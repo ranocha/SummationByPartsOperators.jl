@@ -198,7 +198,7 @@ function periodic_central_derivative_coefficients(derivative_order, accuracy_ord
                 k == j && continue
                 fac += 1 // k^2
             end
-            coef[j] =  6*tmp / j
+            coef[j] =  6*tmp*fac/ j
         end
         upper_coef = SVector{n,T}(coef)
         central_coef = zero(T)
