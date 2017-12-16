@@ -1,37 +1,47 @@
 
 """
-    PeriodicDerivativeOperator{T,StencilWidth,Parallel}
+    PeriodicDerivativeCoefficients{T,StencilWidth,Parallel}
 
-A derivative operator on a periodic grid.
+The coefficients of a derivative operator on a periodic grid.
 """
-struct PeriodicDerivativeOperator{T,LowerOffset,UpperOffset,Parallel} <: AbstractDerivativeOperator{T}
+struct PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,Parallel} <: AbstractDerivativeCoefficients{T}
+    # coefficients defining the operator and its action
     lower_coef::SVector{LowerOffset, T}
     central_coef::T
     upper_coef::SVector{UpperOffset, T}
     parallel::Parallel
+    # corresponding orders etc.
+    derivative_order::Int
+    accuracy_order  ::Int
 end
 
+derivative_order(coefficients::AbstractDerivativeCoefficients) = coefficients.derivative_order
+accuracy_order(coefficients::AbstractDerivativeCoefficients) = coefficients.accuracy_order
+Base.eltype(coefficients::AbstractDerivativeCoefficients{T}) = T
 
-Base.A_mul_B!(dest, D::PeriodicDerivativeOperator, u) = mul!(dest, D, u, one(eltype(dest)), zero(eltype(dest)))
+
+function Base.A_mul_B!(dest, coefficients::PeriodicDerivativeCoefficients, u)
+    mul!(dest, coefficients, u, one(eltype(dest)), zero(eltype(dest)))
+end
 
 """
-    mul!(dest::AbstractVector, D::PeriodicDerivativeOperator, u::AbstractVector, α, β)
+    mul!(dest::AbstractVector, coefficients::PeriodicDerivativeCoefficients, u::AbstractVector, α, β)
 
 Compute `α*D*u + β*dest` and store the result in `dest`.
 """
-function mul!(dest::AbstractVector, D::PeriodicDerivativeOperator{T,LowerOffset,UpperOffset}, u::AbstractVector, α, β) where {T,LowerOffset,UpperOffset}
+function mul!(dest::AbstractVector, coefficients::PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset}, u::AbstractVector, α, β) where {T,LowerOffset,UpperOffset}
     @boundscheck begin
         @argcheck length(dest) == length(u) DimensionMismatch
         @argcheck length(u) > LowerOffset+UpperOffset DimensionMismatch
     end
 
-    @unpack lower_coef, central_coef, upper_coef, parallel = D
-    convolve_boundary_coefficients!(dest, lower_coef, central_coef, upper_coef, u, α, β)
+    @unpack lower_coef, central_coef, upper_coef, parallel = coefficients
+    convolve_periodic_boundary_coefficients!(dest, lower_coef, central_coef, upper_coef, u, α, β)
     convolve_interior_coefficients!(dest, lower_coef, central_coef, upper_coef, u, α, β, parallel)
 end
 
 
-@generated function convolve_boundary_coefficients!(dest::AbstractVector, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset}, u::AbstractVector, α, β) where {LowerOffset, UpperOffset}
+@generated function convolve_periodic_boundary_coefficients!(dest::AbstractVector, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset}, u::AbstractVector, α, β) where {LowerOffset, UpperOffset}
     ex_lower = :( nothing )
     for i in 1:LowerOffset
         ex = :( lower_coef[$LowerOffset]*u[end-$(LowerOffset-i)] )
@@ -108,4 +118,39 @@ function convolve_interior_coefficients!(dest::AbstractVector{T}, lower_coef::SV
         end
         dest[i] = β*dest[i] + α*tmp
     end end
+end
+
+
+"""
+    PeriodicDerivativeOperator{T,StencilWidth,Parallel}
+
+A derivative operator on a uniform periodic grid with grid spacing `Δx`.
+"""
+struct PeriodicDerivativeOperator{T,LowerOffset,UpperOffset,Parallel} <: AbstractDerivativeOperator{T}
+    coefficients::PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,Parallel}
+    Δx::T
+    factor::T
+
+    function PeriodicDerivativeOperator(coefficients::PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,Parallel}, Δx::T)
+        factor = inv(Δx^coefficients.derivative_order)
+        new(coefficients, Δx, factor)
+    end
+end
+
+derivative_order(D::AbstractDerivativeOperator) = derivative_order(D.coefficients)
+accuracy_order(D::AbstractDerivativeOperator) = accuracy_order(D.coefficients)
+Base.eltype(D::AbstractDerivativeOperator{T}) = T
+
+
+function Base.A_mul_B!(dest, D::PeriodicDerivativeOperator, u)
+    mul!(dest, D, u, one(eltype(dest)), zero(eltype(dest)))
+end
+
+"""
+    mul!(dest::AbstractVector, D::PeriodicDerivativeOperator, u::AbstractVector, α, β)
+
+Compute `α*D*u + β*dest` and store the result in `dest`.
+"""
+Base.@propagate_inbounds function mul!(dest::AbstractVector, D::PeriodicDerivativeOperator, u::AbstractVector, α, β)
+    mul!(dest, D.coefficients, u, α*D.factor, β)
 end
