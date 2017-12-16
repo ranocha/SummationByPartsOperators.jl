@@ -13,12 +13,23 @@ struct PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,Parallel} <: Abs
     # corresponding orders etc.
     derivative_order::Int
     accuracy_order  ::Int
+    symmetric       ::Bool
+
+    function PeriodicDerivativeCoefficients(lower_coef::SVector{LowerOffset, T}, central_coef::T, upper_coef::SVector{UpperOffset, T}, parallel::Parallel, derivative_order::Int, accuracy_order::Int) where {T,LowerOffset,UpperOffset,Parallel}
+        symmetric = LowerOffset == UpperOffset
+        if symmetric
+            @inbounds for i in Base.OneTo(LowerOffset)
+                symmetric = symmetric && lower_coef[i] == upper_coef[i]
+            end
+        end
+        new{T,LowerOffset,UpperOffset,Parallel}(lower_coef, central_coef, upper_coef, parallel, derivative_order, accuracy_order, symmetric)
+    end
 end
 
 derivative_order(coefficients::AbstractDerivativeCoefficients) = coefficients.derivative_order
 accuracy_order(coefficients::AbstractDerivativeCoefficients) = coefficients.accuracy_order
 Base.eltype(coefficients::AbstractDerivativeCoefficients{T}) where {T} = T
-
+Base.issymmetric(coefficients::AbstractDerivativeCoefficients) = coefficients.symmetric
 
 function Base.A_mul_B!(dest, coefficients::PeriodicDerivativeCoefficients, u)
     mul!(dest, coefficients, u, one(eltype(dest)), zero(eltype(dest)))
@@ -236,6 +247,7 @@ end
 derivative_order(D::AbstractDerivativeOperator) = derivative_order(D.coefficients)
 accuracy_order(D::AbstractDerivativeOperator) = accuracy_order(D.coefficients)
 Base.eltype(D::AbstractDerivativeOperator{T}) where {T} = T
+Base.issymmetric(D::AbstractDerivativeOperator) = issymmetric(D.coefficients)
 
 
 function Base.A_mul_B!(dest, D::PeriodicDerivativeOperator, u)
