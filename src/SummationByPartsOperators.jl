@@ -1,3 +1,5 @@
+__precompile__()
+
 module SummationByPartsOperators
 
 using ArgCheck
@@ -18,6 +20,9 @@ include("periodic_operators.jl")
 
 
 # exports
-
+export PeriodicDerivativeOperator
+export derivative_order, accuracy_order
+export mul!
+export periodic_central_derivative_operator
 
 end # module

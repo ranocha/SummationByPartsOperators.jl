@@ -17,7 +17,7 @@ end
 
 derivative_order(coefficients::AbstractDerivativeCoefficients) = coefficients.derivative_order
 accuracy_order(coefficients::AbstractDerivativeCoefficients) = coefficients.accuracy_order
-Base.eltype(coefficients::AbstractDerivativeCoefficients{T}) = T
+Base.eltype(coefficients::AbstractDerivativeCoefficients{T}) where {T} = T
 
 
 function Base.A_mul_B!(dest, coefficients::PeriodicDerivativeCoefficients, u)
@@ -122,6 +122,50 @@ end
 
 
 """
+    periodic_central_derivative_coefficients(derivative_order, accuracy_order, T=Float64, parallel=Val{:serial}())
+
+Create the `PeriodicDerivativeCoefficients` approximating the `derivative_order`-th
+derivative with an order of accuracy `accuracy_order` and scalar type `T`.
+The evaluation of the derivative can be parallised using threads by chosing
+`parallel=Val{:threads}())`.
+"""
+function periodic_central_derivative_coefficients(derivative_order, accuracy_order, T=Float64, parallel=Val{:serial}())
+    @argcheck derivative_order > 0
+    @argcheck accuracy_order > 0
+    @argcheck typeof(parallel) <: Union{Val{:serial}, Val{:threads}}
+
+    if isodd(accuracy_order)
+        warn("Central derivative operators support only even orders of accuracy.")
+    end
+
+    if derivative_order == 1
+        # Exact evaluation of the coefficients, see
+        # Beljadid, LeFloch, Mishra, Parés (2017)
+        # Schemes with Well-Controlled Dissipation. Hyperbolic Systems in Nonconservative Form.
+        # Communications in Computational Physics 21.4, pp. 913-946.
+        n = (accuracy_order+1) ÷ 2
+        coef = Vector{T}(n)
+        for j in 1:n
+            tmp = one(Rational{Int128})
+            if iseven(j)
+                tmp *= -1
+            end
+            for i in 1:j
+                tmp *= (n+1-i) // (n+i)
+            end
+            coef[j] =  tmp / j
+        end
+        upper_coef = SVector{n,T}(coef)
+        central_coef = zero(T)
+        lower_coef = -upper_coef
+    else
+        throw(ArgumentError("Derivative order $derivative_order not implemented yet."))
+    end
+    PeriodicDerivativeCoefficients(lower_coef, central_coef, upper_coef, parallel, derivative_order, accuracy_order)
+end
+
+
+"""
     PeriodicDerivativeOperator{T,StencilWidth,Parallel}
 
 A derivative operator on a uniform periodic grid with grid spacing `Δx`.
@@ -131,15 +175,15 @@ struct PeriodicDerivativeOperator{T,LowerOffset,UpperOffset,Parallel} <: Abstrac
     Δx::T
     factor::T
 
-    function PeriodicDerivativeOperator(coefficients::PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,Parallel}, Δx::T)
+    function PeriodicDerivativeOperator(coefficients::PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,Parallel}, Δx::T) where {T,LowerOffset,UpperOffset,Parallel}
         factor = inv(Δx^coefficients.derivative_order)
-        new(coefficients, Δx, factor)
+        new{T,LowerOffset,UpperOffset,Parallel}(coefficients, Δx, factor)
     end
 end
 
 derivative_order(D::AbstractDerivativeOperator) = derivative_order(D.coefficients)
 accuracy_order(D::AbstractDerivativeOperator) = accuracy_order(D.coefficients)
-Base.eltype(D::AbstractDerivativeOperator{T}) = T
+Base.eltype(D::AbstractDerivativeOperator{T}) where {T} = T
 
 
 function Base.A_mul_B!(dest, D::PeriodicDerivativeOperator, u)
@@ -153,4 +197,19 @@ Compute `α*D*u + β*dest` and store the result in `dest`.
 """
 Base.@propagate_inbounds function mul!(dest::AbstractVector, D::PeriodicDerivativeOperator, u::AbstractVector, α, β)
     mul!(dest, D.coefficients, u, α*D.factor, β)
+end
+
+
+"""
+    periodic_central_derivative_operator(Δx, derivative_order, accuracy_order, parallel=Val{:serial}())
+
+Create a `PeriodicDerivativeOperator` approximating the `derivative_order`-th
+derivative on a uniform grid with spacing `Δx` and up to order of accuracy
+`accuracy_order`.
+The evaluation of the derivative can be parallised using threads by chosing
+`parallel=Val{:threads}())`.
+"""
+function periodic_central_derivative_operator(Δx, derivative_order, accuracy_order, parallel=Val{:serial}())
+    coefficients = periodic_central_derivative_coefficients(derivative_order, accuracy_order, typeof(Δx), parallel)
+    PeriodicDerivativeOperator(coefficients, Δx)
 end
