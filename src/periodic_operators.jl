@@ -178,6 +178,31 @@ function periodic_central_derivative_coefficients(derivative_order, accuracy_ord
         upper_coef = SVector{n,T}(coef)
         central_coef = -2*sum(upper_coef)
         lower_coef = upper_coef
+    elseif derivative_order == 3
+        # Exact evaluation of the coefficients, see
+        # Beljadid, LeFloch, Mishra, Parés (2017)
+        # Schemes with Well-Controlled Dissipation. Hyperbolic Systems in Nonconservative Form.
+        # Communications in Computational Physics 21.4, pp. 913-946.
+        n = (accuracy_order+1) ÷ 2
+        coef = Vector{T}(n)
+        for j in 1:n
+            tmp = one(Rational{Int128})
+            if isodd(j)
+                tmp *= -1
+            end
+            for i in 1:j
+                tmp *= (n+1-i) // (n+i)
+            end
+            fac = zero(Rational{Int128})
+            for k in 1:n
+                k == j && continue
+                fac += 1 // k^2
+            end
+            coef[j] =  6*tmp / j
+        end
+        upper_coef = SVector{n,T}(coef)
+        central_coef = zero(T)
+        lower_coef = -upper_coef
     else
         throw(ArgumentError("Derivative order $derivative_order not implemented yet."))
     end
