@@ -6,6 +6,7 @@ using ArgCheck
 using Parameters
 using StaticArrays
 
+import Base: *
 import PolynomialBases: integrate
 
 

@@ -45,6 +45,10 @@ let T = Float32
     A_mul_B!(res, D, x5); @test norm((res - 5 .* x4)[accurcy_order:end-accurcy_order], Inf) < 780*eps(T)
     A_mul_B!(res, D, x6); @test norm((res - 6 .* x5)[accurcy_order:end-accurcy_order], Inf) < 2200*eps(T)
     A_mul_B!(res, D, x7); @test norm((res - 7 .* x6)[accurcy_order:end-accurcy_order], Inf) > 2200*eps(T)
+
+    tmp = D * x7
+    @test typeof(tmp) == typeof(res)
+    @test norm(tmp - res, Inf) < eps(T)
 end
 
 let T = Float64
@@ -93,4 +97,8 @@ let T = Float64
     A_mul_B!(res, D, x5); @test norm((res - 5 .* x4)[accurcy_order:end-accurcy_order], Inf) < 1000*eps(T)
     A_mul_B!(res, D, x6); @test norm((res - 6 .* x5)[accurcy_order:end-accurcy_order], Inf) < 2200*eps(T)
     A_mul_B!(res, D, x7); @test norm((res - 7 .* x6)[accurcy_order:end-accurcy_order], Inf) > 2200*eps(T)
+
+    tmp = D * x7
+    @test typeof(tmp) == typeof(res)
+    @test norm(tmp - res, Inf) < eps(T)
 end

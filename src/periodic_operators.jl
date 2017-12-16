@@ -24,6 +24,13 @@ function Base.A_mul_B!(dest, coefficients::PeriodicDerivativeCoefficients, u)
     mul!(dest, coefficients, u, one(eltype(dest)), zero(eltype(dest)))
 end
 
+function *(coefficients::AbstractDerivativeCoefficients, u::AbstractVector)
+    T = promote_type(eltype(coefficients), eltype(u))
+    dest = similar(u, T)
+    A_mul_B!(dest, coefficients, u)
+    dest
+end
+
 """
     mul!(dest::AbstractVector, coefficients::PeriodicDerivativeCoefficients, u::AbstractVector, α, β)
 
@@ -233,6 +240,13 @@ Base.eltype(D::AbstractDerivativeOperator{T}) where {T} = T
 
 function Base.A_mul_B!(dest, D::PeriodicDerivativeOperator, u)
     mul!(dest, D, u, one(eltype(dest)), zero(eltype(dest)))
+end
+
+function *(D::PeriodicDerivativeOperator, u)
+    T = promote_type(eltype(D), eltype(u))
+    dest = similar(u, T)
+    A_mul_B!(dest, D, u)
+    dest
 end
 
 """
