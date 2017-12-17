@@ -26,19 +26,14 @@ struct PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,Parallel} <: Abs
     end
 end
 
-derivative_order(coefficients::AbstractDerivativeCoefficients) = coefficients.derivative_order
-accuracy_order(coefficients::AbstractDerivativeCoefficients) = coefficients.accuracy_order
-Base.eltype(coefficients::AbstractDerivativeCoefficients{T}) where {T} = T
-Base.issymmetric(coefficients::AbstractDerivativeCoefficients) = coefficients.symmetric
-
-function Base.A_mul_B!(dest, coefficients::PeriodicDerivativeCoefficients, u)
+Base.@propagate_inbounds function Base.A_mul_B!(dest, coefficients::PeriodicDerivativeCoefficients, u)
     mul!(dest, coefficients, u, one(eltype(dest)), zero(eltype(dest)))
 end
 
 function *(coefficients::AbstractDerivativeCoefficients, u::AbstractVector)
     T = promote_type(eltype(coefficients), eltype(u))
     dest = similar(u, T)
-    A_mul_B!(dest, coefficients, u)
+    @inbounds A_mul_B!(dest, coefficients, u)
     dest
 end
 
@@ -312,31 +307,32 @@ end
 
 A derivative operator on a uniform periodic grid with grid spacing `Δx`.
 """
-struct PeriodicDerivativeOperator{T,LowerOffset,UpperOffset,Parallel} <: AbstractDerivativeOperator{T}
+struct PeriodicDerivativeOperator{T,LowerOffset,UpperOffset,Parallel,Grid} <: AbstractDerivativeOperator{T}
     coefficients::PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,Parallel}
-    Δx::T
+    grid::Grid
     factor::T
 
-    function PeriodicDerivativeOperator(coefficients::PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,Parallel}, Δx::T) where {T,LowerOffset,UpperOffset,Parallel}
+    function PeriodicDerivativeOperator(coefficients::PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,Parallel}, grid::Grid) where {T,LowerOffset,UpperOffset,Parallel,Grid}
+        Δx = step(grid)
         factor = inv(Δx^coefficients.derivative_order)
-        new{T,LowerOffset,UpperOffset,Parallel}(coefficients, Δx, factor)
+        new{T,LowerOffset,UpperOffset,Parallel,Grid}(coefficients, grid, factor)
     end
 end
 
-derivative_order(D::AbstractDerivativeOperator) = derivative_order(D.coefficients)
-accuracy_order(D::AbstractDerivativeOperator) = accuracy_order(D.coefficients)
-Base.eltype(D::AbstractDerivativeOperator{T}) where {T} = T
-Base.issymmetric(D::AbstractDerivativeOperator) = issymmetric(D.coefficients)
+function PeriodicDerivativeOperator(coefficients::PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,Parallel}, xmin, xmax, N) where {T,LowerOffset,UpperOffset,Parallel}
+    grid = linspace(xmin, xmax, N)
+    PeriodicDerivativeOperator(coefficients, grid)
+end
 
 
-function Base.A_mul_B!(dest, D::PeriodicDerivativeOperator, u)
+Base.@propagate_inbounds function Base.A_mul_B!(dest, D::PeriodicDerivativeOperator, u)
     mul!(dest, D, u, one(eltype(dest)), zero(eltype(dest)))
 end
 
 function *(D::PeriodicDerivativeOperator, u)
     T = promote_type(eltype(D), eltype(u))
     dest = similar(u, T)
-    A_mul_B!(dest, D, u)
+    @inbounds A_mul_B!(dest, D, u)
     dest
 end
 
@@ -351,29 +347,59 @@ end
 
 
 """
-    periodic_central_derivative_operator(Δx, derivative_order, accuracy_order, parallel=Val{:serial}())
+    periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N, parallel=Val{:serial}())
 
 Create a `PeriodicDerivativeOperator` approximating the `derivative_order`-th
-derivative on a uniform grid with spacing `Δx` up to order of accuracy
-`accuracy_order`.
+derivative on a uniform grid between `xmin` and `xmax` with `N` grid points up
+to order of accuracy `accuracy_order`.
 The evaluation of the derivative can be parallised using threads by chosing
 `parallel=Val{:threads}())`.
 """
-function periodic_central_derivative_operator(Δx, derivative_order, accuracy_order, parallel=Val{:serial}())
-    coefficients = periodic_central_derivative_coefficients(derivative_order, accuracy_order, typeof(Δx), parallel)
-    PeriodicDerivativeOperator(coefficients, Δx)
+function periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N, parallel=Val{:serial}())
+    grid = linspace(xmin, xmax, N)
+    coefficients = periodic_central_derivative_coefficients(derivative_order, accuracy_order, eltype(grid), parallel)
+    PeriodicDerivativeOperator(coefficients, grid)
 end
 
 """
-    periodic_central_derivative_operator(Δx, derivative_order, accuracy_order, parallel=Val{:serial}())
+    periodic_central_derivative_operator(derivative_order, accuracy_order, grid, parallel=Val{:serial}())
 
 Create a `PeriodicDerivativeOperator` approximating the `derivative_order`-th
-derivative on a uniform grid with spacing `Δx` up to order of accuracy
-`accuracy_order` where the leftmost grid point used is determined by `left_offset`.
+derivative on the uniform `grid` up to order of accuracy `accuracy_order`.
 The evaluation of the derivative can be parallised using threads by chosing
 `parallel=Val{:threads}())`.
 """
-function periodic_derivative_operator(Δx, derivative_order, accuracy_order, left_offset=-(accuracy_order+1)÷2, parallel=Val{:serial}())
-    coefficients = periodic_derivative_coefficients(derivative_order, accuracy_order, left_offset, typeof(Δx), parallel)
-    PeriodicDerivativeOperator(coefficients, Δx)
+function periodic_central_derivative_operator(derivative_order, accuracy_order, grid::Union{LinSpace,StepRangeLen}, parallel=Val{:serial}())
+    coefficients = periodic_central_derivative_coefficients(derivative_order, accuracy_order, eltype(grid), parallel)
+    PeriodicDerivativeOperator(coefficients, grid)
+end
+
+"""
+    periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N, left_offset=-(accuracy_order+1)÷2, parallel=Val{:serial}())
+
+Create a `PeriodicDerivativeOperator` approximating the `derivative_order`-th
+derivative on a uniform grid between `xmin` and `xmax` with `N` grid points up
+to order of accuracy `accuracy_order` where the leftmost grid point used is
+determined by `left_offset`.
+The evaluation of the derivative can be parallised using threads by chosing
+`parallel=Val{:threads}())`.
+"""
+function periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N, left_offset=-(accuracy_order+1)÷2, parallel=Val{:serial}())
+    grid = linspace(xmin, xmax, N)
+    coefficients = periodic_derivative_coefficients(derivative_order, accuracy_order, left_offset, eltype(grid), parallel)
+    PeriodicDerivativeOperator(coefficients, grid)
+end
+
+"""
+    periodic_derivative_operator(derivative_order, accuracy_order, grid::Union{LinSpace,StepRangeLen}, left_offset=-(accuracy_order+1)÷2, parallel=Val{:serial}())
+
+Create a `PeriodicDerivativeOperator` approximating the `derivative_order`-th
+derivative on thr uniform `grid` up to order of accuracy `accuracy_order` where
+the leftmost grid point used is determined by `left_offset`.
+The evaluation of the derivative can be parallised using threads by chosing
+`parallel=Val{:threads}())`.
+"""
+function periodic_derivative_operator(derivative_order, accuracy_order, grid::Union{LinSpace,StepRangeLen}, left_offset=-(accuracy_order+1)÷2, parallel=Val{:serial}())
+    coefficients = periodic_derivative_coefficients(derivative_order, accuracy_order, left_offset, eltype(grid), parallel)
+    PeriodicDerivativeOperator(coefficients, grid)
 end

@@ -6,7 +6,6 @@ let T = Float32
     xmax = 2*one(T)
     N = 101
     x1 = linspace(xmin, xmax, N)
-    Δx = (xmax - xmin) / (N-1)
 
     x0 = ones(x1)
     x2 = x1 .* x1
@@ -16,11 +15,11 @@ let T = Float32
     x6 = x3 .* x3
     x7 = x4 .* x3
 
-    res = similar(x0)
+    res = zeros(x0)
 
     # first derivative operators
     accuracy_order = 2
-    D = periodic_central_derivative_operator(Δx, 1, accuracy_order)
+    D = periodic_central_derivative_operator(1, accuracy_order, xmin, xmax, N)
     @test issymmetric(D) == false
     A_mul_B!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < eps(T)
     A_mul_B!(res, D, x1); @test norm((res - x0)[accuracy_order:end-accuracy_order], Inf) < 20*eps(T)
@@ -28,7 +27,7 @@ let T = Float32
     A_mul_B!(res, D, x3); @test norm((res - 3 .* x2)[accuracy_order:end-accuracy_order], Inf) > 140*eps(T)
 
     accuracy_order = 4
-    D = periodic_central_derivative_operator(Δx, 1, accuracy_order)
+    D = periodic_central_derivative_operator(1, accuracy_order, xmin, xmax, N)
     @test issymmetric(D) == false
     A_mul_B!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 10*eps(T)
     A_mul_B!(res, D, x1); @test norm((res - x0)[accuracy_order:end-accuracy_order], Inf) < 40*eps(T)
@@ -38,7 +37,7 @@ let T = Float32
     A_mul_B!(res, D, x5); @test norm((res - 5 .* x4)[accuracy_order:end-accuracy_order], Inf) > 500*eps(T)
 
     accuracy_order = 6
-    D = periodic_central_derivative_operator(Δx, 1, accuracy_order)
+    D = periodic_central_derivative_operator(1, accuracy_order, xmin, xmax, N)
     @test issymmetric(D) == false
     A_mul_B!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 10*eps(T)
     A_mul_B!(res, D, x1); @test norm((res - x0)[accuracy_order:end-accuracy_order], Inf) < 40*eps(T)
@@ -51,7 +50,7 @@ let T = Float32
 
     # second derivative operators
     accuracy_order = 2
-    D = periodic_central_derivative_operator(Δx, 2, accuracy_order)
+    D = periodic_central_derivative_operator(2, accuracy_order, xmin, xmax, N)
     @test issymmetric(D) == true
     A_mul_B!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < eps(T)
     A_mul_B!(res, D, x1); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 1400*eps(T)
@@ -59,7 +58,7 @@ let T = Float32
     A_mul_B!(res, D, x3); @test norm((res - 6 .* x1)[accuracy_order:end-accuracy_order], Inf) > 7000*eps(T)
 
     accuracy_order = 4
-    D = periodic_central_derivative_operator(Δx, 2, accuracy_order)
+    D = periodic_central_derivative_operator(2, accuracy_order, xmin, xmax, N)
     @test issymmetric(D) == true
     A_mul_B!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 400*eps(T)
     A_mul_B!(res, D, x1); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 6000*eps(T)
@@ -69,7 +68,7 @@ let T = Float32
     A_mul_B!(res, D, x5); @test norm((res - 20 .* x3)[accuracy_order:end-accuracy_order], Inf) > 50000*eps(T)
 
     accuracy_order = 6
-    D = periodic_central_derivative_operator(Δx, 2, accuracy_order)
+    D = periodic_central_derivative_operator(2, accuracy_order, xmin, xmax, N)
     @test issymmetric(D) == true
     A_mul_B!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 600*eps(T)
     A_mul_B!(res, D, x1); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 5000*eps(T)
@@ -86,7 +85,7 @@ let T = Float32
 
     # third derivative operators
     accuracy_order = 2
-    D = periodic_central_derivative_operator(Δx, 3, accuracy_order)
+    D = periodic_central_derivative_operator(3, accuracy_order, xmin, xmax, N)
     @test issymmetric(D) == true # because this operator is zero!
     A_mul_B!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < eps(T)
     A_mul_B!(res, D, x1); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 1400*eps(T)
@@ -94,7 +93,7 @@ let T = Float32
     A_mul_B!(res, D, x3); @test norm((res - 6 .* x0)[accuracy_order:end-accuracy_order], Inf) > 7000*eps(T)
 
     accuracy_order = 4
-    D = periodic_central_derivative_operator(Δx, 3, accuracy_order)
+    D = periodic_central_derivative_operator(3, accuracy_order, xmin, xmax, N)
     @test issymmetric(D) == false
     A_mul_B!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 400*eps(T)
     A_mul_B!(res, D, x1); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 20000*eps(T)
@@ -104,7 +103,7 @@ let T = Float32
     A_mul_B!(res, D, x5); @test norm((res - 60 .* x2)[accuracy_order:end-accuracy_order], Inf) > 600000*eps(T)
 
     accuracy_order = 6
-    D = periodic_central_derivative_operator(Δx, 3, accuracy_order)
+    D = periodic_central_derivative_operator(3, accuracy_order, xmin, xmax, N)
     @test issymmetric(D) == false
     A_mul_B!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 300*eps(T)
     A_mul_B!(res, D, x1); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 80000*eps(T)
@@ -121,9 +120,9 @@ let T = Float32
 
     # higher derivative operators
     accuracy_order = 2
-    @test_throws ArgumentError periodic_central_derivative_operator(Δx, 4, accuracy_order)
-    @test_throws ArgumentError periodic_central_derivative_operator(Δx, 5, accuracy_order)
-    @test_throws ArgumentError periodic_central_derivative_operator(Δx, 6, accuracy_order)
+    @test_throws ArgumentError periodic_central_derivative_operator(4, accuracy_order, xmin, xmax, N)
+    @test_throws ArgumentError periodic_central_derivative_operator(5, accuracy_order, xmin, xmax, N)
+    @test_throws ArgumentError periodic_central_derivative_operator(6, accuracy_order, xmin, xmax, N)
 end
 
 let T = Float64
@@ -131,7 +130,6 @@ let T = Float64
     xmax = 2*one(T)
     N = 101
     x1 = linspace(xmin, xmax, N)
-    Δx = (xmax - xmin) / (N-1)
 
     x0 = ones(x1)
     x2 = x1 .* x1
@@ -143,11 +141,11 @@ let T = Float64
     x8 = x4 .* x4
     x9 = x4 .* x5
 
-    res = similar(x0)
+    res = zeros(x0)
 
     # first derivative operators
     accuracy_order = 2
-    D = periodic_central_derivative_operator(Δx, 1, accuracy_order)
+    D = periodic_central_derivative_operator(1, accuracy_order, xmin, xmax, N)
     @test issymmetric(D) == false
     A_mul_B!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < eps(T)
     A_mul_B!(res, D, x1); @test norm((res - x0)[accuracy_order:end-accuracy_order], Inf) < 20*eps(T)
@@ -155,7 +153,7 @@ let T = Float64
     A_mul_B!(res, D, x3); @test norm((res - 3 .* x2)[accuracy_order:end-accuracy_order], Inf) > 140*eps(T)
 
     accuracy_order = 4
-    D = periodic_central_derivative_operator(Δx, 1, accuracy_order)
+    D = periodic_central_derivative_operator(1, accuracy_order, xmin, xmax, N)
     @test issymmetric(D) == false
     A_mul_B!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 10*eps(T)
     A_mul_B!(res, D, x1); @test norm((res - x0)[accuracy_order:end-accuracy_order], Inf) < 40*eps(T)
@@ -165,7 +163,7 @@ let T = Float64
     A_mul_B!(res, D, x5); @test norm((res - 5 .* x4)[accuracy_order:end-accuracy_order], Inf) > 500*eps(T)
 
     accuracy_order = 6
-    D = periodic_central_derivative_operator(Δx, 1, accuracy_order)
+    D = periodic_central_derivative_operator(1, accuracy_order, xmin, xmax, N)
     @test issymmetric(D) == false
     A_mul_B!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 10*eps(T)
     A_mul_B!(res, D, x1); @test norm((res - x0)[accuracy_order:end-accuracy_order], Inf) < 40*eps(T)
@@ -182,7 +180,7 @@ let T = Float64
 
     # second derivative operators
     accuracy_order = 2
-    D = periodic_central_derivative_operator(Δx, 2, accuracy_order)
+    D = periodic_central_derivative_operator(2, accuracy_order, xmin, xmax, N)
     @test issymmetric(D) == true
     A_mul_B!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < eps(T)
     A_mul_B!(res, D, x1); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 1400*eps(T)
@@ -190,7 +188,7 @@ let T = Float64
     A_mul_B!(res, D, x3); @test norm((res - 6 .* x1)[accuracy_order:end-accuracy_order], Inf) > 7000*eps(T)
 
     accuracy_order = 4
-    D = periodic_central_derivative_operator(Δx, 2, accuracy_order)
+    D = periodic_central_derivative_operator(2, accuracy_order, xmin, xmax, N)
     @test issymmetric(D) == true
     A_mul_B!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 400*eps(T)
     A_mul_B!(res, D, x1); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 5000*eps(T)
@@ -200,7 +198,7 @@ let T = Float64
     A_mul_B!(res, D, x5); @test norm((res - 20 .* x3)[accuracy_order:end-accuracy_order], Inf) > 50000*eps(T)
 
     accuracy_order = 6
-    D = periodic_central_derivative_operator(Δx, 2, accuracy_order)
+    D = periodic_central_derivative_operator(2, accuracy_order, xmin, xmax, N)
     @test issymmetric(D) == true
     A_mul_B!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 300*eps(T)
     A_mul_B!(res, D, x1); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 5000*eps(T)
@@ -217,7 +215,7 @@ let T = Float64
 
     # third derivative operators
     accuracy_order = 2
-    D = periodic_central_derivative_operator(Δx, 3, accuracy_order)
+    D = periodic_central_derivative_operator(3, accuracy_order, xmin, xmax, N)
     @test issymmetric(D) == true # because this operator is zero!
     A_mul_B!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < eps(T)
     A_mul_B!(res, D, x1); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 1400*eps(T)
@@ -225,7 +223,7 @@ let T = Float64
     A_mul_B!(res, D, x3); @test norm((res - 6 .* x0)[accuracy_order:end-accuracy_order], Inf) > 7000*eps(T)
 
     accuracy_order = 4
-    D = periodic_central_derivative_operator(Δx, 3, accuracy_order)
+    D = periodic_central_derivative_operator(3, accuracy_order, xmin, xmax, N)
     @test issymmetric(D) == false
     A_mul_B!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 400*eps(T)
     A_mul_B!(res, D, x1); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 20000*eps(T)
@@ -235,7 +233,7 @@ let T = Float64
     A_mul_B!(res, D, x5); @test norm((res - 60 .* x2)[accuracy_order:end-accuracy_order], Inf) > 600000*eps(T)
 
     accuracy_order = 6
-    D = periodic_central_derivative_operator(Δx, 3, accuracy_order)
+    D = periodic_central_derivative_operator(3, accuracy_order, xmin, xmax, N)
     @test issymmetric(D) == false
     A_mul_B!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 300*eps(T)
     A_mul_B!(res, D, x1); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 70000*eps(T)
@@ -252,14 +250,17 @@ let T = Float64
 
     # higher derivative operators
     accuracy_order = 2
-    @test_throws ArgumentError periodic_central_derivative_operator(Δx, 4, accuracy_order)
-    @test_throws ArgumentError periodic_central_derivative_operator(Δx, 5, accuracy_order)
-    @test_throws ArgumentError periodic_central_derivative_operator(Δx, 6, accuracy_order)
+    @test_throws ArgumentError periodic_central_derivative_operator(4, accuracy_order, xmin, xmax, N)
+    @test_throws ArgumentError periodic_central_derivative_operator(5, accuracy_order, xmin, xmax, N)
+    @test_throws ArgumentError periodic_central_derivative_operator(6, accuracy_order, xmin, xmax, N)
 end
 
 for T in (Float32, Float64), accuracy_order in 2:2:12, derivative_order in 1:3
-    D_central = periodic_central_derivative_operator(one(T), derivative_order, accuracy_order)
-    D_general = periodic_derivative_operator(one(T), derivative_order, accuracy_order)
+    xmin = zero(T)
+    xmax = one(T)
+    N = 11
+    D_central = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
+    D_general = periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
     @test norm(D_central.coefficients.lower_coef - D_general.coefficients.lower_coef) < 3*eps(T)
     @test abs(D_central.coefficients.central_coef - D_general.coefficients.central_coef) < 3*eps(T)
     @test norm(D_central.coefficients.upper_coef - D_general.coefficients.upper_coef) < 3*eps(T)

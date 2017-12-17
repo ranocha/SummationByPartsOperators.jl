@@ -17,6 +17,7 @@ abstract type AbstractMassMatrix{T} end
 
 
 # source files
+include("general_operators.jl")
 include("periodic_operators.jl")
 
 
