@@ -255,13 +255,32 @@ let T = Float64
     @test_throws ArgumentError periodic_central_derivative_operator(6, accuracy_order, xmin, xmax, N)
 end
 
+
 for T in (Float32, Float64), accuracy_order in 2:2:12, derivative_order in 1:3
     xmin = zero(T)
     xmax = one(T)
-    N = 11
+    N = 21
     D_central = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
     D_general = periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
     @test norm(D_central.coefficients.lower_coef - D_general.coefficients.lower_coef) < 3*eps(T)
     @test abs(D_central.coefficients.central_coef - D_general.coefficients.central_coef) < 3*eps(T)
     @test norm(D_central.coefficients.upper_coef - D_general.coefficients.upper_coef) < 3*eps(T)
+end
+
+
+for T in (Float32, Float64), accuracy_order in 1:10, derivative_order in 1:3
+    xmin = zero(T)
+    xmax = one(T)
+    N = 51
+    x = linspace(xmin, xmax, N)
+    u = x.^5
+    dest_serial = zeros(u)
+    dest_threads= zeros(u)
+    D_serial = periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
+    D_threads= periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N, Val{:threads}())
+    A_mul_B!(dest_serial, D_serial, u)
+    A_mul_B!(dest_threads, D_threads, u)
+    for i in eachindex(u)
+        @test dest_serial[i] ≈ dest_threads[i]
+    end
 end

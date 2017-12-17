@@ -32,7 +32,7 @@ end
 
 function *(coefficients::AbstractDerivativeCoefficients, u::AbstractVector)
     T = promote_type(eltype(coefficients), eltype(u))
-    dest = similar(u, T)
+    dest = similar(u, T); dest .= zero(T)
     @inbounds A_mul_B!(dest, coefficients, u)
     dest
 end
@@ -280,7 +280,7 @@ the leftmost grid point used is determined by `left_offset`.
 The evaluation of the derivative can be parallised using threads by chosing
 parallel=Val{:threads}())`.
 """
-function periodic_derivative_coefficients(derivative_order, accuracy_order, left_offset=-(accuracy_order+1)÷2, T=Float64, parallel=Val{:serial}())
+function periodic_derivative_coefficients(derivative_order, accuracy_order, left_offset::Int=-(accuracy_order+1)÷2, T=Float64, parallel=Val{:serial}())
     @argcheck -accuracy_order <= left_offset <= 0
 
     x = Rational{Int128}.(left_offset:left_offset+accuracy_order)
@@ -313,6 +313,8 @@ struct PeriodicDerivativeOperator{T,LowerOffset,UpperOffset,Parallel,Grid} <: Ab
     factor::T
 
     function PeriodicDerivativeOperator(coefficients::PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,Parallel}, grid::Grid) where {T,LowerOffset,UpperOffset,Parallel,Grid}
+        @argcheck length(grid) > LowerOffset+UpperOffset DimensionMismatch
+
         Δx = step(grid)
         factor = inv(Δx^coefficients.derivative_order)
         new{T,LowerOffset,UpperOffset,Parallel,Grid}(coefficients, grid, factor)
@@ -331,7 +333,7 @@ end
 
 function *(D::PeriodicDerivativeOperator, u)
     T = promote_type(eltype(D), eltype(u))
-    dest = similar(u, T)
+    dest = similar(u, T); dest .= zero(T)
     @inbounds A_mul_B!(dest, D, u)
     dest
 end
@@ -341,8 +343,12 @@ end
 
 Compute `α*D*u + β*dest` and store the result in `dest`.
 """
-Base.@propagate_inbounds function mul!(dest::AbstractVector, D::PeriodicDerivativeOperator, u::AbstractVector, α, β)
-    mul!(dest, D.coefficients, u, α*D.factor, β)
+Base.@propagate_inbounds function mul!(dest::AbstractVector, D::PeriodicDerivativeOperator{T,LowerOffset,UpperOffset}, u::AbstractVector, α, β) where {T,LowerOffset,UpperOffset}
+    @boundscheck begin
+        @argcheck size(D, 2) == length(u) DimensionMismatch
+        @argcheck size(D, 1) == length(dest) DimensionMismatch
+    end
+    @inbounds mul!(dest, D.coefficients, u, α*D.factor, β)
 end
 
 
@@ -384,10 +390,14 @@ determined by `left_offset`.
 The evaluation of the derivative can be parallised using threads by chosing
 `parallel=Val{:threads}())`.
 """
-function periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N, left_offset=-(accuracy_order+1)÷2, parallel=Val{:serial}())
+function periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N, left_offset::Int=-(accuracy_order+1)÷2, parallel=Val{:serial}())
     grid = linspace(xmin, xmax, N)
     coefficients = periodic_derivative_coefficients(derivative_order, accuracy_order, left_offset, eltype(grid), parallel)
     PeriodicDerivativeOperator(coefficients, grid)
+end
+
+@inline function periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N, parallel::Union{Val{:serial},Val{:threads}}=Val{:serial}(), left_offset::Int=-(accuracy_order+1)÷2)
+    periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N, left_offset, parallel)
 end
 
 """
@@ -399,7 +409,11 @@ the leftmost grid point used is determined by `left_offset`.
 The evaluation of the derivative can be parallised using threads by chosing
 `parallel=Val{:threads}())`.
 """
-function periodic_derivative_operator(derivative_order, accuracy_order, grid::Union{LinSpace,StepRangeLen}, left_offset=-(accuracy_order+1)÷2, parallel=Val{:serial}())
+function periodic_derivative_operator(derivative_order, accuracy_order, grid::Union{LinSpace,StepRangeLen}, left_offset::Int=-(accuracy_order+1)÷2, parallel=Val{:serial}())
     coefficients = periodic_derivative_coefficients(derivative_order, accuracy_order, left_offset, eltype(grid), parallel)
     PeriodicDerivativeOperator(coefficients, grid)
+end
+
+@inline function periodic_derivative_operator(derivative_order, accuracy_order, grid::Union{LinSpace,StepRangeLen}, parallel::Union{Val{:serial},Val{:threads}}=Val{:serial}(), left_offset::Int=-(accuracy_order+1)÷2)
+    periodic_derivative_operator(derivative_order, accuracy_order, grid, left_offset, parallel)
 end
