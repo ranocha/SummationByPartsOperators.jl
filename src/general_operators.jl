@@ -30,3 +30,27 @@ function Base.full(D::AbstractDerivativeOperator{T}) where {T}
     end
     A
 end
+
+function Base.sparse(D::AbstractDerivativeOperator{T}) where {T}
+    M, N = size(D)
+    rowind = Int[]
+    nzval = T[]
+    colptr = Vector{Int}(N+1)
+    u = zeros(T, N)
+    dest = zeros(T, N)
+
+    for i = 1:N
+        u[i] = one(T)
+        A_mul_B!(dest, D, u)
+        js = find(dest)
+        colptr[i] = length(nzval)+1
+        if length(js) > 0
+            append!(rowind, js)
+            append!(nzval, dest[js])
+        end
+        u[i] = zero(T)
+    end
+    colptr[N+1] = length(nzval)+1
+
+    return SparseMatrixCSC(M, N, colptr, rowind, nzval)
+end
