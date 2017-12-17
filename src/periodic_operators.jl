@@ -224,6 +224,85 @@ function periodic_central_derivative_coefficients(derivative_order, accuracy_ord
     else
         throw(ArgumentError("Derivative order $derivative_order not implemented yet."))
     end
+
+    PeriodicDerivativeCoefficients(lower_coef, central_coef, upper_coef, parallel, derivative_order, accuracy_order)
+end
+
+"""
+    fornberg(x::Vector{T}, m::Int) where {T}
+
+Calculate the weights of a finite difference approximation of the `m`th derivative
+with maximal order of accuracy at `0` using the nodes `x`, see
+Fornberg (1998)
+Calculation of Weights in Finite Difference Formulas
+SIAM Rev. 40.3, pp. 685-691.
+"""
+function fornberg(xx::Vector{T}, m::Int) where {T}
+    x = sort(xx)
+    @argcheck x[1] <= 0
+    @argcheck x[end] >= 0
+    @argcheck length(unique(x)) == length(x)
+    @argcheck zero(T) in x
+    @argcheck m >= 1
+
+    z = zero(T)
+    n = length(x) - 1
+    c = zeros(T, length(x), m+1)
+    c1 = one(T)
+    c4 = x[1] - z
+    c[1,1] = one(T)
+    for i in 1:n
+        mn = min(i,m)
+        c2 = one(T)
+        c5 = c4
+        c4 = x[i+1] - z
+        for j in 0:i-1
+            c3 = x[i+1] - x[j+1]
+            c2 = c2 * c3
+            if j == i-1
+                for k in mn:-1:1
+                    c[i+1,k+1] = c1 * (k*c[i,k]-c5*c[i,k+1]) / c2
+                end
+                c[i+1,1] = -c1*c5*c[i,1] / c2
+            end
+            for k in mn:-1:1
+                c[j+1,k+1] = (c4*c[j+1,k+1]-k*c[j+1,k]) / c3
+            end
+            c[j+1,1] = c4*c[j+1,1] / c3
+        end
+        c1 = c2
+    end
+
+    c[:,end]
+end
+
+"""
+    function periodic_derivative_coefficients(derivative_order, accuracy_order, left_offset=-(accuracy_order+1)÷2, T=Float64, parallel=Val{:serial}())
+
+Create the `PeriodicDerivativeCoefficients` approximating the `derivative_order`-th
+derivative with an order of accuracy `accuracy_order` and scalar type `T` where
+the leftmost grid point used is determined by `left_offset`.
+The evaluation of the derivative can be parallised using threads by chosing
+parallel=Val{:threads}())`.
+"""
+function periodic_derivative_coefficients(derivative_order, accuracy_order, left_offset=-(accuracy_order+1)÷2, T=Float64, parallel=Val{:serial}())
+    @argcheck -accuracy_order <= left_offset <= 0
+
+    x = Rational{Int128}.(left_offset:left_offset+accuracy_order)
+    c = fornberg(x, derivative_order)
+
+    z = zero(eltype(x))
+    lower_idx = x .< z
+    central_idx = first(find(xx->xx==z, x))
+    upper_idx = x .> z
+
+    LowerOffset = sum(lower_idx)
+    UpperOffset = sum(upper_idx)
+
+    lower_coef = SVector{LowerOffset, T}(reverse(c[lower_idx]))
+    central_coef = T(c[central_idx])
+    upper_coef = SVector{UpperOffset, T}(c[upper_idx])
+
     PeriodicDerivativeCoefficients(lower_coef, central_coef, upper_coef, parallel, derivative_order, accuracy_order)
 end
 
@@ -275,12 +354,26 @@ end
     periodic_central_derivative_operator(Δx, derivative_order, accuracy_order, parallel=Val{:serial}())
 
 Create a `PeriodicDerivativeOperator` approximating the `derivative_order`-th
-derivative on a uniform grid with spacing `Δx` and up to order of accuracy
+derivative on a uniform grid with spacing `Δx` up to order of accuracy
 `accuracy_order`.
 The evaluation of the derivative can be parallised using threads by chosing
 `parallel=Val{:threads}())`.
 """
 function periodic_central_derivative_operator(Δx, derivative_order, accuracy_order, parallel=Val{:serial}())
     coefficients = periodic_central_derivative_coefficients(derivative_order, accuracy_order, typeof(Δx), parallel)
+    PeriodicDerivativeOperator(coefficients, Δx)
+end
+
+"""
+    periodic_central_derivative_operator(Δx, derivative_order, accuracy_order, parallel=Val{:serial}())
+
+Create a `PeriodicDerivativeOperator` approximating the `derivative_order`-th
+derivative on a uniform grid with spacing `Δx` up to order of accuracy
+`accuracy_order` where the leftmost grid point used is determined by `left_offset`.
+The evaluation of the derivative can be parallised using threads by chosing
+`parallel=Val{:threads}())`.
+"""
+function periodic_derivative_operator(Δx, derivative_order, accuracy_order, left_offset=-(accuracy_order+1)÷2, parallel=Val{:serial}())
+    coefficients = periodic_derivative_coefficients(derivative_order, accuracy_order, left_offset, typeof(Δx), parallel)
     PeriodicDerivativeOperator(coefficients, Δx)
 end

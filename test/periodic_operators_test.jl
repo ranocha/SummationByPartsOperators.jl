@@ -256,3 +256,11 @@ let T = Float64
     @test_throws ArgumentError periodic_central_derivative_operator(Δx, 5, accuracy_order)
     @test_throws ArgumentError periodic_central_derivative_operator(Δx, 6, accuracy_order)
 end
+
+for T in (Float32, Float64), accuracy_order in 2:2:12, derivative_order in 1:3
+    D_central = periodic_central_derivative_operator(one(T), derivative_order, accuracy_order)
+    D_general = periodic_derivative_operator(one(T), derivative_order, accuracy_order)
+    @test norm(D_central.coefficients.lower_coef - D_general.coefficients.lower_coef) < 3*eps(T)
+    @test abs(D_central.coefficients.central_coef - D_general.coefficients.central_coef) < 3*eps(T)
+    @test norm(D_central.coefficients.upper_coef - D_general.coefficients.upper_coef) < 3*eps(T)
+end
