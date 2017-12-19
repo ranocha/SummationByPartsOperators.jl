@@ -397,9 +397,9 @@ end
 
 
 """
-    PeriodicDerivativeOperator{T,StencilWidth,Parallel}
+    PeriodicDerivativeOperator{T,LowerOffset,UpperOffset,Parallel,Grid}
 
-A derivative operator on a uniform periodic grid with grid spacing `Δx`.
+A derivative operator on a uniform periodic grid.
 """
 struct PeriodicDerivativeOperator{T,LowerOffset,UpperOffset,Parallel,Grid} <: AbstractDerivativeOperator{T}
     coefficients::PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,Parallel}
@@ -415,7 +415,7 @@ struct PeriodicDerivativeOperator{T,LowerOffset,UpperOffset,Parallel,Grid} <: Ab
     end
 end
 
-function PeriodicDerivativeOperator(coefficients::PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,Parallel}, xmin, xmax, N) where {T,LowerOffset,UpperOffset,Parallel}
+function PeriodicDerivativeOperator(coefficients::PeriodicDerivativeCoefficients, xmin, xmax, N)
     grid = linspace(xmin, xmax, N)
     PeriodicDerivativeOperator(coefficients, grid)
 end

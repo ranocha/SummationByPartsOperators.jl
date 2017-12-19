@@ -47,6 +47,23 @@ function mul!(dest::AbstractVector, coefficients::DerivativeCoefficients{T,LeftB
     convolve_interior_coefficients!(dest, lower_coef, central_coef, upper_coef, u, α, β, length(left_boundary), length(right_boundary), parallel)
 end
 
+"""
+    mul!(dest::AbstractVector, coefficients::DerivativeCoefficients, u::AbstractVector, α)
+
+Compute `α*D*u` and store the result in `dest`.
+"""
+function mul!(dest::AbstractVector, coefficients::DerivativeCoefficients{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,Parallel}, u::AbstractVector, α) where {T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,Parallel}
+    @boundscheck begin
+        @argcheck length(dest) == length(u) DimensionMismatch
+        @argcheck length(u) > LowerOffset+UpperOffset DimensionMismatch
+        @argcheck length(u) > length(coefficients.left_boundary) + length(coefficients.right_boundary) DimensionMismatch
+    end
+
+    @unpack left_boundary, right_boundary, lower_coef, central_coef, upper_coef, parallel = coefficients
+    convolve_boundary_coefficients!(dest, left_boundary, right_boundary, u, α)
+    convolve_interior_coefficients!(dest, lower_coef, central_coef, upper_coef, u, α, length(left_boundary), length(right_boundary), parallel)
+end
+
 
 struct DerivativeCoefficientRow{T,Start,Length}
     coef::SVector{Length, T}
@@ -72,6 +89,7 @@ end
     tmp
 end
 
+
 @unroll function convolve_boundary_coefficients!(dest, left_boundary, right_boundary, u, α, β)
     @unroll for i in 1:length(left_boundary)
         tmp = convolve_left_row(left_boundary[i], u)
@@ -82,6 +100,18 @@ end
         @inbounds dest[end-i+1] = β*dest[end-i+1] + α*tmp
     end
 end
+
+@unroll function convolve_boundary_coefficients!(dest, left_boundary, right_boundary, u, α)
+    @unroll for i in 1:length(left_boundary)
+        tmp = convolve_left_row(left_boundary[i], u)
+        @inbounds dest[i] = α*tmp
+    end
+    @unroll for i in 1:length(right_boundary)
+        tmp = convolve_right_row(right_boundary[i], u)
+        @inbounds dest[end-i+1] = α*tmp
+    end
+end
+
 
 @generated function convolve_interior_coefficients!(dest::AbstractVector, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset}, u::AbstractVector, α, β, left_boundary_width, right_boundary_width, parallel) where {LowerOffset, UpperOffset}
     ex = :( lower_coef[$LowerOffset]*u[i-$LowerOffset] )
@@ -114,6 +144,131 @@ function convolve_interior_coefficients!(dest::AbstractVector{T}, lower_coef::SV
     end end
 end
 
+@generated function convolve_interior_coefficients!(dest::AbstractVector, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset}, u::AbstractVector, α, left_boundary_width, right_boundary_width, parallel) where {LowerOffset, UpperOffset}
+    ex = :( lower_coef[$LowerOffset]*u[i-$LowerOffset] )
+    for j in LowerOffset-1:-1:1
+        ex = :( $ex + lower_coef[$j]*u[i-$j] )
+    end
+    ex = :( $ex + central_coef*u[i] )
+    for j in 1:UpperOffset
+        ex = :( $ex + upper_coef[$j]*u[i+$j] )
+    end
+
+    quote
+        @inbounds for i in (left_boundary_width+1):(length(dest)-right_boundary_width)
+            dest[i] = α*$ex
+        end
+    end
+end
+
+function convolve_interior_coefficients!(dest::AbstractVector{T}, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset}, u::AbstractVector, α, left_boundary_width, right_boundary_width, parallel::Val{:threads}) where {T, LowerOffset, UpperOffset}
+    Threads.@threads for i in (left_boundary_width+1):(length(dest)-right_boundary_width) @inbounds begin
+        tmp = zero(T)
+        for j in Base.OneTo(LowerOffset)
+            tmp += lower_coef[j]*u[i-j]
+        end
+        tmp += central_coef*u[i]
+        for j in Base.OneTo(UpperOffset)
+            tmp += upper_coef[j]*u[i+j]
+        end
+        dest[i] = α*tmp
+    end end
+end
+
+
+
+"""
+    DerivativeOperator{T,StencilWidth,Parallel}
+
+A derivative operator on a finite difference grid.
+"""
+struct DerivativeOperator{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,Parallel,Grid} <: AbstractDerivativeOperator{T}
+    coefficients::DerivativeCoefficients{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,Parallel}
+    grid::Grid
+    factor::T
+
+    function DerivativeOperator(coefficients::DerivativeCoefficients{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,Parallel}, grid::Grid) where {T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,Parallel,Grid}
+        @argcheck length(grid) > LowerOffset+UpperOffset DimensionMismatch
+        @argcheck length(grid) > length(coefficients.left_boundary) + length(coefficients.right_boundary) DimensionMismatch
+
+        Δx = step(grid)
+        factor = inv(Δx^derivative_order(coefficients))
+        new{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,Parallel,Grid}(coefficients, grid, factor)
+    end
+end
+
+function DerivativeOperator(coefficients::DerivativeCoefficients, xmin, xmax, N)
+    grid = linspace(xmin, xmax, N)
+    DerivativeOperator(coefficients, grid)
+end
+
+
+Base.@propagate_inbounds function Base.A_mul_B!(dest, D::DerivativeOperator, u)
+    mul!(dest, D, u, one(eltype(dest)))
+end
+
+@noinline function *(D::DerivativeOperator, u)
+    T = promote_type(eltype(D), eltype(u))
+    dest = similar(u, T); fill!(dest, zero(T))
+    @inbounds A_mul_B!(dest, D, u)
+    dest
+end
+
+"""
+    mul!(dest::AbstractVector, D::DerivativeOperator, u::AbstractVector, α, β)
+
+Compute `α*D*u + β*dest` and store the result in `dest`.
+"""
+Base.@propagate_inbounds function mul!(dest::AbstractVector, D::DerivativeOperator, u::AbstractVector, α, β)
+    @boundscheck begin
+        @argcheck size(D, 2) == length(u) DimensionMismatch
+        @argcheck size(D, 1) == length(dest) DimensionMismatch
+    end
+    @inbounds mul!(dest, D.coefficients, u, α*D.factor, β)
+end
+
+"""
+    mul!(dest::AbstractVector, D::erivativeOperator, u::AbstractVector, α)
+
+Compute `α*D*u` and store the result in `dest`.
+"""
+Base.@propagate_inbounds function mul!(dest::AbstractVector, D::DerivativeOperator, u::AbstractVector, α)
+    @boundscheck begin
+        @argcheck size(D, 2) == length(u) DimensionMismatch
+        @argcheck size(D, 1) == length(dest) DimensionMismatch
+    end
+    @inbounds mul!(dest, D.coefficients, u, α*D.factor)
+end
+
+
+"""
+    derivative_operator(source_of_coefficients, derivative_order, accuracy_order,
+                        xmin, xmax, N, parallel=Val{:serial}())
+
+Create a `DerivativeOperator` approximating the `derivative_order`-th derivative
+on a grid between `xmin` and `xmax` with `N` grid points up to order of accuracy
+`accuracy_order`. with coefficients given by `source_of_coefficients`.
+The evaluation of the derivative can be parallised using threads by chosing
+`parallel=Val{:threads}())`.
+"""
+function derivative_operator(source_of_coefficients, derivative_order, accuracy_order, xmin, xmax, N, parallel=Val{:serial}())
+    grid = construct_grid(source_of_coefficients, xmin, xmax, N)
+    if derivative_order == 1
+        coefficients = first_derivative_coefficients(source_of_coefficients, accuracy_order, eltype(grid), parallel)
+    elseif derivative_order == 2
+        coefficients = second_derivative_coefficients(source_of_coefficients, accuracy_order, eltype(grid), parallel)
+    elseif derivative_order == 3
+        coefficients = third_derivative_coefficients(source_of_coefficients, accuracy_order, eltype(grid), parallel)
+    elseif derivative_order == 4
+        coefficients = fourth_derivative_coefficients(source_of_coefficients, accuracy_order, eltype(grid), parallel)
+    else
+        throw(ArgumentError("Derivative order $derivative_order not implemented."))
+    end
+    DerivativeOperator(coefficients, grid)
+end
+
+
+@inline construct_grid(source_of_coefficients, xmin, xmax, N) = linspace(xmin, xmax, N)
 
 # Coefficients
 """

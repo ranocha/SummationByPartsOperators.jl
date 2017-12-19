@@ -27,7 +27,7 @@ include("SBP_operators.jl")
 export PeriodicDerivativeOperator
 export derivative_order, accuracy_order
 export mul!
-export periodic_central_derivative_operator, periodic_derivative_operator
+export periodic_central_derivative_operator, periodic_derivative_operator, derivative_operator
 
 export MattssonSvärdShoeybi2008
 
