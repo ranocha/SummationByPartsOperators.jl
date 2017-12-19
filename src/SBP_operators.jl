@@ -4,7 +4,7 @@
 
 The coefficients of a derivative operator on a periodic grid.
 """
-struct DerivativeCoefficients{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,Parallel} <: AbstractDerivativeCoefficients{T}
+struct DerivativeCoefficients{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients} <: AbstractDerivativeCoefficients{T}
     # coefficients defining the operator and its action
     left_boundary::LeftBoundary
     right_boundary::RightBoundary
@@ -16,8 +16,9 @@ struct DerivativeCoefficients{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffs
     derivative_order::Int
     accuracy_order  ::Int
     symmetric       ::Bool
+    source_of_coeffcients::SourceOfCoefficients
 
-    function DerivativeCoefficients(left_boundary::LeftBoundary, right_boundary::RightBoundary, lower_coef::SVector{LowerOffset, T}, central_coef::T, upper_coef::SVector{UpperOffset, T}, parallel::Parallel, derivative_order::Int, accuracy_order::Int) where {T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,Parallel}
+    function DerivativeCoefficients(left_boundary::LeftBoundary, right_boundary::RightBoundary, lower_coef::SVector{LowerOffset, T}, central_coef::T, upper_coef::SVector{UpperOffset, T}, parallel::Parallel, derivative_order::Int, accuracy_order::Int, source_of_coeffcients::SourceOfCoefficients) where {T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients}
         symmetric = LowerOffset == UpperOffset
         if symmetric
             @inbounds for i in Base.OneTo(LowerOffset)
@@ -25,9 +26,12 @@ struct DerivativeCoefficients{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffs
             end
         end
         #TODO: check boundary coefficients
-        new{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,Parallel}(left_boundary, right_boundary, lower_coef, central_coef, upper_coef, parallel, derivative_order, accuracy_order, symmetric)
+        new{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients}(left_boundary, right_boundary, lower_coef, central_coef, upper_coef, parallel, derivative_order, accuracy_order, symmetric, source_of_coeffcients)
     end
 end
+
+
+@inline source_of_coeffcients(coefficients::DerivativeCoefficients) = coefficients.source_of_coeffcients
 
 
 """
@@ -35,7 +39,7 @@ end
 
 Compute `α*D*u + β*dest` and store the result in `dest`.
 """
-function mul!(dest::AbstractVector, coefficients::DerivativeCoefficients{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,Parallel}, u::AbstractVector, α, β) where {T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,Parallel}
+function mul!(dest::AbstractVector, coefficients::DerivativeCoefficients{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset}, u::AbstractVector, α, β) where {T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset}
     @boundscheck begin
         @argcheck length(dest) == length(u) DimensionMismatch
         @argcheck length(u) > LowerOffset+UpperOffset DimensionMismatch
@@ -52,7 +56,7 @@ end
 
 Compute `α*D*u` and store the result in `dest`.
 """
-function mul!(dest::AbstractVector, coefficients::DerivativeCoefficients{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,Parallel}, u::AbstractVector, α) where {T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,Parallel}
+function mul!(dest::AbstractVector, coefficients::DerivativeCoefficients{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset}, u::AbstractVector, α) where {T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset}
     @boundscheck begin
         @argcheck length(dest) == length(u) DimensionMismatch
         @argcheck length(u) > LowerOffset+UpperOffset DimensionMismatch
@@ -65,6 +69,12 @@ function mul!(dest::AbstractVector, coefficients::DerivativeCoefficients{T,LeftB
 end
 
 
+"""
+    DerivativeCoefficientRow{T,Start,Length}
+
+A struct representing a row in the boundary block of an SBP derivative operator
+with scalar type `T`.
+"""
 struct DerivativeCoefficientRow{T,Start,Length}
     coef::SVector{Length, T}
 end
@@ -182,18 +192,18 @@ end
 
 A derivative operator on a finite difference grid.
 """
-struct DerivativeOperator{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,Parallel,Grid} <: AbstractDerivativeOperator{T}
-    coefficients::DerivativeCoefficients{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,Parallel}
+struct DerivativeOperator{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients,Grid} <: AbstractDerivativeOperator{T}
+    coefficients::DerivativeCoefficients{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients}
     grid::Grid
     factor::T
 
-    function DerivativeOperator(coefficients::DerivativeCoefficients{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,Parallel}, grid::Grid) where {T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,Parallel,Grid}
+    function DerivativeOperator(coefficients::DerivativeCoefficients{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients}, grid::Grid) where {T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients,Grid}
         @argcheck length(grid) > LowerOffset+UpperOffset DimensionMismatch
         @argcheck length(grid) > length(coefficients.left_boundary) + length(coefficients.right_boundary) DimensionMismatch
 
         Δx = step(grid)
         factor = inv(Δx^derivative_order(coefficients))
-        new{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,Parallel,Grid}(coefficients, grid, factor)
+        new{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients,Grid}(coefficients, grid, factor)
     end
 end
 
@@ -201,6 +211,9 @@ function DerivativeOperator(coefficients::DerivativeCoefficients, xmin, xmax, N)
     grid = linspace(xmin, xmax, N)
     DerivativeOperator(coefficients, grid)
 end
+
+
+@inline source_of_coeffcients(D::DerivativeOperator) = source_of_coeffcients(D.coefficients)
 
 
 Base.@propagate_inbounds function Base.A_mul_B!(dest, D::DerivativeOperator, u)
@@ -281,7 +294,16 @@ Journal of Computational Physics 227, pp. 2293-2316.
 """
 struct MattssonSvärdShoeybi2008 end
 
-function first_derivative_coefficients(::MattssonSvärdShoeybi2008, order::Int, T=Float64, parallel=Val{:serial}())
+function Base.show(io::IO, ::MattssonSvärdShoeybi2008)
+    print(io,
+        "Coefficients of the SBP operators given in \n",
+        "  Mattsson, Svärd, Shoeybi (2008) \n",
+        "  Stable and accurate schemes for the compressible Navier-Stokes equations. \n",
+        "  Journal of Computational Physics 227, pp. 2293-2316. \n")
+end
+
+
+function first_derivative_coefficients(source::MattssonSvärdShoeybi2008, order::Int, T=Float64, parallel=Val{:serial}())
     if order == 2
         left_boundary = (
             DerivativeCoefficientRow{T,1,2}(SVector(-one(T), one(T))),
@@ -293,7 +315,7 @@ function first_derivative_coefficients(::MattssonSvärdShoeybi2008, order::Int, 
         central_coef = zero(T)
         lower_coef = -upper_coef
 
-        DerivativeCoefficients(left_boundary, right_boundary, lower_coef, central_coef, upper_coef, parallel, 1, order)
+        DerivativeCoefficients(left_boundary, right_boundary, lower_coef, central_coef, upper_coef, parallel, 1, order, source)
     elseif order == 4
         left_boundary = (
             DerivativeCoefficientRow{T,1,4}(SVector(T(-24//17), T(59//34), T(-4//17), T(-3//34))),
@@ -306,7 +328,7 @@ function first_derivative_coefficients(::MattssonSvärdShoeybi2008, order::Int, 
         central_coef = zero(T)
         lower_coef = -upper_coef
 
-        DerivativeCoefficients(left_boundary, right_boundary, lower_coef, central_coef, upper_coef, parallel, 1, order)
+        DerivativeCoefficients(left_boundary, right_boundary, lower_coef, central_coef, upper_coef, parallel, 1, order, source)
     elseif order == 6
         left_boundary = (
             # q1
@@ -363,7 +385,7 @@ function first_derivative_coefficients(::MattssonSvärdShoeybi2008, order::Int, 
         central_coef = zero(T)
         lower_coef = -upper_coef
 
-        DerivativeCoefficients(left_boundary, right_boundary, lower_coef, central_coef, upper_coef, parallel, 1, order)
+        DerivativeCoefficients(left_boundary, right_boundary, lower_coef, central_coef, upper_coef, parallel, 1, order, source)
     elseif order == 8
         x1 =
         left_boundary = (
@@ -455,7 +477,7 @@ function first_derivative_coefficients(::MattssonSvärdShoeybi2008, order::Int, 
         central_coef = zero(T)
         lower_coef = -upper_coef
 
-        DerivativeCoefficients(left_boundary, right_boundary, lower_coef, central_coef, upper_coef, parallel, 1, order)
+        DerivativeCoefficients(left_boundary, right_boundary, lower_coef, central_coef, upper_coef, parallel, 1, order, source)
     else
         throw(ArgumentError("Order $order not implemented/derived."))
     end
