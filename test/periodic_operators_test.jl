@@ -1,6 +1,7 @@
 using Base.Test
 using SummationByPartsOperators
 
+# Accuracy tests with FLoat32.
 let T = Float32
     xmin = -one(T)
     xmax = 2*one(T)
@@ -125,6 +126,7 @@ let T = Float32
     @test_throws ArgumentError periodic_central_derivative_operator(6, accuracy_order, xmin, xmax, N)
 end
 
+# Accuracy tests with FLoat64.
 let T = Float64
     xmin = -one(T)
     xmax = 2*one(T)
@@ -255,7 +257,7 @@ let T = Float64
     @test_throws ArgumentError periodic_central_derivative_operator(6, accuracy_order, xmin, xmax, N)
 end
 
-
+# Compare Fornberg algorithm with exact representation of central derivative coefficients.
 for T in (Float32, Float64), accuracy_order in 2:2:12, derivative_order in 1:3
     xmin = zero(T)
     xmax = one(T)
@@ -267,7 +269,7 @@ for T in (Float32, Float64), accuracy_order in 2:2:12, derivative_order in 1:3
     @test norm(D_central.coefficients.upper_coef - D_general.coefficients.upper_coef) < 3*eps(T)
 end
 
-
+# Compare serial and threaded with full and sparse matrix vector products implementation.
 for T in (Float32, Float64), accuracy_order in 1:10, derivative_order in 1:3
     xmin = zero(T)
     xmax = 5*one(T)
@@ -290,5 +292,22 @@ for T in (Float32, Float64), accuracy_order in 1:10, derivative_order in 1:3
         @test dest_serial[i] ≈ dest_threads[i]
         @test isapprox(dest_serial[i], dest_full[i], rtol=5*sqrt(eps(T)))
         @test isapprox(dest_serial[i], dest_sparse[i], rtol=5*sqrt(eps(T)))
+    end
+end
+
+# Compare mul! with β=0 and mul! without β.
+for T in (Float32, Float64), accuracy_order in 1:10, derivative_order in 1:3
+    xmin = zero(T)
+    xmax = 5*one(T)
+    N = 51
+    x = linspace(xmin, xmax, N)
+    u = x.^5
+    dest1 = zeros(u)
+    dest2 = zeros(u)
+    D = periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
+    mul!(dest1, D, u, one(T), zero(T))
+    mul!(dest2, D, u, one(T))
+    for i in eachindex(u)
+        @test dest1[i] ≈ dest2[i]
     end
 end
