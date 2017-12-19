@@ -2,7 +2,7 @@ using Base.Test
 using SummationByPartsOperators
 
 # Accuracy tests with FLoat32.
-let T = Float32
+let T=Float32
     xmin = -one(T)
     xmax = 2*one(T)
     N = 101
@@ -22,51 +22,81 @@ let T = Float32
     accuracy_order = 2
     D = periodic_central_derivative_operator(1, accuracy_order, xmin, xmax, N)
     @test issymmetric(D) == false
-    A_mul_B!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < eps(T)
-    A_mul_B!(res, D, x1); @test norm((res - x0)[accuracy_order:end-accuracy_order], Inf) < 20*eps(T)
-    A_mul_B!(res, D, x2); @test norm((res - 2 .* x1)[accuracy_order:end-accuracy_order], Inf) < 40*eps(T)
-    A_mul_B!(res, D, x3); @test norm((res - 3 .* x2)[accuracy_order:end-accuracy_order], Inf) > 140*eps(T)
+    A_mul_B!(res, D, x0)
+    @test all(i->abs(res[i]) < eps(T), accuracy_order:length(res)-accuracy_order)
+    A_mul_B!(res, D, x1)
+    @test all(i->res[i] ≈ x0[i], accuracy_order:length(res)-accuracy_order)
+    A_mul_B!(res, D, x2)
+    @test all(i->res[i] ≈ 2*x1[i], accuracy_order:length(res)-accuracy_order)
+    A_mul_B!(res, D, x3)
+    @test any(i->!(res[i] ≈ 3*x2[i]), accuracy_order:length(res)-accuracy_order)
 
     accuracy_order = 4
     D = periodic_central_derivative_operator(1, accuracy_order, xmin, xmax, N)
     @test issymmetric(D) == false
-    A_mul_B!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 10*eps(T)
-    A_mul_B!(res, D, x1); @test norm((res - x0)[accuracy_order:end-accuracy_order], Inf) < 40*eps(T)
-    A_mul_B!(res, D, x2); @test norm((res - 2 .* x1)[accuracy_order:end-accuracy_order], Inf) < 60*eps(T)
-    A_mul_B!(res, D, x3); @test norm((res - 3 .* x2)[accuracy_order:end-accuracy_order], Inf) < 140*eps(T)
-    A_mul_B!(res, D, x4); @test norm((res - 4 .* x3)[accuracy_order:end-accuracy_order], Inf) < 300*eps(T)
-    A_mul_B!(res, D, x5); @test norm((res - 5 .* x4)[accuracy_order:end-accuracy_order], Inf) > 500*eps(T)
+    A_mul_B!(res, D, x0)
+    @test all(i->abs(res[i]) < 10*eps(T), accuracy_order:length(res)-accuracy_order)
+    A_mul_B!(res, D, x1)
+    @test all(i->res[i] ≈ x0[i], accuracy_order:length(res)-accuracy_order)
+    A_mul_B!(res, D, x2)
+    @test all(i->res[i] ≈ 2*x1[i], accuracy_order:length(res)-accuracy_order)
+    A_mul_B!(res, D, x3)
+    @test all(i->res[i] ≈ 3*x2[i], accuracy_order:length(res)-accuracy_order)
+    A_mul_B!(res, D, x4)
+    @test all(i->res[i] ≈ 4*x3[i], accuracy_order:length(res)-accuracy_order)
+    A_mul_B!(res, D, x5)
+    @test any(i->!(res[i] ≈ 5*x4[i]), accuracy_order:length(res)-accuracy_order)
 
     accuracy_order = 6
     D = periodic_central_derivative_operator(1, accuracy_order, xmin, xmax, N)
     @test issymmetric(D) == false
-    A_mul_B!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 10*eps(T)
-    A_mul_B!(res, D, x1); @test norm((res - x0)[accuracy_order:end-accuracy_order], Inf) < 40*eps(T)
-    A_mul_B!(res, D, x2); @test norm((res - 2 .* x1)[accuracy_order:end-accuracy_order], Inf) < 100*eps(T)
-    A_mul_B!(res, D, x3); @test norm((res - 3 .* x2)[accuracy_order:end-accuracy_order], Inf) < 200*eps(T)
-    A_mul_B!(res, D, x4); @test norm((res - 4 .* x3)[accuracy_order:end-accuracy_order], Inf) < 360*eps(T)
-    A_mul_B!(res, D, x5); @test norm((res - 5 .* x4)[accuracy_order:end-accuracy_order], Inf) < 780*eps(T)
-    A_mul_B!(res, D, x6); @test norm((res - 6 .* x5)[accuracy_order:end-accuracy_order], Inf) < 2200*eps(T)
-    A_mul_B!(res, D, x7); @test norm((res - 7 .* x6)[accuracy_order:end-accuracy_order], Inf) > 2200*eps(T)
+    A_mul_B!(res, D, x0)
+    @test all(i->abs(res[i]) < 10*eps(T), accuracy_order:length(res)-accuracy_order)
+    A_mul_B!(res, D, x1)
+    @test all(i->res[i] ≈ x0[i], accuracy_order:length(res)-accuracy_order)
+    A_mul_B!(res, D, x2)
+    @test all(i->res[i] ≈ 2*x1[i], accuracy_order:length(res)-accuracy_order)
+    A_mul_B!(res, D, x3)
+    @test all(i->res[i] ≈ 3*x2[i], accuracy_order:length(res)-accuracy_order)
+    A_mul_B!(res, D, x4)
+    @test all(i->res[i] ≈ 4*x3[i], accuracy_order:length(res)-accuracy_order)
+    A_mul_B!(res, D, x5)
+    @test all(i->res[i] ≈ 5*x4[i], accuracy_order:length(res)-accuracy_order)
+    A_mul_B!(res, D, x6)
+    @test all(i->res[i] ≈ 6*x5[i], accuracy_order:length(res)-accuracy_order)
+    A_mul_B!(res, D, x7)
+    @test any(i->!(res[i] ≈ 7*x6[i]), accuracy_order:length(res)-accuracy_order)
 
     # second derivative operators
     accuracy_order = 2
     D = periodic_central_derivative_operator(2, accuracy_order, xmin, xmax, N)
     @test issymmetric(D) == true
-    A_mul_B!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < eps(T)
-    A_mul_B!(res, D, x1); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 1400*eps(T)
-    A_mul_B!(res, D, x2); @test norm((res - 2 .* x0)[accuracy_order:end-accuracy_order], Inf) < 7000*eps(T)
-    A_mul_B!(res, D, x3); @test norm((res - 6 .* x1)[accuracy_order:end-accuracy_order], Inf) > 7000*eps(T)
+    A_mul_B!(res, D, x0)
+    @test all(i->abs(res[i]) < eps(T), accuracy_order:length(res)-accuracy_order)
+    A_mul_B!(res, D, x1)
+    @test all(i->abs(res[i]) < 1400*eps(T), accuracy_order:length(res)-accuracy_order)
+    A_mul_B!(res, D, x2)
+    @test all(i->res[i] ≈ 2*x0[i], accuracy_order:length(res)-accuracy_order)
+    A_mul_B!(res, D, x3)
+    @test all(i->res[i] ≈ 6*x1[i], accuracy_order:length(res)-accuracy_order)
+    A_mul_B!(res, D, x4)
+    @test any(i->!(res[i] ≈ 12*x2[i]), accuracy_order:length(res)-accuracy_order)
 
     accuracy_order = 4
     D = periodic_central_derivative_operator(2, accuracy_order, xmin, xmax, N)
     @test issymmetric(D) == true
-    A_mul_B!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 400*eps(T)
-    A_mul_B!(res, D, x1); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 6000*eps(T)
-    A_mul_B!(res, D, x2); @test norm((res - 2 .* x0)[accuracy_order:end-accuracy_order], Inf) < 11000*eps(T)
-    A_mul_B!(res, D, x3); @test norm((res - 6 .* x1)[accuracy_order:end-accuracy_order], Inf) < 23000*eps(T)
-    A_mul_B!(res, D, x4); @test norm((res - 12 .* x2)[accuracy_order:end-accuracy_order], Inf) < 40000*eps(T)
-    A_mul_B!(res, D, x5); @test norm((res - 20 .* x3)[accuracy_order:end-accuracy_order], Inf) > 50000*eps(T)
+    A_mul_B!(res, D, x0)
+    @test all(i->abs(res[i]) < 400*eps(T), accuracy_order:length(res)-accuracy_order)
+    A_mul_B!(res, D, x1)
+    @test all(i->abs(res[i]) < 6000*eps(T), accuracy_order:length(res)-accuracy_order)
+    A_mul_B!(res, D, x2)
+    @test all(i->res[i] ≈ 2*x0[i], accuracy_order:length(res)-accuracy_order)
+    A_mul_B!(res, D, x3)
+    @test all(i->res[i] ≈ 6*x1[i], accuracy_order:length(res)-accuracy_order)
+    A_mul_B!(res, D, x4)
+    @test all(i->res[i] ≈ 12*x2[i], accuracy_order:length(res)-accuracy_order)
+    A_mul_B!(res, D, x5)
+    @test any(i->!(res[i] ≈ 30*x3[i]), accuracy_order:length(res)-accuracy_order)
 
     accuracy_order = 6
     D = periodic_central_derivative_operator(2, accuracy_order, xmin, xmax, N)
@@ -149,32 +179,53 @@ let T = Float64
     accuracy_order = 2
     D = periodic_central_derivative_operator(1, accuracy_order, xmin, xmax, N)
     @test issymmetric(D) == false
-    A_mul_B!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < eps(T)
-    A_mul_B!(res, D, x1); @test norm((res - x0)[accuracy_order:end-accuracy_order], Inf) < 20*eps(T)
-    A_mul_B!(res, D, x2); @test norm((res - 2 .* x1)[accuracy_order:end-accuracy_order], Inf) < 70*eps(T)
-    A_mul_B!(res, D, x3); @test norm((res - 3 .* x2)[accuracy_order:end-accuracy_order], Inf) > 140*eps(T)
+    A_mul_B!(res, D, x0)
+    @test all(i->abs(res[i]) < eps(T), accuracy_order:length(res)-accuracy_order)
+    A_mul_B!(res, D, x1)
+    @test all(i->res[i] ≈ x0[i], accuracy_order:length(res)-accuracy_order)
+    A_mul_B!(res, D, x2)
+    @test all(i->res[i] ≈ 2*x1[i], accuracy_order:length(res)-accuracy_order)
+    A_mul_B!(res, D, x3)
+    @test any(i->!(res[i] ≈ 3*x2[i]), accuracy_order:length(res)-accuracy_order)
 
     accuracy_order = 4
     D = periodic_central_derivative_operator(1, accuracy_order, xmin, xmax, N)
     @test issymmetric(D) == false
-    A_mul_B!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 10*eps(T)
-    A_mul_B!(res, D, x1); @test norm((res - x0)[accuracy_order:end-accuracy_order], Inf) < 40*eps(T)
-    A_mul_B!(res, D, x2); @test norm((res - 2 .* x1)[accuracy_order:end-accuracy_order], Inf) < 80*eps(T)
-    A_mul_B!(res, D, x3); @test norm((res - 3 .* x2)[accuracy_order:end-accuracy_order], Inf) < 220*eps(T)
-    A_mul_B!(res, D, x4); @test norm((res - 4 .* x3)[accuracy_order:end-accuracy_order], Inf) < 480*eps(T)
-    A_mul_B!(res, D, x5); @test norm((res - 5 .* x4)[accuracy_order:end-accuracy_order], Inf) > 500*eps(T)
+    accuracy_order = 4
+    D = periodic_central_derivative_operator(1, accuracy_order, xmin, xmax, N)
+    @test issymmetric(D) == false
+    A_mul_B!(res, D, x0)
+    @test all(i->abs(res[i]) < 10*eps(T), accuracy_order:length(res)-accuracy_order)
+    A_mul_B!(res, D, x1)
+    @test all(i->res[i] ≈ x0[i], accuracy_order:length(res)-accuracy_order)
+    A_mul_B!(res, D, x2)
+    @test all(i->res[i] ≈ 2*x1[i], accuracy_order:length(res)-accuracy_order)
+    A_mul_B!(res, D, x3)
+    @test all(i->res[i] ≈ 3*x2[i], accuracy_order:length(res)-accuracy_order)
+    A_mul_B!(res, D, x4)
+    @test all(i->res[i] ≈ 4*x3[i], accuracy_order:length(res)-accuracy_order)
+    A_mul_B!(res, D, x5)
+    @test any(i->!(res[i] ≈ 5*x4[i]), accuracy_order:length(res)-accuracy_order)
 
     accuracy_order = 6
     D = periodic_central_derivative_operator(1, accuracy_order, xmin, xmax, N)
     @test issymmetric(D) == false
-    A_mul_B!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 10*eps(T)
-    A_mul_B!(res, D, x1); @test norm((res - x0)[accuracy_order:end-accuracy_order], Inf) < 40*eps(T)
-    A_mul_B!(res, D, x2); @test norm((res - 2 .* x1)[accuracy_order:end-accuracy_order], Inf) < 120*eps(T)
-    A_mul_B!(res, D, x3); @test norm((res - 3 .* x2)[accuracy_order:end-accuracy_order], Inf) < 300*eps(T)
-    A_mul_B!(res, D, x4); @test norm((res - 4 .* x3)[accuracy_order:end-accuracy_order], Inf) < 420*eps(T)
-    A_mul_B!(res, D, x5); @test norm((res - 5 .* x4)[accuracy_order:end-accuracy_order], Inf) < 1000*eps(T)
-    A_mul_B!(res, D, x6); @test norm((res - 6 .* x5)[accuracy_order:end-accuracy_order], Inf) < 2200*eps(T)
-    A_mul_B!(res, D, x7); @test norm((res - 7 .* x6)[accuracy_order:end-accuracy_order], Inf) > 2200*eps(T)
+    A_mul_B!(res, D, x0)
+    @test all(i->abs(res[i]) < 10*eps(T), accuracy_order:length(res)-accuracy_order)
+    A_mul_B!(res, D, x1)
+    @test all(i->res[i] ≈ x0[i], accuracy_order:length(res)-accuracy_order)
+    A_mul_B!(res, D, x2)
+    @test all(i->res[i] ≈ 2*x1[i], accuracy_order:length(res)-accuracy_order)
+    A_mul_B!(res, D, x3)
+    @test all(i->res[i] ≈ 3*x2[i], accuracy_order:length(res)-accuracy_order)
+    A_mul_B!(res, D, x4)
+    @test all(i->res[i] ≈ 4*x3[i], accuracy_order:length(res)-accuracy_order)
+    A_mul_B!(res, D, x5)
+    @test all(i->res[i] ≈ 5*x4[i], accuracy_order:length(res)-accuracy_order)
+    A_mul_B!(res, D, x6)
+    @test all(i->res[i] ≈ 6*x5[i], accuracy_order:length(res)-accuracy_order)
+    A_mul_B!(res, D, x7)
+    @test any(i->!(res[i] ≈ 7*x6[i]), accuracy_order:length(res)-accuracy_order)
 
     tmp = D * x7
     @test typeof(tmp) == typeof(res)
@@ -288,11 +339,9 @@ for T in (Float32, Float64), accuracy_order in 1:10, derivative_order in 1:3
     A_mul_B!(dest_threads, D_threads, u)
     A_mul_B!(dest_full, D_full, u)
     A_mul_B!(dest_sparse, D_sparse, u)
-    for i in eachindex(u)
-        @test dest_serial[i] ≈ dest_threads[i]
-        @test isapprox(dest_serial[i], dest_full[i], rtol=5*sqrt(eps(T)))
-        @test isapprox(dest_serial[i], dest_sparse[i], rtol=5*sqrt(eps(T)))
-    end
+    @test all(i->dest_serial[i] ≈ dest_threads[i], eachindex(u))
+    @test all(i->isapprox(dest_serial[i], dest_full[i], rtol=5*sqrt(eps(T))), eachindex(u))
+    @test all(i->isapprox(dest_serial[i], dest_sparse[i], rtol=5*sqrt(eps(T))), eachindex(u))
 end
 
 # Compare mul! with β=0 and mul! without β.
@@ -307,7 +356,5 @@ for T in (Float32, Float64), accuracy_order in 1:10, derivative_order in 1:3
     D = periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
     mul!(dest1, D, u, one(T), zero(T))
     mul!(dest2, D, u, one(T))
-    for i in eachindex(u)
-        @test dest1[i] ≈ dest2[i]
-    end
+    @test all(i->dest1[i] ≈ dest2[i], eachindex(u))
 end

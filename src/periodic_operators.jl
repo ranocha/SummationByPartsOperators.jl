@@ -425,7 +425,7 @@ Base.@propagate_inbounds function Base.A_mul_B!(dest, D::PeriodicDerivativeOpera
     mul!(dest, D, u, one(eltype(dest)))
 end
 
-function *(D::PeriodicDerivativeOperator, u)
+@noinline function *(D::PeriodicDerivativeOperator, u)
     T = promote_type(eltype(D), eltype(u))
     dest = similar(u, T); fill!(dest, zero(T))
     @inbounds A_mul_B!(dest, D, u)
