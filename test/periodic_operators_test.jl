@@ -19,8 +19,11 @@ let T=Float32
     res = zeros(x0)
 
     # first derivative operators
+    derivative_order = 1
     accuracy_order = 2
-    D = periodic_central_derivative_operator(1, accuracy_order, xmin, xmax, N)
+    D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
+    @test SummationByPartsOperators.derivative_order(D) == derivative_order
+    @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
     A_mul_B!(res, D, x0)
     @test all(i->abs(res[i]) < eps(T), accuracy_order:length(res)-accuracy_order)
@@ -32,7 +35,9 @@ let T=Float32
     @test any(i->!(res[i] ≈ 3*x2[i]), accuracy_order:length(res)-accuracy_order)
 
     accuracy_order = 4
-    D = periodic_central_derivative_operator(1, accuracy_order, xmin, xmax, N)
+    D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
+    @test SummationByPartsOperators.derivative_order(D) == derivative_order
+    @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
     A_mul_B!(res, D, x0)
     @test all(i->abs(res[i]) < 10*eps(T), accuracy_order:length(res)-accuracy_order)
@@ -48,7 +53,9 @@ let T=Float32
     @test any(i->!(res[i] ≈ 5*x4[i]), accuracy_order:length(res)-accuracy_order)
 
     accuracy_order = 6
-    D = periodic_central_derivative_operator(1, accuracy_order, xmin, xmax, N)
+    D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
+    @test SummationByPartsOperators.derivative_order(D) == derivative_order
+    @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
     A_mul_B!(res, D, x0)
     @test all(i->abs(res[i]) < 10*eps(T), accuracy_order:length(res)-accuracy_order)
@@ -68,8 +75,11 @@ let T=Float32
     @test any(i->!(res[i] ≈ 7*x6[i]), accuracy_order:length(res)-accuracy_order)
 
     # second derivative operators
+    derivative_order = 2
     accuracy_order = 2
-    D = periodic_central_derivative_operator(2, accuracy_order, xmin, xmax, N)
+    D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
+    @test SummationByPartsOperators.derivative_order(D) == derivative_order
+    @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == true
     A_mul_B!(res, D, x0)
     @test all(i->abs(res[i]) < eps(T), accuracy_order:length(res)-accuracy_order)
@@ -83,7 +93,9 @@ let T=Float32
     @test any(i->!(res[i] ≈ 12*x2[i]), accuracy_order:length(res)-accuracy_order)
 
     accuracy_order = 4
-    D = periodic_central_derivative_operator(2, accuracy_order, xmin, xmax, N)
+    D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
+    @test SummationByPartsOperators.derivative_order(D) == derivative_order
+    @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == true
     A_mul_B!(res, D, x0)
     @test all(i->abs(res[i]) < 400*eps(T), accuracy_order:length(res)-accuracy_order)
@@ -99,7 +111,9 @@ let T=Float32
     @test any(i->!(res[i] ≈ 30*x3[i]), accuracy_order:length(res)-accuracy_order)
 
     accuracy_order = 6
-    D = periodic_central_derivative_operator(2, accuracy_order, xmin, xmax, N)
+    D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
+    @test SummationByPartsOperators.derivative_order(D) == derivative_order
+    @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == true
     A_mul_B!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 600*eps(T)
     A_mul_B!(res, D, x1); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 5000*eps(T)
@@ -115,8 +129,11 @@ let T=Float32
     @test norm(tmp - res, Inf) < eps(T)
 
     # third derivative operators
+    derivative_order = 3
     accuracy_order = 2
-    D = periodic_central_derivative_operator(3, accuracy_order, xmin, xmax, N)
+    D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
+    @test SummationByPartsOperators.derivative_order(D) == derivative_order
+    @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == true # because this operator is zero!
     A_mul_B!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < eps(T)
     A_mul_B!(res, D, x1); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 1400*eps(T)
@@ -124,7 +141,9 @@ let T=Float32
     A_mul_B!(res, D, x3); @test norm((res - 6 .* x0)[accuracy_order:end-accuracy_order], Inf) > 7000*eps(T)
 
     accuracy_order = 4
-    D = periodic_central_derivative_operator(3, accuracy_order, xmin, xmax, N)
+    D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
+    @test SummationByPartsOperators.derivative_order(D) == derivative_order
+    @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
     A_mul_B!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 400*eps(T)
     A_mul_B!(res, D, x1); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 20000*eps(T)
@@ -134,7 +153,9 @@ let T=Float32
     A_mul_B!(res, D, x5); @test norm((res - 60 .* x2)[accuracy_order:end-accuracy_order], Inf) > 600000*eps(T)
 
     accuracy_order = 6
-    D = periodic_central_derivative_operator(3, accuracy_order, xmin, xmax, N)
+    D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
+    @test SummationByPartsOperators.derivative_order(D) == derivative_order
+    @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
     A_mul_B!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 300*eps(T)
     A_mul_B!(res, D, x1); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 80000*eps(T)
@@ -176,8 +197,11 @@ let T = Float64
     res = zeros(x0)
 
     # first derivative operators
+    derivative_order = 1
     accuracy_order = 2
-    D = periodic_central_derivative_operator(1, accuracy_order, xmin, xmax, N)
+    D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
+    @test SummationByPartsOperators.derivative_order(D) == derivative_order
+    @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
     A_mul_B!(res, D, x0)
     @test all(i->abs(res[i]) < eps(T), accuracy_order:length(res)-accuracy_order)
@@ -189,7 +213,9 @@ let T = Float64
     @test any(i->!(res[i] ≈ 3*x2[i]), accuracy_order:length(res)-accuracy_order)
 
     accuracy_order = 4
-    D = periodic_central_derivative_operator(1, accuracy_order, xmin, xmax, N)
+    D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
+    @test SummationByPartsOperators.derivative_order(D) == derivative_order
+    @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
     accuracy_order = 4
     D = periodic_central_derivative_operator(1, accuracy_order, xmin, xmax, N)
@@ -208,7 +234,9 @@ let T = Float64
     @test any(i->!(res[i] ≈ 5*x4[i]), accuracy_order:length(res)-accuracy_order)
 
     accuracy_order = 6
-    D = periodic_central_derivative_operator(1, accuracy_order, xmin, xmax, N)
+    D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
+    @test SummationByPartsOperators.derivative_order(D) == derivative_order
+    @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
     A_mul_B!(res, D, x0)
     @test all(i->abs(res[i]) < 10*eps(T), accuracy_order:length(res)-accuracy_order)
@@ -232,8 +260,11 @@ let T = Float64
     @test norm(tmp - res, Inf) < eps(T)
 
     # second derivative operators
+    derivative_order = 2
     accuracy_order = 2
-    D = periodic_central_derivative_operator(2, accuracy_order, xmin, xmax, N)
+    D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
+    @test SummationByPartsOperators.derivative_order(D) == derivative_order
+    @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == true
     A_mul_B!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < eps(T)
     A_mul_B!(res, D, x1); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 1400*eps(T)
@@ -241,7 +272,9 @@ let T = Float64
     A_mul_B!(res, D, x3); @test norm((res - 6 .* x1)[accuracy_order:end-accuracy_order], Inf) > 7000*eps(T)
 
     accuracy_order = 4
-    D = periodic_central_derivative_operator(2, accuracy_order, xmin, xmax, N)
+    D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
+    @test SummationByPartsOperators.derivative_order(D) == derivative_order
+    @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == true
     A_mul_B!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 400*eps(T)
     A_mul_B!(res, D, x1); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 5000*eps(T)
@@ -251,7 +284,9 @@ let T = Float64
     A_mul_B!(res, D, x5); @test norm((res - 20 .* x3)[accuracy_order:end-accuracy_order], Inf) > 50000*eps(T)
 
     accuracy_order = 6
-    D = periodic_central_derivative_operator(2, accuracy_order, xmin, xmax, N)
+    D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
+    @test SummationByPartsOperators.derivative_order(D) == derivative_order
+    @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == true
     A_mul_B!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 300*eps(T)
     A_mul_B!(res, D, x1); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 5000*eps(T)
@@ -267,8 +302,11 @@ let T = Float64
     @test norm(tmp - res, Inf) < eps(T)
 
     # third derivative operators
+    derivative_order = 3
     accuracy_order = 2
-    D = periodic_central_derivative_operator(3, accuracy_order, xmin, xmax, N)
+    D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
+    @test SummationByPartsOperators.derivative_order(D) == derivative_order
+    @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == true # because this operator is zero!
     A_mul_B!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < eps(T)
     A_mul_B!(res, D, x1); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 1400*eps(T)
@@ -276,7 +314,9 @@ let T = Float64
     A_mul_B!(res, D, x3); @test norm((res - 6 .* x0)[accuracy_order:end-accuracy_order], Inf) > 7000*eps(T)
 
     accuracy_order = 4
-    D = periodic_central_derivative_operator(3, accuracy_order, xmin, xmax, N)
+    D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
+    @test SummationByPartsOperators.derivative_order(D) == derivative_order
+    @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
     A_mul_B!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 400*eps(T)
     A_mul_B!(res, D, x1); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 20000*eps(T)
@@ -286,7 +326,9 @@ let T = Float64
     A_mul_B!(res, D, x5); @test norm((res - 60 .* x2)[accuracy_order:end-accuracy_order], Inf) > 600000*eps(T)
 
     accuracy_order = 6
-    D = periodic_central_derivative_operator(3, accuracy_order, xmin, xmax, N)
+    D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
+    @test SummationByPartsOperators.derivative_order(D) == derivative_order
+    @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
     A_mul_B!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 300*eps(T)
     A_mul_B!(res, D, x1); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 70000*eps(T)
@@ -353,8 +395,12 @@ for T in (Float32, Float64), accuracy_order in 1:10, derivative_order in 1:3
     u = x.^5
     dest1 = zeros(u)
     dest2 = zeros(u)
-    D = periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
-    mul!(dest1, D, u, one(T), zero(T))
-    mul!(dest2, D, u, one(T))
+    D_serial = periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
+    D_threads= periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N, Val{:threads}())
+    mul!(dest1, D_serial, u, one(T), zero(T))
+    mul!(dest2, D_serial, u, one(T))
+    @test all(i->dest1[i] ≈ dest2[i], eachindex(u))
+    mul!(dest1, D_threads, u, one(T), zero(T))
+    mul!(dest2, D_threads, u, one(T))
     @test all(i->dest1[i] ≈ dest2[i], eachindex(u))
 end
