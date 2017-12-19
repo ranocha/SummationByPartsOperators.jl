@@ -20,6 +20,9 @@ function Base.size(D::AbstractDerivativeOperator, i::Int)
     end
 end
 
+@inline grid(D::AbstractDerivativeOperator) = D.grid
+
+
 function Base.full(D::AbstractDerivativeOperator{T}) where {T}
     v = zeros(T, size(D, 2))
     A = zeros(T, size(D)...)
@@ -30,6 +33,7 @@ function Base.full(D::AbstractDerivativeOperator{T}) where {T}
     end
     A
 end
+
 
 function Base.sparse(D::AbstractDerivativeOperator{T}) where {T}
     M, N = size(D)

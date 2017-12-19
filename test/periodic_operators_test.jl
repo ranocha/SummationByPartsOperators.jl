@@ -1,7 +1,7 @@
 using Base.Test
 using SummationByPartsOperators
 
-# Accuracy tests with FLoat32.
+# Accuracy tests with Float32.
 let T=Float32
     xmin = -one(T)
     xmax = 2*one(T)
@@ -177,7 +177,7 @@ let T=Float32
     @test_throws ArgumentError periodic_central_derivative_operator(6, accuracy_order, xmin, xmax, N)
 end
 
-# Accuracy tests with FLoat64.
+# Accuracy tests with Float64.
 let T = Float64
     xmin = -one(T)
     xmax = 2*one(T)
