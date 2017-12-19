@@ -1,6 +1,6 @@
 
 """
-    PeriodicDerivativeCoefficients{T,StencilWidth,Parallel}
+    PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,Parallel}
 
 The coefficients of a derivative operator on a periodic grid.
 """
