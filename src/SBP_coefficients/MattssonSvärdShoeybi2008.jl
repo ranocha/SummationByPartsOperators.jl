@@ -13,7 +13,12 @@ function Base.show(io::IO, ::MattssonSvärdShoeybi2008)
     print(io,
         "  Mattsson, Svärd, Shoeybi (2008) \n",
         "  Stable and accurate schemes for the compressible Navier-Stokes equations. \n",
-        "  Journal of Computational Physics 227, pp. 2293-2316. \n")
+        "  Journal of Computational Physics 227, pp. 2293-2316. \n",
+        "See also \n",
+        "  Mattsson, Nordström (2004) \n",
+        "  Summation by parts operators for finite difference approximations of second \n",
+        "    derivaties. \n",
+        "  Journal of Computational Physics 199, pp.503-540. \n")
 end
 
 
