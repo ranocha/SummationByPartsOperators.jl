@@ -196,3 +196,66 @@ function first_derivative_coefficients(source::MattssonSvärdShoeybi2008, order:
         throw(ArgumentError("Order $order not implemented/derived."))
     end
 end
+
+
+function second_derivative_coefficients(source::MattssonSvärdShoeybi2008, order::Int, T=Float64, parallel=Val{:serial}())
+    if order == 2
+        left_boundary = (
+            DerivativeCoefficientRow{T,1,3}(SVector(T(-5),
+                                                    T(6),
+                                                    T(-1) )),
+        )
+        right_boundary = (
+            DerivativeCoefficientRow{T,1,3}(SVector(T(1),
+                                                    T(-2),
+                                                    T(1) )),
+        )
+        upper_coef = SVector(T(1))
+        central_coef = T(-2)
+        lower_coef = upper_coef
+
+        DerivativeCoefficients(left_boundary, right_boundary, lower_coef, central_coef, upper_coef, parallel, 2, order, source)
+    elseif order == 4
+        left_boundary = (
+            # d1
+            DerivativeCoefficientRow{T,1,4}(SVector(T(-142//17),
+                                                    T(203//17),
+                                                    T(-76//17),
+                                                    T(15//17) )),
+            # d2
+            DerivativeCoefficientRow{T,1,3}(SVector(T(1),
+                                                    T(-2),
+                                                    T(1) )),
+            # d3
+            DerivativeCoefficientRow{T,1,5}(SVector(T(-4//43),
+                                                    T(59//43),
+                                                    T(-110//43),
+                                                    T(59//43),
+                                                    T(-4//43) )),
+            # d4
+            DerivativeCoefficientRow{T,1,6}(SVector(T(-1//49),
+                                                    T(0),
+                                                    T(59//49),
+                                                    T(-118//49),
+                                                    T(64//49),
+                                                    T(-4//49) ))
+        )
+        right_boundary = (
+            # d1
+            DerivativeCoefficientRow{T,1,4}(SVector(T(2),
+                                                    T(-5),
+                                                    T(4),
+                                                    T(-1) )),
+            left_boundary[2],
+            left_boundary[3],
+            left_boundary[4],
+        )
+        upper_coef = SVector(T(4//3), T(-1//12))
+        central_coef = T(-5//2)
+        lower_coef = upper_coef
+
+        DerivativeCoefficients(left_boundary, right_boundary, lower_coef, central_coef, upper_coef, parallel, 2, order, source)
+    else
+        throw(ArgumentError("Order $order not implemented/derived."))
+    end
+end

@@ -25,7 +25,13 @@ struct DerivativeCoefficients{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffs
                 symmetric = symmetric && lower_coef[i] == upper_coef[i]
             end
         end
+        symmetric = symmetric && length(left_boundary[end]) == length(left_boundary)
         #TODO: check boundary coefficients
+        if symmetric
+            for i in 1:length(left_boundary)
+
+            end
+        end
         new{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients}(left_boundary, right_boundary, lower_coef, central_coef, upper_coef, parallel, derivative_order, accuracy_order, symmetric, source_of_coeffcients)
     end
 end
@@ -96,6 +102,10 @@ with scalar type `T`.
 """
 struct DerivativeCoefficientRow{T,Start,Length}
     coef::SVector{Length, T}
+end
+
+function Base.length(::DerivativeCoefficientRow{T,Start,Length}) where {T,Start,Length}
+    Length
 end
 
 function -(coef_row::DerivativeCoefficientRow{T,Start,Length}) where {T,Start,Length}
