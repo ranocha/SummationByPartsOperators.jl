@@ -33,21 +33,48 @@ function first_derivative_coefficients(source::MattssonSvärdShoeybi2008, order:
         upper_coef = SVector(T(1//2))
         central_coef = zero(T)
         lower_coef = -upper_coef
+        left_weights = SVector(T(1//2))
+        right_weights = left_weights
 
-        DerivativeCoefficients(left_boundary, right_boundary, lower_coef, central_coef, upper_coef, parallel, 1, order, source)
+        DerivativeCoefficients(left_boundary, right_boundary, lower_coef, central_coef, upper_coef,
+                                left_weights, right_weights, parallel, 1, order, source)
     elseif order == 4
         left_boundary = (
-            DerivativeCoefficientRow{T,1,4}(SVector(T(-24//17), T(59//34), T(-4//17), T(-3//34))),
-            DerivativeCoefficientRow{T,1,3}(SVector(T(-1//2), T(0), T(1//2))),
-            DerivativeCoefficientRow{T,1,5}(SVector(T(4//43), T(-59//86), T(0), T(59//86), T(-4//43))),
-            DerivativeCoefficientRow{T,1,6}(SVector(T(3//98), T(0), T(-59//98), T(0), T(32//49), T(-4//49))),
+            # q1
+            DerivativeCoefficientRow{T,1,4}(SVector(T(-24//17),
+                                                    T(59//34),
+                                                    T(-4//17),
+                                                    T(-3//34) )),
+            # q2
+            DerivativeCoefficientRow{T,1,3}(SVector(T(-1//2),
+                                                    T(0),
+                                                    T(1//2))),
+            # q3
+            DerivativeCoefficientRow{T,1,5}(SVector(T(4//43),
+                                                    T(-59//86),
+                                                    T(0),
+                                                    T(59//86),
+                                                    T(-4//43))),
+            # q4
+            DerivativeCoefficientRow{T,1,6}(SVector(T(3//98),
+                                                    T(0),
+                                                    T(-59//98),
+                                                    T(0),
+                                                    T(32//49),
+                                                    T(-4//49))),
         )
         right_boundary = .- left_boundary
         upper_coef = SVector(T(2//3), T(-1//12))
         central_coef = zero(T)
         lower_coef = -upper_coef
+        left_weights = SVector( T(17//48),
+                                T(59//48),
+                                T(43//48),
+                                T(49//48) )
+        right_weights = left_weights
 
-        DerivativeCoefficients(left_boundary, right_boundary, lower_coef, central_coef, upper_coef, parallel, 1, order, source)
+        DerivativeCoefficients(left_boundary, right_boundary, lower_coef, central_coef, upper_coef,
+                                left_weights, right_weights, parallel, 1, order, source)
     elseif order == 6
         left_boundary = (
             # q1
@@ -103,8 +130,16 @@ function first_derivative_coefficients(source::MattssonSvärdShoeybi2008, order:
         upper_coef = SVector(T(3//4), T(-3//20), T(1//60))
         central_coef = zero(T)
         lower_coef = -upper_coef
+        left_weights = SVector( T(13649//43200),
+                                T(12013//8640),
+                                T(2711//4320),
+                                T(5359//4320),
+                                T(7877//8640),
+                                T(43801//43200) )
+        right_weights = left_weights
 
-        DerivativeCoefficients(left_boundary, right_boundary, lower_coef, central_coef, upper_coef, parallel, 1, order, source)
+        DerivativeCoefficients(left_boundary, right_boundary, lower_coef, central_coef, upper_coef,
+                                left_weights, right_weights, parallel, 1, order, source)
     elseif order == 8
         x1 =
         left_boundary = (
@@ -195,8 +230,18 @@ function first_derivative_coefficients(source::MattssonSvärdShoeybi2008, order:
         upper_coef = SVector(T(4//5), T(-1//5), T(4//105), T(-1//280))
         central_coef = zero(T)
         lower_coef = -upper_coef
+        left_weights = SVector( T(1498139//5080320),
+                                T(1107307//725760),
+                                T(20761//80640),
+                                T(1304999//725760),
+                                T(299527//725760),
+                                T(103097//80640),
+                                T(670091//725760),
+                                T(5127739//5080320) )
+        right_weights = left_weights
 
-        DerivativeCoefficients(left_boundary, right_boundary, lower_coef, central_coef, upper_coef, parallel, 1, order, source)
+        DerivativeCoefficients(left_boundary, right_boundary, lower_coef, central_coef, upper_coef,
+                                left_weights, right_weights, parallel, 1, order, source)
     else
         throw(ArgumentError("Order $order not implemented/derived."))
     end
@@ -215,8 +260,11 @@ function second_derivative_coefficients(source::MattssonSvärdShoeybi2008, order
         upper_coef = SVector(T(1))
         central_coef = T(-2)
         lower_coef = upper_coef
+        left_weights = SVector(T(1//2))
+        right_weights = left_weights
 
-        DerivativeCoefficients(left_boundary, right_boundary, lower_coef, central_coef, upper_coef, parallel, 2, order, source)
+        DerivativeCoefficients(left_boundary, right_boundary, lower_coef, central_coef, upper_coef,
+                                left_weights, right_weights, parallel, 2, order, source)
     elseif order == 4
         left_boundary = (
             # d1
@@ -246,8 +294,11 @@ function second_derivative_coefficients(source::MattssonSvärdShoeybi2008, order
         upper_coef = SVector(T(4//3), T(-1//12))
         central_coef = T(-5//2)
         lower_coef = upper_coef
+        left_weights = SVector(T(17//48), T(59//48), T(43//48), T(49//48))
+        right_weights = left_weights
 
-        DerivativeCoefficients(left_boundary, right_boundary, lower_coef, central_coef, upper_coef, parallel, 2, order, source)
+        DerivativeCoefficients(left_boundary, right_boundary, lower_coef, central_coef, upper_coef,
+                                left_weights, right_weights, parallel, 2, order, source)
     elseif order == 6
         left_boundary = (
             # d1
@@ -303,8 +354,16 @@ function second_derivative_coefficients(source::MattssonSvärdShoeybi2008, order
         upper_coef = SVector(T(3//2), T(-3//20), T(1//90))
         central_coef = T(-49//18)
         lower_coef = upper_coef
+        left_weights = SVector( T(13649//43200),
+                                T(12013//8640),
+                                T(2711//4320),
+                                T(5359//4320),
+                                T(7877//8640),
+                                T(43801//43200) )
+        right_weights = left_weights
 
-        DerivativeCoefficients(left_boundary, right_boundary, lower_coef, central_coef, upper_coef, parallel, 2, order, source)
+        DerivativeCoefficients(left_boundary, right_boundary, lower_coef, central_coef, upper_coef,
+                                left_weights, right_weights, parallel, 2, order, source)
     elseif order == 8
         left_boundary = (
             # d1
@@ -394,8 +453,18 @@ function second_derivative_coefficients(source::MattssonSvärdShoeybi2008, order
         upper_coef = SVector(T(8//5), T(-1//5), T(8//315), T(-1//560))
         central_coef = T(-205//72)
         lower_coef = upper_coef
+        left_weights = SVector( T(1498139//5080320),
+                                T(1107307//725760),
+                                T(20761//80640),
+                                T(1304999//725760),
+                                T(299527//725760),
+                                T(103097//80640),
+                                T(670091//725760),
+                                T(5127739//5080320) )
+        right_weights = left_weights
 
-        DerivativeCoefficients(left_boundary, right_boundary, lower_coef, central_coef, upper_coef, parallel, 2, order, source)
+        DerivativeCoefficients(left_boundary, right_boundary, lower_coef, central_coef, upper_coef,
+                                left_weights, right_weights, parallel, 2, order, source)
     else
         throw(ArgumentError("Order $order not implemented/derived."))
     end

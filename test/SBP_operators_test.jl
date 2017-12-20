@@ -32,6 +32,9 @@ for source in accuracy_test_list, T in (Float32,Float64)
     @test all(i->res[i] ≈ 2*x1[i], acc_order+1:length(res)-acc_order-1)
     A_mul_B!(res, D, x3)
     @test any(i->!(res[i] ≈ 3*x2[i]), acc_order+1:length(res)-acc_order-1)
+    # integration
+    k=0; @test integrate(x0, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
+    k=1; @test integrate(x1, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
 
     acc_order = 4
     D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
@@ -63,6 +66,11 @@ for source in accuracy_test_list, T in (Float32,Float64)
     @test all(i->res[i] ≈ 4*x3[i], acc_order+1:length(res)-acc_order-1)
     A_mul_B!(res, D, x5)
     @test any(i->!(res[i] ≈ 5*x4[i]), acc_order+1:length(res)-acc_order-1)
+    # integration
+    k=0; @test integrate(x0, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
+    k=1; @test integrate(x1, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
+    k=2; @test integrate(x2, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
+    k=3; @test integrate(x3, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
 
     acc_order = 6
     D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
@@ -96,6 +104,15 @@ for source in accuracy_test_list, T in (Float32,Float64)
     @test all(i->res[i] ≈ 5*x4[i], acc_order+1:length(res)-acc_order-1)
     A_mul_B!(res, D, x6)
     @test all(i->res[i] ≈ 6*x5[i], acc_order+1:length(res)-acc_order-1)
+    # integration
+    k=0; @test integrate(x0, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
+    k=1; @test integrate(x1, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
+    k=2; @test integrate(x2, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
+    k=3; @test integrate(x3, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
+    k=4; @test integrate(x4, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
+    k=5; @test integrate(x5, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
+    k=6; @test integrate(x6, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
+    k=7; @test integrate(x7, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
 
     acc_order = 8
     D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
@@ -129,6 +146,15 @@ for source in accuracy_test_list, T in (Float32,Float64)
     @test all(i->res[i] ≈ 5*x4[i], acc_order+1:length(res)-acc_order-1)
     A_mul_B!(res, D, x6)
     @test all(i->isapprox(res[i], 6*x5[i], rtol=8000*eps(T)), acc_order+1:length(res)-acc_order-1)
+    # integration
+    k=0; @test integrate(x0, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
+    k=1; @test integrate(x1, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
+    k=2; @test integrate(x2, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
+    k=3; @test integrate(x3, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
+    k=4; @test integrate(x4, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
+    k=5; @test integrate(x5, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
+    k=6; @test integrate(x6, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
+    k=7; @test integrate(x7, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
 end
 
 # Accuracy tests of first derivative operators.

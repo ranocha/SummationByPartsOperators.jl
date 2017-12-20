@@ -404,6 +404,7 @@ A derivative operator on a uniform periodic grid.
 struct PeriodicDerivativeOperator{T,LowerOffset,UpperOffset,Parallel,Grid} <: AbstractDerivativeOperator{T}
     coefficients::PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,Parallel}
     grid::Grid
+    Δx::T
     factor::T
 
     function PeriodicDerivativeOperator(coefficients::PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,Parallel}, grid::Grid) where {T,LowerOffset,UpperOffset,Parallel,Grid}
@@ -411,7 +412,7 @@ struct PeriodicDerivativeOperator{T,LowerOffset,UpperOffset,Parallel,Grid} <: Ab
 
         Δx = step(grid)
         factor = inv(Δx^coefficients.derivative_order)
-        new{T,LowerOffset,UpperOffset,Parallel,Grid}(coefficients, grid, factor)
+        new{T,LowerOffset,UpperOffset,Parallel,Grid}(coefficients, grid, Δx, factor)
     end
 end
 
@@ -456,6 +457,24 @@ Base.@propagate_inbounds function mul!(dest::AbstractVector, D::PeriodicDerivati
         @argcheck size(D, 1) == length(dest) DimensionMismatch
     end
     @inbounds mul!(dest, D.coefficients, u, α*D.factor)
+end
+
+
+"""
+    integrate(func, u, D::PeriodicDerivativeOperator)
+
+Map the function `func` to the coefficients `u` and integrate with respect to
+the quadrature rule associated with the periodic derivative operator `D`.
+"""
+function integrate(func, u::AbstractVector, D::PeriodicDerivativeOperator)
+    @boundscheck begin
+        length(u) == length(grid(D))
+    end
+    @unpack Δx = D
+
+    @inbounds res = sum(func, u)
+
+    Δx * res
 end
 
 

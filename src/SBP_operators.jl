@@ -4,13 +4,15 @@
 
 The coefficients of a derivative operator on a periodic grid.
 """
-struct DerivativeCoefficients{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients} <: AbstractDerivativeCoefficients{T}
+struct DerivativeCoefficients{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel,SourceOfCoefficients} <: AbstractDerivativeCoefficients{T}
     # coefficients defining the operator and its action
     left_boundary::LeftBoundary
     right_boundary::RightBoundary
     lower_coef::SVector{LowerOffset, T}
     central_coef::T
     upper_coef::SVector{UpperOffset, T}
+    left_weights::SVector{LeftWidth, T}
+    right_weights::SVector{RightWidth, T}
     parallel::Parallel
     # corresponding orders etc.
     derivative_order::Int
@@ -18,7 +20,12 @@ struct DerivativeCoefficients{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffs
     symmetric       ::Bool
     source_of_coeffcients::SourceOfCoefficients
 
-    function DerivativeCoefficients(left_boundary::LeftBoundary, right_boundary::RightBoundary, lower_coef::SVector{LowerOffset, T}, central_coef::T, upper_coef::SVector{UpperOffset, T}, parallel::Parallel, derivative_order::Int, accuracy_order::Int, source_of_coeffcients::SourceOfCoefficients) where {T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients}
+    function DerivativeCoefficients(left_boundary::LeftBoundary, right_boundary::RightBoundary,
+                                    lower_coef::SVector{LowerOffset, T}, central_coef::T, upper_coef::SVector{UpperOffset, T},
+                                    left_weights::SVector{LeftWidth, T}, right_weights::SVector{RightWidth, T},
+                                    parallel::Parallel, derivative_order::Int, accuracy_order::Int, source_of_coeffcients::SourceOfCoefficients) where {T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel,SourceOfCoefficients}
+        @argcheck length(left_boundary) == LeftWidth
+        @argcheck length(right_boundary) == RightWidth
         symmetric = LowerOffset == UpperOffset
         if symmetric
             @inbounds for i in Base.OneTo(LowerOffset)
@@ -32,7 +39,9 @@ struct DerivativeCoefficients{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffs
 
             end
         end
-        new{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients}(left_boundary, right_boundary, lower_coef, central_coef, upper_coef, parallel, derivative_order, accuracy_order, symmetric, source_of_coeffcients)
+        new{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel,SourceOfCoefficients}(
+            left_boundary, right_boundary, lower_coef, central_coef, upper_coef, left_weights, right_weights,
+            parallel, derivative_order, accuracy_order, symmetric, source_of_coeffcients)
     end
 end
 
@@ -221,18 +230,19 @@ end
 
 A derivative operator on a finite difference grid.
 """
-struct DerivativeOperator{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients,Grid} <: AbstractDerivativeOperator{T}
-    coefficients::DerivativeCoefficients{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients}
+struct DerivativeOperator{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel,SourceOfCoefficients,Grid} <: AbstractDerivativeOperator{T}
+    coefficients::DerivativeCoefficients{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel,SourceOfCoefficients}
     grid::Grid
+    Δx::T
     factor::T
 
-    function DerivativeOperator(coefficients::DerivativeCoefficients{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients}, grid::Grid) where {T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients,Grid}
+    function DerivativeOperator(coefficients::DerivativeCoefficients{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel,SourceOfCoefficients}, grid::Grid) where {T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel,SourceOfCoefficients,Grid}
         @argcheck length(grid) > LowerOffset+UpperOffset DimensionMismatch
         @argcheck length(grid) > length(coefficients.left_boundary) + length(coefficients.right_boundary) DimensionMismatch
 
         Δx = step(grid)
         factor = inv(Δx^derivative_order(coefficients))
-        new{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients,Grid}(coefficients, grid, factor)
+        new{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel,SourceOfCoefficients,Grid}(coefficients, grid, Δx, factor)
     end
 end
 
@@ -240,7 +250,7 @@ end
 @inline source_of_coeffcients(D::DerivativeOperator) = source_of_coeffcients(D.coefficients)
 
 
-function Base.show(io::IO, D::DerivativeOperator{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,Parallel}) where {T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,Parallel}
+function Base.show(io::IO, D::DerivativeOperator{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel}) where {T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel}
     if derivative_order(D) == 1
         print(io, "SBP 1st derivative operator of order ")
     elseif  derivative_order(D) == 2
@@ -293,6 +303,31 @@ Base.@propagate_inbounds function mul!(dest::AbstractVector, D::DerivativeOperat
         @argcheck size(D, 1) == length(dest) DimensionMismatch
     end
     @inbounds mul!(dest, D.coefficients, u, α*D.factor)
+end
+
+
+"""
+    integrate(func, u, D::DerivativeOperator)
+
+Map the function `func` to the coefficients `u` and integrate with respect to
+the quadrature rule associated with the SBP derivative operator `D`.
+"""
+function integrate(func, u::AbstractVector, D::DerivativeOperator)
+    @boundscheck begin
+        length(u) == length(grid(D))
+    end
+    @unpack Δx = D
+    @unpack left_weights, right_weights = D.coefficients
+    
+    @inbounds res = sum(func, view(u,1+length(left_weights):length(u)-length(right_weights)))
+    @inbounds for i in Base.OneTo(length(left_weights))
+        res += left_weights[i]*func(u[i])
+    end
+    @inbounds for i in Base.OneTo(length(right_weights))
+        res += right_weights[i]*func(u[end-i+1])
+    end
+
+    Δx * res
 end
 
 
