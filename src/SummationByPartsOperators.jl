@@ -15,6 +15,12 @@ import PolynomialBases: integrate
 abstract type AbstractDerivativeOperator{T} end
 abstract type AbstractDerivativeCoefficients{T} end
 abstract type AbstractMassMatrix{T} end
+"""
+    SourceOfCoefficients
+
+All sources of coefficients (articles) are subtypes of this abstract type.
+"""
+abstract type SourceOfCoefficients end
 
 
 # source files
@@ -25,7 +31,7 @@ include("SBP_coefficients/MattssonSvärdShoeybi2008.jl")
 
 
 # exports
-export PeriodicDerivativeOperator, DerivativeOperator
+export PeriodicDerivativeOperator, DerivativeOperator, SourceOfCoefficients
 export derivative_order, accuracy_order, source_of_coeffcients, grid
 export mul!
 export periodic_central_derivative_operator, periodic_derivative_operator, derivative_operator

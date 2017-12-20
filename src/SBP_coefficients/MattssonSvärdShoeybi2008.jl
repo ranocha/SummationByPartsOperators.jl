@@ -7,7 +7,7 @@ Coefficients of the SBP operators given in
   Stable and accurate schemes for the compressible Navier-Stokes equations.
   Journal of Computational Physics 227, pp. 2293-2316.
 """
-struct MattssonSvärdShoeybi2008 end
+struct MattssonSvärdShoeybi2008 <: SourceOfCoefficients end
 
 function Base.show(io::IO, ::MattssonSvärdShoeybi2008)
     print(io,
