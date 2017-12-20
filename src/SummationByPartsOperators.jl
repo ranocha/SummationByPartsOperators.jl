@@ -21,6 +21,7 @@ abstract type AbstractMassMatrix{T} end
 include("general_operators.jl")
 include("periodic_operators.jl")
 include("SBP_operators.jl")
+include("SBP_coefficients/MattssonSvärdShoeybi2008.jl")
 
 
 # exports

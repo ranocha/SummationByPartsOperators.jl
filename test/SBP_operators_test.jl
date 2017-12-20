@@ -12,6 +12,8 @@ for source in accuracy_test_list, T in (Float32,Float64)
 
     acc_order = 2
     D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
+    println(DevNull, D)
+    println(DevNull, D.coefficients)
     x1 = grid(D)
     x0 = ones(x1)
     x2 = x1 .* x1
@@ -33,6 +35,8 @@ for source in accuracy_test_list, T in (Float32,Float64)
 
     acc_order = 4
     D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
+    println(DevNull, D)
+    println(DevNull, D.coefficients)
     x1 = grid(D)
     x0 = ones(x1)
     x2 = x1 .* x1
@@ -62,6 +66,8 @@ for source in accuracy_test_list, T in (Float32,Float64)
 
     acc_order = 6
     D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
+    println(DevNull, D)
+    println(DevNull, D.coefficients)
     x1 = grid(D)
     x0 = ones(x1)
     x2 = x1 .* x1
@@ -93,6 +99,8 @@ for source in accuracy_test_list, T in (Float32,Float64)
 
     acc_order = 8
     D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
+    println(DevNull, D)
+    println(DevNull, D.coefficients)
     x1 = grid(D)
     x0 = ones(x1)
     x2 = x1 .* x1
@@ -143,4 +151,6 @@ for T in (Float32, Float64), acc_order in (2,4,6,8)
     mul!(dest1, D_threads, u, one(T), zero(T))
     mul!(dest2, D_threads, u, one(T))
     @test all(i->dest1[i] ≈ dest2[i], eachindex(u))
+    dest3 = D_serial*u
+    @test all(i->dest1[i] ≈ dest3[i], eachindex(u))
 end
