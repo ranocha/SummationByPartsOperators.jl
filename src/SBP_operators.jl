@@ -34,11 +34,6 @@ struct DerivativeCoefficients{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffs
         end
         symmetric = symmetric && length(left_boundary[end]) == length(left_boundary)
         #TODO: check boundary coefficients
-        if symmetric
-            for i in 1:length(left_boundary)
-
-            end
-        end
         new{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel,SourceOfCoefficients}(
             left_boundary, right_boundary, lower_coef, central_coef, upper_coef, left_weights, right_weights,
             parallel, derivative_order, accuracy_order, symmetric, source_of_coeffcients)
@@ -318,7 +313,7 @@ function integrate(func, u::AbstractVector, D::DerivativeOperator)
     end
     @unpack Δx = D
     @unpack left_weights, right_weights = D.coefficients
-    
+
     @inbounds res = sum(func, view(u,1+length(left_weights):length(u)-length(right_weights)))
     @inbounds for i in Base.OneTo(length(left_weights))
         res += left_weights[i]*func(u[i])
