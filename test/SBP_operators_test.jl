@@ -157,7 +157,7 @@ for source in accuracy_test_list, T in (Float32,Float64)
     k=7; @test integrate(x7, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
 end
 
-# Accuracy tests of first derivative operators.
+# Accuracy tests of second derivative operators.
 for source in accuracy_test_list, T in (Float32,Float64)
     xmin = -one(T)
     xmax = 2*one(T)
@@ -189,6 +189,13 @@ for source in accuracy_test_list, T in (Float32,Float64)
     @test all(i->res[i] ≈ 6*x1[i], acc_order+1:length(res)-acc_order-1)
     A_mul_B!(res, D, x4)
     @test any(i->!(res[i] ≈ 12*x2[i]), acc_order+1:length(res)-acc_order-1)
+    # boundary derivative
+    @test abs(derivative_left( D, x0, Val{1}())) < eps(T)
+    @test abs(derivative_right(D, x0, Val{1}())) < eps(T)
+    @test derivative_left( D, x1, Val{1}()) ≈ one(T)
+    @test derivative_right(D, x1, Val{1}()) ≈ one(T)
+    @test derivative_left( D, x2, Val{1}()) ≈ 2xmin
+    @test derivative_right(D, x2, Val{1}()) ≈ 2xmax
 
     acc_order = 4
     D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
@@ -222,6 +229,15 @@ for source in accuracy_test_list, T in (Float32,Float64)
     @test all(i->res[i] ≈ 20*x3[i], acc_order+1:length(res)-acc_order-1)
     A_mul_B!(res, D, x6)
     @test any(i->!(res[i] ≈ 30*x4[i]), acc_order+1:length(res)-acc_order-1)
+    # boundary derivative
+    @test abs(derivative_left( D, x0, Val{1}())) < 10*eps(T)
+    @test abs(derivative_right(D, x0, Val{1}())) < 10*eps(T)
+    @test derivative_left( D, x1, Val{1}()) ≈ one(T)
+    @test derivative_right(D, x1, Val{1}()) ≈ one(T)
+    @test derivative_left( D, x2, Val{1}()) ≈ 2xmin
+    @test derivative_right(D, x2, Val{1}()) ≈ 2xmax
+    @test derivative_left( D, x3, Val{1}()) ≈ 3xmin^2
+    @test derivative_right(D, x3, Val{1}()) ≈ 3xmax^2
 
     acc_order = 6
     D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
@@ -257,6 +273,17 @@ for source in accuracy_test_list, T in (Float32,Float64)
     @test all(i->res[i] ≈ 30*x4[i], acc_order+1:length(res)-acc_order-1)
     A_mul_B!(res, D, x7)
     @test all(i->res[i] ≈ 42*x5[i], acc_order+1:length(res)-acc_order-1)
+    # boundary derivative
+    @test abs(derivative_left( D, x0, Val{1}())) < 40*eps(T)
+    @test abs(derivative_right(D, x0, Val{1}())) < 40*eps(T)
+    @test derivative_left( D, x1, Val{1}()) ≈ one(T)
+    @test derivative_right(D, x1, Val{1}()) ≈ one(T)
+    @test derivative_left( D, x2, Val{1}()) ≈ 2xmin
+    @test derivative_right(D, x2, Val{1}()) ≈ 2xmax
+    @test derivative_left( D, x3, Val{1}()) ≈ 3xmin^2
+    @test derivative_right(D, x3, Val{1}()) ≈ 3xmax^2
+    @test derivative_left( D, x4, Val{1}()) ≈ 4xmin^3
+    @test derivative_right(D, x4, Val{1}()) ≈ 4xmax^3
 
     acc_order = 8
     D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
@@ -295,6 +322,19 @@ for source in accuracy_test_list, T in (Float32,Float64)
     @test all(i->res[i] ≈ 42*x5[i], acc_order+1:length(res)-acc_order-1)
     A_mul_B!(res, D, x8)
     @test all(i->isapprox(res[i], 56*x6[i], rtol=20000*eps(T)), acc_order+1:length(res)-acc_order-1)
+    # boundary derivative
+    @test abs(derivative_left( D, x0, Val{1}())) < 40*eps(T)
+    @test abs(derivative_right(D, x0, Val{1}())) < 40*eps(T)
+    @test derivative_left( D, x1, Val{1}()) ≈ one(T)
+    @test derivative_right(D, x1, Val{1}()) ≈ one(T)
+    @test derivative_left( D, x2, Val{1}()) ≈ 2xmin
+    @test derivative_right(D, x2, Val{1}()) ≈ 2xmax
+    @test derivative_left( D, x3, Val{1}()) ≈ 3xmin^2
+    @test derivative_right(D, x3, Val{1}()) ≈ 3xmax^2
+    @test derivative_left( D, x4, Val{1}()) ≈ 4xmin^3
+    @test derivative_right(D, x4, Val{1}()) ≈ 4xmax^3
+    @test derivative_left( D, x5, Val{1}()) ≈ 5xmin^4
+    @test derivative_right(D, x5, Val{1}()) ≈ 5xmax^4
 end
 
 

@@ -4,10 +4,13 @@
 
 The coefficients of a derivative operator on a periodic grid.
 """
-struct DerivativeCoefficients{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel,SourceOfCoefficients} <: AbstractDerivativeCoefficients{T}
+struct DerivativeCoefficients{T,LeftBoundary,RightBoundary,LeftBoundaryDerivatives,RightBoundaryDerivatives,
+                              LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel,SourceOfCoefficients} <: AbstractDerivativeCoefficients{T}
     # coefficients defining the operator and its action
     left_boundary::LeftBoundary
     right_boundary::RightBoundary
+    left_boundary_derivatives::LeftBoundaryDerivatives
+    right_boundary_derivatives::RightBoundaryDerivatives
     lower_coef::SVector{LowerOffset, T}
     central_coef::T
     upper_coef::SVector{UpperOffset, T}
@@ -21,11 +24,16 @@ struct DerivativeCoefficients{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffs
     source_of_coeffcients::SourceOfCoefficients
 
     function DerivativeCoefficients(left_boundary::LeftBoundary, right_boundary::RightBoundary,
+                                    left_boundary_derivatives::LeftBoundaryDerivatives,
+                                    right_boundary_derivatives::RightBoundaryDerivatives,
                                     lower_coef::SVector{LowerOffset, T}, central_coef::T, upper_coef::SVector{UpperOffset, T},
                                     left_weights::SVector{LeftWidth, T}, right_weights::SVector{RightWidth, T},
-                                    parallel::Parallel, derivative_order::Int, accuracy_order::Int, source_of_coeffcients::SourceOfCoefficients) where {T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel,SourceOfCoefficients}
+                                    parallel::Parallel, derivative_order::Int, accuracy_order::Int,
+                                    source_of_coeffcients::SourceOfCoefficients) where {T,LeftBoundary,RightBoundary,LeftBoundaryDerivatives,RightBoundaryDerivatives,
+                                                                                        LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel,SourceOfCoefficients}
         @argcheck length(left_boundary) == LeftWidth
         @argcheck length(right_boundary) == RightWidth
+        @argcheck length(left_boundary_derivatives) == length(right_boundary_derivatives)
         symmetric = LowerOffset == UpperOffset
         if symmetric
             @inbounds for i in Base.OneTo(LowerOffset)
@@ -34,8 +42,12 @@ struct DerivativeCoefficients{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffs
         end
         symmetric = symmetric && length(left_boundary[end]) == length(left_boundary)
         #TODO: check boundary coefficients
-        new{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel,SourceOfCoefficients}(
-            left_boundary, right_boundary, lower_coef, central_coef, upper_coef, left_weights, right_weights,
+        if derivative_order-1 != length(left_boundary_derivatives)
+            warn("Derivative coefficients of degree $derivative_order should provide $(derivative_order-1) boundary derivatives.")
+        end
+        new{T,LeftBoundary,RightBoundary,LeftBoundaryDerivatives,RightBoundaryDerivatives,LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel,SourceOfCoefficients}(
+            left_boundary, right_boundary, left_boundary_derivatives, right_boundary_derivatives,
+            lower_coef, central_coef, upper_coef, left_weights, right_weights,
             parallel, derivative_order, accuracy_order, symmetric, source_of_coeffcients)
     end
 end
@@ -68,14 +80,15 @@ end
 
 Compute `α*D*u + β*dest` and store the result in `dest`.
 """
-function mul!(dest::AbstractVector, coefficients::DerivativeCoefficients{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset}, u::AbstractVector, α, β) where {T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset}
+function mul!(dest::AbstractVector, coefficients::DerivativeCoefficients, u::AbstractVector, α, β)
+    @unpack left_boundary, right_boundary, lower_coef, central_coef, upper_coef, parallel = coefficients
+
     @boundscheck begin
         @argcheck length(dest) == length(u) DimensionMismatch
-        @argcheck length(u) > LowerOffset+UpperOffset DimensionMismatch
-        @argcheck length(u) > length(coefficients.left_boundary) + length(coefficients.right_boundary) DimensionMismatch
+        @argcheck length(u) > length(lower_coef)+length(upper_coef) DimensionMismatch
+        @argcheck length(u) > length(left_boundary) + length(right_boundary) DimensionMismatch
     end
 
-    @unpack left_boundary, right_boundary, lower_coef, central_coef, upper_coef, parallel = coefficients
     convolve_boundary_coefficients!(dest, left_boundary, right_boundary, u, α, β)
     convolve_interior_coefficients!(dest, lower_coef, central_coef, upper_coef, u, α, β, length(left_boundary), length(right_boundary), parallel)
 end
@@ -85,14 +98,15 @@ end
 
 Compute `α*D*u` and store the result in `dest`.
 """
-function mul!(dest::AbstractVector, coefficients::DerivativeCoefficients{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset}, u::AbstractVector, α) where {T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset}
+function mul!(dest::AbstractVector, coefficients::DerivativeCoefficients, u::AbstractVector, α)
+    @unpack left_boundary, right_boundary, lower_coef, central_coef, upper_coef, parallel = coefficients
+
     @boundscheck begin
         @argcheck length(dest) == length(u) DimensionMismatch
-        @argcheck length(u) > LowerOffset+UpperOffset DimensionMismatch
+        @argcheck length(u) > length(lower_coef)+length(upper_coef) DimensionMismatch
         @argcheck length(u) > length(coefficients.left_boundary) + length(coefficients.right_boundary) DimensionMismatch
     end
 
-    @unpack left_boundary, right_boundary, lower_coef, central_coef, upper_coef, parallel = coefficients
     convolve_boundary_coefficients!(dest, left_boundary, right_boundary, u, α)
     convolve_interior_coefficients!(dest, lower_coef, central_coef, upper_coef, u, α, length(left_boundary), length(right_boundary), parallel)
 end
@@ -225,19 +239,25 @@ end
 
 A derivative operator on a finite difference grid.
 """
-struct DerivativeOperator{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel,SourceOfCoefficients,Grid} <: AbstractDerivativeOperator{T}
-    coefficients::DerivativeCoefficients{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel,SourceOfCoefficients}
+struct DerivativeOperator{T,LeftBoundary,RightBoundary,LeftBoundaryDerivatives,RightBoundaryDerivatives,
+                          LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel,SourceOfCoefficients,Grid} <: AbstractDerivativeOperator{T}
+    coefficients::DerivativeCoefficients{T,LeftBoundary,RightBoundary,LeftBoundaryDerivatives,RightBoundaryDerivatives,
+                                         LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel,SourceOfCoefficients}
     grid::Grid
     Δx::T
     factor::T
 
-    function DerivativeOperator(coefficients::DerivativeCoefficients{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel,SourceOfCoefficients}, grid::Grid) where {T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel,SourceOfCoefficients,Grid}
+    function DerivativeOperator(coefficients::DerivativeCoefficients{T,LeftBoundary,RightBoundary,LeftBoundaryDerivatives,RightBoundaryDerivatives,
+                                                                     LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel,SourceOfCoefficients},
+                                grid::Grid) where {T,LeftBoundary,RightBoundary,LeftBoundaryDerivatives,RightBoundaryDerivatives,
+                                                   LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel,SourceOfCoefficients,Grid}
         @argcheck length(grid) > LowerOffset+UpperOffset DimensionMismatch
         @argcheck length(grid) > length(coefficients.left_boundary) + length(coefficients.right_boundary) DimensionMismatch
 
         Δx = step(grid)
         factor = inv(Δx^derivative_order(coefficients))
-        new{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel,SourceOfCoefficients,Grid}(coefficients, grid, Δx, factor)
+        new{T,LeftBoundary,RightBoundary,LeftBoundaryDerivatives,RightBoundaryDerivatives,LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel,SourceOfCoefficients,Grid}(
+            coefficients, grid, Δx, factor)
     end
 end
 
@@ -245,7 +265,7 @@ end
 @inline source_of_coeffcients(D::DerivativeOperator) = source_of_coeffcients(D.coefficients)
 
 
-function Base.show(io::IO, D::DerivativeOperator{T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel}) where {T,LeftBoundary,RightBoundary,LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel}
+function Base.show(io::IO, D::DerivativeOperator{T}) where {T}
     if derivative_order(D) == 1
         print(io, "SBP 1st derivative operator of order ")
     elseif  derivative_order(D) == 2
@@ -255,11 +275,32 @@ function Base.show(io::IO, D::DerivativeOperator{T,LeftBoundary,RightBoundary,Lo
     else
         print(io, "SBP ", derivative_order(D), "th derivative operator of order ")
     end
-    print(io, accuracy_order(D), " {T=", T, ", Parallel=", Parallel, "} \n")
+    print(io, accuracy_order(D), " {T=", T, ", Parallel=", typeof(D.coefficients.parallel), "} \n")
     print(io, "on a grid in [", first(grid(D)), ", ", last(grid(D)),
                 "] using ", length(grid(D)), " nodes \n")
     print(io, "and coefficients given in \n")
     print(io, source_of_coeffcients(D))
+end
+
+
+"""
+    derivative_left(D::DerivativeOperator, u, der_order::Val{N})
+
+Compute the `N`-th derivative of the function given by the coefficients `u` at
+the left boundary of the grid.
+"""
+@inline function derivative_left(D::DerivativeOperator, u, der_order::Val{N}) where {N}
+    convolve_left_row(D.coefficients.left_boundary_derivatives[N], u) / D.Δx
+end
+
+"""
+    derivative_right(D::DerivativeOperator, u, der_order::Val{N})
+
+Compute the `N`-th derivative of the function given by the coefficients `u` at
+the right boundary of the grid.
+"""
+@inline function derivative_right(D::DerivativeOperator, u, der_order::Val{N}) where {N}
+    convolve_right_row(D.coefficients.right_boundary_derivatives[N], u) / D.Δx
 end
 
 
@@ -288,7 +329,7 @@ Base.@propagate_inbounds function mul!(dest::AbstractVector, D::DerivativeOperat
 end
 
 """
-    mul!(dest::AbstractVector, D::erivativeOperator, u::AbstractVector, α)
+    mul!(dest::AbstractVector, D::DerivativeOperator, u::AbstractVector, α)
 
 Compute `α*D*u` and store the result in `dest`.
 """

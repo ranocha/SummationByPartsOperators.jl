@@ -33,7 +33,7 @@ include("SBP_coefficients/MattssonSvärdShoeybi2008.jl")
 # exports
 export PeriodicDerivativeOperator, DerivativeOperator, SourceOfCoefficients
 export derivative_order, accuracy_order, source_of_coeffcients, grid
-export mul!, integrate
+export mul!, integrate, derivative_left, derivative_right
 export periodic_central_derivative_operator, periodic_derivative_operator, derivative_operator
 
 export MattssonSvärdShoeybi2008
