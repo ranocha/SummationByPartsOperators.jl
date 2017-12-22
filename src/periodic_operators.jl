@@ -15,7 +15,8 @@ struct PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,Parallel} <: Abs
     accuracy_order  ::Int
     symmetric       ::Bool
 
-    function PeriodicDerivativeCoefficients(lower_coef::SVector{LowerOffset, T}, central_coef::T, upper_coef::SVector{UpperOffset, T}, parallel::Parallel, derivative_order::Int, accuracy_order::Int) where {T,LowerOffset,UpperOffset,Parallel}
+    function PeriodicDerivativeCoefficients(lower_coef::SVector{LowerOffset, T}, central_coef::T, upper_coef::SVector{UpperOffset, T},
+                                            parallel::Parallel, derivative_order::Int, accuracy_order::Int) where {T,LowerOffset,UpperOffset,Parallel}
         symmetric = LowerOffset == UpperOffset
         if symmetric
             @inbounds for i in Base.OneTo(LowerOffset)
@@ -26,16 +27,6 @@ struct PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,Parallel} <: Abs
     end
 end
 
-Base.@propagate_inbounds function Base.A_mul_B!(dest, coefficients::PeriodicDerivativeCoefficients, u)
-    mul!(dest, coefficients, u, one(eltype(dest)))
-end
-
-function *(coefficients::AbstractDerivativeCoefficients, u::AbstractVector)
-    T = promote_type(eltype(coefficients), eltype(u))
-    dest = similar(u, T); dest .= zero(T)
-    @inbounds A_mul_B!(dest, coefficients, u)
-    dest
-end
 
 """
     mul!(dest::AbstractVector, coefficients::PeriodicDerivativeCoefficients, u::AbstractVector, α, β)
@@ -70,7 +61,8 @@ function mul!(dest::AbstractVector, coefficients::PeriodicDerivativeCoefficients
 end
 
 
-@generated function convolve_periodic_boundary_coefficients!(dest::AbstractVector, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset}, u::AbstractVector, α, β) where {LowerOffset, UpperOffset}
+@generated function convolve_periodic_boundary_coefficients!(dest::AbstractVector, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset},
+                                                             u::AbstractVector, α, β) where {LowerOffset, UpperOffset}
     ex_lower = :( nothing )
     for i in 1:LowerOffset
         ex = :( lower_coef[$LowerOffset]*u[end-$(LowerOffset-i)] )
@@ -117,7 +109,8 @@ end
     end
 end
 
-@generated function convolve_periodic_boundary_coefficients!(dest::AbstractVector, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset}, u::AbstractVector, α) where {LowerOffset, UpperOffset}
+@generated function convolve_periodic_boundary_coefficients!(dest::AbstractVector, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset},
+                                                             u::AbstractVector, α) where {LowerOffset, UpperOffset}
     ex_lower = :( nothing )
     for i in 1:LowerOffset
         ex = :( lower_coef[$LowerOffset]*u[end-$(LowerOffset-i)] )
@@ -165,7 +158,8 @@ end
 end
 
 
-@generated function convolve_interior_coefficients!(dest::AbstractVector, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset}, u::AbstractVector, α, β, parallel) where {LowerOffset, UpperOffset}
+@generated function convolve_interior_coefficients!(dest::AbstractVector, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset},
+                                                    u::AbstractVector, α, β, parallel) where {LowerOffset, UpperOffset}
     ex = :( lower_coef[$LowerOffset]*u[i-$LowerOffset] )
     for j in LowerOffset-1:-1:1
         ex = :( $ex + lower_coef[$j]*u[i-$j] )
@@ -182,7 +176,8 @@ end
     end
 end
 
-function convolve_interior_coefficients!(dest::AbstractVector{T}, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset}, u::AbstractVector, α, β, parallel::Val{:threads}) where {T, LowerOffset, UpperOffset}
+function convolve_interior_coefficients!(dest::AbstractVector{T}, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset},
+                                         u::AbstractVector, α, β, parallel::Val{:threads}) where {T, LowerOffset, UpperOffset}
     Threads.@threads for i in (LowerOffset+1):(length(dest)-UpperOffset) @inbounds begin
         tmp = zero(T)
         for j in Base.OneTo(LowerOffset)
@@ -196,7 +191,8 @@ function convolve_interior_coefficients!(dest::AbstractVector{T}, lower_coef::SV
     end end
 end
 
-@generated function convolve_interior_coefficients!(dest::AbstractVector, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset}, u::AbstractVector, α, parallel) where {LowerOffset, UpperOffset}
+@generated function convolve_interior_coefficients!(dest::AbstractVector, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset},
+                                                    u::AbstractVector, α, parallel) where {LowerOffset, UpperOffset}
     ex = :( lower_coef[$LowerOffset]*u[i-$LowerOffset] )
     for j in LowerOffset-1:-1:1
         ex = :( $ex + lower_coef[$j]*u[i-$j] )
@@ -213,7 +209,8 @@ end
     end
 end
 
-function convolve_interior_coefficients!(dest::AbstractVector{T}, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset}, u::AbstractVector, α, parallel::Val{:threads}) where {T, LowerOffset, UpperOffset}
+function convolve_interior_coefficients!(dest::AbstractVector{T}, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset},
+                                         u::AbstractVector, α, parallel::Val{:threads}) where {T, LowerOffset, UpperOffset}
     Threads.@threads for i in (LowerOffset+1):(length(dest)-UpperOffset) @inbounds begin
         tmp = zero(T)
         for j in Base.OneTo(LowerOffset)
@@ -407,7 +404,8 @@ struct PeriodicDerivativeOperator{T,LowerOffset,UpperOffset,Parallel,Grid} <: Ab
     Δx::T
     factor::T
 
-    function PeriodicDerivativeOperator(coefficients::PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,Parallel}, grid::Grid) where {T,LowerOffset,UpperOffset,Parallel,Grid}
+    function PeriodicDerivativeOperator(coefficients::PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,Parallel},
+                                        grid::Grid) where {T,LowerOffset,UpperOffset,Parallel,Grid}
         @argcheck length(grid) > LowerOffset+UpperOffset DimensionMismatch
 
         Δx = step(grid)
@@ -422,7 +420,7 @@ function PeriodicDerivativeOperator(coefficients::PeriodicDerivativeCoefficients
 end
 
 
-function Base.show(io::IO, D::PeriodicDerivativeOperator{T,LowerOffset,UpperOffset,Parallel}) where {T,LowerOffset,UpperOffset,Parallel}
+function Base.show(io::IO, D::PeriodicDerivativeOperator{T,LowerOffset,UpperOffset}) where {T,LowerOffset,UpperOffset}
     if derivative_order(D) == 1
         print(io, "Periodic 1st derivative operator of order ")
     elseif  derivative_order(D) == 2
@@ -432,7 +430,7 @@ function Base.show(io::IO, D::PeriodicDerivativeOperator{T,LowerOffset,UpperOffs
     else
         print(io, "Periodic ", derivative_order(D), "th derivative operator of order ")
     end
-    print(io, accuracy_order(D), " {T=", T, ", Parallel=", Parallel, "} \n")
+    print(io, accuracy_order(D), " {T=", T, ", Parallel=", typeof(D.coefficients.parallel), "} \n")
     print(io, "on a grid in [", first(grid(D)), ", ", last(grid(D)),
                 "] using ", length(grid(D)), " nodes \n")
     print(io, "and stencils with ", LowerOffset, " nodes to the left and ", UpperOffset,
@@ -534,18 +532,20 @@ determined by `left_offset`.
 The evaluation of the derivative can be parallised using threads by chosing
 `parallel=Val{:threads}())`.
 """
-function periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N, left_offset::Int=-(accuracy_order+1)÷2, parallel::Union{Val{:serial},Val{:threads}}=Val{:serial}())
+function periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N, left_offset::Int=-(accuracy_order+1)÷2,
+                                      parallel::Union{Val{:serial},Val{:threads}}=Val{:serial}())
     grid = linspace(xmin, xmax, N)
     coefficients = periodic_derivative_coefficients(derivative_order, accuracy_order, left_offset, eltype(grid), parallel)
     PeriodicDerivativeOperator(coefficients, grid)
 end
 
-@inline function periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N, parallel::Union{Val{:serial},Val{:threads}}, left_offset::Int=-(accuracy_order+1)÷2)
+@inline function periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N,
+                                              parallel::Union{Val{:serial},Val{:threads}}, left_offset::Int=-(accuracy_order+1)÷2)
     periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N, left_offset, parallel)
 end
 
 """
-    periodic_derivative_operator(derivative_order, accuracy_order, grid::Union{LinSpace,StepRangeLen}, left_offset=-(accuracy_order+1)÷2, parallel=Val{:serial}())
+    periodic_derivative_operator(derivative_order, accuracy_order, grid, left_offset=-(accuracy_order+1)÷2, parallel=Val{:serial}())
 
 Create a `PeriodicDerivativeOperator` approximating the `derivative_order`-th
 derivative on thr uniform `grid` up to order of accuracy `accuracy_order` where
@@ -553,11 +553,13 @@ the leftmost grid point used is determined by `left_offset`.
 The evaluation of the derivative can be parallised using threads by chosing
 `parallel=Val{:threads}())`.
 """
-function periodic_derivative_operator(derivative_order, accuracy_order, grid::Union{LinSpace,StepRangeLen}, left_offset::Int=-(accuracy_order+1)÷2, parallel=Val{:serial}())
+function periodic_derivative_operator(derivative_order, accuracy_order, grid::Union{LinSpace,StepRangeLen},
+                                      left_offset::Int=-(accuracy_order+1)÷2, parallel=Val{:serial}())
     coefficients = periodic_derivative_coefficients(derivative_order, accuracy_order, left_offset, eltype(grid), parallel)
     PeriodicDerivativeOperator(coefficients, grid)
 end
 
-@inline function periodic_derivative_operator(derivative_order, accuracy_order, grid::Union{LinSpace,StepRangeLen}, parallel::Union{Val{:serial},Val{:threads}}, left_offset::Int=-(accuracy_order+1)÷2)
+@inline function periodic_derivative_operator(derivative_order, accuracy_order, grid::Union{LinSpace,StepRangeLen},
+                                              parallel::Union{Val{:serial},Val{:threads}}, left_offset::Int=-(accuracy_order+1)÷2)
     periodic_derivative_operator(derivative_order, accuracy_order, grid, left_offset, parallel)
 end
