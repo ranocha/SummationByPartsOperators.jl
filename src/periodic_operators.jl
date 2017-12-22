@@ -422,6 +422,24 @@ function PeriodicDerivativeOperator(coefficients::PeriodicDerivativeCoefficients
 end
 
 
+function Base.show(io::IO, D::PeriodicDerivativeOperator{T,LowerOffset,UpperOffset,Parallel}) where {T,LowerOffset,UpperOffset,Parallel}
+    if derivative_order(D) == 1
+        print(io, "Periodic 1st derivative operator of order ")
+    elseif  derivative_order(D) == 2
+        print(io, "Periodic 2nd derivative operator of order ")
+    elseif  derivative_order(D) == 3
+        print(io, "Periodic 3rd derivative operator of order ")
+    else
+        print(io, "Periodic ", derivative_order(D), "th derivative operator of order ")
+    end
+    print(io, accuracy_order(D), " {T=", T, ", Parallel=", Parallel, "} \n")
+    print(io, "on a grid in [", first(grid(D)), ", ", last(grid(D)),
+                "] using ", length(grid(D)), " nodes \n")
+    print(io, "and stencils with ", LowerOffset, " nodes to the left and ", UpperOffset,
+                " nodes to the right.")
+end
+
+
 Base.@propagate_inbounds function Base.A_mul_B!(dest, D::PeriodicDerivativeOperator, u)
     mul!(dest, D, u, one(eltype(dest)))
 end
