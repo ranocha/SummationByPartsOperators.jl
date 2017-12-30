@@ -13,7 +13,7 @@ struct Mattsson2014 <: SourceOfCoefficients end
 function Base.show(io::IO, ::Mattsson2014)
     print(io,
         "  Mattsson (2014) \n",
-        "  Diagonal-norm summation by parts operators for fiite difference approximations \n",
+        "  Diagonal-norm summation by parts operators for fiite difference approximations\n",
         "    of third and fourth derivatives. \n",
         "  Journal of Computational Physics 274, pp. 432-454. \n")
 end
