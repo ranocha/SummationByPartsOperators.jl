@@ -13,6 +13,7 @@ for source in accuracy_test_list, T in (Float32,Float64)
     try
         acc_order = 2
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
+        inner_indices = length(D.left_boundary)+1:length(res)-length(D.left_boundary)-1
         println(DevNull, D)
         println(DevNull, D.coefficients)
         x1 = grid(D)
@@ -30,9 +31,9 @@ for source in accuracy_test_list, T in (Float32,Float64)
         @test all(i->res[i] ≈ x0[i], eachindex(res))
         # only interior
         A_mul_B!(res, D, x2)
-        @test all(i->res[i] ≈ 2*x1[i], acc_order+1:length(res)-acc_order-1)
+        @test all(i->res[i] ≈ 2*x1[i], inner_indices)
         A_mul_B!(res, D, x3)
-        @test any(i->!(res[i] ≈ 3*x2[i]), acc_order+1:length(res)-acc_order-1)
+        @test any(i->!(res[i] ≈ 3*x2[i]), inner_indices)
         # integration
         k=0; @test integrate(x0, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
         k=1; @test integrate(x1, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
@@ -41,6 +42,7 @@ for source in accuracy_test_list, T in (Float32,Float64)
     try
         acc_order = 4
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
+        inner_indices = length(D.left_boundary)+1:length(res)-length(D.left_boundary)-1
         println(DevNull, D)
         println(DevNull, D.coefficients)
         x1 = grid(D)
@@ -60,15 +62,17 @@ for source in accuracy_test_list, T in (Float32,Float64)
         @test all(i->abs(res[i]) < 20*eps(T), eachindex(res))
         A_mul_B!(res, D, x1)
         @test all(i->res[i] ≈ x0[i], eachindex(res))
-        A_mul_B!(res, D, x2)
-        @test all(i->res[i] ≈ 2*x1[i], eachindex(res))
+        if !(source::Mattsson2014)
+            A_mul_B!(res, D, x2)
+            @test all(i->res[i] ≈ 2*x1[i], eachindex(res))
+        end
         # only interior
         A_mul_B!(res, D, x3)
-        @test all(i->res[i] ≈ 3*x2[i], acc_order+1:length(res)-acc_order-1)
+        @test all(i->res[i] ≈ 3*x2[i], inner_indices)
         A_mul_B!(res, D, x4)
-        @test all(i->res[i] ≈ 4*x3[i], acc_order+1:length(res)-acc_order-1)
+        @test all(i->res[i] ≈ 4*x3[i], inner_indices)
         A_mul_B!(res, D, x5)
-        @test any(i->!(res[i] ≈ 5*x4[i]), acc_order+1:length(res)-acc_order-1)
+        @test any(i->!(res[i] ≈ 5*x4[i]), inner_indices)
         # integration
         k=0; @test integrate(x0, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
         k=1; @test integrate(x1, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
@@ -79,6 +83,7 @@ for source in accuracy_test_list, T in (Float32,Float64)
     try
         acc_order = 6
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
+        inner_indices = length(D.left_boundary)+1:length(res)-length(D.left_boundary)-1
         println(DevNull, D)
         println(DevNull, D.coefficients)
         x1 = grid(D)
@@ -104,11 +109,11 @@ for source in accuracy_test_list, T in (Float32,Float64)
         @test all(i->res[i] ≈ 3*x2[i], eachindex(res))
         # only interior
         A_mul_B!(res, D, x4)
-        @test all(i->res[i] ≈ 4*x3[i], acc_order+1:length(res)-acc_order-1)
+        @test all(i->res[i] ≈ 4*x3[i], inner_indices)
         A_mul_B!(res, D, x5)
-        @test all(i->res[i] ≈ 5*x4[i], acc_order+1:length(res)-acc_order-1)
+        @test all(i->res[i] ≈ 5*x4[i], inner_indices)
         A_mul_B!(res, D, x6)
-        @test all(i->res[i] ≈ 6*x5[i], acc_order+1:length(res)-acc_order-1)
+        @test all(i->res[i] ≈ 6*x5[i], inner_indices)
         # integration
         k=0; @test integrate(x0, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
         k=1; @test integrate(x1, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
@@ -123,6 +128,7 @@ for source in accuracy_test_list, T in (Float32,Float64)
     try
         acc_order = 8
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
+        inner_indices = length(D.left_boundary)+1:length(res)-length(D.left_boundary)-1
         println(DevNull, D)
         println(DevNull, D.coefficients)
         x1 = grid(D)
@@ -147,12 +153,12 @@ for source in accuracy_test_list, T in (Float32,Float64)
         A_mul_B!(res, D, x3)
         @test all(i->isapprox(res[i], 3*x2[i], rtol=8000*eps(T)), eachindex(res))
         A_mul_B!(res, D, x4)
-        @test all(i->res[i] ≈ 4*x3[i], acc_order+1:length(res)-acc_order-1)
+        @test all(i->res[i] ≈ 4*x3[i], inner_indices)
         # only interior
         A_mul_B!(res, D, x5)
-        @test all(i->res[i] ≈ 5*x4[i], acc_order+1:length(res)-acc_order-1)
+        @test all(i->res[i] ≈ 5*x4[i], inner_indices)
         A_mul_B!(res, D, x6)
-        @test all(i->isapprox(res[i], 6*x5[i], rtol=8000*eps(T)), acc_order+1:length(res)-acc_order-1)
+        @test all(i->isapprox(res[i], 6*x5[i], rtol=8000*eps(T)), inner_indices)
         # integration
         k=0; @test integrate(x0, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
         k=1; @test integrate(x1, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
@@ -175,6 +181,7 @@ for source in accuracy_test_list, T in (Float32,Float64)
     try
         acc_order = 2
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
+        inner_indices = length(D.left_boundary)+1:length(res)-length(D.left_boundary)-1
         println(DevNull, D)
         println(DevNull, D.coefficients)
         x1 = grid(D)
@@ -193,11 +200,11 @@ for source in accuracy_test_list, T in (Float32,Float64)
         @test all(i->abs(res[i]) < 5000*eps(T), eachindex(res))
         # only interior
         A_mul_B!(res, D, x2)
-        @test all(i->res[i] ≈ 2*x0[i], acc_order+1:length(res)-acc_order-1)
+        @test all(i->res[i] ≈ 2*x0[i], inner_indices)
         A_mul_B!(res, D, x3)
-        @test all(i->res[i] ≈ 6*x1[i], acc_order+1:length(res)-acc_order-1)
+        @test all(i->res[i] ≈ 6*x1[i], inner_indices)
         A_mul_B!(res, D, x4)
-        @test any(i->!(res[i] ≈ 12*x2[i]), acc_order+1:length(res)-acc_order-1)
+        @test any(i->!(res[i] ≈ 12*x2[i]), inner_indices)
         # boundary derivative
         @test abs(derivative_left( D, x0, Val{1}())) < eps(T)
         @test abs(derivative_right(D, x0, Val{1}())) < eps(T)
@@ -210,6 +217,7 @@ for source in accuracy_test_list, T in (Float32,Float64)
     try
         acc_order = 4
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
+        inner_indices = length(D.left_boundary)+1:length(res)-length(D.left_boundary)-1
         println(DevNull, D)
         println(DevNull, D.coefficients)
         x1 = grid(D)
@@ -233,13 +241,13 @@ for source in accuracy_test_list, T in (Float32,Float64)
         @test all(i->isapprox(res[i], 2*x0[i], rtol=5000*eps(T)), eachindex(res))
         # only interior
         A_mul_B!(res, D, x3)
-        @test all(i->res[i] ≈ 6*x1[i], acc_order+1:length(res)-acc_order-1)
+        @test all(i->res[i] ≈ 6*x1[i], inner_indices)
         A_mul_B!(res, D, x4)
-        @test all(i->res[i] ≈ 12*x2[i], acc_order+1:length(res)-acc_order-1)
+        @test all(i->res[i] ≈ 12*x2[i], inner_indices)
         A_mul_B!(res, D, x5)
-        @test all(i->res[i] ≈ 20*x3[i], acc_order+1:length(res)-acc_order-1)
+        @test all(i->res[i] ≈ 20*x3[i], inner_indices)
         A_mul_B!(res, D, x6)
-        @test any(i->!(res[i] ≈ 30*x4[i]), acc_order+1:length(res)-acc_order-1)
+        @test any(i->!(res[i] ≈ 30*x4[i]), inner_indices)
         # boundary derivative
         @test abs(derivative_left( D, x0, Val{1}())) < 10*eps(T)
         @test abs(derivative_right(D, x0, Val{1}())) < 10*eps(T)
@@ -254,6 +262,7 @@ for source in accuracy_test_list, T in (Float32,Float64)
     try
         acc_order = 6
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
+        inner_indices = length(D.left_boundary)+1:length(res)-length(D.left_boundary)-1
         println(DevNull, D)
         println(DevNull, D.coefficients)
         x1 = grid(D)
@@ -279,13 +288,13 @@ for source in accuracy_test_list, T in (Float32,Float64)
         @test all(i->isapprox(res[i], 6*x1[i], rtol=5000*eps(res[i])), eachindex(res))
         # only interior
         A_mul_B!(res, D, x4)
-        @test all(i->res[i] ≈ 12*x2[i], acc_order+1:length(res)-acc_order-1)
+        @test all(i->res[i] ≈ 12*x2[i], inner_indices)
         A_mul_B!(res, D, x5)
-        @test all(i->res[i] ≈ 20*x3[i], acc_order+1:length(res)-acc_order-1)
+        @test all(i->res[i] ≈ 20*x3[i], inner_indices)
         A_mul_B!(res, D, x6)
-        @test all(i->res[i] ≈ 30*x4[i], acc_order+1:length(res)-acc_order-1)
+        @test all(i->res[i] ≈ 30*x4[i], inner_indices)
         A_mul_B!(res, D, x7)
-        @test all(i->res[i] ≈ 42*x5[i], acc_order+1:length(res)-acc_order-1)
+        @test all(i->res[i] ≈ 42*x5[i], inner_indices)
         # boundary derivative
         @test abs(derivative_left( D, x0, Val{1}())) < 40*eps(T)
         @test abs(derivative_right(D, x0, Val{1}())) < 40*eps(T)
@@ -302,6 +311,7 @@ for source in accuracy_test_list, T in (Float32,Float64)
     try
         acc_order = 8
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
+        inner_indices = length(D.left_boundary)+1:length(res)-length(D.left_boundary)-1
         println(DevNull, D)
         println(DevNull, D.coefficients)
         x1 = grid(D)
@@ -327,16 +337,16 @@ for source in accuracy_test_list, T in (Float32,Float64)
         A_mul_B!(res, D, x3)
         @test all(i->isapprox(res[i], 6*x1[i], rtol=20000*eps(T)), eachindex(res))
         A_mul_B!(res, D, x4)
-        @test all(i->res[i] ≈ 12*x2[i], acc_order+1:length(res)-acc_order-1)
+        @test all(i->res[i] ≈ 12*x2[i], inner_indices)
         # only interior
         A_mul_B!(res, D, x5)
-        @test all(i->res[i] ≈ 20*x3[i], acc_order+1:length(res)-acc_order-1)
+        @test all(i->res[i] ≈ 20*x3[i], inner_indices)
         A_mul_B!(res, D, x6)
-        @test all(i->isapprox(res[i], 30*x4[i], rtol=10000*eps(T)), acc_order+1:length(res)-acc_order-1)
+        @test all(i->isapprox(res[i], 30*x4[i], rtol=10000*eps(T)), inner_indices)
         A_mul_B!(res, D, x7)
-        @test all(i->res[i] ≈ 42*x5[i], acc_order+1:length(res)-acc_order-1)
+        @test all(i->res[i] ≈ 42*x5[i], inner_indices)
         A_mul_B!(res, D, x8)
-        @test all(i->isapprox(res[i], 56*x6[i], rtol=20000*eps(T)), acc_order+1:length(res)-acc_order-1)
+        @test all(i->isapprox(res[i], 56*x6[i], rtol=20000*eps(T)), inner_indices)
         # boundary derivative
         @test abs(derivative_left( D, x0, Val{1}())) < 40*eps(T)
         @test abs(derivative_right(D, x0, Val{1}())) < 40*eps(T)
@@ -363,6 +373,7 @@ for source in accuracy_test_list, T in (Float32,Float64)
     try
         acc_order = 2
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
+        inner_indices = length(D.left_boundary)+1:length(res)-length(D.left_boundary)-1
         println(DevNull, D)
         println(DevNull, D.coefficients)
         x1 = grid(D)
@@ -383,11 +394,11 @@ for source in accuracy_test_list, T in (Float32,Float64)
         @test all(i->abs(res[i]) < 5000*eps(T), eachindex(res))
         # only interior
         A_mul_B!(res, D, x2)
-        @test all(i->abs(res[i]) < 5000*eps(T), acc_order+1:length(res)-acc_order-1)
+        @test all(i->abs(res[i]) < 5000*eps(T), inner_indices)
         A_mul_B!(res, D, x3)
-        @test all(i->res[i] ≈ 6*x0[i], acc_order+1:length(res)-acc_order-1)
+        @test all(i->res[i] ≈ 6*x0[i], inner_indices)
         A_mul_B!(res, D, x4)
-        @test any(i->!(res[i] ≈ 24*x1[i]), acc_order+1:length(res)-acc_order-1)
+        @test any(i->!(res[i] ≈ 24*x1[i]), inner_indices)
         # boundary: first derivative
         @test abs(derivative_left( D, x0, Val{1}())) < eps(T)
         @test abs(derivative_right(D, x0, Val{1}())) < eps(T)
@@ -415,6 +426,7 @@ for source in accuracy_test_list, T in (Float32,Float64)
     try
         acc_order = 2
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
+        inner_indices = length(D.left_boundary)+1:length(res)-length(D.left_boundary)-1
         println(DevNull, D)
         println(DevNull, D.coefficients)
         x1 = grid(D)
@@ -435,11 +447,11 @@ for source in accuracy_test_list, T in (Float32,Float64)
         @test all(i->abs(res[i]) < 5000*eps(T), eachindex(res))
         # only interior
         A_mul_B!(res, D, x2)
-        @test all(i->abs(res[i]) < 5000*eps(T), acc_order+1:length(res)-acc_order-1)
+        @test all(i->abs(res[i]) < 5000*eps(T), inner_indices)
         A_mul_B!(res, D, x3)
-        @test all(i->abs(res[i]) < 5000*eps(T), acc_order+1:length(res)-acc_order-1)
+        @test all(i->abs(res[i]) < 5000*eps(T), inner_indices)
         A_mul_B!(res, D, x4)
-        @test any(i->!(res[i] ≈ 24*x0[i]), acc_order+1:length(res)-acc_order-1)
+        @test any(i->!(res[i] ≈ 24*x0[i]), inner_indices)
         # boundary: first derivative
         @test abs(derivative_left( D, x0, Val{1}())) < eps(T)
         @test abs(derivative_right(D, x0, Val{1}())) < eps(T)
@@ -471,7 +483,7 @@ for T in (Float32, Float64), acc_order in (2,4,6,8)
     xmax = 5*one(T)
     N = 51
     source = MattssonSvärdShoeybi2008()
-    D_serial = derivative_operator(source, 1, acc_order, xmin, xmax, N)
+    D_serial = derivative_operator(source, 1, acc_order, xmin, xmax, N, Val{:serial}())
     D_threads= derivative_operator(source, 1, acc_order, xmin, xmax, N, Val{:threads}())
     x = grid(D_serial)
     u = x.^5
