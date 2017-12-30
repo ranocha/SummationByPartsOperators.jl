@@ -190,6 +190,8 @@ for source in accuracy_test_list, T in (Float32,Float64)
         k=6; @test integrate(x6, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
         k=7; @test integrate(x7, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
     end
+
+    @test_throws ArgumentError derivative_operator(source, der_order, 16, xmin, xmax, N)
 end
 
 # Accuracy tests of second derivative operators.
@@ -402,6 +404,8 @@ for source in accuracy_test_list, T in (Float32,Float64)
         @test derivative_left( D, x5, Val{1}()) ≈ 5xmin^4
         @test derivative_right(D, x5, Val{1}()) ≈ 5xmax^4
     end
+
+    @test_throws ArgumentError derivative_operator(source, der_order, 16, xmin, xmax, N)
 end
 
 # Accuracy tests of third derivative operators.
@@ -575,6 +579,8 @@ for source in accuracy_test_list, T in (Float32,Float64)
         @test isapprox(derivative_left( D, x3, Val{2}()), 6xmin, atol=50_000*eps(T))
         @test isapprox(derivative_right(D, x3, Val{2}()), 6xmax, atol=50_000*eps(T))
     end
+
+    @test_throws ArgumentError derivative_operator(source, der_order, 16, xmin, xmax, N)
 end
 
 # Accuracy tests of fourth derivative operators.
@@ -770,6 +776,8 @@ for source in accuracy_test_list, T in (Float32,Float64)
         @test isapprox(derivative_left( D, x3, Val{3}()), 6, atol=500_000*eps(T))
         @test isapprox(derivative_right(D, x3, Val{3}()), 6, atol=5_000_000*eps(T))
     end
+
+    @test_throws ArgumentError derivative_operator(source, der_order, 16, xmin, xmax, N)
 end
 
 
