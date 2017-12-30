@@ -705,6 +705,71 @@ for source in accuracy_test_list, T in (Float32,Float64)
         @test isapprox(derivative_left( D, x3, Val{3}()), 6, atol=100_000*eps(T))
         @test isapprox(derivative_right(D, x3, Val{3}()), 6, atol=1_000_000*eps(T))
     end
+
+    acc_order = 6
+    D = try
+        derivative_operator(source, der_order, acc_order, xmin, xmax, N)
+    catch
+        nothing
+    end
+    if D != nothing
+        D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
+        println(DevNull, D)
+        println(DevNull, D.coefficients)
+        x1 = grid(D)
+        x0 = ones(x1)
+        x2 = x1 .* x1
+        x3 = x2 .* x1
+        x4 = x2 .* x2
+        res = zeros(x0)
+        inner_indices = length(D.coefficients.left_boundary)+1:length(res)-length(D.coefficients.left_boundary)-1
+        @test derivative_order(D) == der_order
+        @test accuracy_order(D)   == acc_order
+        @test issymmetric(D) == false
+        # interior and boundary
+        A_mul_B!(res, D, x0)
+        @test all(i->abs(res[i]) < 50_000_000*eps(T), eachindex(res))
+        A_mul_B!(res, D, x1)
+        @test all(i->abs(res[i]) < 50_000_000*eps(T), eachindex(res))
+        A_mul_B!(res, D, x2)
+        @test all(i->abs(res[i]) < 100_000_000*eps(T), eachindex(res))
+        # only interior
+        A_mul_B!(res, D, x2)
+        @test all(i->abs(res[i]) < 100_000_000*eps(T), inner_indices)
+        A_mul_B!(res, D, x3)
+        @test all(i->abs(res[i]) < 500_000_000*eps(T), inner_indices)
+        A_mul_B!(res, D, x4)
+        @test all(i->isapprox(res[i], 24*x0[i], rtol=50_000_000*eps(T)), inner_indices)
+        # boundary: first derivative
+        @test isapprox(derivative_left( D, x0, Val{1}()), 0, atol=1000*eps(T))
+        @test isapprox(derivative_right(D, x0, Val{1}()), 0, atol=1000*eps(T))
+        @test derivative_left( D, x1, Val{1}()) ≈ one(T)
+        @test derivative_right(D, x1, Val{1}()) ≈ one(T)
+        @test derivative_left( D, x2, Val{1}()) ≈ 2xmin
+        @test derivative_right(D, x2, Val{1}()) ≈ 2xmax
+        @test derivative_left( D, x3, Val{1}()) ≈ 3xmin^2
+        @test derivative_right(D, x3, Val{1}()) ≈ 3xmax^2
+        @test isapprox(derivative_left( D, x4, Val{1}()), 4xmin^3, atol=1.e-3)
+        @test isapprox(derivative_right(D, x4, Val{1}()), 4xmax^3, atol=1.e-3)
+        # boundary: second derivative
+        @test isapprox(derivative_left( D, x0, Val{2}()), 0, atol=10_000*eps(T))
+        @test isapprox(derivative_right(D, x0, Val{2}()), 0, atol=10_000*eps(T))
+        @test isapprox(derivative_left( D, x1, Val{2}()), 0, atol=10_000*eps(T))
+        @test isapprox(derivative_right(D, x1, Val{2}()), 0, atol=10_000*eps(T))
+        @test isapprox(derivative_left( D, x2, Val{2}()), 2, atol=10_000*eps(T))
+        @test isapprox(derivative_right(D, x2, Val{2}()), 2, atol=10_000*eps(T))
+        @test isapprox(derivative_left( D, x3, Val{2}()), 6xmin, atol=10_000*eps(T))
+        @test isapprox(derivative_right(D, x3, Val{2}()), 6xmax, atol=50_000*eps(T))
+        # boundary: third derivative
+        @test abs(derivative_left( D, x0, Val{3}())) < eps(T)
+        @test abs(derivative_right(D, x0, Val{3}())) < eps(T)
+        @test abs(derivative_left( D, x1, Val{3}())) < 500_000*eps(T)
+        @test abs(derivative_right(D, x1, Val{3}())) < 500_000*eps(T)
+        @test abs(derivative_left( D, x2, Val{3}())) < 500_000*eps(T)
+        @test abs(derivative_right(D, x2, Val{3}())) < 1_000_000*eps(T)
+        @test isapprox(derivative_left( D, x3, Val{3}()), 6, atol=500_000*eps(T))
+        @test isapprox(derivative_right(D, x3, Val{3}()), 6, atol=5_000_000*eps(T))
+    end
 end
 
 
