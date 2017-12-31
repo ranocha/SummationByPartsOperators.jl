@@ -1,7 +1,7 @@
 using Base.Test
 using SummationByPartsOperators
 
-accuracy_test_list = (MattssonSvärdShoeybi2008(), Mattsson2014())
+accuracy_test_list = (MattssonSvärdShoeybi2008(), Mattsson2014(), MattssonAlmquistCarpenter2014Extended())
 
 # Accuracy tests of first derivative operators.
 for source in accuracy_test_list, T in (Float32,Float64)
@@ -30,7 +30,7 @@ for source in accuracy_test_list, T in (Float32,Float64)
         @test issymmetric(D) == false
         # interior and boundary
         A_mul_B!(res, D, x0)
-        @test all(i->abs(res[i]) < eps(T), eachindex(res))
+        @test all(i->abs(res[i]) < 50*eps(T), eachindex(res))
         A_mul_B!(res, D, x1)
         @test all(i->res[i] ≈ x0[i], eachindex(res))
         # only interior
@@ -68,7 +68,7 @@ for source in accuracy_test_list, T in (Float32,Float64)
         @test issymmetric(D) == false
         # interior and boundary
         A_mul_B!(res, D, x0)
-        @test all(i->abs(res[i]) < 20*eps(T), eachindex(res))
+        @test all(i->abs(res[i]) < 50*eps(T), eachindex(res))
         A_mul_B!(res, D, x1)
         @test all(i->res[i] ≈ x0[i], eachindex(res))
         if source != Mattsson2014()
