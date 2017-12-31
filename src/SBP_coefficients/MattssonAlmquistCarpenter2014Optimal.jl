@@ -126,9 +126,9 @@ function first_derivative_coefficients(source::MattssonAlmquistCarpenter2014Opti
         upper_coef = SVector(T(1//2))
         central_coef = zero(T)
         lower_coef = -upper_coef
-        left_weights = SVector( T(),
-                                T(),
-                                T() )
+        left_weights = SVector( T(33743097329453577701//Int128(10)^20),
+                                T(97759682018833491296//Int128(10)^20),
+                                T(93278808104030343530//Int128(10)^20) )
         right_weights = left_weights
         left_boundary_derivatives = Tuple{}()
         right_boundary_derivatives = left_boundary_derivatives
