@@ -274,6 +274,7 @@ function first_derivative_coefficients(source::MattssonAlmquistCarpenter2014Opti
                                 left_boundary_derivatives, right_boundary_derivatives,
                                 lower_coef, central_coef, upper_coef,
                                 left_weights, right_weights, parallel, 1, order, source)
+    #= FIXME: There seem to be some errors in the coefficients...
     elseif order == 8
         left_boundary = (
             # d1
@@ -379,6 +380,7 @@ function first_derivative_coefficients(source::MattssonAlmquistCarpenter2014Opti
                                 left_boundary_derivatives, right_boundary_derivatives,
                                 lower_coef, central_coef, upper_coef,
                                 left_weights, right_weights, parallel, 1, order, source)
+    =#
     else
         throw(ArgumentError("Order $order not implemented/derived."))
     end
