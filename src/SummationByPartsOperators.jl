@@ -27,6 +27,8 @@ abstract type SourceOfCoefficients end
 include("general_operators.jl")
 include("periodic_operators.jl")
 include("SBP_operators.jl")
+include("dissipation_operators.jl")
+include("SBP_coefficients/MattssonSvärdNordström2004.jl")
 include("SBP_coefficients/MattssonSvärdShoeybi2008.jl")
 include("SBP_coefficients/Mattsson2014.jl")
 include("SBP_coefficients/MattssonAlmquistCarpenter2014Extended.jl")
@@ -37,9 +39,10 @@ include("SBP_coefficients/MattssonAlmquistCarpenter2014Optimal.jl")
 export PeriodicDerivativeOperator, DerivativeOperator, SourceOfCoefficients
 export derivative_order, accuracy_order, source_of_coeffcients, grid
 export mul!, integrate, derivative_left, derivative_right
-export periodic_central_derivative_operator, periodic_derivative_operator, derivative_operator
+export periodic_central_derivative_operator, periodic_derivative_operator, derivative_operator,
+        dissipation_operator
 
-export MattssonSvärdShoeybi2008, Mattsson2014, MattssonAlmquistCarpenter2014Extended,
-        MattssonAlmquistCarpenter2014Optimal
+export MattssonSvärdNordström2004, MattssonSvärdShoeybi2008, Mattsson2014,
+        MattssonAlmquistCarpenter2014Extended, MattssonAlmquistCarpenter2014Optimal
 
 end # module
