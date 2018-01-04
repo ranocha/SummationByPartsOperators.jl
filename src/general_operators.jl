@@ -23,6 +23,18 @@ end
 @inline grid(D::AbstractDerivativeOperator) = D.grid
 
 
+Base.@propagate_inbounds function Base.A_mul_B!(dest, D::AbstractDerivativeOperator, u)
+    mul!(dest, D, u, one(eltype(dest)))
+end
+
+@noinline function *(D::AbstractDerivativeOperator, u)
+    T = promote_type(eltype(D), eltype(u))
+    dest = similar(u, T); fill!(dest, zero(T))
+    @inbounds A_mul_B!(dest, D, u)
+    dest
+end
+
+
 function Base.full(D::AbstractDerivativeOperator{T}) where {T}
     v = zeros(T, size(D, 2))
     A = zeros(T, size(D)...)

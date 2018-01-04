@@ -304,16 +304,6 @@ the right boundary of the grid.
 end
 
 
-Base.@propagate_inbounds function Base.A_mul_B!(dest, D::DerivativeOperator, u)
-    mul!(dest, D, u, one(eltype(dest)))
-end
-
-@noinline function *(D::DerivativeOperator, u)
-    T = promote_type(eltype(D), eltype(u))
-    dest = similar(u, T); fill!(dest, zero(T))
-    @inbounds A_mul_B!(dest, D, u)
-    dest
-end
 
 """
     mul!(dest::AbstractVector, D::DerivativeOperator, u::AbstractVector, α, β)
