@@ -1,8 +1,8 @@
 
 """
-    DerivativeCoefficients{T,BoundaryWidth,LowerOffset,UpperOffset,Parallel}
+    DerivativeCoefficients
 
-The coefficients of a derivative operator on a periodic grid.
+The coefficients of a derivative operator on a nonperiodic grid.
 """
 struct DerivativeCoefficients{T,LeftBoundary,RightBoundary,LeftBoundaryDerivatives,RightBoundaryDerivatives,
                               LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel,SourceOfCoefficients} <: AbstractDerivativeCoefficients{T}
@@ -53,7 +53,7 @@ struct DerivativeCoefficients{T,LeftBoundary,RightBoundary,LeftBoundaryDerivativ
 end
 
 
-@inline source_of_coeffcients(coefficients::DerivativeCoefficients) = coefficients.source_of_coeffcients
+@inline source_of_coeffcients(coefficients::AbstractDerivativeCoefficients) = coefficients.source_of_coeffcients
 
 
 function Base.show(io::IO, coefficients::DerivativeCoefficients)
@@ -235,9 +235,9 @@ end
 
 
 """
-    DerivativeOperator{T,StencilWidth,Parallel}
+    DerivativeOperator
 
-A derivative operator on a finite difference grid.
+A derivative operator on a nonperiodic finite difference grid.
 """
 struct DerivativeOperator{T,LeftBoundary,RightBoundary,LeftBoundaryDerivatives,RightBoundaryDerivatives,
                           LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel,SourceOfCoefficients,Grid} <: AbstractDerivativeOperator{T}
