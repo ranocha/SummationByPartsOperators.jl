@@ -36,3 +36,32 @@ for source_D in D_test_list, source_Di in Di_test_list, acc_order in 2:2:8, T in
         end
     end
 end
+
+
+# Compare mul! with β=0 and mul! without β.
+for T in (Float32, Float64), order in (2,4,6,8)
+    xmin = zero(T)
+    xmax = 5*one(T)
+    N = 51
+    source = MattssonSvärdShoeybi2008()
+    D = derivative_operator(source, 1, order, xmin, xmax, N)
+    x = grid(D)
+    u = x.^5
+    dest1 = zeros(u)
+    dest2 = zeros(u)
+
+    Di_serial = dissipation_operator(MattssonSvärdNordström2004(), D, order, Val{:serial}())
+    Di_threads= dissipation_operator(MattssonSvärdNordström2004(), D, order, Val{:threads}())
+    Di_full   = full(Di_serial)
+
+    mul!(dest1, Di_serial, u, one(T), zero(T))
+    mul!(dest2, Di_serial, u, one(T))
+    @test all(i->dest1[i] ≈ dest2[i], eachindex(u))
+    mul!(dest1, Di_threads, u, one(T), zero(T))
+    mul!(dest2, Di_threads, u, one(T))
+    @test all(i->dest1[i] ≈ dest2[i], eachindex(u))
+    dest3 = Di_serial*u
+    @test all(i->dest1[i] ≈ dest3[i], eachindex(u))
+    dest3 = Di_full*u
+    @test all(i->isapprox(dest1[i], dest3[i], atol=500000*eps(T)), eachindex(u))
+end

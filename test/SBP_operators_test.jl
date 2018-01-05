@@ -790,6 +790,7 @@ for T in (Float32, Float64), acc_order in (2,4,6,8)
     source = MattssonSvärdShoeybi2008()
     D_serial = derivative_operator(source, 1, acc_order, xmin, xmax, N, Val{:serial}())
     D_threads= derivative_operator(source, 1, acc_order, xmin, xmax, N, Val{:threads}())
+    D_full   = full(D_serial)
     x = grid(D_serial)
     u = x.^5
     dest1 = zeros(u)
@@ -803,4 +804,6 @@ for T in (Float32, Float64), acc_order in (2,4,6,8)
     @test all(i->dest1[i] ≈ dest2[i], eachindex(u))
     dest3 = D_serial*u
     @test all(i->dest1[i] ≈ dest3[i], eachindex(u))
+    dest3 = D_full*u
+    @test all(i->isapprox(dest1[i], dest3[i], atol=500000*eps(T)), eachindex(u))
 end
