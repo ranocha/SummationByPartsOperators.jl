@@ -20,5 +20,5 @@ display(D1)
 B1 = eye(Int, N); B1[1,1] = 0
 display(B1)
 
-#isplay(D1' * B * D1)
+display(D1' * B * D1)
 display(D1' * B1 * D1)

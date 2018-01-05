@@ -24,18 +24,18 @@ function dissipation_coefficients(source::MattssonSvärdNordström2004, order::I
             # d1
             (
                 DerivativeCoefficientRow{T,0,2}(SVector(T(1), T(1) )),
-                DerivativeCoefficientRow{T,0,2}(SVector(T(1), T(-1) )),
+                DerivativeCoefficientRow{T,-1,2}(SVector(T(1), T(-1) )),
             ),
         )
         right_boundary = (
             .- left_boundary[1],
         )
         lower_coef = (
-            DerivativeCoefficientRow{T,0,1}(SVector(T(-1), )),
+            DerivativeCoefficientRow{T,1,1}(SVector(T(-1), )),
         )
         central_coef = DerivativeCoefficientRow{T,0,2}(SVector(T(1), T(1) ))
         upper_coef = (
-            DerivativeCoefficientRow{T,1,1}(SVector(T(-1), )),
+            DerivativeCoefficientRow{T,0,1}(SVector(T(-1), )),
         )
 
         coef = DissipationCoefficients(left_boundary, right_boundary,

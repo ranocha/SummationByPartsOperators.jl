@@ -61,11 +61,10 @@ function mul!(dest::AbstractVector, coefficients::DissipationCoefficients, u::Ab
         @argcheck length(u) > length(left_boundary) + length(right_boundary) DimensionMismatch
     end
 
-    #convolve_boundary_coefficients!(dest, left_boundary, right_boundary, u, b, α)
+    convolve_boundary_coefficients!(dest, left_boundary, right_boundary, u, b, α)
     convolve_interior_coefficients!(dest, lower_coef, central_coef, upper_coef, u, b, α, length(left_boundary), length(right_boundary), parallel)
 end
 
-#TODO: convolve_boundary_coefficients!(dest, left_boundary, right_boundary, u, b, α)
 
 @inline function convolve_row(coef_row::DerivativeCoefficientRow{T,Offset,Length}, i::Int, u, b) where {T,Offset,Length}
     @inbounds begin
@@ -78,6 +77,19 @@ end
     retval
 end
 
+@unroll function convolve_boundary_coefficients!(dest::AbstractVector, left_boundary, right_boundary, u::AbstractVector, b::AbstractVector, α)
+    T = eltype(dest)
+
+    @unroll for i in 1:length(left_boundary) #=@inbounds TODO=# begin
+        tmp = zero(T)
+        for j in 1:length(left_boundary[i])
+            tmp += convolve_row(left_boundary[i][j], j, u, b)
+        end
+        dest[i] = α*tmp
+    end end
+
+    #L = length(dest)
+end
 
 @unroll function convolve_interior_coefficients!(dest::AbstractVector, lower_coef, central_coef, upper_coef, u::AbstractVector, b::AbstractVector, α, left_boundary_width, right_boundary_width, parallel)
     T = eltype(dest)
@@ -144,7 +156,7 @@ end
 
 Compute `α*D*u + β*dest` and store the result in `dest`.
 """
-Base.@propagate_inbounds function mul!(dest::AbstractVector, D::DerivativeOperator, u::AbstractVector, α, β)
+Base.@propagate_inbounds function mul!(dest::AbstractVector, D::DissipationOperator, u::AbstractVector, α, β)
     @boundscheck begin
         @argcheck size(D, 2) == length(u) DimensionMismatch
         @argcheck size(D, 1) == length(dest) DimensionMismatch
@@ -153,7 +165,7 @@ Base.@propagate_inbounds function mul!(dest::AbstractVector, D::DerivativeOperat
 end
 
 """
-    mul!(dest::AbstractVector, D::DerivativeOperator, u::AbstractVector, α)
+    mul!(dest::AbstractVector, D::DissipationOperator, u::AbstractVector, α)
 
 Compute `α*D*u` and store the result in `dest`.
 """
