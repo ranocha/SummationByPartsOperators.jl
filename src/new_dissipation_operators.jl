@@ -1,6 +1,10 @@
 
 abstract type AbstractCoefficientCache{T} end
 
+function Base.checkbounds(::Type{Bool}, u::AbstractVector, cache::AbstractCoefficientCache)
+    length(u) > length(cache.inv_left_weights)+length(cache.inv_right_weights)
+end
+
 """
     NewDissipationCoefficients
 
@@ -73,6 +77,36 @@ function mul!(dest::AbstractVector, coefficients::NewDissipationCoefficients, u:
 
     convolve_boundary_coefficients!(dest, coefficient_cache, u, b, α)
     convolve_interior_coefficients!(dest, coefficient_cache, u, b, α, parallel)
+end
+
+
+function convolve_interior_coefficients!(dest::AbstractVector, cache::AbstractCoefficientCache, u::AbstractVector, b::AbstractVector, α, parallel)
+    for i in (length(cache.inv_left_weights)+1):(length(dest)-length(cache.inv_right_weights)) @inbounds begin
+        retval = convolve_interior_coefficients_loopbody(i, cache, u, b)
+        dest[i] = α*retval
+    end end
+end
+
+function convolve_interior_coefficients!(dest::AbstractVector, cache::AbstractCoefficientCache, u::AbstractVector, b::AbstractVector, α, parallel::Val{:threads})
+    Threads.@threads for i in (length(cache.inv_left_weights)+1):(length(dest)-length(cache.inv_right_weights)) @inbounds begin
+        retval = convolve_interior_coefficients_loopbody(i, cache, u, b)
+        dest[i] = α*retval
+    end end
+end
+
+
+function convolve_interior_coefficients!(dest::AbstractVector, cache::AbstractCoefficientCache, u::AbstractVector, b::AbstractVector, α, β, parallel)
+    for i in (length(cache.inv_left_weights)+1):(length(dest)-length(cache.inv_right_weights)) @inbounds begin
+        retval = convolve_interior_coefficients_loopbody(i, cache, u, b)
+        dest[i] = α*retval + β*dest[i]
+    end end
+end
+
+function convolve_interior_coefficients!(dest::AbstractVector, cache::AbstractCoefficientCache, u::AbstractVector, b::AbstractVector, α, β, parallel::Val{:threads})
+    Threads.@threads for i in (length(cache.inv_left_weights)+1):(length(dest)-length(cache.inv_right_weights)) @inbounds begin
+        retval = convolve_interior_coefficients_loopbody(i, cache, u, b)
+        dest[i] = α*retval + β*dest[i]
+    end end
 end
 
 
