@@ -43,8 +43,24 @@ function Base.show(io::IO, coefficients::DissipationCoefficients)
 end
 
 
-#TODO: mul!(dest::AbstractVector, coefficients::DissipationCoefficients, u::AbstractVector, b::AbstractVector, α, β)
-# etc.
+"""
+    mul!(dest::AbstractVector, coefficients::DissipationCoefficients, u::AbstractVector, b::AbstractVector, α, β)
+
+Compute `α*D*u + β*dest` using the coefficients `b` and store the result in `dest`.
+"""
+function mul!(dest::AbstractVector, coefficients::DissipationCoefficients, u::AbstractVector, b::AbstractVector, α, β)
+    @unpack left_boundary, right_boundary, lower_coef, central_coef, upper_coef, parallel = coefficients
+
+    @boundscheck begin
+        @argcheck length(dest) == length(u) DimensionMismatch
+        @argcheck length(dest) == length(b) DimensionMismatch
+        @argcheck length(u) > length(lower_coef)+length(upper_coef) DimensionMismatch
+        @argcheck length(u) > length(left_boundary) + length(right_boundary) DimensionMismatch
+    end
+
+    convolve_variable_boundary_coefficients!(dest, left_boundary, right_boundary, u, b, α, β)
+    convolve_variable_interior_coefficients!(dest, lower_coef, central_coef, upper_coef, u, b, α, β, length(left_boundary), length(right_boundary), parallel)
+end
 
 """
     mul!(dest::AbstractVector, coefficients::DissipationCoefficients, u::AbstractVector, b::AbstractVector, α)
@@ -105,6 +121,21 @@ end
     end end
 end
 
+@inline @unroll function convolve_variable_boundary_coefficients!(dest::AbstractVector, left_boundary, right_boundary, u::AbstractVector, b::AbstractVector, α, β)
+    T = eltype(dest)
+
+    @unroll for i in 1:length(left_boundary) @inbounds begin
+        tmp = convolve_left_boundary(T, left_boundary[i], u, b)
+        dest[i] = α*tmp + β*dest[i]
+    end end
+
+    @unroll for i in 1:length(right_boundary) @inbounds begin
+        tmp = convolve_right_boundary(T, right_boundary[i], u, b)
+        dest[end+1-i] = α*tmp + β*dest[end+1-i]
+    end end
+end
+
+
 @inline @unroll function convolve_left_boundary(T, boundary_coef, u, b)
     tmp = zero(T)
     @unroll for j in 1:length(boundary_coef)
@@ -135,6 +166,21 @@ end
             tmp += convolve_row(upper_coef[j], i+j, u, b)
         end
         dest[i] = α*tmp
+    end end
+end
+
+@inline @unroll function convolve_variable_interior_coefficients!(dest::AbstractVector, lower_coef, central_coef, upper_coef, u::AbstractVector, b::AbstractVector, α, β, left_boundary_width, right_boundary_width, parallel)
+    T = eltype(dest)
+    for i in (left_boundary_width+1):(length(dest)-right_boundary_width) @inbounds begin
+        tmp = zero(T)
+        @unroll for j in 1:length(lower_coef)
+            tmp += convolve_row(lower_coef[j], i-j, u, b)
+        end
+        tmp += convolve_row(central_coef, i, u, b)
+        @unroll for j in 1:length(upper_coef)
+            tmp += convolve_row(upper_coef[j], i+j, u, b)
+        end
+        dest[i] = α*tmp + β*dest[i]
     end end
 end
 

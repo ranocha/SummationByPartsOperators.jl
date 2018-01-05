@@ -20,6 +20,16 @@ end
 function dissipation_coefficients(source::MattssonSvärdNordström2004, order::Int, grid, left_weights, right_weights, parallel=Val{:serial}())
     T = eltype(grid)
     if order == 2
+        #=
+        boundary_length = 1
+        if length(left_weights) < boundary_length
+            left_weights = (left_weights..., ntuple(j->one(T), boundary_length-length(left_weights)))
+        end
+        if length(right_weights) < boundary_length
+            right_weights = (right_weights..., ntuple(j->one(T), boundary_length-length(right_weights)))
+        end
+        =#
+
         left_boundary = (
             # d1
             left_weights[1] .\ (
@@ -27,6 +37,16 @@ function dissipation_coefficients(source::MattssonSvärdNordström2004, order::I
                 DerivativeCoefficientRow{T,-1,2}(SVector(T(1), T(-1) )),
             ),
         )
+        for i in 2:length(left_weights)
+            di = left_weights[i] .\ (
+                ntuple(j->DerivativeCoefficientRow{T,0,1}(SVector(T(0), )), i-2)...,
+                DerivativeCoefficientRow{T,1,1}(SVector(T(-1), )),
+                DerivativeCoefficientRow{T,0,2}(SVector(T(1), T(1) )),
+                DerivativeCoefficientRow{T,0,1}(SVector(T(-1), )),
+            )
+            left_boundary = (left_boundary..., di)
+        end
+
         right_boundary = (
             # d1
             right_weights[1] .\ (
@@ -34,6 +54,16 @@ function dissipation_coefficients(source::MattssonSvärdNordström2004, order::I
                 DerivativeCoefficientRow{T,1,1}(SVector(T(-1), )),
             ),
         )
+        for i in 2:length(right_weights)
+            di = right_weights[i] .\ (
+                ntuple(j->DerivativeCoefficientRow{T,0,1}(SVector(T(0), )), i-2)...,
+                DerivativeCoefficientRow{T,0,1}(SVector(T(-1), )),
+                DerivativeCoefficientRow{T,0,2}(SVector(T(1), T(1) )),
+                DerivativeCoefficientRow{T,1,1}(SVector(T(-1), )),
+            )
+            right_boundary = (right_boundary..., di)
+        end
+
         lower_coef = (
             DerivativeCoefficientRow{T,1,1}(SVector(T(-1), )),
         )
