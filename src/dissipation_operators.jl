@@ -322,6 +322,6 @@ adapted to the derivative operator `D`.
 The evaluation of the derivative can be parallised using threads by chosing
 `parallel=Val{:threads}())`.
 """
-function dissipation_operator(source_of_coefficients, D::DerivativeOperator, order::Int=accuracy_order(D), parallel=Val{:serial}())
+function dissipation_operator(source_of_coefficients, D::DerivativeOperator, order::Int=accuracy_order(D), parallel=D.coefficients.parallel)
     dissipation_operator(source_of_coefficients, order, first(grid(D)), last(grid(D)), length(grid(D)), D.coefficients.left_weights, D.coefficients.right_weights, parallel)
 end
