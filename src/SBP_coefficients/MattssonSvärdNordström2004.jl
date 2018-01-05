@@ -465,3 +465,67 @@ function dissipation_coefficients(source::MattssonSvärdNordström2004, order::I
 
     coef, b
 end
+
+
+function new_dissipation_coefficients(source::MattssonSvärdNordström2004, order::Int, grid, left_weights, right_weights, parallel=Val{:serial}())
+    T = promote_type(eltype(grid), eltype(left_weights), eltype(right_weights))
+    if order == 2
+        inv_left_weights = one(T) ./ left_weights
+        inv_right_weights = one(T) ./ right_weights
+        coefficient_cache = MattssonSvärdNordström2004Cache2{T,
+            typeof(inv_left_weights),typeof(inv_right_weights)}(inv_left_weights, inv_right_weights)
+        b = ones(grid)
+        b[1] = T(0)
+    else
+        throw(ArgumentError("Order $order not implemented/derived."))
+    end
+
+
+    NewDissipationCoefficients(coefficient_cache, parallel, order, 2, source), b
+end
+
+
+
+struct MattssonSvärdNordström2004Cache2{T,InvLeftWeights,InvRightWeights} <: AbstractCoefficientCache{T}
+    inv_left_weights::InvLeftWeights
+    inv_right_weights::InvRightWeights
+end
+
+function Base.checkbounds(::Type{Bool}, u::AbstractVector, cache::MattssonSvärdNordström2004Cache2)
+    L = length(u)
+    (L > 2) && (L > length(cache.inv_left_weights)+length(cache.inv_right_weights))
+end
+
+function convolve_boundary_coefficients!(dest::AbstractVector, cache::MattssonSvärdNordström2004Cache2, u::AbstractVector, b::AbstractVector, α)
+    #TODO: Modified boundaries...
+    #TODO: Not finished...
+    @unpack inv_left_weights, inv_right_weights = cache
+
+    @inbounds begin
+        dest[1] = α * inv_left_weights[1] * ( (b[1] + b[2]) * u[1] + (b[1] - b[2]) * u[2] )
+
+        dest[end] = α * inv_right_weights[1] * ( b[end] * u[end] - b[end] * u[end-1] )
+    end
+end
+
+function convolve_interior_coefficients!(dest::AbstractVector, cache::MattssonSvärdNordström2004Cache2, u::AbstractVector, b::AbstractVector, α, parallel)
+    for i in (length(cache.inv_left_weights)+1):(length(dest)-length(cache.inv_right_weights))
+        convolve_interior_coefficients_loopbody!(dest, i, cache, u, b, α)
+    end
+end
+
+function convolve_interior_coefficients!(dest::AbstractVector, cache::MattssonSvärdNordström2004Cache2, u::AbstractVector, b::AbstractVector, α, parallel::Val{:threads})
+    Threads.@threads for i in (length(cache.inv_left_weights)+1):(length(dest)-length(cache.inv_right_weights))
+        convolve_interior_coefficients_loopbody!(dest, i, cache, u, b, α)
+    end
+end
+
+@inline function convolve_interior_coefficients_loopbody!(dest, i, cache::MattssonSvärdNordström2004Cache2, u, b, α)
+    #TODO: Modified boundaries...
+    @inbounds begin
+        b_i = b[i]
+        b_ip1 = b[i+1]
+
+        dest[i] = α * ( -b_i * u[i-1] + (b_i + b_ip1) * u[i] - b_ip1 * u[i+1] )
+    end
+end
