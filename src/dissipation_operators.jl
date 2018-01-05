@@ -61,8 +61,8 @@ function mul!(dest::AbstractVector, coefficients::DissipationCoefficients, u::Ab
         @argcheck length(u) > length(left_boundary) + length(right_boundary) DimensionMismatch
     end
 
-    convolve_boundary_coefficients!(dest, left_boundary, right_boundary, u, b, α)
-    convolve_interior_coefficients!(dest, lower_coef, central_coef, upper_coef, u, b, α, length(left_boundary), length(right_boundary), parallel)
+    convolve_variable_boundary_coefficients!(dest, left_boundary, right_boundary, u, b, α)
+    convolve_variable_interior_coefficients!(dest, lower_coef, central_coef, upper_coef, u, b, α, length(left_boundary), length(right_boundary), parallel)
 end
 
 
@@ -91,7 +91,7 @@ end
 end
 =#
 
-@inline @unroll function convolve_boundary_coefficients!(dest::AbstractVector, left_boundary, right_boundary, u::AbstractVector, b::AbstractVector, α)
+@inline @unroll function convolve_variable_boundary_coefficients!(dest::AbstractVector, left_boundary, right_boundary, u::AbstractVector, b::AbstractVector, α)
     T = eltype(dest)
 
     @unroll for i in 1:length(left_boundary) @inbounds begin
@@ -123,7 +123,7 @@ end
 end
 
 
-@inline @unroll function convolve_interior_coefficients!(dest::AbstractVector, lower_coef, central_coef, upper_coef, u::AbstractVector, b::AbstractVector, α, left_boundary_width, right_boundary_width, parallel)
+@inline @unroll function convolve_variable_interior_coefficients!(dest::AbstractVector, lower_coef, central_coef, upper_coef, u::AbstractVector, b::AbstractVector, α, left_boundary_width, right_boundary_width, parallel)
     T = eltype(dest)
     for i in (left_boundary_width+1):(length(dest)-right_boundary_width) @inbounds begin
         tmp = zero(T)

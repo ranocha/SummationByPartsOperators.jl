@@ -158,7 +158,7 @@ end
 end
 
 
-@unroll function convolve_boundary_coefficients!(dest, left_boundary, right_boundary, u, α, β)
+@unroll function convolve_boundary_coefficients!(dest::AbstractVector, left_boundary, right_boundary, u::AbstractVector, α, β)
     @unroll for i in 1:length(left_boundary)
         tmp = convolve_left_row(left_boundary[i], u)
         @inbounds dest[i] = β*dest[i] + α*tmp
@@ -169,7 +169,7 @@ end
     end
 end
 
-@unroll function convolve_boundary_coefficients!(dest, left_boundary, right_boundary, u, α)
+@unroll function convolve_boundary_coefficients!(dest::AbstractVector, left_boundary, right_boundary, u::AbstractVector, α)
     @unroll for i in 1:length(left_boundary)
         tmp = convolve_left_row(left_boundary[i], u)
         @inbounds dest[i] = α*tmp
