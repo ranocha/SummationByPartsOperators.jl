@@ -45,3 +45,31 @@ display(B2)
 
 display(D2' * B * D2)
 display(D2' * B2 * D2)
+
+
+# 6th order dissipation
+D3 = zeros(Int, N, N)
+for i in 1:N
+    D3[i,i] = -3
+end
+for i in 1:N-1
+    D3[i+1,i] = 3
+    D3[i,i+1] = 1
+end
+for i in 1:N-2
+    D3[i+2,i] = -1
+end
+boundary_width = 2
+for i in 1:boundary_width
+    D3[i,:] = D3[boundary_width+1,:]
+end
+for i in 1:boundary_width-1
+    D3[end-i+1,:] = D3[end-boundary_width+1,:]
+end
+display(D3)
+
+B3 = eye(Int, N); B3[1,1] = B3[2,2]= B3[end,end] = 0
+display(B3)
+
+display(D3' * B * D3)
+display(D3' * B3 * D3)
