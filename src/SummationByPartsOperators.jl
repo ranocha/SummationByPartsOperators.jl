@@ -7,7 +7,7 @@ using ArgCheck
 using Parameters
 using StaticArrays
 
-import Base: *, -
+import Base: *, -, \
 import PolynomialBases: integrate
 
 
