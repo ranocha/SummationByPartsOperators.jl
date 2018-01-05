@@ -29,6 +29,8 @@ for source_D in D_test_list, source_Di in Di_test_list, acc_order in 2:2:8, T in
                 nothing
             end
             if Di != nothing
+                println(DevNull, Di)
+                println(DevNull, Di.coefficients)
                 HDi = H*full(Di)
                 @test norm(HDi - HDi') < 10*eps(T)
                 @test minimum(real, eigvals(HDi)) > -10*eps(T)
