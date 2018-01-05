@@ -92,7 +92,40 @@ end
     end
     retval
 end
+
 #=
+# Less efficient than the version above
+@inline function convolve_row(coef_row::DerivativeCoefficientRow{T,Offset,Length}, i::Int, u, b) where {T,Offset,Length}
+    @inbounds begin
+        tmp = zero(promote_type(eltype(coef_row.coef), eltype(b)))
+        for j in Base.OneTo(length(coef_row))
+            tmp += coef_row.coef[j]*b[i+j-1+Offset]
+        end
+        retval = tmp*u[i]
+    end
+    retval
+end
+=#
+#=
+# This does not work...
+@generated function convolve_row(coef_row::DerivativeCoefficientRow{T,Offset,Length}, i::Int, u, b) where {T,Offset,Length}
+    @inbounds begin
+        ex = :( coef_row.coef[1]*b[i+$Offset] )
+        for j in 2:Length
+            tmp = :( $ex + coef_row.coef[$j]*b[i+$(j-1+Offset)] )
+        end
+        ex = :( $ex * u[i] )
+    end
+    #:( Base.@_inline_meta; $ex )
+    ex
+end
+=#
+#=
+# This is less efficient than the first version
+@inline function offset(::DerivativeCoefficientRow{T,Offset,Length}) where {T,Offset,Length}
+    Offset
+end
+
 @inline @unroll function convolve_row(coef_row::DerivativeCoefficientRow, i::Int, u, b)
     Offset = offset(coef_row)
 
@@ -138,18 +171,18 @@ end
 
 @inline @unroll function convolve_left_boundary(T, boundary_coef, u, b)
     tmp = zero(T)
-    @unroll for j in 1:length(boundary_coef)
+    @unroll for j in 1:length(boundary_coef) @inbounds begin
         tmp += convolve_row(boundary_coef[j], j, u, b)
-    end
+    end end
     tmp
 end
 
 @inline @unroll function convolve_right_boundary(T, boundary_coef, u, b)
     tmp = zero(T)
     L = length(u)+1
-    @unroll for j in 1:length(boundary_coef)
+    @unroll for j in 1:length(boundary_coef) @inbounds begin
         tmp += convolve_row(boundary_coef[j], L-j, u, b)
-    end
+    end end
     tmp
 end
 
