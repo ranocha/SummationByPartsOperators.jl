@@ -73,3 +73,30 @@ display(B3)
 
 display(D3' * B * D3)
 display(D3' * B3 * D3)
+
+
+# 8th order dissipation
+D4 = zeros(Int, N, N)
+for i in 1:N
+    D4[i,i] = 6
+end
+for i in 1:N-1
+    D4[i+1,i] = -4
+    D4[i,i+1] = -4
+end
+for i in 1:N-2
+    D4[i+2,i] = 1
+    D4[i,i+2] = 1
+end
+boundary_width = 2
+for i in 1:boundary_width
+    D4[i,:] = D4[boundary_width+1,:]
+    D4[end-i+1,:] = D4[end-boundary_width,:]
+end
+display(D4)
+
+B4 = eye(Int, N); B4[1,1] = B4[2,2]= B4[end,end] = B4[end-1,end-1] = 0
+display(B4)
+
+display(D4' * B * D4)
+display(D4' * B4 * D4)
