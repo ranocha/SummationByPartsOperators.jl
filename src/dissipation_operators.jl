@@ -169,6 +169,27 @@ end
     end end
 end
 
+@inline function convolve_variable_interior_coefficients!(dest::AbstractVector, lower_coef, central_coef, upper_coef, u::AbstractVector, b::AbstractVector, α, left_boundary_width, right_boundary_width, parallel::Val{:threads})
+    Threads.@threads for i in (left_boundary_width+1):(length(dest)-right_boundary_width)
+        convolve_variable_interior_coefficients_threaded_loop!(dest, i, lower_coef, central_coef, upper_coef, u, b, α)
+    end
+end
+
+@noinline @unroll function convolve_variable_interior_coefficients_threaded_loop!(dest::AbstractVector, i, lower_coef, central_coef, upper_coef, u::AbstractVector, b::AbstractVector, α)
+    T = eltype(dest)
+    @inbounds begin
+        tmp = zero(T)
+        @unroll for j in 1:length(lower_coef)
+            tmp += convolve_row(lower_coef[j], i-j, u, b)
+        end
+        tmp += convolve_row(central_coef, i, u, b)
+        @unroll for j in 1:length(upper_coef)
+            tmp += convolve_row(upper_coef[j], i+j, u, b)
+        end
+        dest[i] = α*tmp
+    end
+end
+
 @inline @unroll function convolve_variable_interior_coefficients!(dest::AbstractVector, lower_coef, central_coef, upper_coef, u::AbstractVector, b::AbstractVector, α, β, left_boundary_width, right_boundary_width, parallel)
     T = eltype(dest)
     for i in (left_boundary_width+1):(length(dest)-right_boundary_width) @inbounds begin
@@ -182,6 +203,27 @@ end
         end
         dest[i] = α*tmp + β*dest[i]
     end end
+end
+
+@inline function convolve_variable_interior_coefficients!(dest::AbstractVector, lower_coef, central_coef, upper_coef, u::AbstractVector, b::AbstractVector, α, β, left_boundary_width, right_boundary_width, parallel::Val{:threads})
+    Threads.@threads for i in (left_boundary_width+1):(length(dest)-right_boundary_width)
+        convolve_variable_interior_coefficients_threaded_loop!(dest, i, lower_coef, central_coef, upper_coef, u, b, α, β)
+    end
+end
+
+@noinline @unroll function convolve_variable_interior_coefficients_threaded_loop!(dest::AbstractVector, i, lower_coef, central_coef, upper_coef, u::AbstractVector, b::AbstractVector, α, β)
+    T = eltype(dest)
+    @inbounds begin
+        tmp = zero(T)
+        @unroll for j in 1:length(lower_coef)
+            tmp += convolve_row(lower_coef[j], i-j, u, b)
+        end
+        tmp += convolve_row(central_coef, i, u, b)
+        @unroll for j in 1:length(upper_coef)
+            tmp += convolve_row(upper_coef[j], i+j, u, b)
+        end
+        dest[i] = α*tmp + β*dest[i]
+    end
 end
 
 
