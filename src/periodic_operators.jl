@@ -4,7 +4,7 @@
 
 The coefficients of a derivative operator on a periodic grid.
 """
-struct PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,Parallel} <: AbstractDerivativeCoefficients{T}
+struct PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients} <: AbstractDerivativeCoefficients{T}
     # coefficients defining the operator and its action
     lower_coef::SVector{LowerOffset, T}
     central_coef::T
@@ -14,16 +14,18 @@ struct PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,Parallel} <: Abs
     derivative_order::Int
     accuracy_order  ::Int
     symmetric       ::Bool
+    source_of_coeffcients::SourceOfCoefficients
 
     function PeriodicDerivativeCoefficients(lower_coef::SVector{LowerOffset, T}, central_coef::T, upper_coef::SVector{UpperOffset, T},
-                                            parallel::Parallel, derivative_order::Int, accuracy_order::Int) where {T,LowerOffset,UpperOffset,Parallel}
+                                            parallel::Parallel, derivative_order::Int, accuracy_order::Int,
+                                            source_of_coeffcients::SourceOfCoefficients) where {T,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients}
         symmetric = LowerOffset == UpperOffset
         if symmetric
             @inbounds for i in Base.OneTo(LowerOffset)
                 symmetric = symmetric && lower_coef[i] == upper_coef[i]
             end
         end
-        new{T,LowerOffset,UpperOffset,Parallel}(lower_coef, central_coef, upper_coef, parallel, derivative_order, accuracy_order, symmetric)
+        new{T,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients}(lower_coef, central_coef, upper_coef, parallel, derivative_order, accuracy_order, symmetric)
     end
 end
 
@@ -226,6 +228,25 @@ end
 
 
 """
+    BeljaddLeFlochMishraParés2017
+
+Coefficients of the periodic operators given in
+  Beljadid, LeFloch, Mishra, Parés (2017)
+  Schemes with Well-Controlled Dissipation. Hyperbolic Systems in
+    Nonconservative Form.
+  Communications in Computational Physics 21.4, pp. 913-946.
+"""
+struct BeljaddLeFlochMishraParés2017 <: SourceOfCoefficients end
+
+function Base.show(io::IO, ::BeljaddLeFlochMishraParés2017)
+    print(io,
+        "  Beljadid, LeFloch, Mishra, Parés (2017) \n",
+        "  Schemes with Well-Controlled Dissipation. Hyperbolic Systems in \n",
+        "    Nonconservative Form. \n",
+        "  Communications in Computational Physics 21.4, pp. 913-946. \n")
+end
+
+"""
     periodic_central_derivative_coefficients(derivative_order, accuracy_order, T=Float64, parallel=Val{:serial}())
 
 Create the `PeriodicDerivativeCoefficients` approximating the `derivative_order`-th
@@ -262,6 +283,7 @@ function periodic_central_derivative_coefficients(derivative_order, accuracy_ord
         upper_coef = SVector{n,T}(coef)
         central_coef = zero(T)
         lower_coef = -upper_coef
+        source = BeljaddLeFlochMishraParés2017()
     elseif derivative_order == 2
         # Exact evaluation of the coefficients, see
         # Beljadid, LeFloch, Mishra, Parés (2017)
@@ -282,6 +304,7 @@ function periodic_central_derivative_coefficients(derivative_order, accuracy_ord
         upper_coef = SVector{n,T}(coef)
         central_coef = -2*sum(upper_coef)
         lower_coef = upper_coef
+        source = BeljaddLeFlochMishraParés2017()
     elseif derivative_order == 3
         # Exact evaluation of the coefficients, see
         # Beljadid, LeFloch, Mishra, Parés (2017)
@@ -307,11 +330,29 @@ function periodic_central_derivative_coefficients(derivative_order, accuracy_ord
         upper_coef = SVector{n,T}(coef)
         central_coef = zero(T)
         lower_coef = -upper_coef
+        source = BeljaddLeFlochMishraParés2017()
     else
         throw(ArgumentError("Derivative order $derivative_order not implemented yet."))
     end
 
-    PeriodicDerivativeCoefficients(lower_coef, central_coef, upper_coef, parallel, derivative_order, accuracy_order)
+    PeriodicDerivativeCoefficients(lower_coef, central_coef, upper_coef, parallel, derivative_order, accuracy_order, source)
+end
+
+"""
+Fornberg1998
+
+Coefficients of the periodic operators given in
+  Fornberg (1998)
+  Calculation of Weights in Finite Difference Formulas.
+  SIAM Rev. 40.3, pp. 685-691.
+"""
+struct Fornberg1998 <: SourceOfCoefficients end
+
+function Base.show(io::IO, ::Fornberg1998)
+    print(io,
+        "  Fornberg (1998) \n",
+        "  Calculation of Weights in Finite Difference Formulas. \n",
+        "  SIAM Rev. 40.3, pp. 685-691. \n")
 end
 
 """
@@ -389,7 +430,9 @@ function periodic_derivative_coefficients(derivative_order, accuracy_order, left
     central_coef = T(c[central_idx])
     upper_coef = SVector{UpperOffset, T}(c[upper_idx])
 
-    PeriodicDerivativeCoefficients(lower_coef, central_coef, upper_coef, parallel, derivative_order, accuracy_order)
+    source = Fornberg1998()
+
+    PeriodicDerivativeCoefficients(lower_coef, central_coef, upper_coef, parallel, derivative_order, accuracy_order, source)
 end
 
 
@@ -398,26 +441,23 @@ end
 
 A derivative operator on a uniform periodic grid.
 """
-struct PeriodicDerivativeOperator{T,LowerOffset,UpperOffset,Parallel,Grid} <: AbstractDerivativeOperator{T}
-    coefficients::PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,Parallel}
+struct PeriodicDerivativeOperator{T,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients,Grid} <: AbstractDerivativeOperator{T}
+    coefficients::PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients}
     grid::Grid
     Δx::T
     factor::T
 
-    function PeriodicDerivativeOperator(coefficients::PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,Parallel},
-                                        grid::Grid) where {T,LowerOffset,UpperOffset,Parallel,Grid}
+    function PeriodicDerivativeOperator(coefficients::PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients},
+                                        grid::Grid) where {T,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients,Grid}
         @argcheck length(grid) > LowerOffset+UpperOffset DimensionMismatch
 
         Δx = step(grid)
         factor = inv(Δx^coefficients.derivative_order)
-        new{T,LowerOffset,UpperOffset,Parallel,Grid}(coefficients, grid, Δx, factor)
+        new{T,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients,Grid}(coefficients, grid, Δx, factor)
     end
 end
 
-function PeriodicDerivativeOperator(coefficients::PeriodicDerivativeCoefficients, xmin, xmax, N)
-    grid = linspace(xmin, xmax, N)
-    PeriodicDerivativeOperator(coefficients, grid)
-end
+@inline source_of_coeffcients(D::PeriodicDerivativeOperator) = source_of_coeffcients(D.coefficients)
 
 
 function Base.show(io::IO, D::PeriodicDerivativeOperator{T,LowerOffset,UpperOffset}) where {T,LowerOffset,UpperOffset}
@@ -432,9 +472,9 @@ function Base.show(io::IO, D::PeriodicDerivativeOperator{T,LowerOffset,UpperOffs
     end
     print(io, accuracy_order(D), " {T=", T, ", Parallel=", typeof(D.coefficients.parallel), "} \n")
     print(io, "on a grid in [", first(grid(D)), ", ", last(grid(D)),
-                "] using ", length(grid(D)), " nodes \n")
-    print(io, "and stencils with ", LowerOffset, " nodes to the left and ", UpperOffset,
-                " nodes to the right.")
+                "] using ", length(grid(D)), " nodes, \n")
+    print(io, "stencils with ", LowerOffset, " nodes to the left, ", UpperOffset,
+                " nodes to the right, and coefficients from \n", source_of_coeffcients(D))
 end
 
 
