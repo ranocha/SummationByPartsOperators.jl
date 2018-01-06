@@ -1,31 +1,31 @@
 
+abstract type AbstractCoefficientCache{T} end
+
+function Base.checkbounds(::Type{Bool}, u::AbstractVector, cache::AbstractCoefficientCache)
+    length(u) > length(cache.inv_left_weights)+length(cache.inv_right_weights)
+end
+
 """
     DissipationCoefficients
 
 The coefficients of a dissipation operator on a nonperiodic grid.
 """
-struct DissipationCoefficients{T,LeftBoundary,RightBoundary,LowerCoef,CentralCoef<:DerivativeCoefficientRow{T},
-                               UpperCoef,Parallel,SourceOfCoefficients} <: AbstractDerivativeCoefficients{T}
+struct DissipationCoefficients{T,CoefficientCache<:AbstractCoefficientCache{T},
+                               Parallel,SourceOfCoefficients} <: AbstractDerivativeCoefficients{T}
     # coefficients defining the operator and its action
-    left_boundary::LeftBoundary
-    right_boundary::RightBoundary
-    lower_coef::LowerCoef
-    central_coef::CentralCoef
-    upper_coef::UpperCoef
+    coefficient_cache::CoefficientCache
     parallel::Parallel
     # corresponding orders etc.
     derivative_order::Int
     accuracy_order  ::Int
     source_of_coeffcients::SourceOfCoefficients
 
-    function DissipationCoefficients(left_boundary::LeftBoundary, right_boundary::RightBoundary,
-                                    lower_coef::LowerCoef, central_coef::CentralCoef, upper_coef::UpperCoef,
+    function DissipationCoefficients(coefficient_cache::CoefficientCache,
                                     parallel::Parallel, derivative_order::Int, accuracy_order::Int,
-                                    source_of_coeffcients::SourceOfCoefficients) where {T,LeftBoundary,RightBoundary,LowerCoef,CentralCoef<:DerivativeCoefficientRow{T},
-                                                                                        UpperCoef,Parallel,SourceOfCoefficients}
-        new{T,LeftBoundary,RightBoundary,LowerCoef,CentralCoef,UpperCoef,Parallel,SourceOfCoefficients}(
-            left_boundary, right_boundary, lower_coef, central_coef, upper_coef,
-            parallel, derivative_order, accuracy_order, source_of_coeffcients)
+                                    source_of_coeffcients::SourceOfCoefficients) where {T,CoefficientCache<:AbstractCoefficientCache{T},
+                                                                                        Parallel,SourceOfCoefficients}
+        new{T,CoefficientCache,Parallel,SourceOfCoefficients}(
+            coefficient_cache, parallel, derivative_order, accuracy_order, source_of_coeffcients)
     end
 end
 
@@ -49,17 +49,16 @@ end
 Compute `α*D*u + β*dest` using the coefficients `b` and store the result in `dest`.
 """
 function mul!(dest::AbstractVector, coefficients::DissipationCoefficients, u::AbstractVector, b::AbstractVector, α, β)
-    @unpack left_boundary, right_boundary, lower_coef, central_coef, upper_coef, parallel = coefficients
+    @unpack coefficient_cache, parallel = coefficients
 
     @boundscheck begin
         @argcheck length(dest) == length(u) DimensionMismatch
         @argcheck length(dest) == length(b) DimensionMismatch
-        @argcheck length(u) > length(lower_coef)+length(upper_coef) DimensionMismatch
-        @argcheck length(u) > length(left_boundary) + length(right_boundary) DimensionMismatch
+        @argcheck checkbounds(Bool, dest, coefficient_cache) DimensionMismatch
     end
 
-    convolve_variable_boundary_coefficients!(dest, left_boundary, right_boundary, u, b, α, β)
-    convolve_variable_interior_coefficients!(dest, lower_coef, central_coef, upper_coef, u, b, α, β, length(left_boundary), length(right_boundary), parallel)
+    convolve_boundary_coefficients!(dest, coefficient_cache, u, b, α, β)
+    convolve_interior_coefficients!(dest, coefficient_cache, u, b, α, β, parallel)
 end
 
 """
@@ -68,134 +67,47 @@ end
 Compute `α*D*u` using the coefficients `b` and store the result in `dest`.
 """
 function mul!(dest::AbstractVector, coefficients::DissipationCoefficients, u::AbstractVector, b::AbstractVector, α)
-    @unpack left_boundary, right_boundary, lower_coef, central_coef, upper_coef, parallel = coefficients
+    @unpack coefficient_cache, parallel = coefficients
 
     @boundscheck begin
         @argcheck length(dest) == length(u) DimensionMismatch
         @argcheck length(dest) == length(b) DimensionMismatch
-        @argcheck length(u) > length(lower_coef)+length(upper_coef) DimensionMismatch
-        @argcheck length(u) > length(left_boundary) + length(right_boundary) DimensionMismatch
+        @argcheck checkbounds(Bool, dest, coefficient_cache) DimensionMismatch
     end
 
-    convolve_variable_boundary_coefficients!(dest, left_boundary, right_boundary, u, b, α)
-    convolve_variable_interior_coefficients!(dest, lower_coef, central_coef, upper_coef, u, b, α, length(left_boundary), length(right_boundary), parallel)
+    convolve_boundary_coefficients!(dest, coefficient_cache, u, b, α)
+    convolve_interior_coefficients!(dest, coefficient_cache, u, b, α, parallel)
 end
 
 
-@inline function convolve_row(coef_row::DerivativeCoefficientRow{T,Offset,Length}, i::Int, u, b) where {T,Offset,Length}
-    @inbounds begin
-        tmp = coef_row.coef[1]*b[i+Offset]
-        for j in 2:length(coef_row)
-            tmp += coef_row.coef[j]*b[i+j-1+Offset]
-        end
-        retval = tmp*u[i]
-    end
-    retval
-end
-
-
-@inline @unroll function convolve_variable_boundary_coefficients!(dest::AbstractVector, left_boundary, right_boundary, u::AbstractVector, b::AbstractVector, α)
-    T = eltype(dest)
-
-    @unroll for i in 1:length(left_boundary) @inbounds begin
-        tmp = convolve_left_boundary(T, left_boundary[i], u, b)
-        dest[i] = α*tmp
-    end end
-
-    @unroll for i in 1:length(right_boundary) @inbounds begin
-        tmp = convolve_right_boundary(T, right_boundary[i], u, b)
-        dest[end+1-i] = α*tmp
+function convolve_interior_coefficients!(dest::AbstractVector, cache::AbstractCoefficientCache, u::AbstractVector, b::AbstractVector, α, parallel)
+    for i in (length(cache.inv_left_weights)+1):(length(dest)-length(cache.inv_right_weights)) @inbounds begin
+        retval = convolve_interior_coefficients_loopbody(i, cache, u, b)
+        dest[i] = α*retval
     end end
 end
 
-@inline @unroll function convolve_variable_boundary_coefficients!(dest::AbstractVector, left_boundary, right_boundary, u::AbstractVector, b::AbstractVector, α, β)
-    T = eltype(dest)
-
-    @unroll for i in 1:length(left_boundary) @inbounds begin
-        tmp = convolve_left_boundary(T, left_boundary[i], u, b)
-        dest[i] = α*tmp + β*dest[i]
-    end end
-
-    @unroll for i in 1:length(right_boundary) @inbounds begin
-        tmp = convolve_right_boundary(T, right_boundary[i], u, b)
-        dest[end+1-i] = α*tmp + β*dest[end+1-i]
+function convolve_interior_coefficients!(dest::AbstractVector, cache::AbstractCoefficientCache, u::AbstractVector, b::AbstractVector, α, parallel::Val{:threads})
+    Threads.@threads for i in (length(cache.inv_left_weights)+1):(length(dest)-length(cache.inv_right_weights)) @inbounds begin
+        retval = convolve_interior_coefficients_loopbody(i, cache, u, b)
+        dest[i] = α*retval
     end end
 end
 
 
-@inline @unroll function convolve_left_boundary(T, boundary_coef, u, b)
-    tmp = zero(T)
-    @unroll for j in 1:length(boundary_coef) @inbounds begin
-        tmp += convolve_row(boundary_coef[j], j, u, b)
+function convolve_interior_coefficients!(dest::AbstractVector, cache::AbstractCoefficientCache, u::AbstractVector, b::AbstractVector, α, β, parallel)
+    for i in (length(cache.inv_left_weights)+1):(length(dest)-length(cache.inv_right_weights)) @inbounds begin
+        retval = convolve_interior_coefficients_loopbody(i, cache, u, b)
+        dest[i] = α*retval + β*dest[i]
     end end
-    tmp
 end
 
-@inline @unroll function convolve_right_boundary(T, boundary_coef, u, b)
-    tmp = zero(T)
-    L = length(u)+1
-    @unroll for j in 1:length(boundary_coef) @inbounds begin
-        tmp += convolve_row(boundary_coef[j], L-j, u, b)
+function convolve_interior_coefficients!(dest::AbstractVector, cache::AbstractCoefficientCache, u::AbstractVector, b::AbstractVector, α, β, parallel::Val{:threads})
+    Threads.@threads for i in (length(cache.inv_left_weights)+1):(length(dest)-length(cache.inv_right_weights)) @inbounds begin
+        retval = convolve_interior_coefficients_loopbody(i, cache, u, b)
+        dest[i] = α*retval + β*dest[i]
     end end
-    tmp
 end
-
-
-@inline function convolve_variable_interior_coefficients!(dest::AbstractVector, lower_coef, central_coef, upper_coef, u::AbstractVector, b::AbstractVector, α, left_boundary_width, right_boundary_width, parallel)
-    for i in (left_boundary_width+1):(length(dest)-right_boundary_width)
-        convolve_variable_interior_coefficients_loopbody!(dest, i, lower_coef, central_coef, upper_coef, u, b, α)
-    end
-end
-
-@inline function convolve_variable_interior_coefficients!(dest::AbstractVector, lower_coef, central_coef, upper_coef, u::AbstractVector, b::AbstractVector, α, left_boundary_width, right_boundary_width, parallel::Val{:threads})
-    Threads.@threads for i in (left_boundary_width+1):(length(dest)-right_boundary_width)
-        convolve_variable_interior_coefficients_loopbody!(dest, i, lower_coef, central_coef, upper_coef, u, b, α)
-    end
-end
-
-@inline @unroll function convolve_variable_interior_coefficients_loopbody!(dest::AbstractVector, i, lower_coef, central_coef, upper_coef, u::AbstractVector, b::AbstractVector, α)
-    T = eltype(dest)
-    @inbounds begin
-        tmp = zero(T)
-        @unroll for j in 1:length(lower_coef)
-            tmp += convolve_row(lower_coef[j], i-j, u, b)
-        end
-        tmp += convolve_row(central_coef, i, u, b)
-        @unroll for j in 1:length(upper_coef)
-            tmp += convolve_row(upper_coef[j], i+j, u, b)
-        end
-        dest[i] = α*tmp
-    end
-end
-
-
-@inline function convolve_variable_interior_coefficients!(dest::AbstractVector, lower_coef, central_coef, upper_coef, u::AbstractVector, b::AbstractVector, α, β, left_boundary_width, right_boundary_width, parallel)
-    for i in (left_boundary_width+1):(length(dest)-right_boundary_width)
-        convolve_variable_interior_coefficients_loopbody!(dest, i, lower_coef, central_coef, upper_coef, u, b, α, β)
-    end
-end
-
-@inline function convolve_variable_interior_coefficients!(dest::AbstractVector, lower_coef, central_coef, upper_coef, u::AbstractVector, b::AbstractVector, α, β, left_boundary_width, right_boundary_width, parallel::Val{:threads})
-    Threads.@threads for i in (left_boundary_width+1):(length(dest)-right_boundary_width)
-        convolve_variable_interior_coefficients_loopbody!(dest, i, lower_coef, central_coef, upper_coef, u, b, α, β)
-    end
-end
-
-@inline @unroll function convolve_variable_interior_coefficients_loopbody!(dest::AbstractVector, i, lower_coef, central_coef, upper_coef, u::AbstractVector, b::AbstractVector, α, β)
-    T = eltype(dest)
-    @inbounds begin
-        tmp = zero(T)
-        @unroll for j in 1:length(lower_coef)
-            tmp += convolve_row(lower_coef[j], i-j, u, b)
-        end
-        tmp += convolve_row(central_coef, i, u, b)
-        @unroll for j in 1:length(upper_coef)
-            tmp += convolve_row(upper_coef[j], i+j, u, b)
-        end
-        dest[i] = α*tmp + β*dest[i]
-    end
-end
-
 
 
 """
@@ -203,22 +115,17 @@ end
 
 A dissipation operator on a nonperiodic finite difference grid.
 """
-struct DissipationOperator{T,LeftBoundary,RightBoundary,LowerCoef,CentralCoef,
-                           UpperCoef,Parallel,SourceOfCoefficients,Grid} <: AbstractDerivativeOperator{T}
-    coefficients::DissipationCoefficients{T,LeftBoundary,RightBoundary,LowerCoef,CentralCoef,
-                                          UpperCoef,Parallel,SourceOfCoefficients}
+struct DissipationOperator{T,CoefficientCache,Parallel,SourceOfCoefficients,Grid} <: AbstractDerivativeOperator{T}
+    coefficients::DissipationCoefficients{T,CoefficientCache,Parallel,SourceOfCoefficients}
     grid::Grid
     b::Vector{T}
 
-    function DissipationOperator(coefficients::DissipationCoefficients{T,LeftBoundary,RightBoundary,LowerCoef,CentralCoef,
-                                                                       UpperCoef,Parallel,SourceOfCoefficients},
-                                grid::Grid, b::Vector{T}) where {T,LeftBoundary,RightBoundary,LowerCoef,CentralCoef,
-                                                                 UpperCoef,Parallel,SourceOfCoefficients,Grid}
-        @argcheck length(grid) > length(coefficients.lower_coef)+length(coefficients.upper_coef) DimensionMismatch
-        @argcheck length(grid) > length(coefficients.left_boundary) + length(coefficients.right_boundary) DimensionMismatch
+    function DissipationOperator(coefficients::DissipationCoefficients{T,CoefficientCache,Parallel,SourceOfCoefficients},
+                                grid::Grid, b::Vector{T}) where {T,CoefficientCache,Parallel,SourceOfCoefficients,Grid}
+        @argcheck checkbounds(Bool, grid, coefficients.coefficient_cache) DimensionMismatch
         @argcheck length(grid) == length(b)
 
-        new{T,LeftBoundary,RightBoundary,LowerCoef,CentralCoef,UpperCoef,Parallel,SourceOfCoefficients,Grid}(
+        new{T,CoefficientCache,Parallel,SourceOfCoefficients,Grid}(
             coefficients, grid, b)
     end
 end
@@ -285,7 +192,7 @@ function dissipation_operator(source_of_coefficients, order, xmin, xmax, N, left
 end
 
 """
-    dissipation_operator(source_of_coefficients, D::DerivativeOperator, order::Int=accuracy_order(D), parallel=Val{:serial}())
+    dissipation_operator(source_of_coefficients, D::DerivativeOperator, order::Int=accuracy_order(D), parallel=D.coefficients.parallel)
 
 Create a `DissipationOperator` approximating a weighted `order`-th derivative
 adapted to the derivative operator `D`.
