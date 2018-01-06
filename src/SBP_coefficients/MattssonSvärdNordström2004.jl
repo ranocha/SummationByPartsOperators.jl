@@ -886,46 +886,62 @@ function convolve_boundary_coefficients!(dest::AbstractVector, cache::MattssonSv
                     )
         end
 
-        #TODO
         dest[end] = α * inv_right_weights[1] * (
-                        (b[end] + b[end-1]) * u[end]
-                        - 3*(b[end] + b[end-1]) * u[end-1]
-                        + 3*(b[end] + b[end-1]) * u[end-2]
-                        - (b[end] + b[end-1]) * u[end-3]
+                        (b[end-2] + b[end-1] + b[end]) * u[end]
+                        - 4*(b[end-2] + b[end-1] + b[end]) * u[end-1]
+                        + 6*(b[end-2] + b[end-1] + b[end]) * u[end-2]
+                        - 4*(b[end-2] + b[end-1] + b[end]) * u[end-3]
+                        + (b[end-2] + b[end-1] + b[end]) * u[end-4]
                     )
         dest[end-1] = α * inv_right_weights[2] * (
-                        - 3*(b[end] + b[end-1]) * u[end]
-                        + (b[end-2] + 9*b[end-1] + 9*b[end]) * u[end-1]
-                        - 3*(b[end-2] + 3*b[end-1] + 3*b[end]) * u[end-2]
-                        + 3*(b[end-2] + b[end-1] + b[end]) * u[end-3]
-                        - b[end-2] * u[end-4]
+                        - 4*(b[end-2] + b[end-1] + b[end]) * u[end]
+                        + (b[end-3] + 16*b[end-2] + 16*b[end-1] + 16*b[end]) * u[end-1]
+                        - 4*(b[end-3] + 6*b[end-2] + 6*b[end-1] + 6*b[end]) * u[end-2]
+                        + (6*b[end-3] + 16*b[end-2] + 16*b[end-1] + 16*b[end]) * u[end-3]
+                        - 4*(b[end-3] + b[end-2] + b[end-1] + b[end]) * u[end-4]
+                        + b[end-3] * u[end-5]
                     )
         dest[end-2] = α * inv_right_weights[3] * (
-                        3*(b[end] + b[end-1]) * u[end]
-                        - 3*(b[end-2] + 3*b[end-1] + 3*b[end]) * u[end-1]
-                        + (b[end-3] + 9*b[end-2] + 9*b[end-1] + 9*b[end]) * u[end-2]
-                        - 3*(b[end-3] + 3*b[end-2] + b[end-1] + b[end]) * u[end-3]
-                        + 3*(b[end-3] + b[end-2]) * u[end-4]
-                        - b[end-3] * u[end-5]
+                        6*(b[end-2] + b[end-1] + b[end]) * u[end]
+                        - 4*(b[end-3] + 6*b[end-2] + 6*b[end-1] + 6*b[end]) * u[end-1]
+                        + (b[end-4] + 16*b[end-3] + 36*b[end-2] + 36*b[end-1] + 36*b[end]) * u[end-2]
+                        - 4*(b[end-4] + 6*b[end-3] + 6*b[end-2] + 6*b[end-1] + 6*b[end]) * u[end-3]
+                        + (6*b[end-4] + 16*b[end-3] + 6*b[end-2] + 6*b[end-1] + 6*b[end]) * u[end-4]
+                        - 4*(b[end-4] + b[end-3]) * u[end-5]
+                        + b[end-4] * u[end-6]
                     )
         dest[end-3] = α * inv_right_weights[4] * (
-                        - (b[end] + b[end-1]) * u[end]
-                        + 3*(b[end-2] + b[end-1] + b[end]) * u[end-1]
-                        - 3*(b[end-3] + 3*b[end-2] + b[end-1] + b[end]) * u[end-2]
-                        + (b[end-4] + 9*b[end-3] + 9*b[end-2] + b[end-1] + b[end]) * u[end-3]
-                        - 3*(b[end-4] + 3*b[end-3] + b[end-2]) * u[end-4]
-                        + 3*(b[end-4] + b[end-3]) * u[end-5]
-                        - b[end-4] * u[end-6]
+                        - 4*(b[end-2] + b[end-1] + b[end]) * u[end]
+                        + (6*b[end-3] + 16*b[end-2] + 16*b[end-1] + 16*b[end]) * u[end-1]
+                        - 4*(b[end-4] + 6*b[end-3] + 6*b[end-2] + 6*b[end-1] + 6*b[end]) * u[end-2]
+                        + (b[end-5] + 16*b[end-4] + 36*b[end-3] + 16*b[end-2] + 16*b[end-1] + 16*b[end]) * u[end-3]
+                        - 4*(b[end-5] + 6*b[end-4] + 6*b[end-3] + b[end-2] + b[end-1] + b[end]) * u[end-4]
+                        + (6*b[end-5] + 16*b[end-4] + 6*b[end-3]) * u[end-5]
+                        - 4*(b[end-5] + b[end-4]) * u[end-6]
+                        + b[end-5] * u[end-7]
                     )
-        for i in 4:length(inv_right_weights)-1
+        dest[end-4] = α * inv_right_weights[5] * (
+                        (b[end-2] + b[end-1] + b[end]) * u[end]
+                        - 4*(b[end-3] + b[end-2] + b[end-1] + b[end]) * u[end-1]
+                        + (6*b[end-4] + 16*b[end-3] + 6*b[end-2] + 6*b[end-1] + 6*b[end]) * u[end-2]
+                        - 4*(b[end-5] + 6*b[end-4] + 6*b[end-3] + b[end-2] + b[end-1] + b[end]) * u[end-3]
+                        + (b[end-6] + 16*b[end-5] + 36*b[end-4] + 16*b[end-3] + b[end-2] + b[end-1] + b[end]) * u[end-4]
+                        - 4*(b[end-6] + 6*b[end-5] + 6*b[end-4] + b[end-3]) * u[end-5]
+                        + (6*b[end-6] + 16*b[end-5] + 6*b[end-4]) * u[end-6]
+                        - 4*(b[end-6] + b[end-5]) * u[end-7]
+                        + b[end-6] * u[end-8]
+                    )
+        for i in 5:length(inv_right_weights)-1
             dest[end-i] = α * inv_right_weights[i+1] * (
-                        - b[end-(i+1)] * u[end-(i+3)]
-                        + 3*(b[end-(i+1)] + b[end-i]) * u[end-(i+2)]
-                        - 3*(b[end-(i+1)] + 3*b[end-i] + b[end-(i-1)]) * u[end-(i+1)]
-                        + (b[end-(i+1)] + 9*b[end-i] + 9*b[end-(i-1)] + b[end-(i-2)]) * u[end-i]
-                        - 3*(b[end-i] + 3*b[end-(i-1)] + b[end-(i-2)]) * u[end-(i-1)]
-                        + 3*(b[end-(i-1)] + b[end-(i-2)]) * u[end-(i-2)]
-                        - b[end-(i-2)] * u[end-(i-3)]
+                        b[end-(i+2)] * u[end-(i+4)]
+                        - 4*(b[end-(i+2)] + b[end-(i+1)]) * u[end-(i+3)]
+                        + (6*b[end-(i+2)] + 16*b[end-(i+1)] + 6*b[end-i]) * u[end-(i+2)]
+                        - 4*(b[end-(i+2)] + 6*b[end-(i+1)] + 6*b[end-i] + b[end-(i-1)]) * u[end-(i+1)]
+                        + (b[end-(i+2)] + 16*b[end-(i+1)] + 36*b[end-i] + 16*b[end-(i-1)] + b[end-(i-2)]) * u[end-i]
+                        - 4*(b[end-(i+1)] + 6*b[end-i] + 6*b[end-(i-1)] + b[end-(i-2)]) * u[end-(i-1)]
+                        + (6*b[end-i] + 16*b[end-(i-1)] + 6*b[end-(i-2)]) * u[end-(i-2)]
+                        - 4*(b[end-(i-1)] + b[end-(i-2)]) * u[end-(i-3)]
+                        + b[end-(i-2)] * u[end-(i-4)]
                     )
         end
     end
