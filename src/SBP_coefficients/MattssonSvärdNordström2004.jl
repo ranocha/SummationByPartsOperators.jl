@@ -530,7 +530,7 @@ function convolve_boundary_coefficients!(dest::AbstractVector, cache::MattssonSv
                     + (b[1] - b[2]) * u[2]
                 )
         dest[2] = α * inv_left_weights[2] * (
-                    (b[1] + b[2]) * u[1]
+                    (b[1] - b[2]) * u[1]
                     + (b[1] + b[2] + b[3]) * u[2]
                     - b[3] * u[3]
                 )
@@ -636,7 +636,7 @@ function convolve_boundary_coefficients!(dest::AbstractVector, cache::MattssonSv
                         + b[end-2] * u[end-3]
                     )
         dest[end-2] = α * inv_right_weights[3] * (
-                        2*(b[end] + b[end-1]) * u[end]
+                        (b[end-1] + b[end]) * u[end]
                         -2*(b[end-2] + b[end-1] + b[end]) * u[end-1]
                         + (b[end-3] + 4*b[end-2] + b[end-1] + b[end]) * u[end-2]
                         -2*(b[end-3] + b[end-2]) * u[end-3]
