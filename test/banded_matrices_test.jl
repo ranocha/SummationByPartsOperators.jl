@@ -24,6 +24,10 @@ for T in (Float32, Float64), acc_order in (2,4,6,8), D_source in D_test_list, Di
     dest1 = zeros(u)
     dest2 = zeros(u)
 
+    @test BandedMatrices.isbanded(D_serial) == BandedMatrices.isbanded(D_banded)
+    @test bandwidth(D_serial, 1) == bandwidth(D_banded, 1)
+    @test bandwidth(D_serial, 2) == bandwidth(D_banded, 2)
+
     A_mul_B!(dest1, D_serial, u)
     A_mul_B!(dest2, D_full, u)
     @test all(i->isapprox(dest1[i], dest2[i], atol=500*eps(T)), eachindex(u))
@@ -42,6 +46,10 @@ for T in (Float32, Float64), acc_order in (2,4,6,8), D_source in D_test_list, Di
     Di_full   = full(Di_serial)
     Di_sparse = sparse(Di_serial)
     Di_banded = BandedMatrix(Di_serial)
+
+    @test BandedMatrices.isbanded(Di_serial) == BandedMatrices.isbanded(Di_banded)
+    @test bandwidth(Di_serial, 1) == bandwidth(Di_banded, 1)
+    @test bandwidth(Di_serial, 2) == bandwidth(Di_banded, 2)
 
     A_mul_B!(dest1, Di_serial, u)
     A_mul_B!(dest2, Di_full, u)
