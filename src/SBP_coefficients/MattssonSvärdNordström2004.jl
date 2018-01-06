@@ -487,6 +487,12 @@ function new_dissipation_coefficients(source::MattssonSvärdNordström2004, orde
         coefficient_cache = MattssonSvärdNordström2004Cache6(inv_left_weights, inv_right_weights)
         b = ones(grid)
         b[1] = b[2] = b[end] = T(0)
+    elseif order == 8
+        inv_left_weights = one(T) ./ left_weights
+        inv_right_weights = one(T) ./ right_weights
+        coefficient_cache = MattssonSvärdNordström2004Cache8(inv_left_weights, inv_right_weights)
+        b = ones(grid)
+        b[1] = b[2] = b[end] = b[end-1] = T(0)
     else
         throw(ArgumentError("Order $order not implemented/derived."))
     end
@@ -500,17 +506,18 @@ end
 struct MattssonSvärdNordström2004Cache2{T,LeftWidth,RightWidth} <: AbstractCoefficientCache{T}
     inv_left_weights::SVector{LeftWidth,T}
     inv_right_weights::SVector{RightWidth,T}
-end
 
-function MattssonSvärdNordström2004Cache2(inv_left_weights, inv_right_weights)
-    boundary_length = 2
-    T = eltype(inv_left_weights)
+    function MattssonSvärdNordström2004Cache2(inv_left_weights::SVector{LeftWidth,T}, inv_right_weights::SVector{RightWidth,T}) where {T,LeftWidth,RightWidth}
+        boundary_length = 2
 
-    if length(inv_left_weights) < boundary_length
-        inv_left_weights = SVector(inv_left_weights..., ntuple(j->one(T), boundary_length-length(inv_left_weights))...)
-    end
-    if length(inv_right_weights) < boundary_length
-        inv_right_weights = SVector(inv_right_weights..., ntuple(j->one(T), boundary_length-length(inv_right_weights))...)
+        if length(inv_left_weights) < boundary_length
+            inv_left_weights = SVector(inv_left_weights..., ntuple(j->one(T), boundary_length-length(inv_left_weights))...)
+        end
+        if length(inv_right_weights) < boundary_length
+            inv_right_weights = SVector(inv_right_weights..., ntuple(j->one(T), boundary_length-length(inv_right_weights))...)
+        end
+
+        new{T,length(inv_left_weights),length(inv_right_weights)}(inv_left_weights, inv_right_weights)
     end
 end
 
@@ -570,17 +577,18 @@ end
 struct MattssonSvärdNordström2004Cache4{T,LeftWidth,RightWidth} <: AbstractCoefficientCache{T}
     inv_left_weights::SVector{LeftWidth,T}
     inv_right_weights::SVector{RightWidth,T}
-end
 
-function MattssonSvärdNordström2004Cache4(inv_left_weights, inv_right_weights)
-    boundary_length = 3
-    T = eltype(inv_left_weights)
+    function MattssonSvärdNordström2004Cache4(inv_left_weights::SVector{LeftWidth,T}, inv_right_weights::SVector{RightWidth,T}) where {T,LeftWidth,RightWidth}
+        boundary_length = 3
 
-    if length(inv_left_weights) < boundary_length
-        inv_left_weights = SVector(inv_left_weights..., ntuple(j->one(T), boundary_length-length(inv_left_weights))...)
-    end
-    if length(inv_right_weights) < boundary_length
-        inv_right_weights = SVector(inv_right_weights..., ntuple(j->one(T), boundary_length-length(inv_right_weights))...)
+        if length(inv_left_weights) < boundary_length
+            inv_left_weights = SVector(inv_left_weights..., ntuple(j->one(T), boundary_length-length(inv_left_weights))...)
+        end
+        if length(inv_right_weights) < boundary_length
+            inv_right_weights = SVector(inv_right_weights..., ntuple(j->one(T), boundary_length-length(inv_right_weights))...)
+        end
+
+        new{T,length(inv_left_weights),length(inv_right_weights)}(inv_left_weights, inv_right_weights)
     end
 end
 
@@ -669,17 +677,18 @@ end
 struct MattssonSvärdNordström2004Cache6{T,LeftWidth,RightWidth} <: AbstractCoefficientCache{T}
     inv_left_weights::SVector{LeftWidth,T}
     inv_right_weights::SVector{RightWidth,T}
-end
 
-function MattssonSvärdNordström2004Cache6(inv_left_weights, inv_right_weights)
-    boundary_length = 4
-    T = eltype(inv_left_weights)
+    function MattssonSvärdNordström2004Cache6(inv_left_weights::SVector{LeftWidth,T}, inv_right_weights::SVector{RightWidth,T}) where {T,LeftWidth,RightWidth}
+        boundary_length = 4
 
-    if length(inv_left_weights) < boundary_length
-        inv_left_weights = SVector(inv_left_weights..., ntuple(j->one(T), boundary_length-length(inv_left_weights))...)
-    end
-    if length(inv_right_weights) < boundary_length
-        inv_right_weights = SVector(inv_right_weights..., ntuple(j->one(T), boundary_length-length(inv_right_weights))...)
+        if length(inv_left_weights) < boundary_length
+            inv_left_weights = SVector(inv_left_weights..., ntuple(j->one(T), boundary_length-length(inv_left_weights))...)
+        end
+        if length(inv_right_weights) < boundary_length
+            inv_right_weights = SVector(inv_right_weights..., ntuple(j->one(T), boundary_length-length(inv_right_weights))...)
+        end
+
+        new{T,length(inv_left_weights),length(inv_right_weights)}(inv_left_weights, inv_right_weights)
     end
 end
 
@@ -788,6 +797,158 @@ end
                     - 3*(b_i + 3*b_ip1 + b_ip2) * u[i+1]
                     + 3*(b_ip1 + b_ip2) * u[i+2]
                     - b_ip2 * u[i+3]
+                )
+    end
+
+    retval
+end
+
+
+
+struct MattssonSvärdNordström2004Cache8{T,LeftWidth,RightWidth} <: AbstractCoefficientCache{T}
+    inv_left_weights::SVector{LeftWidth,T}
+    inv_right_weights::SVector{RightWidth,T}
+
+    function MattssonSvärdNordström2004Cache8(inv_left_weights::SVector{LeftWidth,T}, inv_right_weights::SVector{RightWidth,T}) where {T,LeftWidth,RightWidth}
+        boundary_length = 5
+
+        if length(inv_left_weights) < boundary_length
+            inv_left_weights = SVector(inv_left_weights..., ntuple(j->one(T), boundary_length-length(inv_left_weights))...)
+        end
+        if length(inv_right_weights) < boundary_length
+            inv_right_weights = SVector(inv_right_weights..., ntuple(j->one(T), boundary_length-length(inv_right_weights))...)
+        end
+
+        new{T,length(inv_left_weights),length(inv_right_weights)}(inv_left_weights, inv_right_weights)
+    end
+end
+
+function convolve_boundary_coefficients!(dest::AbstractVector, cache::MattssonSvärdNordström2004Cache8, u::AbstractVector, b::AbstractVector, α)
+    @unpack inv_left_weights, inv_right_weights = cache
+
+    @inbounds begin
+        dest[1] = α * inv_left_weights[1] * (
+                    (b[1] + b[2] + b[3]) * u[1]
+                    - 4*(b[1] + b[2] + b[3]) * u[2]
+                    + 6*(b[1] + b[2] + b[3]) * u[3]
+                    - 4*(b[1] + b[2] + b[3]) * u[4]
+                    + (b[1] + b[2] + b[3]) * u[5]
+                )
+        dest[2] = α * inv_left_weights[2] * (
+                    - 4*(b[1] + b[2] + b[3]) * u[1]
+                    + (16*b[1] + 16*b[2] + 16*b[3] + b[4]) * u[2]
+                    - 4*(6*b[1] + 6*b[2] + 6*b[3] + b[4]) * u[3]
+                    + (16*b[1] + 16*b[2] + 16*b[3] + 6*b[4]) * u[4]
+                    - 4*(b[1] + b[2] + b[3] + b[4]) * u[5]
+                    + b[4] * u[6]
+                )
+        dest[3] = α * inv_left_weights[3] * (
+                    6*(b[1] + b[2] + b[3]) * u[1]
+                    - 4*(6*b[1] + 6*b[2] + 6*b[3] + b[4]) * u[2]
+                    + (36*b[1] + 36*b[2] + 36*b[3] + 16*b[4] + b[5]) * u[3]
+                    - 4*(6*b[1] + 6*b[2] + 6*b[3] + 6*b[4] + b[5]) * u[4]
+                    + (6*b[1] + 6*b[2] + 6*b[3] + 16*b[4] + 6*b[5]) * u[5]
+                    - 4*(b[4] + b[5]) * u[6]
+                    + b[5] * u[7]
+                )
+        dest[4] = α * inv_left_weights[4] * (
+                    - 4*(b[1] + b[2] + b[3]) * u[1]
+                    + (16*b[1] + 16*b[2] + 16*b[3] + 6*b[4]) * u[2]
+                    - 4*(6*b[1] + 6*b[2] + 6*b[3] + 6*b[4] + b[5]) * u[3]
+                    + (16*b[1] + 16*b[2] + 16*b[3] + 36*b[4] + 16*b[5] + b[6]) * u[4]
+                    - 4*(b[1] + b[2] + b[3] + 6*b[4] + 6*b[5] + b[6]) * u[5]
+                    + (6*b[4] + 16*b[5] + 6*b[6]) * u[6]
+                    - 4*(b[5] + b[6]) * u[7]
+                    + b[6] * u[8]
+                )
+        dest[5] = α * inv_left_weights[5] * (
+                    (b[1] + b[2] + b[3]) * u[1]
+                    - 4*(b[1] + b[2] + b[3] + b[4]) * u[2]
+                    + (6*b[1] + 6*b[2] + 6*b[3] + 16*b[4] + 6*b[5]) * u[3]
+                    - 4*(b[1] + b[2] + b[3] + 6*b[4] + 6*b[5] + b[6]) * u[4]
+                    + (b[1] + b[2] + b[3] + 16*b[4] + 36*b[5] + 16*b[6] + b[7]) * u[5]
+                    - 4*(b[4] + 6*b[5] + 6*b[6] + b[7]) * u[6]
+                    + (6*b[5] + 16*b[6] + 6*b[7]) * u[7]
+                    - 4*(b[6] + b[7]) * u[8]
+                    + b[7] * u[9]
+                )
+        for i in 6:length(inv_left_weights)
+            dest[i] = α * inv_left_weights[i] * (
+                        b[i-2] * u[i-4]
+                        - 4*(b[i-2] + b[i-1]) * u[i-3]
+                        + (6*b[i-2] + 16*b[i-1] + 6*b[i]) * u[i-2]
+                        - 4*(b[i-2] + 6*b[i-1] + 6*b[i] + b[i+1]) * u[i-1]
+                        + (b[i-2] + 16*b[i-1] + 36*b[i] + 16*b[i+1] + b[i+2]) * u[i]
+                        - 4*(b[i-1] + 6*b[i] + 6*b[i+1] + b[i+2]) * u[i+1]
+                        + (6*b[i] + 16*b[i+1] + 6*b[i+2]) * u[i+2]
+                        - 4*(b[i+1] + b[i+2]) * u[i+3]
+                        + b[i+2] * u[i+4]
+                    )
+        end
+
+        #TODO
+        dest[end] = α * inv_right_weights[1] * (
+                        (b[end] + b[end-1]) * u[end]
+                        - 3*(b[end] + b[end-1]) * u[end-1]
+                        + 3*(b[end] + b[end-1]) * u[end-2]
+                        - (b[end] + b[end-1]) * u[end-3]
+                    )
+        dest[end-1] = α * inv_right_weights[2] * (
+                        - 3*(b[end] + b[end-1]) * u[end]
+                        + (b[end-2] + 9*b[end-1] + 9*b[end]) * u[end-1]
+                        - 3*(b[end-2] + 3*b[end-1] + 3*b[end]) * u[end-2]
+                        + 3*(b[end-2] + b[end-1] + b[end]) * u[end-3]
+                        - b[end-2] * u[end-4]
+                    )
+        dest[end-2] = α * inv_right_weights[3] * (
+                        3*(b[end] + b[end-1]) * u[end]
+                        - 3*(b[end-2] + 3*b[end-1] + 3*b[end]) * u[end-1]
+                        + (b[end-3] + 9*b[end-2] + 9*b[end-1] + 9*b[end]) * u[end-2]
+                        - 3*(b[end-3] + 3*b[end-2] + b[end-1] + b[end]) * u[end-3]
+                        + 3*(b[end-3] + b[end-2]) * u[end-4]
+                        - b[end-3] * u[end-5]
+                    )
+        dest[end-3] = α * inv_right_weights[4] * (
+                        - (b[end] + b[end-1]) * u[end]
+                        + 3*(b[end-2] + b[end-1] + b[end]) * u[end-1]
+                        - 3*(b[end-3] + 3*b[end-2] + b[end-1] + b[end]) * u[end-2]
+                        + (b[end-4] + 9*b[end-3] + 9*b[end-2] + b[end-1] + b[end]) * u[end-3]
+                        - 3*(b[end-4] + 3*b[end-3] + b[end-2]) * u[end-4]
+                        + 3*(b[end-4] + b[end-3]) * u[end-5]
+                        - b[end-4] * u[end-6]
+                    )
+        for i in 4:length(inv_right_weights)-1
+            dest[end-i] = α * inv_right_weights[i+1] * (
+                        - b[end-(i+1)] * u[end-(i+3)]
+                        + 3*(b[end-(i+1)] + b[end-i]) * u[end-(i+2)]
+                        - 3*(b[end-(i+1)] + 3*b[end-i] + b[end-(i-1)]) * u[end-(i+1)]
+                        + (b[end-(i+1)] + 9*b[end-i] + 9*b[end-(i-1)] + b[end-(i-2)]) * u[end-i]
+                        - 3*(b[end-i] + 3*b[end-(i-1)] + b[end-(i-2)]) * u[end-(i-1)]
+                        + 3*(b[end-(i-1)] + b[end-(i-2)]) * u[end-(i-2)]
+                        - b[end-(i-2)] * u[end-(i-3)]
+                    )
+        end
+    end
+end
+
+@inline function convolve_interior_coefficients_loopbody(i, cache::MattssonSvärdNordström2004Cache8, u, b)
+    @inbounds begin
+        b_im2 = b[i-2]
+        b_im1 = b[i-1]
+        b_i   = b[i]
+        b_ip1 = b[i+1]
+        b_ip2 = b[i+2]
+
+        retval = (
+                    b_im2 * u[i-4]
+                    - 4*(b_im2 + b_im1) * u[i-3]
+                    + (6*b_im2 + 16*b_im1 + 6*b_i) * u[i-2]
+                    - 4*(b_im2 + 6*b_im1 + 6*b_i + b_ip1) * u[i-1]
+                    + (b_im2 + 16*b_im1 + 36*b_i + 16*b_ip1 + b_ip2) * u[i]
+                    - 4*(b_im1 + 6*b_i + 6*b_ip1 + b_ip2) * u[i+1]
+                    + (6*b_i + 16*b_ip1 + 6*b_ip2) * u[i+2]
+                    - 4*(b_ip1 + b_ip2) * u[i+3]
+                    + b_ip2 * u[i+4]
                 )
     end
 
