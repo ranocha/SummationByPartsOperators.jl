@@ -126,6 +126,10 @@ function Base.length(::DerivativeCoefficientRow{T,Start,Length}) where {T,Start,
     Length
 end
 
+function offset(::DerivativeCoefficientRow{T,Start,Length}) where {T,Start,Length}
+    Start
+end
+
 function -(coef_row::DerivativeCoefficientRow{T,Start,Length}) where {T,Start,Length}
     DerivativeCoefficientRow{T,Start,Length}(-coef_row.coef)
 end
@@ -400,3 +404,82 @@ end
 
 
 @inline construct_grid(source_of_coefficients, accuracy_order, xmin, xmax, N) = linspace(xmin, xmax, N)
+
+
+function lower_bandwidth(D::DerivativeOperator)
+    @unpack left_boundary, right_boundary, lower_coef = D.coefficients
+
+    l = length(lower_coef)
+    for (i,coef_row) in enumerate(left_boundary)
+        l = max(l, i-offset(coef_row))
+    end
+    for (i,coef_row) in enumerate(right_boundary)
+        l = max(l, i-offset(coef_row))
+    end
+    l
+end
+
+function upper_bandwidth(D::DerivativeOperator)
+    @unpack left_boundary, right_boundary, upper_coef = D.coefficients
+
+    u = length(upper_coef)
+    for (i,coef_row) in enumerate(left_boundary)
+        u = max(u, 1+length(coef_row)-offset(coef_row)-i)
+    end
+    for (i,coef_row) in enumerate(right_boundary)
+        u = max(u, 1+length(coef_row)-offset(coef_row)-i)
+    end
+    u
+end
+
+@require BandedMatrices begin
+    import BandedMatrices: BandedMatrix, isbanded, bandwidth
+
+    @inline function bandwidth(D::DerivativeOperator, k::Int)
+        if k == 1
+            lower_bandwidth(D)
+        else
+            upper_bandwidth(D)
+        end
+    end
+
+    isbanded(D::DerivativeOperator) = true
+
+    function BandedMatrix(D::DerivativeOperator)
+        T = eltype(D)
+        l = lower_bandwidth(D)
+        u = upper_bandwidth(D)
+        n,m = size(D)
+
+        # create uninitialised matrix
+        B = BandedMatrices.bzeros(T, n, m, l, u)
+
+        # B.data[i,:] is the ith band, starting with the upper ones
+        # B.data[:,j] is the jth column, entries out of range are undefined
+        e = zeros(grid(D))
+        dest = similar(e)
+        # left boundary
+        for j in 1:l
+            e[j] = 1
+            A_mul_B!(dest, D, e)
+            e[j] = 0
+            B.data[end-j-u+1:end,j] = dest[1:j+u]
+        end
+        # inner part
+        for j in l+1:length(e)-u
+            e[j] = 1
+            A_mul_B!(dest, D, e)
+            e[j] = 0
+            B.data[:,j] = dest[j-l:j+u]
+        end
+        # right boundary
+        for j in length(e)-u+1:length(e)
+            e[j] = 1
+            A_mul_B!(dest, D, e)
+            e[j] = 0
+            B.data[1:length(e)+1-j+l,j] = dest[j-l:end]
+        end
+
+        B
+    end
+end

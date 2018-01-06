@@ -2,6 +2,7 @@ __precompile__()
 
 module SummationByPartsOperators
 
+using Requires
 using Unrolled
 using ArgCheck
 using Parameters
