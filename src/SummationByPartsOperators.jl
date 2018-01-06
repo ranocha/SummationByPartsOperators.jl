@@ -29,6 +29,9 @@ include("general_operators.jl")
 include("periodic_operators.jl")
 include("SBP_operators.jl")
 include("dissipation_operators.jl")
+@require BandedMatrices begin
+        include("banded_matrices.jl")
+end
 include("SBP_coefficients/MattssonSvärdNordström2004.jl")
 include("SBP_coefficients/MattssonSvärdShoeybi2008.jl")
 include("SBP_coefficients/Mattsson2014.jl")

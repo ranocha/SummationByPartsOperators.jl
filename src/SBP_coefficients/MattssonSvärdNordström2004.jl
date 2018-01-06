@@ -71,6 +71,9 @@ struct MattssonSvärdNordström2004Cache2{T,LeftWidth,RightWidth} <: AbstractCoe
     end
 end
 
+lower_bandwidth(cache::MattssonSvärdNordström2004Cache2) = 1
+upper_bandwidth(cache::MattssonSvärdNordström2004Cache2) = 1
+
 function convolve_boundary_coefficients!(dest::AbstractVector, cache::MattssonSvärdNordström2004Cache2, u::AbstractVector, b::AbstractVector, α)
     @unpack inv_left_weights, inv_right_weights = cache
 
@@ -181,6 +184,9 @@ struct MattssonSvärdNordström2004Cache4{T,LeftWidth,RightWidth} <: AbstractCoe
         new{T,length(inv_left_weights),length(inv_right_weights)}(inv_left_weights, inv_right_weights)
     end
 end
+
+lower_bandwidth(cache::MattssonSvärdNordström2004Cache4) = 2
+upper_bandwidth(cache::MattssonSvärdNordström2004Cache4) = 2
 
 function convolve_boundary_coefficients!(dest::AbstractVector, cache::MattssonSvärdNordström2004Cache4, u::AbstractVector, b::AbstractVector, α)
     @unpack inv_left_weights, inv_right_weights = cache
@@ -343,6 +349,9 @@ struct MattssonSvärdNordström2004Cache6{T,LeftWidth,RightWidth} <: AbstractCoe
         new{T,length(inv_left_weights),length(inv_right_weights)}(inv_left_weights, inv_right_weights)
     end
 end
+
+lower_bandwidth(cache::MattssonSvärdNordström2004Cache6) = 3
+upper_bandwidth(cache::MattssonSvärdNordström2004Cache6) = 3
 
 function convolve_boundary_coefficients!(dest::AbstractVector, cache::MattssonSvärdNordström2004Cache6, u::AbstractVector, b::AbstractVector, α)
     @unpack inv_left_weights, inv_right_weights = cache
@@ -564,6 +573,9 @@ struct MattssonSvärdNordström2004Cache8{T,LeftWidth,RightWidth} <: AbstractCoe
         new{T,length(inv_left_weights),length(inv_right_weights)}(inv_left_weights, inv_right_weights)
     end
 end
+
+lower_bandwidth(cache::MattssonSvärdNordström2004Cache8) = 4
+upper_bandwidth(cache::MattssonSvärdNordström2004Cache8) = 4
 
 function convolve_boundary_coefficients!(dest::AbstractVector, cache::MattssonSvärdNordström2004Cache8, u::AbstractVector, b::AbstractVector, α)
     @unpack inv_left_weights, inv_right_weights = cache

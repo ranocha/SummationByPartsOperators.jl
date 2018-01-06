@@ -1,19 +1,21 @@
 using Base.Test
 using SummationByPartsOperators, BandedMatrices
 
-test_list = (MattssonSvärdShoeybi2008(), Mattsson2014(), MattssonAlmquistCarpenter2014Extended(),
-    MattssonAlmquistCarpenter2014Optimal())
+D_test_list = (MattssonSvärdShoeybi2008(), Mattsson2014(), MattssonAlmquistCarpenter2014Extended(),
+                MattssonAlmquistCarpenter2014Optimal())
+Di_test_list = (MattssonSvärdNordström2004(),)
 
-for T in (Float32, Float64), acc_order in (2,4,6,8), source in test_list
+for T in (Float32, Float64), acc_order in (2,4,6,8), D_source in D_test_list, Di_source in Di_test_list
     xmin = zero(T)
     xmax = 5*one(T)
     N = 101
     D_serial = try
-        derivative_operator(source, 1, acc_order, xmin, xmax, N, Val{:serial}())
+        derivative_operator(D_source, 1, acc_order, xmin, xmax, N, Val{:serial}())
     catch
         nothing
     end
     D_serial == nothing && continue
+
     D_full   = full(D_serial)
     D_sparse = sparse(D_serial)
     D_banded = BandedMatrix(D_serial)
@@ -28,5 +30,24 @@ for T in (Float32, Float64), acc_order in (2,4,6,8), source in test_list
     A_mul_B!(dest2, D_sparse, u)
     @test all(i->isapprox(dest1[i], dest2[i], atol=500*eps(T)), eachindex(u))
     A_mul_B!(dest2, D_banded, u)
+    @test all(i->isapprox(dest1[i], dest2[i], atol=500*eps(T)), eachindex(u))
+
+    Di_serial = try
+        derivative_operator(Di_source, 1, acc_order, xmin, xmax, N, Val{:serial}())
+    catch
+        nothing
+    end
+    Di_serial == nothing && continue
+
+    Di_full   = full(Di_serial)
+    Di_sparse = sparse(Di_serial)
+    Di_banded = BandedMatrix(Di_serial)
+
+    A_mul_B!(dest1, Di_serial, u)
+    A_mul_B!(dest2, Di_full, u)
+    @test all(i->isapprox(dest1[i], dest2[i], atol=500*eps(T)), eachindex(u))
+    A_mul_B!(dest2, Di_sparse, u)
+    @test all(i->isapprox(dest1[i], dest2[i], atol=500*eps(T)), eachindex(u))
+    A_mul_B!(dest2, Di_banded, u)
     @test all(i->isapprox(dest1[i], dest2[i], atol=500*eps(T)), eachindex(u))
 end
