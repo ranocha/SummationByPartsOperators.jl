@@ -125,13 +125,6 @@ end
 function Base.length(::DerivativeCoefficientRow{T,Start,Length}) where {T,Start,Length}
     Length
 end
-function Base.length(::Type{DerivativeCoefficientRow{T,Start,Length}}) where {T,Start,Length}
-    Length
-end
-
-@inline function \(α::T, coef_row::DerivativeCoefficientRow{T,Start,Length}) where {T,Start,Length}
-    DerivativeCoefficientRow{T,Start,Length}(α \ coef_row.coef)
-end
 
 function -(coef_row::DerivativeCoefficientRow{T,Start,Length}) where {T,Start,Length}
     DerivativeCoefficientRow{T,Start,Length}(-coef_row.coef)
