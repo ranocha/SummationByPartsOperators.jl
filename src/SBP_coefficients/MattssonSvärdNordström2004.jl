@@ -868,7 +868,7 @@ function first_derivative_coefficients(source::MattssonSvärdNordström2004, ord
                                 left_boundary_derivatives, right_boundary_derivatives,
                                 lower_coef, central_coef, upper_coef,
                                 left_weights, right_weights, parallel, 1, order, source)
-    #=elseif order == 4
+    elseif order == 4
         left_boundary = (
             # q1
             DerivativeCoefficientRow{T,1,4}(SVector(T(-24//17),
@@ -909,7 +909,7 @@ function first_derivative_coefficients(source::MattssonSvärdNordström2004, ord
                                 left_boundary_derivatives, right_boundary_derivatives,
                                 lower_coef, central_coef, upper_coef,
                                 left_weights, right_weights, parallel, 1, order, source)
-    elseif order == 6
+    #=elseif order == 6
         left_boundary = (
             # q1
             DerivativeCoefficientRow{T,1,6}(SVector(T(-21600//13649),
@@ -1116,8 +1116,9 @@ function second_derivative_coefficients(source::MattssonSvärdNordström2004, or
                                 left_boundary_derivatives, right_boundary_derivatives,
                                 lower_coef, central_coef, upper_coef,
                                 left_weights, right_weights, parallel, 2, order, source)
-    #=elseif order == 4
+    elseif order == 4
         left_boundary = (
+            #TODO: 
             # d1
             DerivativeCoefficientRow{T,1,4}(SVector(T(2),
                                                     T(-5),
@@ -1159,7 +1160,7 @@ function second_derivative_coefficients(source::MattssonSvärdNordström2004, or
                                 left_boundary_derivatives, right_boundary_derivatives,
                                 lower_coef, central_coef, upper_coef,
                                 left_weights, right_weights, parallel, 2, order, source)
-    elseif order == 6
+    #=elseif order == 6
         left_boundary = (
             # d1
             DerivativeCoefficientRow{T,1,6}(SVector(T(114170//40947),
