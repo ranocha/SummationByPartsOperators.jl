@@ -13,7 +13,12 @@ function Base.show(io::IO, ::MattssonSvärdNordström2004)
     print(io,
         "  Mattsson, Svärd, Nordström (2004) \n",
         "  Stable and Accurate Artificial Dissipation. \n",
-        "  Journal of Scientific Computing 21.1, pp. 57-79. \n")
+        "  Journal of Scientific Computing 21.1, pp. 57-79. \n",
+        "See also (first and second derivatives) \n",
+        "  Mattsson, Nordström (2004) \n",
+        "  Summation by parts operators for finite difference approximations of second \n",
+        "    derivaties. \n",
+        "  Journal of Computational Physics 199, pp.503-540. \n")
 end
 
 

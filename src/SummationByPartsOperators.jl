@@ -32,6 +32,7 @@ include("dissipation_operators.jl")
 @require BandedMatrices begin
         include("banded_matrices.jl")
 end
+include("SBP_coefficients/MattssonNordström2004.jl")
 include("SBP_coefficients/MattssonSvärdNordström2004.jl")
 include("SBP_coefficients/MattssonSvärdShoeybi2008.jl")
 include("SBP_coefficients/Mattsson2014.jl")
@@ -47,7 +48,8 @@ export mul!, integrate, derivative_left, derivative_right
 export periodic_central_derivative_operator, periodic_derivative_operator, derivative_operator,
         dissipation_operator
 
-export MattssonSvärdNordström2004, MattssonSvärdShoeybi2008, Mattsson2014,
+export MattssonNordström2004, MattssonSvärdNordström2004, MattssonSvärdShoeybi2008,
+        Mattsson2014,
         MattssonAlmquistCarpenter2014Extended, MattssonAlmquistCarpenter2014Optimal
 
 end # module

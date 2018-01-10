@@ -1,12 +1,13 @@
 using Base.Test
 using SummationByPartsOperators
 
-accuracy_test_list = (MattssonSvärdNordström2004(), MattssonSvärdShoeybi2008(), 
-    Mattsson2014(), MattssonAlmquistCarpenter2014Extended(),
-    MattssonAlmquistCarpenter2014Optimal())
+D_test_list = (MattssonNordström2004(), MattssonSvärdNordström2004(), 
+                MattssonSvärdShoeybi2008(), Mattsson2014(), 
+                MattssonAlmquistCarpenter2014Extended(), 
+                MattssonAlmquistCarpenter2014Optimal())
 
 # Accuracy tests of first derivative operators.
-for source in accuracy_test_list, T in (Float32,Float64)
+for source in D_test_list, T in (Float32,Float64)
     xmin = -one(T)
     xmax = 2*one(T)
     N = 101
@@ -197,7 +198,7 @@ for source in accuracy_test_list, T in (Float32,Float64)
 end
 
 # Accuracy tests of second derivative operators.
-for source in accuracy_test_list, T in (Float32,Float64)
+for source in D_test_list, T in (Float32,Float64)
     xmin = -one(T)
     xmax = 2*one(T)
     N = 101
@@ -411,7 +412,7 @@ for source in accuracy_test_list, T in (Float32,Float64)
 end
 
 # Accuracy tests of third derivative operators.
-for source in accuracy_test_list, T in (Float32,Float64)
+for source in D_test_list, T in (Float32,Float64)
     xmin = -one(T)
     xmax = 2*one(T)
     N = 101
@@ -586,7 +587,7 @@ for source in accuracy_test_list, T in (Float32,Float64)
 end
 
 # Accuracy tests of fourth derivative operators.
-for source in accuracy_test_list, T in (Float32,Float64)
+for source in D_test_list, T in (Float32,Float64)
     xmin = -one(T)
     xmax = 2*one(T)
     N = 101
