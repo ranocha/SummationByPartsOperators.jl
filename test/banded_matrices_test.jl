@@ -39,7 +39,7 @@ for T in (Float32, Float64), acc_order in (2,4,6,8), D_source in D_test_list, Di
     @test all(i->isapprox(dest1[i], dest2[i], atol=500*eps(T)), eachindex(u))
 
     Di_serial = try
-        derivative_operator(Di_source, 1, acc_order, xmin, xmax, N, Val{:serial}())
+        dissipation_operator(source_Di, D)
     catch
         nothing
     end
