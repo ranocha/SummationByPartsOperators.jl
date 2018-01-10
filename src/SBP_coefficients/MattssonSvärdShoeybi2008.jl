@@ -153,7 +153,6 @@ function first_derivative_coefficients(source::MattssonSvärdShoeybi2008, order:
                                 lower_coef, central_coef, upper_coef,
                                 left_weights, right_weights, parallel, 1, order, source)
     elseif order == 8
-        x1 =
         left_boundary = (
             # q1
             DerivativeCoefficientRow{T,1,8}(SVector(T(-2540160//1498139),
