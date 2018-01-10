@@ -1,7 +1,8 @@
 using Base.Test
 using SummationByPartsOperators, BandedMatrices
 
-D_test_list = (MattssonSvärdShoeybi2008(), Mattsson2014(), MattssonAlmquistCarpenter2014Extended(),
+D_test_list = (MattssonSvärdNordström2004(), MattssonSvärdShoeybi2008(), 
+                Mattsson2014(), MattssonAlmquistCarpenter2014Extended(),
                 MattssonAlmquistCarpenter2014Optimal())
 Di_test_list = (MattssonSvärdNordström2004(),)
 
