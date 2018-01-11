@@ -26,7 +26,7 @@ end
 
 
 # Compare mul! with β=0 and mul! without β.
-for T in (Float32, Float64), acc_order in (2,)
+for T in (Float32, Float64), acc_order in (2, 4)
     xmin = zero(T)
     xmax = 5*one(T)
     N = 51
