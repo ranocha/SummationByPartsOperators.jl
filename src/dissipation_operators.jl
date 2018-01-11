@@ -90,10 +90,18 @@ function mul!(dest::AbstractVector, coefficients::VarCoefDerivativeCoefficients,
     convolve_interior_coefficients!(dest, coefficient_cache, u, b, α, parallel)
 end
 
+@inline function left_length(cache::AbstractCoefficientCache)
+    length(cache.inv_left_weights)
+end
+
+@inline function right_length(cache::AbstractCoefficientCache)
+    length(cache.inv_right_weights)
+end
+
 
 function convolve_interior_coefficients!(dest::AbstractVector, cache::AbstractCoefficientCache,
                                          u::AbstractVector, b::AbstractVector, α, parallel)
-    for i in (length(cache.inv_left_weights)+1):(length(dest)-length(cache.inv_right_weights)) @inbounds begin
+    for i in (left_length(cache)+1):(length(dest)-right_length(cache)) @inbounds begin
         retval = convolve_interior_coefficients_loopbody(i, cache, u, b)
         dest[i] = α*retval
     end end
@@ -101,7 +109,7 @@ end
 
 function convolve_interior_coefficients!(dest::AbstractVector, cache::AbstractCoefficientCache,
                                          u::AbstractVector, b::AbstractVector, α, ::Val{:threads})
-    Threads.@threads for i in (length(cache.inv_left_weights)+1):(length(dest)-length(cache.inv_right_weights)) @inbounds begin
+    Threads.@threads for i in (left_length(cache)+1):(length(dest)-right_length(cache)) @inbounds begin
         retval = convolve_interior_coefficients_loopbody(i, cache, u, b)
         dest[i] = α*retval
     end end
@@ -110,7 +118,7 @@ end
 
 function convolve_interior_coefficients!(dest::AbstractVector, cache::AbstractCoefficientCache,
                                          u::AbstractVector, b::AbstractVector, α, β, parallel)
-    for i in (length(cache.inv_left_weights)+1):(length(dest)-length(cache.inv_right_weights)) @inbounds begin
+    for i in (left_length(cache)+1):(length(dest)-right_length(cache)) @inbounds begin
         retval = convolve_interior_coefficients_loopbody(i, cache, u, b)
         dest[i] = α*retval + β*dest[i]
     end end
@@ -118,7 +126,7 @@ end
 
 function convolve_interior_coefficients!(dest::AbstractVector, cache::AbstractCoefficientCache,
                                          u::AbstractVector, b::AbstractVector, α, β, ::Val{:threads})
-    Threads.@threads for i in (length(cache.inv_left_weights)+1):(length(dest)-length(cache.inv_right_weights)) @inbounds begin
+    Threads.@threads for i in (left_length(cache)+1):(length(dest)-right_length(cache)) @inbounds begin
         retval = convolve_interior_coefficients_loopbody(i, cache, u, b)
         dest[i] = α*retval + β*dest[i]
     end end

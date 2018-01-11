@@ -26,14 +26,14 @@ end
 
 function Base.show(io::IO, D::VarCoefDerivativeOperator{T}) where {T}
     print(io, "SBP variable coefficient ")
-    if  derivative_order(coefficients) == 1
+    if  derivative_order(D) == 1
         print(io, "1st")
-    elseif  derivative_order(coefficients) == 2
+    elseif  derivative_order(D) == 2
         print(io, "2nd")
-    elseif  derivative_order(coefficients) == 3
+    elseif  derivative_order(D) == 3
         print(io, "3rd")
     else
-        print(io, derivative_order(coefficients), "th")
+        print(io, derivative_order(D), "th")
     end
     print(io, "derivative operator with order of accuracy ")
     print(io, accuracy_order(D), " {T=", T, ", Parallel=", typeof(D.coefficients.parallel), "} \n")
@@ -49,12 +49,13 @@ end
 
 Compute `α*D*u + β*dest` and store the result in `dest`.
 """
-Base.@propagate_inbounds function mul!(dest::AbstractVector, D::VarCoefDerivativeOperator, u::AbstractVector, α, β)
+Base.@propagate_inbounds function mul!(dest::AbstractVector, D::VarCoefDerivativeOperator,
+                                        u::AbstractVector, α, β)
     @boundscheck begin
         @argcheck size(D, 2) == length(u) DimensionMismatch
         @argcheck size(D, 1) == length(dest) DimensionMismatch
     end
-    @inbounds mul!(dest, D.coefficients, u, D.b, α, β)
+    @inbounds mul!(dest, D.coefficients, u, D.b, D.factor*α, β)
 end
 
 """
@@ -62,12 +63,13 @@ end
 
 Compute `α*D*u` and store the result in `dest`.
 """
-Base.@propagate_inbounds function mul!(dest::AbstractVector, D::VarCoefDerivativeOperator, u::AbstractVector, α)
+Base.@propagate_inbounds function mul!(dest::AbstractVector, D::VarCoefDerivativeOperator,
+                                        u::AbstractVector, α)
     @boundscheck begin
         @argcheck size(D, 2) == length(u) DimensionMismatch
         @argcheck size(D, 1) == length(dest) DimensionMismatch
     end
-    @inbounds mul!(dest, D.coefficients, u, D.b, α)
+    @inbounds mul!(dest, D.coefficients, u, D.b, D.factor*α)
 end
 
 
@@ -83,7 +85,7 @@ The evaluation of the derivative can be parallised using threads by chosing
 """
 function var_coef_derivative_operator(source_of_coefficients, derivative_order, accuracy_order,
                                         xmin, xmax, N, bfunc, parallel=Val{:serial}())
-    grid = construct_grid(source_of_coefficients, order, xmin, xmax, N)
-    coefficients = var_coef_derivative_coefficients(source_of_coefficients, order, grid, left_weights, right_weights, parallel)
+    grid = construct_grid(source_of_coefficients, accuracy_order, xmin, xmax, N)
+    coefficients = var_coef_derivative_coefficients(source_of_coefficients, derivative_order, accuracy_order, grid, parallel)
     VarCoefDerivativeOperator(coefficients, grid, bfunc.(grid))
 end

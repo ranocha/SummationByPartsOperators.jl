@@ -36,6 +36,7 @@ end
 include("SBP_coefficients/MattssonNordström2004.jl")
 include("SBP_coefficients/MattssonSvärdNordström2004.jl")
 include("SBP_coefficients/MattssonSvärdShoeybi2008.jl")
+include("SBP_coefficients/Mattsson2012.jl")
 include("SBP_coefficients/Mattsson2014.jl")
 include("SBP_coefficients/MattssonAlmquistCarpenter2014Extended.jl")
 include("SBP_coefficients/MattssonAlmquistCarpenter2014Optimal.jl")
