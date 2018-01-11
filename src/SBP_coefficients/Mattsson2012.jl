@@ -76,7 +76,7 @@ function convolve_boundary_coefficients!(dest::AbstractVector, cache::Mattsson20
                                          u::AbstractVector, b::AbstractVector, α)
     @inbounds begin
         dest[  1] = α * (
-                        -(2*b[1] - b[2]) * u[1]
+                        (2*b[1] - b[2]) * u[1]
                         + (-3*b[1] + b[2]) * u[2]
                         + b[1] * u[3]
                     )
@@ -86,6 +86,23 @@ function convolve_boundary_coefficients!(dest::AbstractVector, cache::Mattsson20
                         + (-3*b[end] + b[end-1]) * u[end-1]
                         + b[end] * u[end-2]
                     )
+    end
+end
+
+function convolve_boundary_coefficients!(dest::AbstractVector, cache::Mattsson2012Cache2,
+                                         u::AbstractVector, b::AbstractVector, α, β)
+    @inbounds begin
+        dest[  1] = α * (
+                        (2*b[1] - b[2]) * u[1]
+                        + (-3*b[1] + b[2]) * u[2]
+                        + b[1] * u[3]
+                    ) + β*dest[1]
+
+        dest[end] = α * (
+                        (2*b[end] - b[end-1]) * u[end]
+                        + (-3*b[end] + b[end-1]) * u[end-1]
+                        + b[end] * u[end-2]
+                    ) + β*dest[end]
     end
 end
 
