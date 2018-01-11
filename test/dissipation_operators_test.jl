@@ -16,7 +16,8 @@ for source_D in D_test_list, source_Di in Di_test_list, acc_order in 2:2:8, T in
 
     D = try
         derivative_operator(source_D, der_order, acc_order, xmin, xmax, N)
-    catch
+    catch err
+        !isa(err, ArgumentError) && throw(err)
         nothing
     end
 
@@ -27,7 +28,8 @@ for source_D in D_test_list, source_Di in Di_test_list, acc_order in 2:2:8, T in
         for order in 2:2:8
             Di = try
                 dissipation_operator(source_Di, D, order)
-            catch
+            catch err
+                !isa(err, ArgumentError) && throw(err)
                 nothing
             end
             if Di != nothing

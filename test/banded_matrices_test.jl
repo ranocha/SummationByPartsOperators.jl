@@ -7,13 +7,14 @@ D_test_list = (MattssonNordström2004(), MattssonSvärdNordström2004(),
                 MattssonAlmquistCarpenter2014Optimal())
 Di_test_list = (MattssonSvärdNordström2004(),)
 
-for T in (Float32, Float64), acc_order in (2,4,6,8), D_source in D_test_list, Di_source in Di_test_list
+for T in (Float32, Float64), acc_order in (2,4,6,8), diss_order in (2,4,6,8), D_source in D_test_list, Di_source in Di_test_list
     xmin = zero(T)
     xmax = 5*one(T)
     N = 101
     D_serial = try
         derivative_operator(D_source, 1, acc_order, xmin, xmax, N, Val{:serial}())
-    catch
+    catch err
+        !isa(err, ArgumentError) && throw(err)
         nothing
     end
     D_serial == nothing && continue
@@ -39,8 +40,9 @@ for T in (Float32, Float64), acc_order in (2,4,6,8), D_source in D_test_list, Di
     @test all(i->isapprox(dest1[i], dest2[i], atol=500*eps(T)), eachindex(u))
 
     Di_serial = try
-        dissipation_operator(source_Di, D)
-    catch
+        dissipation_operator(Di_source, D_serial, diss_order)
+    catch err
+        !isa(err, ArgumentError) && throw(err)
         nothing
     end
     Di_serial == nothing && continue
