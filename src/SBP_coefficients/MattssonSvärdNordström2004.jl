@@ -24,27 +24,21 @@ end
 
 function dissipation_coefficients(source::MattssonSvärdNordström2004, order::Int, grid, left_weights, right_weights, parallel=Val{:serial}())
     T = promote_type(eltype(grid), eltype(left_weights), eltype(right_weights))
+    inv_left_weights = one(T) ./ left_weights
+    inv_right_weights = one(T) ./ right_weights
     if order == 2
-        inv_left_weights = one(T) ./ left_weights
-        inv_right_weights = one(T) ./ right_weights
         coefficient_cache = MattssonSvärdNordström2004Cache2(inv_left_weights, inv_right_weights)
         b = ones(grid)
         b[1] = T(0)
     elseif order == 4
-        inv_left_weights = one(T) ./ left_weights
-        inv_right_weights = one(T) ./ right_weights
         coefficient_cache = MattssonSvärdNordström2004Cache4(inv_left_weights, inv_right_weights)
         b = ones(grid)
         b[1] = b[end] = T(0)
     elseif order == 6
-        inv_left_weights = one(T) ./ left_weights
-        inv_right_weights = one(T) ./ right_weights
         coefficient_cache = MattssonSvärdNordström2004Cache6(inv_left_weights, inv_right_weights)
         b = ones(grid)
         b[1] = b[2] = b[end] = T(0)
     elseif order == 8
-        inv_left_weights = one(T) ./ left_weights
-        inv_right_weights = one(T) ./ right_weights
         coefficient_cache = MattssonSvärdNordström2004Cache8(inv_left_weights, inv_right_weights)
         b = ones(grid)
         b[1] = b[2] = b[end] = b[end-1] = T(0)
@@ -53,7 +47,7 @@ function dissipation_coefficients(source::MattssonSvärdNordström2004, order::I
     end
 
 
-    DissipationCoefficients(coefficient_cache, parallel, order, 2, source), b
+    VarCoefDerivativeCoefficients(coefficient_cache, left_weights, right_weights, parallel, order, 2, source), b
 end
 
 
@@ -1121,7 +1115,7 @@ function second_derivative_coefficients(source::MattssonSvärdNordström2004, or
                                 left_weights, right_weights, parallel, 2, order, source)
     elseif order == 4
         left_boundary = (
-            #TODO: 
+            #TODO:
             # d1
             DerivativeCoefficientRow{T,1,4}(SVector(T(2),
                                                     T(-5),

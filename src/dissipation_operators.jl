@@ -6,49 +6,59 @@ function Base.checkbounds(::Type{Bool}, u::AbstractVector, cache::AbstractCoeffi
 end
 
 """
-    DissipationCoefficients
+    VarCoefDerivativeCoefficients
 
-The coefficients of a dissipation operator on a nonperiodic grid.
+The coefficients of a variable coefficient derivative operator on a nonperiodic grid.
 """
-struct DissipationCoefficients{T,CoefficientCache<:AbstractCoefficientCache{T},
-                               Parallel,SourceOfCoefficients} <: AbstractDerivativeCoefficients{T}
+struct VarCoefDerivativeCoefficients{T,CoefficientCache<:AbstractCoefficientCache{T},
+                                     LeftWidth,RightWidth,Parallel,SourceOfCoefficients} <: AbstractDerivativeCoefficients{T}
     # coefficients defining the operator and its action
     coefficient_cache::CoefficientCache
+    left_weights::SVector{LeftWidth, T}
+    right_weights::SVector{RightWidth, T}
     parallel::Parallel
     # corresponding orders etc.
     derivative_order::Int
     accuracy_order  ::Int
     source_of_coeffcients::SourceOfCoefficients
 
-    function DissipationCoefficients(coefficient_cache::CoefficientCache,
-                                    parallel::Parallel, derivative_order::Int, accuracy_order::Int,
-                                    source_of_coeffcients::SourceOfCoefficients) where {T,CoefficientCache<:AbstractCoefficientCache{T},
-                                                                                        Parallel,SourceOfCoefficients}
-        new{T,CoefficientCache,Parallel,SourceOfCoefficients}(
-            coefficient_cache, parallel, derivative_order, accuracy_order, source_of_coeffcients)
+    function VarCoefDerivativeCoefficients(coefficient_cache::CoefficientCache,
+                                           left_weights::SVector{LeftWidth, T},
+                                           right_weights::SVector{RightWidth, T},
+                                           parallel::Parallel,
+                                           derivative_order::Int, accuracy_order::Int,
+                                           source_of_coeffcients::SourceOfCoefficients) where {T,CoefficientCache<:AbstractCoefficientCache{T},
+                                                                                                LeftWidth,RightWidth,Parallel,SourceOfCoefficients}
+        new{T,CoefficientCache,LeftWidth,RightWidth,Parallel,SourceOfCoefficients}(
+            coefficient_cache, left_weights, right_weights, parallel, derivative_order, accuracy_order, source_of_coeffcients)
     end
 end
 
 
-function Base.show(io::IO, coefficients::DissipationCoefficients)
-    if  derivative_order(coefficients) == 2
-        print(io, "Coefficients of the SBP 2nd derivative dissipation operator of order ",
-                    accuracy_order(coefficients), " given in \n")
+function Base.show(io::IO, coefficients::VarCoefDerivativeCoefficients)
+    print(io, "Coefficients of the variable coefficient ")
+    if  derivative_order(coefficients) == 1
+        print(io, "1st")
+    elseif  derivative_order(coefficients) == 2
+        print(io, "2nd")
+    elseif  derivative_order(coefficients) == 3
+        print(io, "3rd")
     else
-        print(io, "Coefficients of the SBP ", derivative_order(coefficients),
-                    "th derivative dissipation operator of order ", accuracy_order(coefficients),
-                    " given in \n")
+        print(io, derivative_order(coefficients), "th")
     end
+    print(io, "derivative operator with order of accuracy ",
+            accuracy_order(coefficients), " given in \n")
     print(io, source_of_coeffcients(coefficients))
 end
 
 
 """
-    mul!(dest::AbstractVector, coefficients::DissipationCoefficients, u::AbstractVector, b::AbstractVector, α, β)
+    mul!(dest::AbstractVector, coefficients::VarCoefDerivativeCoefficients, u::AbstractVector, b::AbstractVector, α, β)
 
 Compute `α*D*u + β*dest` using the coefficients `b` and store the result in `dest`.
 """
-function mul!(dest::AbstractVector, coefficients::DissipationCoefficients, u::AbstractVector, b::AbstractVector, α, β)
+function mul!(dest::AbstractVector, coefficients::VarCoefDerivativeCoefficients,
+                u::AbstractVector, b::AbstractVector, α, β)
     @unpack coefficient_cache, parallel = coefficients
 
     @boundscheck begin
@@ -62,11 +72,12 @@ function mul!(dest::AbstractVector, coefficients::DissipationCoefficients, u::Ab
 end
 
 """
-    mul!(dest::AbstractVector, coefficients::DissipationCoefficients, u::AbstractVector, b::AbstractVector, α)
+    mul!(dest::AbstractVector, coefficients::VarCoefDerivativeCoefficients, u::AbstractVector, b::AbstractVector, α)
 
 Compute `α*D*u` using the coefficients `b` and store the result in `dest`.
 """
-function mul!(dest::AbstractVector, coefficients::DissipationCoefficients, u::AbstractVector, b::AbstractVector, α)
+function mul!(dest::AbstractVector, coefficients::VarCoefDerivativeCoefficients,
+                u::AbstractVector, b::AbstractVector, α)
     @unpack coefficient_cache, parallel = coefficients
 
     @boundscheck begin
@@ -80,14 +91,16 @@ function mul!(dest::AbstractVector, coefficients::DissipationCoefficients, u::Ab
 end
 
 
-function convolve_interior_coefficients!(dest::AbstractVector, cache::AbstractCoefficientCache, u::AbstractVector, b::AbstractVector, α, parallel)
+function convolve_interior_coefficients!(dest::AbstractVector, cache::AbstractCoefficientCache,
+                                         u::AbstractVector, b::AbstractVector, α, parallel)
     for i in (length(cache.inv_left_weights)+1):(length(dest)-length(cache.inv_right_weights)) @inbounds begin
         retval = convolve_interior_coefficients_loopbody(i, cache, u, b)
         dest[i] = α*retval
     end end
 end
 
-function convolve_interior_coefficients!(dest::AbstractVector, cache::AbstractCoefficientCache, u::AbstractVector, b::AbstractVector, α, parallel::Val{:threads})
+function convolve_interior_coefficients!(dest::AbstractVector, cache::AbstractCoefficientCache,
+                                         u::AbstractVector, b::AbstractVector, α, ::Val{:threads})
     Threads.@threads for i in (length(cache.inv_left_weights)+1):(length(dest)-length(cache.inv_right_weights)) @inbounds begin
         retval = convolve_interior_coefficients_loopbody(i, cache, u, b)
         dest[i] = α*retval
@@ -95,19 +108,36 @@ function convolve_interior_coefficients!(dest::AbstractVector, cache::AbstractCo
 end
 
 
-function convolve_interior_coefficients!(dest::AbstractVector, cache::AbstractCoefficientCache, u::AbstractVector, b::AbstractVector, α, β, parallel)
+function convolve_interior_coefficients!(dest::AbstractVector, cache::AbstractCoefficientCache,
+                                         u::AbstractVector, b::AbstractVector, α, β, parallel)
     for i in (length(cache.inv_left_weights)+1):(length(dest)-length(cache.inv_right_weights)) @inbounds begin
         retval = convolve_interior_coefficients_loopbody(i, cache, u, b)
         dest[i] = α*retval + β*dest[i]
     end end
 end
 
-function convolve_interior_coefficients!(dest::AbstractVector, cache::AbstractCoefficientCache, u::AbstractVector, b::AbstractVector, α, β, parallel::Val{:threads})
+function convolve_interior_coefficients!(dest::AbstractVector, cache::AbstractCoefficientCache,
+                                         u::AbstractVector, b::AbstractVector, α, β, ::Val{:threads})
     Threads.@threads for i in (length(cache.inv_left_weights)+1):(length(dest)-length(cache.inv_right_weights)) @inbounds begin
         retval = convolve_interior_coefficients_loopbody(i, cache, u, b)
         dest[i] = α*retval + β*dest[i]
     end end
 end
+
+
+
+abstract type AbstractVariableCoefficientDerivativeOperator{T} <: AbstractDerivativeOperator{T} end
+
+@inline source_of_coeffcients(D::AbstractVariableCoefficientDerivativeOperator) = source_of_coeffcients(D.coefficients)
+
+@inline function lower_bandwidth(D::AbstractVariableCoefficientDerivativeOperator)
+    lower_bandwidth(D.coefficients.coefficient_cache)
+end
+
+@inline function upper_bandwidth(D::AbstractVariableCoefficientDerivativeOperator)
+    upper_bandwidth((D.coefficients.coefficient_cache))
+end
+
 
 
 """
@@ -115,12 +145,12 @@ end
 
 A dissipation operator on a nonperiodic finite difference grid.
 """
-struct DissipationOperator{T,CoefficientCache,Parallel,SourceOfCoefficients,Grid} <: AbstractDerivativeOperator{T}
-    coefficients::DissipationCoefficients{T,CoefficientCache,Parallel,SourceOfCoefficients}
+struct DissipationOperator{T,CoefficientCache,Parallel,SourceOfCoefficients,Grid} <: AbstractVariableCoefficientDerivativeOperator{T}
+    coefficients::VarCoefDerivativeCoefficients{T,CoefficientCache,Parallel,SourceOfCoefficients}
     grid::Grid
     b::Vector{T}
 
-    function DissipationOperator(coefficients::DissipationCoefficients{T,CoefficientCache,Parallel,SourceOfCoefficients},
+    function DissipationOperator(coefficients::VarCoefDerivativeCoefficients{T,CoefficientCache,Parallel,SourceOfCoefficients},
                                 grid::Grid, b::Vector{T}) where {T,CoefficientCache,Parallel,SourceOfCoefficients,Grid}
         @argcheck checkbounds(Bool, grid, coefficients.coefficient_cache) DimensionMismatch
         @argcheck length(grid) == length(b)
@@ -129,9 +159,6 @@ struct DissipationOperator{T,CoefficientCache,Parallel,SourceOfCoefficients,Grid
             coefficients, grid, b)
     end
 end
-
-
-@inline source_of_coeffcients(D::DissipationOperator) = source_of_coeffcients(D.coefficients)
 
 
 function Base.show(io::IO, D::DissipationOperator{T}) where {T}
@@ -201,13 +228,4 @@ The evaluation of the derivative can be parallised using threads by chosing
 """
 function dissipation_operator(source_of_coefficients, D::DerivativeOperator, order::Int=accuracy_order(D), parallel=D.coefficients.parallel)
     dissipation_operator(source_of_coefficients, order, first(grid(D)), last(grid(D)), length(grid(D)), D.coefficients.left_weights, D.coefficients.right_weights, parallel)
-end
-
-
-@inline function lower_bandwidth(D::DissipationOperator)
-    lower_bandwidth(D.coefficients.coefficient_cache)
-end
-
-@inline function upper_bandwidth(D::DissipationOperator)
-    upper_bandwidth((D.coefficients.coefficient_cache))
 end

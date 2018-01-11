@@ -29,6 +29,7 @@ include("general_operators.jl")
 include("periodic_operators.jl")
 include("SBP_operators.jl")
 include("dissipation_operators.jl")
+include("var_coef_operators.jl")
 @require BandedMatrices begin
         include("banded_matrices.jl")
 end
@@ -46,10 +47,10 @@ export derivative_order, accuracy_order, source_of_coeffcients, grid
 export mass_matrix
 export mul!, integrate, derivative_left, derivative_right
 export periodic_central_derivative_operator, periodic_derivative_operator, derivative_operator,
-        dissipation_operator
+        dissipation_operator, var_coef_derivative_operator
 
 export MattssonNordström2004, MattssonSvärdNordström2004, MattssonSvärdShoeybi2008,
-        Mattsson2014,
+        Mattsson2012, Mattsson2014,
         MattssonAlmquistCarpenter2014Extended, MattssonAlmquistCarpenter2014Optimal
 
 end # module
