@@ -67,7 +67,7 @@ for T in (Float32, Float64), acc_order in (2,4,6,8), diss_order in (2,4,6,8), D_
 end
 
 
-for T in (Float32, Float64), acc_order in (2,4), D2var_source in D2var_test_list
+for T in (Float32, Float64), acc_order in (2,4,6), D2var_source in D2var_test_list
     xmin = zero(T)
     xmax = 5*one(T)
     N = 101

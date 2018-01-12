@@ -56,17 +56,6 @@ function var_coef_derivative_coefficients(source::Mattsson2012, derivative_order
                                 T(7877//8640),
                                 T(43801//43200) )
         right_weights = left_weights
-    elseif accuracy_order == 8
-        coefficient_cache = Mattsson2012Cache8(T)
-        left_weights = SVector( T(1498139//5080320),
-                                T(1107307//725760),
-                                T(20761//80640),
-                                T(1304999//725760),
-                                T(299527//725760),
-                                T(103097//80640),
-                                T(670091//725760),
-                                T(5127739//5080320) )
-        right_weights = left_weights
     else
         throw(ArgumentError("Order of accuracy $accuracy_order not implemented/derived."))
     end

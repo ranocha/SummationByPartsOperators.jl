@@ -3,8 +3,8 @@ using SummationByPartsOperators
 
 test_list = (Mattsson2012(),)
 
-# Test symmetry and eigenvalues #TODO: 6, 8
-for source in test_list, acc_order in 2:2:4, T in (Float32,Float64)
+# Test symmetry and eigenvalues
+for source in test_list, acc_order in (2,4,6), T in (Float32,Float64)
     xmin = -one(T)
     xmax = 2*one(T)
     N = 101
@@ -26,7 +26,7 @@ end
 
 
 # Compare mul! with β=0 and mul! without β.
-for T in (Float32, Float64), acc_order in (2, 4) #TODO: 6, 8
+for T in (Float32, Float64), acc_order in (2,4,6)
     xmin = zero(T)
     xmax = 5*one(T)
     N = 51
