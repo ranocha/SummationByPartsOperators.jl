@@ -754,6 +754,7 @@ end
 
 
 struct Mattsson2012Cache6{T} <: AbstractCoefficientCache{T}
+    # boundary coefficients
     d010101::T
     d010102::T
     d010103::T
@@ -1190,7 +1191,29 @@ struct Mattsson2012Cache6{T} <: AbstractCoefficientCache{T}
     d091109::T
     d091212::T
     d091209::T
-    #TODO: interior coefficients
+    # interior coefficients
+    di_im3_im3::T
+    di_im3_im2::T
+    di_im3_im1::T
+    di_im3_i_0::T
+    di_im2_im3::T
+    di_im2_im2::T
+    di_im2_im1::T
+    di_im2_i_0::T
+    di_im2_ip1::T
+    di_im1_im3::T
+    di_im1_im2::T
+    di_im1_im1::T
+    di_im1_i_0::T
+    di_im1_ip1::T
+    di_im1_ip2::T
+    di_i_0_im3::T
+    di_i_0_im2::T
+    di_i_0_im1::T
+    di_i_0_i_0::T
+    di_i_0_ip1::T
+    di_i_0_ip2::T
+    di_i_0_ip3::T
 
 
     function Mattsson2012Cache6(::Type{T}) where {T}
@@ -1631,6 +1654,29 @@ struct Mattsson2012Cache6{T} <: AbstractCoefficientCache{T}
         d091212 = T(11//360)
         d091209 = T(11//360)
 
+        di_im3_im3 = T(-11//360)
+        di_im3_im2 = T(1//40)
+        di_im3_im1 = T(1//40)
+        di_im3_i_0 = T(-1//360)
+        di_im2_im3 = T1//20()
+        di_im2_im2 = T(7//40)
+        di_im2_im1 = T(-3//10)
+        di_im2_i_0 = T(7//40)
+        di_im2_ip1 = T(1//20)
+        di_im1_im3 = T(-1//40)
+        di_im1_im2 = T(-3//10)
+        di_im1_im1 = T(-17//40)
+        di_im1_i_0 = T(-17//40)
+        di_im1_ip1 = T(-3//10)
+        di_im1_ip2 = T(-1//40)
+        di_i_0_im3 = T(1//180)
+        di_i_0_im2 = T(1//8)
+        di_i_0_im1 = T(19//20)
+        di_i_0_i_0 = T(101//180)
+        di_i_0_ip1 = T(19//20)
+        di_i_0_ip2 = T(1//8)
+        di_i_0_ip3 = T(1//180)
+
         #TODO: interior coefficients
 
         new{T}( d010101, d010102, d010103, d010104, d010105, d010106, d010107, 
@@ -1720,7 +1766,10 @@ struct Mattsson2012Cache6{T} <: AbstractCoefficientCache{T}
         d091010, d091011, d091008, d091009, 
         d091110, d091111, d091109, 
         d091212, d091209,
-        #TODO: interior coefficients
+        di_im3_im3, di_im3_im2, di_im3_im1, di_im3_i_0, 
+        di_im2_im3, di_im2_im2, di_im2_im1, di_im2_i_0, di_im2_ip1,
+        di_im1_im3, di_im1_im2, di_im1_im1, di_im1_i_0, di_im1_ip1, di_im1_ip2,
+        di_i_0_im3, di_i_0_im2, di_i_0_im1, di_i_0_i_0, di_i_0_ip1, di_i_0_ip2, di_i_0_ip3
         )
     end
 end
@@ -2364,27 +2413,30 @@ function convolve_boundary_coefficients!(dest::AbstractVector, cache::Mattsson20
 end
 
 @inline function convolve_interior_coefficients_loopbody(i, cache::Mattsson2012Cache6, u, b)
-    #TODO @unpack  = cache
+    @unpack di_im3_im3, di_im3_im2, di_im3_im1, di_im3_i_0, 
+    di_im2_im3, di_im2_im2, di_im2_im1, di_im2_i_0, di_im2_ip1,
+    di_im1_im3, di_im1_im2, di_im1_im1, di_im1_i_0, di_im1_ip1, di_im1_ip2,
+    di_i_0_im3, di_i_0_im2, di_i_0_im1, di_i_0_i_0, di_i_0_ip1, di_i_0_ip2, di_i_0_ip3 = cache
 
     @inbounds begin
         b_im3 = b[i-3]
         b_im2 = b[i-2]
         b_im1 = b[i-1]
-        b_i   = b[i]
+        b_i_0 = b[i]
         b_ip1 = b[i+1]
         b_ip2 = b[i+2]
         b_ip3 = b[i+3]
 
         #TODO
-        retval = 0#=(
-                      () * u[i-3]
-                    + () * u[i-2]
-                    + () * u[i-1]
-                    + () * u[i]
-                    + () * u[i+1]
-                    + () * u[i+2]
-                    + () * u[i+3]
-                )=#
+        retval = (
+                      (di_im3_im3*b_im3 + di_im3_im2*b_im2 + di_im3_im1*b_im1 + di_im3_i_0*b_i_0) * u[i-3]
+                    + (di_im2_im3*b_im3 + di_im2_im2*b_im2 + di_im2_im1*b_im1 + di_im2_i_0*b_i_0 + di_im2_ip1*b_ip1) * u[i-2]
+                    + (di_im1_im3*b_im3 + di_im1_im2*b_im2 + di_im1_im1*b_im1 + di_im1_i_0*b_i_0 + di_im1_ip1*b_ip1 + di_im1_ip2*b_ip2) * u[i-1]
+                    + (di_i_0_im3*b_im3 + di_i_0_im2*b_im2 + di_i_0_im1*b_im1 + di_i_0_i_0*b_i_0 + di_i_0_ip1*b_ip1 + di_i_0_ip2*b_ip2 + di_i_0_ip3*b_ip3) * u[i]
+                    + (di_im1_im3*b_ip3 + di_im1_im2*b_ip2 + di_im1_im1*b_ip1 + di_im1_i_0*b_i_0 + di_im1_ip1*b_im1 + di_im1_ip2*b_im2) * u[i+1]
+                    + (di_im2_im3*b_ip3 + di_im2_im2*b_ip2 + di_im2_im1*b_ip1 + di_im2_i_0*b_i_0 + di_im2_ip1*b_im1) * u[i+2]
+                    + (di_im3_im3*b_ip3 + di_im3_im2*b_ip2 + di_im3_im1*b_ip1 + di_im3_i_0*b_i_0) * u[i+3]
+                )
     end
 
     retval
