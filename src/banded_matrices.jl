@@ -1,6 +1,8 @@
 import BandedMatrices: BandedMatrix, isbanded, bandwidth
 
-@inline function bandwidth(D::Union{DerivativeOperator,DissipationOperator}, k::Int)
+const BandedDerivativeOperator= Union{DerivativeOperator,DissipationOperator,VarCoefDerivativeOperator}
+
+@inline function bandwidth(D::BandedDerivativeOperator, k::Int)
     if k == 1
         lower_bandwidth(D)
      else
@@ -8,9 +10,9 @@ import BandedMatrices: BandedMatrix, isbanded, bandwidth
     end
 end
 
-isbanded(D::Union{DerivativeOperator,DissipationOperator}) = true
+isbanded(D::BandedDerivativeOperator) = true
 
-function BandedMatrix(D::Union{DerivativeOperator,DissipationOperator})
+function BandedMatrix(D::BandedDerivativeOperator)
     T = eltype(D)
     l = lower_bandwidth(D)
     u = upper_bandwidth(D)
