@@ -1832,7 +1832,6 @@ function convolve_boundary_coefficients!(dest::AbstractVector, cache::Mattsson20
         #b8 = b[8]
         #b9 = b[9]
 
-        #TODO
         dest[  1] = α * (
                           (d010101*b[ 1] + d010102*b[ 2] + d010103*b[ 3] + d010104*b[ 4] + d010105*b[ 5] + d010106*b[ 6] + d010107*b[ 7]) * u[ 1]
                         + (d010201*b[ 1] + d010203*b[ 3] + d010204*b[ 4] + d010205*b[ 5] + d010206*b[ 6] + d010207*b[ 7]) * u[ 2]
@@ -1939,7 +1938,112 @@ function convolve_boundary_coefficients!(dest::AbstractVector, cache::Mattsson20
                         + (d091212*b[12] + d091209*b[ 9]) * u[12]
         )
 
-        #TODO dest[end] = 
+        
+        dest[end] = α * (
+                          (d010101*b[end] + d010102*b[end-1] + d010103*b[end-2] + d010104*b[end-3] + d010105*b[end-4] + d010106*b[end-5] + d010107*b[end-6]) * u[end]
+                        + (d010201*b[end] + d010203*b[end-2] + d010204*b[end-3] + d010205*b[end-4] + d010206*b[end-5] + d010207*b[end-6]) * u[end-1]
+                        + (d010301*b[end] + d010302*b[end-1] + d010304*b[end-3] + d010305*b[end-4] + d010306*b[end-5] + d010307*b[end-6]) * u[end-2]
+                        + (d010401*b[end] + d010402*b[end-1] + d010403*b[end-2] + d010405*b[end-4] + d010406*b[end-5] + d010407*b[end-6]) * u[end-3]
+                        + (d010501*b[end] + d010502*b[end-1] + d010503*b[end-2] + d010504*b[end-3] + d010505*b[end-4] + d010506*b[end-5] + d010507*b[end-6]) * u[end-4]
+                        + (d010601*b[end] + d010602*b[end-1] + d010603*b[end-2] + d010604*b[end-3] + d010605*b[end-4] + d010606*b[end-5] + d010607*b[end-6]) * u[end-5]
+                        + (d010704*b[end-3] + d010705*b[end-4] + d010706*b[end-5] + d010707*b[end-6]) * u[end-6]
+                        + (d010805*b[end-4] + d010806*b[end-5] + d010807*b[end-6]) * u[end-7]
+                        + (d010905*b[end-4] + d010906*b[end-5] + d010907*b[end-6]) * u[end-8]
+        )
+        dest[end-1] = α * (
+                          (d020101*b[end] + d020103*b[end-2] + d020104*b[end-3] + d020105*b[end-4] + d020106*b[end-5] + d020107*b[end-6]) * u[end]
+                        + (d020201*b[end] + d020203*b[end-2] + d020204*b[end-3] + d020205*b[end-4] + d020206*b[end-5] + d020207*b[end-6]) * u[end-1]
+                        + (d020301*b[end] + d020304*b[end-3] + d020305*b[end-4] + d020306*b[end-5] + d020307*b[end-6]) * u[end-2]
+                        + (d020401*b[end] + d020403*b[end-2] + d020405*b[end-4] + d020406*b[end-5] + d020407*b[end-6]) * u[end-3]
+                        + (d020501*b[end] + d020503*b[end-2] + d020504*b[end-3] + d020505*b[end-4] + d020506*b[end-5] + d020507*b[end-6]) * u[end-4]
+                        + (d020601*b[end] + d020603*b[end-2] + d020604*b[end-3] + d020605*b[end-4] + d020606*b[end-5] + d020607*b[end-6]) * u[end-5]
+                        + (d020704*b[end-3] + d020705*b[end-4] + d020706*b[end-5] + d020707*b[end-6]) * u[end-6]
+                        + (d020805*b[end-4] + d020806*b[end-5] + d020807*b[end-6]) * u[end-7]
+                        + (d020905*b[end-4] + d020906*b[end-5] + d020907*b[end-6]) * u[end-8]
+        )
+        dest[end-2] = α * (
+                          (d030101*b[end] + d030102*b[end-1] + d030104*b[end-3] + d030105*b[end-4] + d030106*b[end-5] + d030107*b[end-6]) * u[end]
+                        + (d030201*b[end] + d030204*b[end-3] + d030205*b[end-4] + d030206*b[end-5] + d030207*b[end-6]) * u[end-1]
+                        + (d030301*b[end] + d030302*b[end-1] + d030304*b[end-3] + d030305*b[end-4] + d030306*b[end-5] + d030307*b[end-6]) * u[end-2]
+                        + (d030401*b[end] + d030402*b[end-1] + d030405*b[end-4] + d030406*b[end-5] + d030407*b[end-6]) * u[end-3]
+                        + (d030501*b[end] + d030502*b[end-1] + d030504*b[end-3] + d030505*b[end-4] + d030506*b[end-5] + d030507*b[end-6]) * u[end-4]
+                        + (d030601*b[end] + d030602*b[end-1] + d030604*b[end-3] + d030605*b[end-4] + d030606*b[end-5] + d030607*b[end-6]) * u[end-5]
+                        + (d030704*b[end-3] + d030705*b[end-4] + d030706*b[end-5] + d030707*b[end-6]) * u[end-6]
+                        + (d030805*b[end-4] + d030806*b[end-5] + d030807*b[end-6]) * u[end-7]
+                        + (d030905*b[end-4] + d030906*b[end-5] + d030907*b[end-6]) * u[end-8]
+        )
+        dest[end-3] = α * (
+                          (d040101*b[end] + d040102*b[end-1] + d040103*b[end-2] + d040105*b[end-4] + d040106*b[end-5] + d040107*b[end-6]) * u[end]
+                        + (d040201*b[end] + d040203*b[end-2] + d040205*b[end-4] + d040206*b[end-5] + d040207*b[end-6]) * u[end-1]
+                        + (d040301*b[end] + d040302*b[end-1] + d040305*b[end-4] + d040306*b[end-5] + d040307*b[end-6]) * u[end-2]
+                        + (d040401*b[end] + d040402*b[end-1] + d040403*b[end-2] + d040405*b[end-4] + d040406*b[end-5] + d040407*b[end-6]) * u[end-3]
+                        + (d040501*b[end] + d040502*b[end-1] + d040503*b[end-2] + d040505*b[end-4] + d040506*b[end-5] + d040507*b[end-6]) * u[end-4]
+                        + (d040601*b[end] + d040602*b[end-1] + d040603*b[end-2] + d040605*b[end-4] + d040606*b[end-5] + d040607*b[end-6]) * u[end-5]
+                        + (d040705*b[end-4] + d040706*b[end-5] + d040707*b[end-6]) * u[end-6]
+                        + (d040805*b[end-4] + d040806*b[end-5] + d040807*b[end-6]) * u[end-7]
+                        + (d040905*b[end-4] + d040906*b[end-5] + d040907*b[end-6]) * u[end-8]
+        )
+        dest[end-4] = α * (
+                          (d050101*b[end] + d050102*b[end-1] + d050103*b[end-2] + d050104*b[end-3] + d050105*b[end-4] + d050106*b[end-5] + d050107*b[end-6]) * u[end]
+                        + (d050201*b[end] + d050203*b[end-2] + d050204*b[end-3] + d050205*b[end-4] + d050206*b[end-5] + d050207*b[end-6]) * u[end-1]
+                        + (d050301*b[end] + d050302*b[end-1] + d050304*b[end-3] + d050305*b[end-4] + d050306*b[end-5] + d050307*b[end-6]) * u[end-2]
+                        + (d050401*b[end] + d050402*b[end-1] + d050403*b[end-2] + d050405*b[end-4] + d050406*b[end-5] + d050407*b[end-6]) * u[end-3]
+                        + (d050501*b[end] + d050502*b[end-1] + d050503*b[end-2] + d050504*b[end-3] + d050505*b[end-4] + d050506*b[end-5] + d050507*b[end-6] + d050508*b[end-7]) * u[end-4]
+                        + (d050601*b[end] + d050602*b[end-1] + d050603*b[end-2] + d050604*b[end-3] + d050605*b[end-4] + d050606*b[end-5] + d050607*b[end-6] + d050608*b[end-7]) * u[end-5]
+                        + (d050704*b[end-3] + d050705*b[end-4] + d050706*b[end-5] + d050707*b[end-6] + d050708*b[end-7]) * u[end-6]
+                        + (d050805*b[end-4] + d050806*b[end-5] + d050807*b[end-6] + d050808*b[end-7]) * u[end-7]
+                        + (d050905*b[end-4] + d050906*b[end-5] + d050907*b[end-6] + d050908*b[end-7]) * u[end-8]
+        )
+        dest[end-5] = α * (
+                          (d060101*b[end] + d060102*b[end-1] + d060103*b[end-2] + d060104*b[end-3] + d060105*b[end-4] + d060106*b[end-5] + d060107*b[end-6]) * u[end]
+                        + (d060201*b[end] + d060203*b[end-2] + d060204*b[end-3] + d060205*b[end-4] + d060206*b[end-5] + d060207*b[end-6]) * u[end-1]
+                        + (d060301*b[end] + d060302*b[end-1] + d060304*b[end-3] + d060305*b[end-4] + d060306*b[end-5] + d060307*b[end-6]) * u[end-2]
+                        + (d060401*b[end] + d060402*b[end-1] + d060403*b[end-2] + d060405*b[end-4] + d060406*b[end-5] + d060407*b[end-6]) * u[end-3]
+                        + (d060501*b[end] + d060502*b[end-1] + d060503*b[end-2] + d060504*b[end-3] + d060505*b[end-4] + d060506*b[end-5] + d060507*b[end-6] + d060508*b[end-7]) * u[end-4]
+                        + (d060601*b[end] + d060602*b[end-1] + d060603*b[end-2] + d060604*b[end-3] + d060605*b[end-4] + d060606*b[end-5] + d060607*b[end-6] + d060608*b[end-7] + d060609*b[end-8]) * u[end-5]
+                        + (d060704*b[end-3] + d060705*b[end-4] + d060706*b[end-5] + d060707*b[end-6] + d060708*b[end-7] + d060709*b[end-8]) * u[end-6]
+                        + (d060805*b[end-4] + d060806*b[end-5] + d060807*b[end-6] + d060808*b[end-7] + d060809*b[end-8]) * u[end-7]
+                        + (d060905*b[end-4] + d060906*b[end-5] + d060907*b[end-6] + d060908*b[end-7] + d060909*b[end-8]) * u[end-8]
+        )
+        dest[end-6] = α * (
+                          (d070104*b[end-3] + d070105*b[end-4] + d070106*b[end-5] + d070107*b[end-6]) * u[end]
+                        + (d070204*b[end-3] + d070205*b[end-4] + d070206*b[end-5] + d070207*b[end-6]) * u[end-1]
+                        + (d070304*b[end-3] + d070305*b[end-4] + d070306*b[end-5] + d070307*b[end-6]) * u[end-2]
+                        + (d070405*b[end-4] + d070406*b[end-5] + d070407*b[end-6]) * u[end-3]
+                        + (d070504*b[end-3] + d070505*b[end-4] + d070506*b[end-5] + d070507*b[end-6] + d070508*b[end-7]) * u[end-4]
+                        + (d070604*b[end-3] + d070605*b[end-4] + d070606*b[end-5] + d070607*b[end-6] + d070608*b[end-7] + d070609*b[end-8]) * u[end-5]
+                        + (d070704*b[end-3] + d070705*b[end-4] + d070706*b[end-5] + d070707*b[end-6] + d070708*b[end-7] + d070709*b[end-8] + d070710*b[end-9]) * u[end-6]
+                        + (d070805*b[end-4] + d070806*b[end-5] + d070807*b[end-6] + d070808*b[end-7] + d070809*b[end-8] + d070810*b[end-9]) * u[end-7]
+                        + (d070905*b[end-4] + d070906*b[end-5] + d070907*b[end-6] + d070908*b[end-7] + d070909*b[end-8] + d070910*b[end-9]) * u[end-8]
+                        + (d071010*b[end-9] + d071007*b[end-6]) * u[end-9]
+        )
+        dest[end-7] = α * (
+                          (d080105*b[end-4] + d080106*b[end-5] + d080107*b[end-6]) * u[end]
+                        + (d080205*b[end-4] + d080206*b[end-5] + d080207*b[end-6]) * u[end-1]
+                        + (d080305*b[end-4] + d080306*b[end-5] + d080307*b[end-6]) * u[end-2]
+                        + (d080405*b[end-4] + d080406*b[end-5] + d080407*b[end-6]) * u[end-3]
+                        + (d080505*b[end-4] + d080506*b[end-5] + d080507*b[end-6] + d080508*b[end-7]) * u[end-4]
+                        + (d080605*b[end-4] + d080606*b[end-5] + d080607*b[end-6] + d080608*b[end-7] + d080609*b[end-8]) * u[end-5]
+                        + (d080705*b[end-4] + d080706*b[end-5] + d080707*b[end-6] + d080708*b[end-7] + d080709*b[end-8] + d080710*b[end-9]) * u[end-6]
+                        + (d080805*b[end-4] + d080806*b[end-5] + d080807*b[end-6] + d080808*b[end-7] + d080809*b[end-8] + d080810*b[end-9] + d080811*b[end-10]) * u[end-7]
+                        + (d080910*b[end-9] + d080911*b[end-10] + d080905*b[end-4] + d080906*b[end-5] + d080907*b[end-6] + d080908*b[end-7] + d080909*b[end-8]) * u[end-8]
+                        + (d081010*b[end-9] + d081008*b[end-7] + d081009*b[end-8]) * u[end-9]
+                        + (d081111*b[end-10] + d081108*b[end-7]) * u[end-10]
+        )
+        dest[end-8] = α * (
+                          (d090105*b[end-4] + d090106*b[end-5] + d090107*b[end-6]) * u[end]
+                        + (d090205*b[end-4] + d090206*b[end-5] + d090207*b[end-6]) * u[end-1]
+                        + (d090305*b[end-4] + d090306*b[end-5] + d090307*b[end-6]) * u[end-2]
+                        + (d090405*b[end-4] + d090406*b[end-5] + d090407*b[end-6]) * u[end-3]
+                        + (d090505*b[end-4] + d090506*b[end-5] + d090507*b[end-6] + d090508*b[end-7]) * u[end-4]
+                        + (d090605*b[end-4] + d090606*b[end-5] + d090607*b[end-6] + d090608*b[end-7] + d090609*b[end-8]) * u[end-5]
+                        + (d090705*b[end-4] + d090706*b[end-5] + d090707*b[end-6] + d090708*b[end-7] + d090709*b[end-8] + d090710*b[end-9]) * u[end-6]
+                        + (d090810*b[end-9] + d090811*b[end-10] + d090805*b[end-4] + d090806*b[end-5] + d090807*b[end-6] + d090808*b[end-7] + d090809*b[end-8]) * u[end-7]
+                        + (d090910*b[end-9] + d090911*b[end-10] + d090912*b[end-11] + d090905*b[end-4] + d090906*b[end-5] + d090907*b[end-6] + d090908*b[end-7] + d090909*b[end-8]) * u[end-8]
+                        + (d091010*b[end-9] + d091011*b[end-10] + d091008*b[end-7] + d091009*b[end-8]) * u[end-9]
+                        + (d091110*b[end-9] + d091111*b[end-10] + d091109*b[end-8]) * u[end-10]
+                        + (d091212*b[end-11] + d091209*b[end-8]) * u[end-11]
+        )
     end
 end
 
