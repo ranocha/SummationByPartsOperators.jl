@@ -1176,6 +1176,7 @@ struct Mattsson2012Cache6{T} <: AbstractCoefficientCache{T}
     d091109::T
     d091212::T
     d091209::T
+    #TODO: interior coefficients
 
 
     function Mattsson2012Cache6(::Type{T}) where {T}
@@ -1602,6 +1603,8 @@ struct Mattsson2012Cache6{T} <: AbstractCoefficientCache{T}
         d091212 = T(11//360)
         d091209 = T(11//360)
 
+        #TODO: interior coefficients
+
         new{T}( d010101, d010102, d010103, d010104, d010105, d010106, d010107, 
         d010201, d010203, d010204, d010205, d010206, d010207, 
         d010301, d010302, d010304, d010305, d010306, d010307, 
@@ -1688,7 +1691,9 @@ struct Mattsson2012Cache6{T} <: AbstractCoefficientCache{T}
         d090910, d090905, d090906, d090907, d090908, d090909, 
         d091010, d091011, d091008, d091009, 
         d091110, d091111, d091109, 
-        d091212, d091209, )
+        d091212, d091209,
+        #TODO: interior coefficients
+        )
     end
 end
 
@@ -1787,7 +1792,7 @@ function convolve_boundary_coefficients!(dest::AbstractVector, cache::Mattsson20
     d091010, d091011, d091008, d091009, 
     d091110, d091111, d091109, 
     d091212, d091209 = cache
-    
+
     @inbounds begin
         #b1 = b[1]
         #b2 = b[2]
