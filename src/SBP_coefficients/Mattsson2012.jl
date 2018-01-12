@@ -2049,7 +2049,6 @@ end
 
 function convolve_boundary_coefficients!(dest::AbstractVector, cache::Mattsson2012Cache6,
                                          u::AbstractVector, b::AbstractVector, α, β)
-    #TODO
     @unpack d010101, d010102, d010103, d010104, d010105, d010106, d010107, 
     d010201, d010203, d010204, d010205, d010206, d010207, 
     d010301, d010302, d010304, d010305, d010306, d010307, 
