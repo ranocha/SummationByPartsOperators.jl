@@ -248,3 +248,49 @@ S = zeros(M)
 S[1,:] = s
 
 D2 = H \ (-M - b[1]*S)
+
+
+# write coefficients to file
+open("test.txt", "w") do io
+    reg = r"\*b_\d+/"
+    for i in 1:9, j in 1:size(D2, 2)
+        s = string(D2[i,j])
+        parts = split(replace(replace(filter(!isspace, s), "+", " + "), "-", " + -"), " + ")
+        for part in parts
+            m = match(reg, part)
+            m == nothing && continue
+            k = parse(Int, m.match[4:end-1])
+            term = replace(part, m.match, "//")
+            @printf(io, "        d%02i%02i%02i = T(%s)\n", i, j, k, term)
+        end
+    end
+end
+
+open("test.txt", "w") do io
+    reg = r"\*b_\d+/"
+    for i in 1:9, j in 1:size(D2, 2)
+        s = string(D2[i,j])
+        parts = split(replace(replace(filter(!isspace, s), "+", " + "), "-", " + -"), " + ")
+        for part in parts
+            m = match(reg, part)
+            m == nothing && continue
+            k = parse(Int, m.match[4:end-1])
+            @printf(io, "    d%02i%02i%02i::T\n", i, j, k)
+        end
+    end
+end
+
+open("test.txt", "w") do io
+    reg = r"\*b_\d+/"
+    for i in 1:9, j in 1:size(D2, 2)
+        s = string(D2[i,j])
+        parts = split(replace(replace(filter(!isspace, s), "+", " + "), "-", " + -"), " + ")
+        for part in parts
+            m = match(reg, part)
+            m == nothing && continue
+            k = parse(Int, m.match[4:end-1])
+            @printf(io, "d%02i%02i%02i, ", i, j, k)
+        end
+        print(io, "\n")
+    end
+end
