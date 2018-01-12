@@ -89,3 +89,19 @@ function var_coef_derivative_operator(source_of_coefficients, derivative_order, 
     coefficients = var_coef_derivative_coefficients(source_of_coefficients, derivative_order, accuracy_order, grid, parallel)
     VarCoefDerivativeOperator(coefficients, grid, bfunc.(grid))
 end
+
+
+
+"""
+    mass_matrix(D::Union{DerivativeOperator,VarCoefDerivativeOperator})
+
+Create the diagonal mass matrix for the SBP derivative operator `D`.
+"""
+function mass_matrix(D::Union{DerivativeOperator,VarCoefDerivativeOperator})
+    m = ones(grid(D))
+    @unpack left_weights, right_weights = D.coefficients
+
+    m[1:length(left_weights)] = left_weights
+    m[end:-1:end-length(right_weights)+1] = right_weights
+    Diagonal(D.Δx * m)
+end
