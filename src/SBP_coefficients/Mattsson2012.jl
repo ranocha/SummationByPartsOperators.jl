@@ -263,6 +263,7 @@ struct Mattsson2012Cache4{T} <: AbstractCoefficientCache{T}
     d646::T
     d653::T
     d654::T
+    d655::T
     d656::T
     d657::T
     d663::T
@@ -318,7 +319,7 @@ struct Mattsson2012Cache4{T} <: AbstractCoefficientCache{T}
         d221 = T(-59//68)
         d223 = T(-156920047993625//159775733917868)
         d224 = T(-12001237118451//79887866958934)
-        d231 = T(1//17)
+        d231 = T(2//17)
         d233 = T(1489556735319//1857857371138)
         d234 = T(149729180391//1857857371138)
         d241 = T(3//68)
@@ -431,18 +432,18 @@ struct Mattsson2012Cache4{T} <: AbstractCoefficientCache{T}
         d687 = T(1//6)
         d688 = T(-1//8)
 
-        dim2m2 = T(1//8)
-        dim2m1 = T(-1//6)
-        dim2_0 = T(1//8)
-        dim1m2 = T(-1//6)
-        dim1m1 = T(-1//2)
-        dim1_0 = T(-1//2)
-        dim1p1 = T(-1//6)
+        dim2m2 = T(-1//8)
+        dim2m1 = T(1//6)
+        dim2_0 = T(-1//8)
+        dim1m2 = T(1//6)
+        dim1m1 = T(1//2)
+        dim1_0 = T(1//2)
+        dim1p1 = T(1//6)
         di_0m2 = T(-1//24)
-        di_0m1 = T(5//6)
-        di_0_0 = T(3//4)
-        di_0p1 = T(5//6)
-        di_0p2 = T(1//24)
+        di_0m1 = T(-5//6)
+        di_0_0 = T(-3//4)
+        di_0p1 = T(-5//6)
+        di_0p2 = T(-1//24)
 
         new{T}( d111, d112, d113, d114, d121, d123, d124, d131, d132, d133, d134,
                 d141, d143, d144, d153, d154, d163, d164,
@@ -457,18 +458,18 @@ struct Mattsson2012Cache4{T} <: AbstractCoefficientCache{T}
                 d553, d554, d555, d556, d557, d563, d564, d565, d566, d567,
                 d575, d576, d577,
                 d613, d614, d623, d624, d633, d634, d635, d643, d644, d645, d646,
-                d653, d654, d656, d657, d663, d664, d665, d666, d667, d668,
+                d653, d654, d655, d656, d657, d663, d664, d665, d666, d667, d668,
                 d675, d676, d677, d678, d686, d687, d688,
                 dim2m2, dim2m1, dim2_0, dim1m2, dim1m1, dim1_0, dim1p1,
                 di_0m2, di_0m1, di_0_0, di_0p1, di_0p2)
     end
 end
 
-lower_bandwidth(cache::Mattsson2012Cache4) = 1
-upper_bandwidth(cache::Mattsson2012Cache4) = 1
-Base.checkbounds(::Type{Bool}, u::AbstractVector, ::Mattsson2012Cache4) = length(u) > 2
-left_length(::Mattsson2012Cache4) = 1
-right_length(::Mattsson2012Cache4) = 1
+lower_bandwidth(cache::Mattsson2012Cache4) = 3
+upper_bandwidth(cache::Mattsson2012Cache4) = 3
+Base.checkbounds(::Type{Bool}, u::AbstractVector, ::Mattsson2012Cache4) = length(u) > 8
+left_length(::Mattsson2012Cache4) = 6
+right_length(::Mattsson2012Cache4) = 6
 
 function convolve_boundary_coefficients!(dest::AbstractVector, cache::Mattsson2012Cache4,
                                          u::AbstractVector, b::AbstractVector, α)
@@ -485,7 +486,7 @@ function convolve_boundary_coefficients!(dest::AbstractVector, cache::Mattsson20
             d553, d554, d555, d556, d557, d563, d564, d565, d566, d567,
             d575, d576, d577,
             d613, d614, d623, d624, d633, d634, d635, d643, d644, d645, d646,
-            d653, d654, d656, d657, d663, d664, d665, d666, d667, d668,
+            d653, d654, d655, d656, d657, d663, d664, d665, d666, d667, d668,
             d675, d676, d677, d678, d686, d687, d688, = cache
     @inbounds begin
         #b1 = b[1]
@@ -543,7 +544,7 @@ function convolve_boundary_coefficients!(dest::AbstractVector, cache::Mattsson20
                         + (d623*b[3] + d624) * u[2]
                         + (d633*b[3] + d634*b[4] + d635*b[5]) * u[3]
                         + (d643*b[3] + d644*b[4] + d645*b[5] + d646*b[6]) * u[4]
-                        + (d653*b[3] + d654*b[4] + d656*b[6] + d657*b[7]) * u[5]
+                        + (d653*b[3] + d654*b[4] + d655*b[5] + d656*b[6] + d657*b[7]) * u[5]
                         + (d663*b[3] + d664*b[4] + d665*b[5] + d666*b[6] + d667*b[7] + d668*b[8]) * u[6]
                         + (d675*b[5] + d676*b[6] + d677*b[7] + d678) * u[7]
                         + (d686*b[6] + d687*b[7] + d688*b[8]) * u[8]
@@ -596,7 +597,7 @@ function convolve_boundary_coefficients!(dest::AbstractVector, cache::Mattsson20
                         + (d623*b[end-2] + d624) * u[end-1]
                         + (d633*b[end-2] + d634*b[end-3] + d635*b[end-4]) * u[end-2]
                         + (d643*b[end-2] + d644*b[end-3] + d645*b[end-4] + d646*b[end-5]) * u[end-3]
-                        + (d653*b[end-2] + d654*b[end-3] + d656*b[end-5] + d657*b[end-6]) * u[end-4]
+                        + (d653*b[end-2] + d654*b[end-3] + d655*b[end-4] + d656*b[end-5] + d657*b[end-6]) * u[end-4]
                         + (d663*b[end-2] + d664*b[end-3] + d665*b[end-4] + d666*b[end-5] + d667*b[end-6] + d668*b[end-7]) * u[end-5]
                         + (d675*b[end-4] + d676*b[end-5] + d677*b[end-6] + d678) * u[end-6]
                         + (d686*b[end-5] + d687*b[end-6] + d688*b[end-7]) * u[end-7]
@@ -606,7 +607,136 @@ end
 
 function convolve_boundary_coefficients!(dest::AbstractVector, cache::Mattsson2012Cache4,
                                          u::AbstractVector, b::AbstractVector, α, β)
-    # TODO
+    @unpack d111, d112, d113, d114, d121, d123, d124, d131, d132, d133, d134,
+            d141, d143, d144, d153, d154, d163, d164,
+            d211, d213, d214, d221, d223, d224, d231, d233, d234, d241, d243, d244,
+            d253, d254, d263, d264,
+            d311, d312, d313, d314, d321, d323, d324, d331, d332, d333, d334, d335,
+            d341, d343, d344, d345, d353, d354, d355, d363, d364, d365,
+            d411, d413, d414, d421, d423, d424, d431, d433, d434, d435,
+            d441, d443, d444, d445, d446, d453, d454, d455, d456,
+            d463, d464, d465, d466,
+            d513, d514, d523, d524, d533, d534, d535, d543, d544, d545, d546,
+            d553, d554, d555, d556, d557, d563, d564, d565, d566, d567,
+            d575, d576, d577,
+            d613, d614, d623, d624, d633, d634, d635, d643, d644, d645, d646,
+            d653, d654, d655, d656, d657, d663, d664, d665, d666, d667, d668,
+            d675, d676, d677, d678, d686, d687, d688, = cache
+    @inbounds begin
+        #b1 = b[1]
+        #b2 = b[2]
+        #b3 = b[3]
+        #b4 = b[4]
+        #b5 = b[5]
+        #b6 = b[6]
+        #b7 = b[7]
+        #b8 = b[8]
+
+        dest[  1] = α * (
+                          (d111*b[1] + d112*b[2] + d113*b[3] + d114*b[4]) * u[1]
+                        + (d121*b[1] + d123*b[3] + d124*b[4]) * u[2]
+                        + (d131*b[1] + d132*b[2] + d133*b[3] + d134*b[4]) * u[3]
+                        + (d141*b[1] + d143*b[3] + d144*b[4]) * u[4]
+                        + (d153*b[3] + d154*b[4]) * u[5]
+                        + (d163*b[3] + d164*b[4]) * u[6]
+                    ) + β*dest[1]
+        dest[  2] = α * (
+                          (d211*b[1] + d213*b[3] + d214*b[4]) * u[1]
+                        + (d221*b[1] + d223*b[3] + d224*b[4]) * u[2]
+                        + (d231*b[1] + d233*b[3] + d234*b[4]) * u[3]
+                        + (d241*b[1] + d243*b[3] + d244*b[4]) * u[4]
+                        + (d253*b[3] + d254*b[4]) * u[5]
+                        + (d263*b[3] + d264*b[4]) * u[6]
+                    ) + β*dest[2]
+        dest[  3] = α * (
+                          (d311*b[1] + d312*b[2] + d313*b[3] + d314*b[4]) * u[1]
+                        + (d321*b[1] + d323*b[3] + d324*b[4]) * u[2]
+                        + (d331*b[1] + d332*b[2] + d333*b[3] + d334*b[4] + d335*b[5]) * u[3]
+                        + (d341*b[1] + d343*b[3] + d344*b[4] + d345*b[5]) * u[4]
+                        + (d353*b[3] + d354*b[4] + d355*b[5]) * u[5]
+                        + (d363*b[3] + d364*b[4] + d365*b[5]) * u[6]
+                    ) + β*dest[3]
+        dest[  4] = α * (
+                          (d411*b[1] + d413*b[3] + d414) * u[1]
+                        + (d421*b[1] + d423*b[3] + d424) * u[2]
+                        + (d431*b[1] + d433*b[3] + d434*b[4] + d435*b[5]) * u[3]
+                        + (d441*b[1] + d443*b[3] + d444*b[4] + d445*b[5] + d446*b[6]) * u[4]
+                        + (d453*b[3] + d454*b[4] + d455*b[5] + d456*b[6]) * u[5]
+                        + (d463*b[3] + d464*b[4] + d465*b[5] + d466*b[6]) * u[6]
+                    ) + β*dest[4]
+        dest[  5] = α * (
+                          (d513*b[3] + d514) * u[1]
+                        + (d523*b[3] + d524) * u[2]
+                        + (d533*b[3] + d534*b[4] + d535*b[5]) * u[3]
+                        + (d543*b[3] + d544*b[4] + d545*b[5] + d546*b[6]) * u[4]
+                        + (d553*b[3] + d554*b[4] + d555*b[5] + d556*b[6] + d557*b[7]) * u[5]
+                        + (d563*b[3] + d564*b[4] + d565*b[5] + d566*b[6] + d567*b[7]) * u[6]
+                        + (d575*b[5] + d576*b[6] + d577*b[7]) * u[7]
+                    ) + β*dest[5]
+        dest[  6] = α * (
+                          (d613*b[3] + d614) * u[1]
+                        + (d623*b[3] + d624) * u[2]
+                        + (d633*b[3] + d634*b[4] + d635*b[5]) * u[3]
+                        + (d643*b[3] + d644*b[4] + d645*b[5] + d646*b[6]) * u[4]
+                        + (d653*b[3] + d654*b[4] + d655*b[5] + d656*b[6] + d657*b[7]) * u[5]
+                        + (d663*b[3] + d664*b[4] + d665*b[5] + d666*b[6] + d667*b[7] + d668*b[8]) * u[6]
+                        + (d675*b[5] + d676*b[6] + d677*b[7] + d678) * u[7]
+                        + (d686*b[6] + d687*b[7] + d688*b[8]) * u[8]
+                    ) + β*dest[6]
+
+
+        dest[end] = α * (
+                          (d111*b[end] + d112*b[end-1] + d113*b[end-2] + d114*b[end-3]) * u[end]
+                        + (d121*b[end] + d123*b[end-2] + d124*b[end-3]) * u[end-1]
+                        + (d131*b[end] + d132*b[end-1] + d133*b[end-2] + d134*b[end-3]) * u[end-2]
+                        + (d141*b[end] + d143*b[end-2] + d144*b[end-3]) * u[end-3]
+                        + (d153*b[end-2] + d154*b[end-3]) * u[end-4]
+                        + (d163*b[end-2] + d164*b[end-3]) * u[end-5]
+                    ) + β*dest[end]
+        dest[end-1] = α * (
+                          (d211*b[end] + d213*b[end-2] + d214*b[end-3]) * u[end]
+                        + (d221*b[end] + d223*b[end-2] + d224*b[end-3]) * u[end-1]
+                        + (d231*b[end] + d233*b[end-2] + d234*b[end-3]) * u[end-2]
+                        + (d241*b[end] + d243*b[end-2] + d244*b[end-3]) * u[end-3]
+                        + (d253*b[end-2] + d254*b[end-3]) * u[end-4]
+                        + (d263*b[end-2] + d264*b[end-3]) * u[end-5]
+                    ) + β*dest[end-1]
+        dest[end-2] = α * (
+                          (d311*b[end] + d312*b[end-1] + d313*b[end-2] + d314*b[end-3]) * u[end]
+                        + (d321*b[end] + d323*b[end-2] + d324*b[end-3]) * u[end-1]
+                        + (d331*b[end] + d332*b[end-1] + d333*b[end-2] + d334*b[end-3] + d335*b[end-4]) * u[end-2]
+                        + (d341*b[end] + d343*b[end-2] + d344*b[end-3] + d345*b[end-4]) * u[end-3]
+                        + (d353*b[end-2] + d354*b[end-3] + d355*b[end-4]) * u[end-4]
+                        + (d363*b[end-2] + d364*b[end-3] + d365*b[end-4]) * u[end-5]
+                    ) + β*dest[end-2]
+        dest[end-3] = α * (
+                          (d411*b[end] + d413*b[end-2] + d414) * u[end]
+                        + (d421*b[end] + d423*b[end-2] + d424) * u[end-1]
+                        + (d431*b[end] + d433*b[end-2] + d434*b[end-3] + d435*b[end-4]) * u[end-2]
+                        + (d441*b[end] + d443*b[end-2] + d444*b[end-3] + d445*b[end-4] + d446*b[end-5]) * u[end-3]
+                        + (d453*b[end-2] + d454*b[end-3] + d455*b[end-4] + d456*b[end-5]) * u[end-4]
+                        + (d463*b[end-2] + d464*b[end-3] + d465*b[end-4] + d466*b[end-5]) * u[end-5]
+                    ) + β*dest[end-3]
+        dest[end-4] = α * (
+                          (d513*b[end-2] + d514) * u[end]
+                        + (d523*b[end-2] + d524) * u[end-1]
+                        + (d533*b[end-2] + d534*b[end-3] + d535*b[end-4]) * u[end-2]
+                        + (d543*b[end-2] + d544*b[end-3] + d545*b[end-4] + d546*b[end-5]) * u[end-3]
+                        + (d553*b[end-2] + d554*b[end-3] + d555*b[end-4] + d556*b[end-5] + d557*b[end-6]) * u[end-4]
+                        + (d563*b[end-2] + d564*b[end-3] + d565*b[end-4] + d566*b[end-5] + d567*b[end-6]) * u[end-5]
+                        + (d575*b[end-4] + d576*b[end-5] + d577*b[end-6]) * u[end-6]
+                    ) + β*dest[end-4]
+        dest[end-5] = α * (
+                          (d613*b[end-2] + d614) * u[end]
+                        + (d623*b[end-2] + d624) * u[end-1]
+                        + (d633*b[end-2] + d634*b[end-3] + d635*b[end-4]) * u[end-2]
+                        + (d643*b[end-2] + d644*b[end-3] + d645*b[end-4] + d646*b[end-5]) * u[end-3]
+                        + (d653*b[end-2] + d654*b[end-3] + d655*b[end-4] + d656*b[end-5] + d657*b[end-6]) * u[end-4]
+                        + (d663*b[end-2] + d664*b[end-3] + d665*b[end-4] + d666*b[end-5] + d667*b[end-6] + d668*b[end-7]) * u[end-5]
+                        + (d675*b[end-4] + d676*b[end-5] + d677*b[end-6] + d678) * u[end-6]
+                        + (d686*b[end-5] + d687*b[end-6] + d688*b[end-7]) * u[end-7]
+                    ) + β*dest[end-5]
+    end
 end
 
 @inline function convolve_interior_coefficients_loopbody(i, cache::Mattsson2012Cache4, u, b)

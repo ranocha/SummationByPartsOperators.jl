@@ -21,7 +21,7 @@ for source in test_list, acc_order in 2:2:8, T in (Float32,Float64)
 
     println(DevNull, D2var)
     println(DevNull, D2var.coefficients)
-    @test norm(full(D2) - full(D2var)) < 10*eps(T)
+    @test maximum(abs, full(D2) - full(D2var)) < 10000*eps(T)
 end
 
 
