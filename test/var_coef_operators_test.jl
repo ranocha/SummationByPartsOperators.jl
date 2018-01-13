@@ -3,12 +3,11 @@ using SummationByPartsOperators
 
 test_list = (Mattsson2012(),)
 
-# Test symmetry and eigenvalues
+# Test consistency with constant coefficient operators
 for source in test_list, acc_order in (2,4,6), T in (Float32,Float64)
     xmin = -one(T)
     xmax = 2*one(T)
     N = 101
-    der_order = 1
 
     D2 = derivative_operator(source, 2, acc_order, xmin, xmax, N)
     D2var = try
