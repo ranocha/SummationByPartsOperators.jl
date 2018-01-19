@@ -165,7 +165,13 @@ end
 
 
 
+"""
+    FourierSpectralViscosity{T<:Real, GridCompute, GridEvaluate, RFFT, IRFFT}
 
+A spectral viscosity operator on a periodic grid with scalar type `T` computing
+the derivative using a spectral Fourier expansion via real discrete Fourier
+transforms.
+"""
 struct FourierSpectralViscosity{T<:Real, GridCompute, GridEvaluate, RFFT, IRFFT} <: AbstractDerivativeOperator{T}
     strength::T
     cutoff::Int
@@ -193,7 +199,7 @@ function Base.A_mul_B!(dest::AbstractVector{T}, Di::FourierSpectralViscosity{T},
                         u::AbstractVector{T}) where {T}
     @unpack strength, cutoff, D = Di
     @unpack jac, tmp, rfft_plan, irfft_plan = D
-    N, _ = size(D)
+    N = size(D, 1)
     @boundscheck begin
         @argcheck N == length(u)
         @argcheck N == length(dest)
@@ -204,9 +210,8 @@ function Base.A_mul_B!(dest::AbstractVector{T}, Di::FourierSpectralViscosity{T},
         tmp[j] = 0
     end
     @inbounds @simd for j in cutoff:(length(tmp))
-        tmp[j] *= -strength * (j-1)^2 * jac^2 * exp(-((N-j+1)/(j-1-cutoff))^2)
+        tmp[j] *= -strength * ((j-1)*jac)^2 * exp(-((N-j+1)/(j-1-cutoff))^2)
     end
-    #@inbounds tmp[end] = 0
     A_mul_B!(dest, irfft_plan, tmp)
 
     nothing
