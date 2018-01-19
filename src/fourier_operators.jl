@@ -124,9 +124,8 @@ struct FourierSpectralViscosity{T<:Real, Grid, RFFT, BRFFT} <: AbstractDerivativ
         N = size(D, 1)
         jac = N * D.jac^2 # ^2: 2nd derivative; # *N: brfft instead of irfft
         coefficients = Array{T}(length(D.brfft_plan))
-        @inbounds @simd for j in Base.OneTo(cutoff-1)
-            coefficients[j] = 0
-        end
+        fill!(coefficients, zero(T))
+        cutoff = max(1, cutoff)
         @inbounds @simd for j in cutoff:length(coefficients)
             coefficients[j] = -strength * (j-1)^2 * jac * exp(-((N-j+1)/(j-1-cutoff))^2)
         end
