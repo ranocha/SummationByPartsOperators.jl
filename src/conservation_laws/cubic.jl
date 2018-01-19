@@ -8,7 +8,7 @@ with periodic boundary conditions.
 "
 struct CubicPeriodicSemidiscretisation{T,Derivative<:AbstractDerivativeOperator{T},
                                         Dissipation<:AbstractDerivativeOperator{T},
-                                        SplitForm<:Union{Val{false}, Val{true}}}
+                                        SplitForm<:Union{Val{false}, Val{true}}} <: AbstractSemidiscretisation
     derivative::Derivative
     dissipation::Dissipation
     tmp1::Vector{T}
@@ -41,26 +41,33 @@ end
 
 
 function (disc::CubicPeriodicSemidiscretisation)(t, u, du)
-    @unpack tmp1, tmp2, derivative, dissipation = disc
+    @unpack tmp1, tmp2, derivative, dissipation, split_form = disc
     @boundscheck begin
         @argcheck length(u) == length(tmp1)
         @argcheck length(u) == length(tmp2)
         @argcheck length(u) == length(du)
     end
-    mhalf = -one(eltype(u)) / 2
 
     # volume terms
-    ## u^2 * D * u
-    @. tmp2 = u^2
-    A_mul_B!(tmp1, derivative, u)
-    @. du = mhalf * tmp2 * tmp1
-    ## u * D * u^2
-    A_mul_B!(tmp1, derivative, tmp2)
-    @. du += mhalf * u * tmp1
-    ## D * u^3
-    @. tmp2 *= u
-    A_mul_B!(tmp1, derivative, tmp2)
-    @. du += mhalf * tmp1
+    if typeof(split_form) <: Val{true}
+        mhalf = -one(eltype(u)) / 2
+
+        ## u^2 * D * u
+        @. tmp2 = u^2
+        A_mul_B!(tmp1, derivative, u)
+        @. du = mhalf * tmp2 * tmp1
+        ## u * D * u^2
+        A_mul_B!(tmp1, derivative, tmp2)
+        @. du += mhalf * u * tmp1
+        ## D * u^3
+        @. tmp2 *= u
+        A_mul_B!(tmp1, derivative, tmp2)
+        @. du += mhalf * tmp1
+    else
+        @. tmp2 = u^3
+        A_mul_B!(tmp1, derivative, tmp2)
+        @. du = -tmp1
+    end
 
     # dissipation
     A_mul_B!(tmp1, dissipation, u)
@@ -69,3 +76,17 @@ function (disc::CubicPeriodicSemidiscretisation)(t, u, du)
     nothing
 end
 
+
+struct CubicIntegralQuantities{T} <: FieldVector{2,T}
+    mass::T 
+    energy::T
+end
+
+function DiffEqCallbacks.SavingCallback(semidisc::CubicPeriodicSemidiscretisation; kwargs...)
+    T = eltype(semidisc.derivative)
+
+    save_func = (t,u,integrator) -> integrate(u->CubicIntegralQuantities(u,u^2),
+                                                u, integrator.f)
+    saved_values = SavedValues(T, CubicIntegralQuantities{T})
+    SavingCallback(save_func, saved_values, kwargs...)
+end

@@ -8,13 +8,14 @@ transforms.
 """
 struct FourierDerivativeOperator{T<:Real, Grid, RFFT, BRFFT} <: AbstractPeriodicDerivativeOperator{T}
     jac::T
+    Δx::T
     grid_compute::Grid   # N-1 nodes, including the left and excluding the right boundary
     grid_evaluate::Grid #  N  nodes, including both boundaries
     tmp::Vector{Complex{T}}
     rfft_plan::RFFT
     brfft_plan::BRFFT
 
-    function FourierDerivativeOperator(jac::T, grid_compute::Grid, grid_evaluate::Grid,
+    function FourierDerivativeOperator(jac::T, Δx::T, grid_compute::Grid, grid_evaluate::Grid,
                                         tmp::Vector{Complex{T}}, rfft_plan::RFFT, brfft_plan::BRFFT) where {T<:Real, Grid, RFFT, BRFFT}
         @argcheck length(brfft_plan) == length(tmp) DimensionMismatch
         @argcheck length(brfft_plan) == (length(rfft_plan)÷2)+1 DimensionMismatch
@@ -24,7 +25,7 @@ struct FourierDerivativeOperator{T<:Real, Grid, RFFT, BRFFT} <: AbstractPeriodic
         @argcheck step(grid_compute) ≈ step(grid_evaluate)
         @argcheck last(grid_compute) < last(grid_evaluate)
 
-        new{T, Grid, RFFT, BRFFT}(jac, grid_compute, grid_evaluate, tmp, rfft_plan, brfft_plan)
+        new{T, Grid, RFFT, BRFFT}(jac, Δx, grid_compute, grid_evaluate, tmp, rfft_plan, brfft_plan)
     end
 end
 
@@ -38,6 +39,7 @@ function FourierDerivativeOperator(xmin::T, xmax::T, N::Int) where {T<:Real}
     @argcheck N >= 1
 
     jac = 2*T(π) / (xmax - xmin) / N # / N because of brfft instead of BRFFT
+    Δx = (xmax - xmin) / N
     grid_evaluate = linspace(xmin, xmax, N+1)
     grid_compute = linspace(xmin, grid_evaluate[end-1], N)
     u = zero.(grid_compute)
@@ -45,7 +47,7 @@ function FourierDerivativeOperator(xmin::T, xmax::T, N::Int) where {T<:Real}
     uhat = rfft_plan*u
     brfft_plan = plan_brfft(uhat, N)
 
-    FourierDerivativeOperator(jac, grid_compute, grid_evaluate, uhat, rfft_plan, brfft_plan)
+    FourierDerivativeOperator(jac, Δx, grid_compute, grid_evaluate, uhat, rfft_plan, brfft_plan)
 end
 
 function fourier_derivative_operator(xmin::T, xmax::T, N::Int) where {T<:Real}

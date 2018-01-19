@@ -196,3 +196,21 @@ function evaluate_coefficients!(xplot, uplot, u, D::AbstractPeriodicDerivativeOp
 
     xplot, uplot
 end
+
+
+"""
+    integrate(func, u, D::AbstractPeriodicDerivativeOperator)
+
+Map the function `func` to the coefficients `u` and integrate with respect to
+the quadrature rule associated with the derivative operator `D`.
+"""
+function integrate(func, u::AbstractVector, D::AbstractPeriodicDerivativeOperator)
+    @boundscheck begin
+        length(u) == length(grid(D))
+    end
+    @unpack Δx = D
+
+    res = sum(func, u)
+
+    Δx * res
+end

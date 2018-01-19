@@ -26,12 +26,14 @@ for T in (Float32, Float64)
             @test accuracy_test!(res, ufunc, dufunc, D)
             xplot, duplot = evaluate_coefficients(res, D)
             @test maximum(abs, duplot - dufunc.(xplot)) < 5N*eps(T)
+            @test abs(integrate(u, D)) < N*eps(T)
 
             ufunc = x->cospi(k*x)
             dufunc = x->-typeof(x)(k*π)*sinpi(k*x)
             @test accuracy_test!(res, ufunc, dufunc, D)
             xplot, duplot = evaluate_coefficients(res, D)
             @test maximum(abs, duplot - dufunc.(xplot)) < 5N*eps(T)
+            @test abs(integrate(u, D)) < N*eps(T)
         end
     end
 end

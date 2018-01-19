@@ -7,3 +7,6 @@ Unrolled
 Parameters
 StaticArrays
 PolynomialBases
+
+DiffEqBase
+DiffEqCallbacks

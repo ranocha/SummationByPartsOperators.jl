@@ -10,6 +10,7 @@ using Parameters
 using StaticArrays
 
 @reexport using DiffEqBase
+using DiffEqCallbacks
 
 import Base: *, -
 import PolynomialBases: integrate, evaluate_coefficients, evaluate_coefficients!,
