@@ -50,6 +50,7 @@ include("SBP_coefficients/MattssonAlmquistCarpenter2014Extended.jl")
 include("SBP_coefficients/MattssonAlmquistCarpenter2014Optimal.jl")
 
 include("conservation_laws/general_laws.jl")
+include("conservation_laws/burgers.jl")
 include("conservation_laws/cubic.jl")
 
 
@@ -70,6 +71,6 @@ export MattssonNordström2004, MattssonSvärdNordström2004, MattssonSvärdShoey
         Mattsson2012, Mattsson2014,
         MattssonAlmquistCarpenter2014Extended, MattssonAlmquistCarpenter2014Optimal
 
-export CubicPeriodicSemidiscretisation
+export BurgersPeriodicSemidiscretisation, CubicPeriodicSemidiscretisation
 
 end # module

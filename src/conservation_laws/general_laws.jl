@@ -19,3 +19,18 @@ end
 function integrate(func, u, semidisc::AbstractSemidiscretisation)
     integrate(func, u, semidisc.derivative)
 end
+
+
+struct ScalarIntegralQuantities{T} <: FieldVector{2,T}
+    mass::T 
+    energy::T
+end
+
+function DiffEqCallbacks.SavingCallback(semidisc::AbstractSemidiscretisation; kwargs...)
+    T = eltype(semidisc.derivative)
+
+    save_func = (t,u,integrator) -> integrate(u->ScalarIntegralQuantities(u,u^2),
+                                                u, integrator.f)
+    saved_values = SavedValues(T, ScalarIntegralQuantities{T})
+    SavingCallback(save_func, saved_values; kwargs...)
+end

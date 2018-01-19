@@ -76,17 +76,3 @@ function (disc::CubicPeriodicSemidiscretisation)(t, u, du)
     nothing
 end
 
-
-struct CubicIntegralQuantities{T} <: FieldVector{2,T}
-    mass::T 
-    energy::T
-end
-
-function DiffEqCallbacks.SavingCallback(semidisc::CubicPeriodicSemidiscretisation; kwargs...)
-    T = eltype(semidisc.derivative)
-
-    save_func = (t,u,integrator) -> integrate(u->CubicIntegralQuantities(u,u^2),
-                                                u, integrator.f)
-    saved_values = SavedValues(T, CubicIntegralQuantities{T})
-    SavingCallback(save_func, saved_values; kwargs...)
-end
