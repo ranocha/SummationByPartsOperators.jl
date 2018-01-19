@@ -2,11 +2,14 @@ __precompile__()
 
 module SummationByPartsOperators
 
+using ArgCheck
+using Reexport
 using Requires
 using Unrolled
-using ArgCheck
 using Parameters
 using StaticArrays
+
+@reexport using DiffEqBase
 
 import Base: *, -
 import PolynomialBases: integrate, evaluate_coefficients, evaluate_coefficients!,
@@ -18,6 +21,7 @@ abstract type AbstractDerivativeOperator{T} end
 abstract type AbstractPeriodicDerivativeOperator{T} <: AbstractDerivativeOperator{T} end
 abstract type AbstractDerivativeCoefficients{T} end
 abstract type AbstractMassMatrix{T} end
+abstract type AbstractSemidiscretisation end #TODO: HyperbolicDiffEq.jl; also semidiscretise
 """
     SourceOfCoefficients
 
@@ -44,12 +48,15 @@ include("SBP_coefficients/Mattsson2014.jl")
 include("SBP_coefficients/MattssonAlmquistCarpenter2014Extended.jl")
 include("SBP_coefficients/MattssonAlmquistCarpenter2014Optimal.jl")
 
+include("conservation_laws/general_laws.jl")
+include("conservation_laws/cubic.jl")
+
 
 # exports
 export PeriodicDerivativeOperator, DerivativeOperator, DissipationOperator,
        VarCoefDerivativeOperator, SourceOfCoefficients,
        FourierDerivativeOperator, FourierSpectralViscosity
-export derivative_order, accuracy_order, source_of_coeffcients, grid
+export derivative_order, accuracy_order, source_of_coeffcients, grid, semidiscretise
 export mass_matrix
 export mul!, integrate, derivative_left, derivative_right,
        evaluate_coefficients, evaluate_coefficients!,
@@ -61,5 +68,7 @@ export periodic_central_derivative_operator, periodic_derivative_operator, deriv
 export MattssonNordström2004, MattssonSvärdNordström2004, MattssonSvärdShoeybi2008,
         Mattsson2012, Mattsson2014,
         MattssonAlmquistCarpenter2014Extended, MattssonAlmquistCarpenter2014Optimal
+
+export CubicPeriodicSemidiscretisation
 
 end # module
