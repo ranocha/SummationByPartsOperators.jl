@@ -7,5 +7,6 @@ tic()
 @time @testset "Dissipation Operators" begin include("dissipation_operators_test.jl") end
 @time @testset "Variable COefficient Operators" begin include("var_coef_operators_test.jl") end
 @time @testset "Banded Matrices" begin include("banded_matrices_test.jl") end
+@time @testset "Fourier Operators" begin include("fourier_operators_test.jl") end
 
 toc()

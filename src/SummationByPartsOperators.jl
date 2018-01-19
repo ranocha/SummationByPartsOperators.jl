@@ -54,7 +54,7 @@ export mul!, integrate, derivative_left, derivative_right,
        evaluate_coefficients, evaluate_coefficients!,
        compute_coefficients, compute_coefficients!
 export periodic_central_derivative_operator, periodic_derivative_operator, derivative_operator,
-        dissipation_operator, var_coef_derivative_operator
+        dissipation_operator, var_coef_derivative_operator, fourier_derivative_operator
 
 export MattssonNordström2004, MattssonSvärdNordström2004, MattssonSvärdShoeybi2008,
         Mattsson2012, Mattsson2014,

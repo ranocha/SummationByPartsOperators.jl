@@ -48,7 +48,12 @@ function FourierDerivativeOperator(xmin::T, xmax::T, N::Int) where {T<:Real}
     FourierDerivativeOperator(jac, grid_compute, grid_evaluate, uhat, rfft_plan, irfft_plan)
 end
 
+function fourier_derivative_operator(xmin::T, xmax::T, N::Int) where {T<:Real}
+    FourierDerivativeOperator(xmin, xmax, N)
+end
 
+derivative_order(D::FourierDerivativeOperator) = 1
+Base.issymmetric(D::FourierDerivativeOperator) = false
 grid(D::FourierDerivativeOperator) = D.grid_compute
 
 function Base.show(io::IO, D::FourierDerivativeOperator{T}) where {T}
