@@ -5,8 +5,8 @@ using SummationByPartsOperators
 let T=Float32
     xmin = -one(T)
     xmax = 2*one(T)
-    N = 101
-    x1 = linspace(xmin, xmax, N)
+    N = 100
+    x1 = compute_coefficients(identity, periodic_derivative_operator(1, 2, xmin, xmax, N))
 
     x0 = ones(x1)
     x2 = x1 .* x1
@@ -190,8 +190,8 @@ end
 let T = Float64
     xmin = -one(T)
     xmax = 2*one(T)
-    N = 101
-    x1 = linspace(xmin, xmax, N)
+    N = 100
+    x1 = compute_coefficients(identity, periodic_derivative_operator(1, 2, xmin, xmax, N))
 
     x0 = ones(x1)
     x2 = x1 .* x1
@@ -421,4 +421,241 @@ for T in (Float32, Float64), accuracy_order in 1:10, derivative_order in 1:3
     mul!(dest1, D_threads, u, one(T), zero(T))
     mul!(dest2, D_threads, u, one(T))
     @test all(i->dest1[i] ≈ dest2[i], eachindex(u))
+end
+
+
+# Accuracy tests for periodic signals
+let T = Float32
+    xmin = T(-1)
+    xmax = T(1)
+    N = 50
+    res = Array{T}(N)
+
+    # order 2
+    accuracy_order = 2
+    D = periodic_derivative_operator(1, accuracy_order, xmin, xmax, N)
+
+    factor=1; ufunc = x->sinpi(factor*x); dufunc = x->factor*T(π)*cospi(factor*x)
+    tol = 1.0e-2
+    u = compute_coefficients(ufunc, D)
+    du = compute_coefficients(dufunc, D)
+    res = D*u
+    @test maximum(abs, res-du) < tol
+    xplot, duplot = evaluate_coefficients(res, D)
+    @test maximum(abs, duplot-dufunc.(xplot)) < tol
+
+    factor=2; ufunc = x->sinpi(factor*x); dufunc = x->factor*T(π)*cospi(factor*x)
+    tol = 0.8
+    u = compute_coefficients(ufunc, D)
+    du = compute_coefficients(dufunc, D)
+    res = D*u
+    @test maximum(abs, res-du) < tol
+    xplot, duplot = evaluate_coefficients(res, D)
+    @test maximum(abs, duplot-dufunc.(xplot)) < tol
+
+    factor=5; ufunc = x->sinpi(factor*x); dufunc = x->factor*T(π)*cospi(factor*x)
+    tol = 1.2
+    u = compute_coefficients(ufunc, D)
+    du = compute_coefficients(dufunc, D)
+    res = D*u
+    @test maximum(abs, res-du) < tol
+    xplot, duplot = evaluate_coefficients(res, D)
+    @test maximum(abs, duplot-dufunc.(xplot)) < tol
+
+    # order 4
+    accuracy_order = 4
+    D = periodic_derivative_operator(1, accuracy_order, xmin, xmax, N)
+
+    factor=1; ufunc = x->sinpi(factor*x); dufunc = x->factor*T(π)*cospi(factor*x)
+    tol = 3.0e-5
+    u = compute_coefficients(ufunc, D)
+    du = compute_coefficients(dufunc, D)
+    res = D*u
+    @test maximum(abs, res-du) < tol
+    xplot, duplot = evaluate_coefficients(res, D)
+    @test maximum(abs, duplot-dufunc.(xplot)) < tol
+
+    factor=2; ufunc = x->sinpi(factor*x); dufunc = x->factor*T(π)*cospi(factor*x)
+    tol = 1.0e-3
+    u = compute_coefficients(ufunc, D)
+    du = compute_coefficients(dufunc, D)
+    res = D*u
+    @test maximum(abs, res-du) < tol
+    xplot, duplot = evaluate_coefficients(res, D)
+    @test maximum(abs, duplot-dufunc.(xplot)) < tol
+
+    factor=5; ufunc = x->sinpi(factor*x); dufunc = x->factor*T(π)*cospi(factor*x)
+    tol = 0.09
+    u = compute_coefficients(ufunc, D)
+    du = compute_coefficients(dufunc, D)
+    res = D*u
+    @test maximum(abs, res-du) < tol
+    xplot, duplot = evaluate_coefficients(res, D)
+    @test maximum(abs, duplot-dufunc.(xplot)) < tol
+
+    factor=8; ufunc = x->sinpi(factor*x); dufunc = x->factor*T(π)*cospi(factor*x)
+    tol = 0.9
+    u = compute_coefficients(ufunc, D)
+    du = compute_coefficients(dufunc, D)
+    res = D*u
+    @test maximum(abs, res-du) < tol
+    xplot, duplot = evaluate_coefficients(res, D)
+    @test maximum(abs, duplot-dufunc.(xplot)) < tol
+
+    # order 6
+    accuracy_order = 6
+    D = periodic_derivative_operator(1, accuracy_order, xmin, xmax, N)
+
+    factor=1; ufunc = x->sinpi(factor*x); dufunc = x->factor*T(π)*cospi(factor*x)
+    tol = 3.0e-6
+    u = compute_coefficients(ufunc, D)
+    du = compute_coefficients(dufunc, D)
+    res = D*u
+    @test maximum(abs, res-du) < tol
+    xplot, duplot = evaluate_coefficients(res, D)
+    @test maximum(abs, duplot-dufunc.(xplot)) < tol
+
+    factor=2; ufunc = x->sinpi(factor*x); dufunc = x->factor*T(π)*cospi(factor*x)
+    tol = 3.0e-5
+    u = compute_coefficients(ufunc, D)
+    du = compute_coefficients(dufunc, D)
+    res = D*u
+    @test maximum(abs, res-du) < tol
+    xplot, duplot = evaluate_coefficients(res, D)
+    @test maximum(abs, duplot-dufunc.(xplot)) < tol
+
+    factor=5; ufunc = x->sinpi(factor*x); dufunc = x->factor*T(π)*cospi(factor*x)
+    tol = 0.008
+    u = compute_coefficients(ufunc, D)
+    du = compute_coefficients(dufunc, D)
+    res = D*u
+    @test maximum(abs, res-du) < tol
+    xplot, duplot = evaluate_coefficients(res, D)
+    @test maximum(abs, duplot-dufunc.(xplot)) < tol
+
+    factor=8; ufunc = x->sinpi(factor*x); dufunc = x->factor*T(π)*cospi(factor*x)
+    tol = 0.3
+    u = compute_coefficients(ufunc, D)
+    du = compute_coefficients(dufunc, D)
+    res = D*u
+    @test maximum(abs, res-du) < tol
+    xplot, duplot = evaluate_coefficients(res, D)
+    @test maximum(abs, duplot-dufunc.(xplot)) < tol
+end
+let T = Float64
+    xmin = T(-1)
+    xmax = T(1)
+    N = 50
+    res = Array{T}(N)
+
+    # order 2
+    accuracy_order = 2
+    D = periodic_derivative_operator(1, accuracy_order, xmin, xmax, N)
+
+    factor=1; ufunc = x->sinpi(factor*x); dufunc = x->factor*T(π)*cospi(factor*x)
+    tol = 0.01
+    u = compute_coefficients(ufunc, D)
+    du = compute_coefficients(dufunc, D)
+    res = D*u
+    @test maximum(abs, res-du) < tol
+    xplot, duplot = evaluate_coefficients(res, D)
+    @test maximum(abs, duplot-dufunc.(xplot)) < tol
+
+    factor=2; ufunc = x->sinpi(factor*x); dufunc = x->factor*T(π)*cospi(factor*x)
+    tol = 0.09
+    u = compute_coefficients(ufunc, D)
+    du = compute_coefficients(dufunc, D)
+    res = D*u
+    @test maximum(abs, res-du) < tol
+    xplot, duplot = evaluate_coefficients(res, D)
+    @test maximum(abs, duplot-dufunc.(xplot)) < tol
+
+    factor=5; ufunc = x->sinpi(factor*x); dufunc = x->factor*T(π)*cospi(factor*x)
+    tol = 1.2
+    u = compute_coefficients(ufunc, D)
+    du = compute_coefficients(dufunc, D)
+    res = D*u
+    @test maximum(abs, res-du) < tol
+    xplot, duplot = evaluate_coefficients(res, D)
+    @test maximum(abs, duplot-dufunc.(xplot)) < tol
+
+    # order 4
+    accuracy_order = 4
+    D = periodic_derivative_operator(1, accuracy_order, xmin, xmax, N)
+
+    factor=1; ufunc = x->sinpi(factor*x); dufunc = x->factor*T(π)*cospi(factor*x)
+    tol = 3.0e-5
+    u = compute_coefficients(ufunc, D)
+    du = compute_coefficients(dufunc, D)
+    res = D*u
+    @test maximum(abs, res-du) < tol
+    xplot, duplot = evaluate_coefficients(res, D)
+    @test maximum(abs, duplot-dufunc.(xplot)) < tol
+
+    factor=2; ufunc = x->sinpi(factor*x); dufunc = x->factor*T(π)*cospi(factor*x)
+    tol = 1.0e-3
+    u = compute_coefficients(ufunc, D)
+    du = compute_coefficients(dufunc, D)
+    res = D*u
+    @test maximum(abs, res-du) < tol
+    xplot, duplot = evaluate_coefficients(res, D)
+    @test maximum(abs, duplot-dufunc.(xplot)) < tol
+
+    factor=5; ufunc = x->sinpi(factor*x); dufunc = x->factor*T(π)*cospi(factor*x)
+    tol = 0.1
+    u = compute_coefficients(ufunc, D)
+    du = compute_coefficients(dufunc, D)
+    res = D*u
+    @test maximum(abs, res-du) < tol
+    xplot, duplot = evaluate_coefficients(res, D)
+    @test maximum(abs, duplot-dufunc.(xplot)) < tol
+
+    factor=8; ufunc = x->sinpi(factor*x); dufunc = x->factor*T(π)*cospi(factor*x)
+    tol = 0.9
+    u = compute_coefficients(ufunc, D)
+    du = compute_coefficients(dufunc, D)
+    res = D*u
+    @test maximum(abs, res-du) < tol
+    xplot, duplot = evaluate_coefficients(res, D)
+    @test maximum(abs, duplot-dufunc.(xplot)) < tol
+
+    # order 6
+    accuracy_order = 6
+    D = periodic_derivative_operator(1, accuracy_order, xmin, xmax, N)
+
+    factor=1; ufunc = x->sinpi(factor*x); dufunc = x->factor*T(π)*cospi(factor*x)
+    tol = 1.0e-7
+    u = compute_coefficients(ufunc, D)
+    du = compute_coefficients(dufunc, D)
+    res = D*u
+    @test maximum(abs, res-du) < tol
+    xplot, duplot = evaluate_coefficients(res, D)
+    @test maximum(abs, duplot-dufunc.(xplot)) < tol
+
+    factor=2; ufunc = x->sinpi(factor*x); dufunc = x->factor*T(π)*cospi(factor*x)
+    tol = 3.0e-5
+    u = compute_coefficients(ufunc, D)
+    du = compute_coefficients(dufunc, D)
+    res = D*u
+    @test maximum(abs, res-du) < tol
+    xplot, duplot = evaluate_coefficients(res, D)
+    @test maximum(abs, duplot-dufunc.(xplot)) < tol
+
+    factor=5; ufunc = x->sinpi(factor*x); dufunc = x->factor*T(π)*cospi(factor*x)
+    tol = 0.01
+    u = compute_coefficients(ufunc, D)
+    du = compute_coefficients(dufunc, D)
+    res = D*u
+    @test maximum(abs, res-du) < tol
+    xplot, duplot = evaluate_coefficients(res, D)
+    @test maximum(abs, duplot-dufunc.(xplot)) < tol
+
+    factor=8; ufunc = x->sinpi(factor*x); dufunc = x->factor*T(π)*cospi(factor*x)
+    tol = 0.3
+    u = compute_coefficients(ufunc, D)
+    du = compute_coefficients(dufunc, D)
+    res = D*u
+    @test maximum(abs, res-du) < tol
+    xplot, duplot = evaluate_coefficients(res, D)
+    @test maximum(abs, duplot-dufunc.(xplot)) < tol
 end
