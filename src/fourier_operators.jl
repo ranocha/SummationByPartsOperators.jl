@@ -162,3 +162,51 @@ function fourier_derivative_matrix(N, xmin::Real=0.0, xmax::Real=2π)
     end
     D
 end
+
+
+
+
+struct FourierSpectralViscosity{T<:Real, GridCompute, GridEvaluate, RFFT, IRFFT} <: AbstractDerivativeOperator{T}
+    strength::T
+    cutoff::Int
+    D::FourierDerivativeOperator{T,GridCompute,GridEvaluate,RFFT,IRFFT}
+end
+
+function spectral_viscosity_operator(D::FourierDerivativeOperator{T},
+                                     strength=T(1)/size(D,2),
+                                     cutoff=round(Int, sqrt(size(D,2)))) where {T}
+    FourierSpectralViscosity(strength, cutoff, D)
+end
+
+function Base.show(io::IO, Di::FourierSpectralViscosity{T}) where {T}
+    grid = Di.D.grid_evaluate
+    print(io, "Spectral viscosity operator for the periodic 1st derivative Fourier operator\n")
+    print(io, "{T=", T, "} on a grid in [", first(grid), ", ", last(grid),
+                "] using ", length(grid)-1, " modes\n")
+    print(io, "with strength ε = ", Di.strength, " and cutoff m = ", Di.cutoff, ".\n")
+end
+
+grid(Di::FourierSpectralViscosity) = grid(Di.D)
+
+function Base.A_mul_B!(dest::AbstractVector{T}, Di::FourierSpectralViscosity{T},
+                        u::AbstractVector{T}) where {T}
+    @unpack strength, cutoff, D = Di
+    @unpack jac, tmp, rfft_plan, irfft_plan = D
+    N, _ = size(D)
+    @boundscheck begin
+        @argcheck N == length(u)
+        @argcheck N == length(dest)
+    end
+
+    A_mul_B!(tmp, rfft_plan, u)
+    @inbounds @simd for j in Base.OneTo(cutoff-1)
+        tmp[j] = 0
+    end
+    @inbounds @simd for j in cutoff:(length(tmp))
+        tmp[j] *= -strength * (j-1)^2 * jac^2 * exp(-((N-j+1)/(j-1-cutoff))^2)
+    end
+    #@inbounds tmp[end] = 0
+    A_mul_B!(dest, irfft_plan, tmp)
+
+    nothing
+end
