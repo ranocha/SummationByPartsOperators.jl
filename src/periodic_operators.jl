@@ -339,7 +339,7 @@ function periodic_central_derivative_coefficients(derivative_order, accuracy_ord
 end
 
 """
-Fornberg1998
+    Fornberg1998
 
 Coefficients of the periodic operators given in
   Fornberg (1998)

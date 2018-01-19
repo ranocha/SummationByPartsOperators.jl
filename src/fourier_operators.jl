@@ -6,16 +6,16 @@ A derivative operator on a periodic grid with scalar type `T` computing the
 first derivative using a spectral Fourier expansion via real discrete Fourier
 transforms.
 """
-struct FourierDerivativeOperator{T<:Real, GridCompute, GridEvaluate, RFFT, IRFFT} <: AbstractPeriodicDerivativeOperator{T}
+struct FourierDerivativeOperator{T<:Real, Grid, RFFT, IRFFT} <: AbstractPeriodicDerivativeOperator{T}
     jac::T
-    grid_compute::GridCompute   # N-1 nodes, including the left and excluding the right boundary
-    grid_evaluate::GridEvaluate #  N  nodes, including both boundaries
+    grid_compute::Grid   # N-1 nodes, including the left and excluding the right boundary
+    grid_evaluate::Grid #  N  nodes, including both boundaries
     tmp::Vector{Complex{T}}
     rfft_plan::RFFT
     irfft_plan::IRFFT
 
-    function FourierDerivativeOperator(jac::T, grid_compute::GridCompute, grid_evaluate::GridEvaluate,
-                                        tmp::Vector{Complex{T}}, rfft_plan::RFFT, irfft_plan::IRFFT) where {T<:Real, GridCompute, GridEvaluate, RFFT, IRFFT}
+    function FourierDerivativeOperator(jac::T, grid_compute::Grid, grid_evaluate::Grid,
+                                        tmp::Vector{Complex{T}}, rfft_plan::RFFT, irfft_plan::IRFFT) where {T<:Real, Grid, RFFT, IRFFT}
         @argcheck length(irfft_plan) == length(tmp) DimensionMismatch
         @argcheck length(irfft_plan) == (length(rfft_plan)÷2)+1 DimensionMismatch
         @argcheck length(grid_compute) == length(rfft_plan) DimensionMismatch
@@ -24,7 +24,7 @@ struct FourierDerivativeOperator{T<:Real, GridCompute, GridEvaluate, RFFT, IRFFT
         @argcheck step(grid_compute) ≈ step(grid_evaluate)
         @argcheck last(grid_compute) < last(grid_evaluate)
 
-        new{T, GridCompute, GridEvaluate, RFFT, IRFFT}(jac, grid_compute, grid_evaluate, tmp, rfft_plan, irfft_plan)
+        new{T, Grid, RFFT, IRFFT}(jac, grid_compute, grid_evaluate, tmp, rfft_plan, irfft_plan)
     end
 end
 
@@ -110,14 +110,14 @@ A spectral viscosity operator on a periodic grid with scalar type `T` computing
 the derivative using a spectral Fourier expansion via real discrete Fourier
 transforms.
 """
-struct FourierSpectralViscosity{T<:Real, GridCompute, GridEvaluate, RFFT, IRFFT} <: AbstractDerivativeOperator{T}
+struct FourierSpectralViscosity{T<:Real, Grid, RFFT, IRFFT} <: AbstractDerivativeOperator{T}
     strength::T
     cutoff::Int
     coefficients::Vector{T}
-    D::FourierDerivativeOperator{T,GridCompute,GridEvaluate,RFFT,IRFFT}
+    D::FourierDerivativeOperator{T,Grid,RFFT,IRFFT}
 
     function FourierSpectralViscosity(strength::T, cutoff::Int,
-                                        D::FourierDerivativeOperator{T,GridCompute,GridEvaluate,RFFT,IRFFT}) where {T<:Real, GridCompute, GridEvaluate, RFFT, IRFFT}
+                                        D::FourierDerivativeOperator{T,Grid,RFFT,IRFFT}) where {T<:Real, Grid, RFFT, IRFFT}
         # precompute coefficients
         N = size(D, 1)
         coefficients = Array{T}(length(D.irfft_plan))
@@ -127,7 +127,7 @@ struct FourierSpectralViscosity{T<:Real, GridCompute, GridEvaluate, RFFT, IRFFT}
         @inbounds @simd for j in cutoff:length(coefficients)
             coefficients[j] = -strength * ((j-1)*D.jac)^2 * exp(-((N-j+1)/(j-1-cutoff))^2)
         end
-        new{T, GridCompute, GridEvaluate, RFFT, IRFFT}(strength, cutoff, coefficients, D)
+        new{T, Grid, RFFT, IRFFT}(strength, cutoff, coefficients, D)
     end
 end
 
