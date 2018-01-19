@@ -186,6 +186,7 @@ function Base.show(io::IO, Di::FourierSpectralViscosity{T}) where {T}
     print(io, "with strength ε = ", Di.strength, " and cutoff m = ", Di.cutoff, ".\n")
 end
 
+Base.issymmetric(Di::FourierSpectralViscosity) = true
 grid(Di::FourierSpectralViscosity) = grid(Di.D)
 
 function Base.A_mul_B!(dest::AbstractVector{T}, Di::FourierSpectralViscosity{T},
