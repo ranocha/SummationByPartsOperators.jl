@@ -15,6 +15,7 @@ import PolynomialBases: integrate, evaluate_coefficients, evaluate_coefficients!
 
 # types
 abstract type AbstractDerivativeOperator{T} end
+abstract type AbstractPeriodicDerivativeOperator{T} <: AbstractDerivativeOperator{T} end
 abstract type AbstractDerivativeCoefficients{T} end
 abstract type AbstractMassMatrix{T} end
 """

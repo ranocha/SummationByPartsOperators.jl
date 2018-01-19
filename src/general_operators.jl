@@ -24,6 +24,7 @@ function Base.size(D::AbstractDerivativeOperator, i::Int)
 end
 
 @inline grid(D::AbstractDerivativeOperator) = D.grid
+@inline grid(D::AbstractPeriodicDerivativeOperator) = D.grid_compute
 
 
 Base.@propagate_inbounds function Base.A_mul_B!(dest, D::AbstractDerivativeOperator, u)
@@ -72,4 +73,126 @@ function Base.sparse(D::AbstractDerivativeOperator{T}) where {T}
     colptr[N+1] = length(nzval)+1
 
     return SparseMatrixCSC(M, N, colptr, rowind, nzval)
+end
+
+
+"""
+    compute_coefficients(u, D::AbstractDerivativeOperator)
+
+Compute the nodal values of the function `u` at the grid associated to the
+derivative operator `D`.
+"""
+function compute_coefficients(u, D::AbstractDerivativeOperator)
+    x = grid(D)
+    xmin = first(x)
+    xmax = last(x)
+    uval = Array{typeof(u((xmin+xmax)/2))}(length(x))
+    compute_coefficients!(uval, u, D)
+end
+
+"""
+    compute_coefficients!(uval::AbstractVector, u, D::AbstractDerivativeOperator)
+
+Compute the nodal values of the function `u` at the grid associated to the
+derivative operator `D` and stores the result in `uval`.
+"""
+function compute_coefficients!(uval::AbstractVector, u, D::AbstractDerivativeOperator)
+    uval .= u.(grid(D))
+end
+
+
+"""
+    compute_coefficients(u, D::AbstractPeriodicDerivativeOperator)
+
+Compute the nodal values of the function `u` at the grid associated to the
+derivative operator `D`.
+"""
+function compute_coefficients(u, D::AbstractPeriodicDerivativeOperator)
+    x = D.grid_compute
+    xmin = first(x)
+    xmax = last(x)
+    uval = Array{typeof(u((xmin+xmax)/2))}(length(x))
+    compute_coefficients!(uval, u, D)
+end
+
+"""
+    compute_coefficients!(uval::AbstractVector, u, D::AbstractPeriodicDerivativeOperator)
+
+Compute the nodal values of the function `u` at the grid associated to the
+derivative operator `D` and stores the result in `uval`.
+"""
+function compute_coefficients!(uval::AbstractVector, u, D::AbstractPeriodicDerivativeOperator)
+    uval .= u.(D.grid_compute)
+end
+
+
+"""
+    evaluate_coefficients(u, D::AbstractDerivativeOperator)
+
+Evaluates the nodal coefficients `u` at a grid associated to the derivative
+operator `D`. 
+Returns `xplot, uplot`, where `xplot` contains the nodes and `uplot` the
+corresponding values of `u`.
+"""
+function evaluate_coefficients(u, D::AbstractDerivativeOperator)
+    x = grid(D)
+    xplot = Array{eltype(x)}(length(x))
+    uplot = Array{eltype(u)}(length(x))
+
+    evaluate_coefficients!(xplot, uplot, u, D)
+end
+
+"""
+    evaluate_coefficients!(xplot, uplot, u, D::AbstractDerivativeOperator)
+
+Evaluates the nodal coefficients `u` at a grid associated to the derivative
+operator `D` and stores the result in `xplot, uplot`.
+Returns `xplot, uplot`, where `xplot` contains the nodes and `uplot` the
+corresponding values of `u`.
+"""
+function evaluate_coefficients!(xplot, uplot, u, D::AbstractDerivativeOperator)
+    @argcheck length(uplot) == length(xplot)
+    @argcheck length(uplot) == length(grid(D))
+
+    xplot .= grid(D)
+    uplot .= u
+
+    xplot, uplot
+end
+
+
+"""
+    evaluate_coefficients(u, D::AbstractPeriodicDerivativeOperator)
+
+Evaluates the nodal coefficients `u` at a grid including both endpoints 
+associated to the derivative periodic operator `D`.
+Returns `xplot, uplot`, where `xplot` contains the equally spaced nodes and 
+`uplot` the corresponding values of `u`.
+"""
+function evaluate_coefficients(u, D::AbstractPeriodicDerivativeOperator)
+    x = D.grid_evaluate
+    xplot = Array{eltype(x)}(length(x))
+    uplot = Array{eltype(u)}(length(x))
+
+    evaluate_coefficients!(xplot, uplot, u, D)
+end
+
+"""
+    evaluate_coefficients!(xplot, uplot, u, D::AbstractPeriodicDerivativeOperator)
+
+Evaluates the nodal coefficients `u` at a grid including both endpoints 
+associated to the derivative periodic operator `D` and stores the result in
+`xplot, uplot`.
+Returns `xplot, uplot`, where `xplot` contains the equally spaced nodes and 
+`uplot` the corresponding values of `u`.
+"""
+function evaluate_coefficients!(xplot, uplot, u, D::AbstractPeriodicDerivativeOperator)
+    @argcheck length(uplot) == length(xplot)
+    @argcheck length(uplot) == length(D.grid_evaluate)
+
+    xplot .= D.grid_evaluate
+    uplot[1:end-1] = u
+    uplot[end] = uplot[1]
+
+    xplot, uplot
 end
