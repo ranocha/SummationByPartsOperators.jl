@@ -175,7 +175,22 @@ transforms.
 struct FourierSpectralViscosity{T<:Real, GridCompute, GridEvaluate, RFFT, IRFFT} <: AbstractDerivativeOperator{T}
     strength::T
     cutoff::Int
+    coefficients::Vector{T}
     D::FourierDerivativeOperator{T,GridCompute,GridEvaluate,RFFT,IRFFT}
+
+    function FourierSpectralViscosity(strength::T, cutoff::Int,
+                                        D::FourierDerivativeOperator{T,GridCompute,GridEvaluate,RFFT,IRFFT}) where {T<:Real, GridCompute, GridEvaluate, RFFT, IRFFT}
+        # precompute coefficients
+        N = size(D, 1)
+        coefficients = Array{T}(length(D.irfft_plan))
+        @inbounds @simd for j in Base.OneTo(cutoff-1)
+            coefficients[j] = 0
+        end
+        @inbounds @simd for j in cutoff:length(coefficients)
+            coefficients[j] = -strength * ((j-1)*D.jac)^2 * exp(-((N-j+1)/(j-1-cutoff))^2)
+        end
+        new{T, GridCompute, GridEvaluate, RFFT, IRFFT}(strength, cutoff, coefficients, D)
+    end
 end
 
 function spectral_viscosity_operator(D::FourierDerivativeOperator{T},
@@ -197,20 +212,18 @@ grid(Di::FourierSpectralViscosity) = grid(Di.D)
 
 function Base.A_mul_B!(dest::AbstractVector{T}, Di::FourierSpectralViscosity{T},
                         u::AbstractVector{T}) where {T}
-    @unpack strength, cutoff, D = Di
+    @unpack strength, cutoff, coefficients, D = Di
     @unpack jac, tmp, rfft_plan, irfft_plan = D
     N = size(D, 1)
     @boundscheck begin
         @argcheck N == length(u)
         @argcheck N == length(dest)
+        @argcheck length(tmp) == length(coefficients)
     end
 
     A_mul_B!(tmp, rfft_plan, u)
-    @inbounds @simd for j in Base.OneTo(cutoff-1)
-        tmp[j] = 0
-    end
-    @inbounds @simd for j in cutoff:(length(tmp))
-        tmp[j] *= -strength * ((j-1)*jac)^2 * exp(-((N-j+1)/(j-1-cutoff))^2)
+    @inbounds @simd for j in Base.OneTo(length(tmp))
+        tmp[j] *= coefficients[j]
     end
     A_mul_B!(dest, irfft_plan, tmp)
 
