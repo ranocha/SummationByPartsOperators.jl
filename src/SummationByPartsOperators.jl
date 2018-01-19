@@ -68,8 +68,9 @@ export periodic_central_derivative_operator, periodic_derivative_operator, deriv
        fourier_derivative_operator, spectral_viscosity_operator
 
 export MattssonNordström2004, MattssonSvärdNordström2004, MattssonSvärdShoeybi2008,
-        Mattsson2012, Mattsson2014,
-        MattssonAlmquistCarpenter2014Extended, MattssonAlmquistCarpenter2014Optimal
+       Mattsson2012, Mattsson2014,
+       MattssonAlmquistCarpenter2014Extended, MattssonAlmquistCarpenter2014Optimal
+export Tadmor1989, Schochet1990
 
 export BurgersPeriodicSemidiscretisation, CubicPeriodicSemidiscretisation
 

@@ -106,45 +106,47 @@ end
 
 
 """
-    FourierSpectralViscosity{T<:Real, GridCompute, GridEvaluate, RFFT, BRFFT}
+    FourierSpectralViscosity
 
-A spectral viscosity operator on a periodic grid with scalar type `T` computing
-the derivative using a spectral Fourier expansion via real discrete Fourier
-transforms.
+A spectral viscosity operator on a periodic grid computing the derivative using
+a spectral Fourier expansion via real discrete Fourier transforms.
 """
-struct FourierSpectralViscosity{T<:Real, Grid, RFFT, BRFFT} <: AbstractDerivativeOperator{T}
+struct FourierSpectralViscosity{T<:Real, Grid, RFFT, BRFFT, SourceOfCoefficients} <: AbstractDerivativeOperator{T}
     strength::T
     cutoff::Int
     coefficients::Vector{T}
     D::FourierDerivativeOperator{T,Grid,RFFT,BRFFT}
+    source_of_coefficients::SourceOfCoefficients
 
-    function FourierSpectralViscosity(strength::T, cutoff::Int,
-                                        D::FourierDerivativeOperator{T,Grid,RFFT,BRFFT}) where {T<:Real, Grid, RFFT, BRFFT}
+    function FourierSpectralViscosity(source_of_coefficients::SourceOfCoefficients, 
+                                        strength::T, cutoff::Int,
+                                        D::FourierDerivativeOperator{T,Grid,RFFT,BRFFT}) where {T<:Real, Grid, RFFT, BRFFT, SourceOfCoefficients}
         # precompute coefficients
         N = size(D, 1)
         jac = N * D.jac^2 # ^2: 2nd derivative; # *N: brfft instead of irfft
-        coefficients = Array{T}(length(D.brfft_plan))
-        fill!(coefficients, zero(T))
         cutoff = max(1, cutoff)
-        @inbounds @simd for j in cutoff:length(coefficients)
-            coefficients[j] = -strength * (j-1)^2 * jac * exp(-((N-j+1)/(j-1-cutoff))^2)
-        end
-        new{T, Grid, RFFT, BRFFT}(strength, cutoff, coefficients, D)
+        coefficients = Array{T}(length(D.brfft_plan))
+        set_filter_coefficients!(coefficients, source_of_coefficients, N, jac, strength, cutoff)
+        new{T, Grid, RFFT, BRFFT, SourceOfCoefficients}(strength, cutoff, coefficients, D, source_of_coefficients)
     end
 end
 
-function spectral_viscosity_operator(D::FourierDerivativeOperator{T},
+function spectral_viscosity_operator(source,
+                                     D::FourierDerivativeOperator{T},
                                      strength=T(1)/size(D,2),
                                      cutoff=round(Int, sqrt(size(D,2)))) where {T}
-    FourierSpectralViscosity(strength, cutoff, D)
+    FourierSpectralViscosity(source, strength, cutoff, D)
 end
+
+@inline source_of_coefficients(Di::FourierSpectralViscosity) = (Di.source_of_coefficients)
 
 function Base.show(io::IO, Di::FourierSpectralViscosity{T}) where {T}
     grid = Di.D.grid_evaluate
     print(io, "Spectral viscosity operator for the periodic 1st derivative Fourier operator\n")
     print(io, "{T=", T, "} on a grid in [", first(grid), ", ", last(grid),
                 "] using ", length(grid)-1, " modes\n")
-    print(io, "with strength ε = ", Di.strength, " and cutoff m = ", Di.cutoff, ".\n")
+    print(io, "with strength ε = ", Di.strength, ", cutoff m = ", Di.cutoff, ", and coefficients from\n")
+    print(io, "  ", Di.source_of_coefficients)
 end
 
 Base.issymmetric(Di::FourierSpectralViscosity) = true
@@ -168,4 +170,66 @@ function Base.A_mul_B!(dest::AbstractVector{T}, Di::FourierSpectralViscosity{T},
     A_mul_B!(dest, brfft_plan, tmp)
 
     nothing
+end
+
+
+
+"""
+    Tadmor1989
+
+Coefficients of the Fourier spectral viscosity given in
+  Tadmor (1989)
+  Convergence of Spectral Methods for Nonlinear Conservation Laws.
+  SIAM Journal of Numerical Analysis 26, pp. 30-44.
+"""
+struct Tadmor1989 <: SourceOfCoefficients end
+
+function Base.show(io::IO, ::Tadmor1989)
+    print(io,
+        "  Tadmor (1989) \n",
+        "  Convergence of Spectral Methods for Nonlinear Conservation Laws. \n",
+        "  SIAM Journal of Numerical Analysis 26, pp. 30-44. \n")
+end
+
+function set_filter_coefficients!(coefficients::AbstractVector{T},
+                                    source::Tadmor1989,
+                                    N::Int, jac::T, strength::T, cutoff::Int) where {T<:Real}
+    @argcheck cutoff >= 1
+    fill!(coefficients, zero(T))
+    @inbounds @simd for j in cutoff:length(coefficients)
+        coefficients[j] = -strength * (j-1)^2 * jac * exp(-((N-j+1)/(j-1-cutoff))^2)
+    end
+end
+
+
+"""
+    Schochet1990
+
+Coefficients of the Fourier spectral viscosity given in
+  Schochet (1990)
+  The Rate of Convergence of Spectral-Viscosity Methods for Periodic Scalar
+    Conservation Laws.
+  SIAM Journal of Numerical Analysis 27, pp. 1142-1159.
+"""
+struct Schochet1990 <: SourceOfCoefficients end
+
+function Base.show(io::IO, ::Schochet1990)
+    print(io,
+        "  Schochet (1990) \n",
+        "  The Rate of Convergence of Spectral-Viscosity Methods for Periodic Scalar\n",
+        "    Conservation Laws. \n",
+        "  SIAM Journal of Numerical Analysis 27, pp. 1142-1159. \n")
+end
+
+function set_filter_coefficients!(coefficients::AbstractVector{T},
+                                    source::Schochet1990,
+                                    N::Int, jac::T, strength::T, cutoff::Int) where {T<:Real}
+    @argcheck cutoff >= 1
+    fill!(coefficients, zero(T))
+    @inbounds @simd for j in cutoff:min(2cutoff,length(coefficients))
+        coefficients[j] = -strength * (j-1)^2 * jac * exp(-((2cutoff-j+1)/(j-1-cutoff))^2)
+    end
+    @inbounds @simd for j in 2cutoff:length(coefficients)
+        coefficients[j] = -strength * (j-1)^2 * jac
+    end
 end
