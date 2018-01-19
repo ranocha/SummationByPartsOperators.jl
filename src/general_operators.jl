@@ -9,12 +9,15 @@ derivative_order(D::AbstractDerivativeOperator) = derivative_order(D.coefficient
 accuracy_order(D::AbstractDerivativeOperator) = accuracy_order(D.coefficients)
 Base.eltype(D::AbstractDerivativeOperator{T}) where {T} = T
 Base.issymmetric(D::AbstractDerivativeOperator) = issymmetric(D.coefficients)
-Base.size(D::AbstractDerivativeOperator) = (length(D.grid), length(D.grid))
+function Base.size(D::AbstractDerivativeOperator)
+    N = length(grid(D))
+    (N, N)
+end
 function Base.size(D::AbstractDerivativeOperator, i::Int)
     if i <= 0
         error("arraysize: dimension out of range")
     elseif i <= 2
-        length(D.grid)
+        length(grid(D))
     else
         1
     end

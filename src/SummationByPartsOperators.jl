@@ -9,7 +9,8 @@ using Parameters
 using StaticArrays
 
 import Base: *, -
-import PolynomialBases: integrate
+import PolynomialBases: integrate, evaluate_coefficients, evaluate_coefficients!,
+                        compute_coefficients, compute_coefficients!
 
 
 # types
@@ -33,6 +34,7 @@ include("var_coef_operators.jl")
 @require BandedMatrices begin
         include("banded_matrices.jl")
 end
+include("fourier_operators.jl")
 include("SBP_coefficients/MattssonNordström2004.jl")
 include("SBP_coefficients/MattssonSvärdNordström2004.jl")
 include("SBP_coefficients/MattssonSvärdShoeybi2008.jl")
@@ -44,10 +46,13 @@ include("SBP_coefficients/MattssonAlmquistCarpenter2014Optimal.jl")
 
 # exports
 export PeriodicDerivativeOperator, DerivativeOperator, DissipationOperator,
-       VarCoefDerivativeOperator, SourceOfCoefficients
+       VarCoefDerivativeOperator, SourceOfCoefficients,
+       FourierDerivativeOperator
 export derivative_order, accuracy_order, source_of_coeffcients, grid
 export mass_matrix
-export mul!, integrate, derivative_left, derivative_right
+export mul!, integrate, derivative_left, derivative_right,
+       evaluate_coefficients, evaluate_coefficients!,
+       compute_coefficients, compute_coefficients!
 export periodic_central_derivative_operator, periodic_derivative_operator, derivative_operator,
         dissipation_operator, var_coef_derivative_operator
 
