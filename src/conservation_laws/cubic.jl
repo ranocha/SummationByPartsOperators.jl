@@ -88,5 +88,5 @@ function DiffEqCallbacks.SavingCallback(semidisc::CubicPeriodicSemidiscretisatio
     save_func = (t,u,integrator) -> integrate(u->CubicIntegralQuantities(u,u^2),
                                                 u, integrator.f)
     saved_values = SavedValues(T, CubicIntegralQuantities{T})
-    SavingCallback(save_func, saved_values, kwargs...)
+    SavingCallback(save_func, saved_values; kwargs...)
 end
