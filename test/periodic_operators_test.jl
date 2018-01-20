@@ -395,6 +395,8 @@ for T in (Float32, Float64), accuracy_order in 1:10, derivative_order in 1:3
     dest_sparse = zeros(u)
 
     D_full = full(D_serial)
+    #NOTE: These tests are excluded because some strange errors occur if
+    # Missings.jl is included (via Roots, via OrdinaryDiffEq, via DiffEqCallbacks).
     #D_sparse = sparse(D_serial)
     A_mul_B!(dest_serial, D_serial, u)
     A_mul_B!(dest_threads, D_threads, u)

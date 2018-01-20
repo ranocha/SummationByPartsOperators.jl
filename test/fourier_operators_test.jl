@@ -40,7 +40,7 @@ end
 
 
 # Spectral Viscosity.
-for T in (Float32, Float64)
+for T in (Float32, Float64), source in (Tadmor1989(), Schochet1990())
     xmin = -one(T)
     xmax = one(T)
 
@@ -49,10 +49,10 @@ for T in (Float32, Float64)
         println(DevNull, D)
         @test issymmetric(D) == false
 
-        Di = spectral_viscosity_operator(D)
+        Di = spectral_viscosity_operator(source, D)
         println(DevNull, Di)
         @test issymmetric(Di) == true
         Di_full = full(Di)
-        @test maximum(abs, Di_full-Di_full') < 10*eps(T)
+        @test maximum(abs, Di_full-Di_full') < 80*eps(T)
     end
 end
