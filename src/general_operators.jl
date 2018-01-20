@@ -40,8 +40,8 @@ end
 
 
 function Base.full(D::AbstractDerivativeOperator{T}) where {T}
-    v = zeros(T, size(D, 2))
-    A = zeros(T, size(D)...)
+    v = Array{T}(size(D, 2))
+    A = Array{T}(size(D)...)
     for i in 1:size(D,2)
         v .= zero(T)
         v[i] = one(T)
@@ -53,11 +53,12 @@ end
 
 function Base.sparse(D::AbstractDerivativeOperator{T}) where {T}
     M, N = size(D)
-    rowind = Int[]
-    nzval = T[]
+    rowind = Vector{Int}()
+    nzval = Vector{T}()
     colptr = Vector{Int}(N+1)
-    u = zeros(T, N)
-    dest = zeros(T, N)
+    u = Array{T}(N)
+    fill!(u, zero(T))
+    dest = Array{T}(M)
 
     for i = 1:N
         u[i] = one(T)

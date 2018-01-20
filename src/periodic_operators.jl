@@ -463,6 +463,7 @@ end
 
 
 function Base.show(io::IO, D::PeriodicDerivativeOperator{T,LowerOffset,UpperOffset}) where {T,LowerOffset,UpperOffset}
+    grid = D.grid_evaluate
     if derivative_order(D) == 1
         print(io, "Periodic 1st derivative operator of order ")
     elseif  derivative_order(D) == 2
@@ -473,8 +474,8 @@ function Base.show(io::IO, D::PeriodicDerivativeOperator{T,LowerOffset,UpperOffs
         print(io, "Periodic ", derivative_order(D), "th derivative operator of order ")
     end
     print(io, accuracy_order(D), " {T=", T, ", Parallel=", typeof(D.coefficients.parallel), "} \n")
-    print(io, "on a grid in [", first(grid(D)), ", ", last(grid(D)),
-                "] using ", length(grid(D)), " nodes, \n")
+    print(io, "on a grid in [", first(grid), ", ", last(grid),
+                "] using ", length(grid)-1, " nodes, \n")
     print(io, "stencils with ", LowerOffset, " nodes to the left, ", UpperOffset,
                 " nodes to the right, and coefficients from \n", source_of_coeffcients(D))
 end

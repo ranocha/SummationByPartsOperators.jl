@@ -385,14 +385,16 @@ for T in (Float32, Float64), accuracy_order in 1:10, derivative_order in 1:3
     xmin = zero(T)
     xmax = 5*one(T)
     N = 51
-    x = linspace(xmin, xmax, N)
+    D_serial = periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
+    D_threads= periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N, Val{:threads}())
+
+    x = grid(D_serial)
     u = x.^5
     dest_serial = zeros(u)
     dest_threads= zeros(u)
     dest_full   = zeros(u)
     dest_sparse = zeros(u)
-    D_serial = periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
-    D_threads= periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N, Val{:threads}())
+
     D_full = full(D_serial)
     D_sparse = sparse(D_serial)
     A_mul_B!(dest_serial, D_serial, u)
