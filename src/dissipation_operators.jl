@@ -219,10 +219,10 @@ end
     dissipation_operator(source_of_coefficients, order, xmin, xmax, N, 
                          left_weights, right_weights, parallel=Val{:serial}())
 
-Create a `DissipationOperator` using undivided differences approximating a
-weighted `order`-th derivative on a grid between `xmin` and `xmax` with `N`
-grid points up to order of accuracy 2 with coefficients given by
-`source_of_coefficients`. 
+Create a negative semidefinite `DissipationOperator` using undivided differences
+approximating a weighted `order`-th derivative on a grid between `xmin` and 
+`xmax` with `N` grid points up to order of accuracy 2 with coefficients given
+by `source_of_coefficients`. 
 The norm matrix is given by `left_weights` and `right_weights`.
 The evaluation of the derivative can be parallised using threads by chosing
 `parallel=Val{:threads}())`.
@@ -242,9 +242,9 @@ end
                          order::Int=accuracy_order(D), 
                          parallel=D.coefficients.parallel)
 
-Create a `DissipationOperator` using undivided differences approximating a
-weighted `order`-th derivative adapted to the derivative operator `D` with
-coefficients given in `source_of_coefficients`.
+Create a negative semidefinite `DissipationOperator` using undivided differences
+approximating a weighted `order`-th derivative adapted to the derivative
+operator `D` with coefficients given in `source_of_coefficients`.
 The evaluation of the derivative can be parallised using threads by chosing
 `parallel=Val{:threads}())`.
 """
@@ -259,8 +259,9 @@ end
 """
     dissipation_operator(D::DerivativeOperator; kwargs...)
 
-Create a `DissipationOperator` using undivided differences approximating a
-weighted `order`-th derivative adapted to the derivative operator `D`.
+Create a negative semidefinite `DissipationOperator` using undivided differences
+approximating a weighted `order`-th derivative adapted to the derivative
+operator `D`.
 The evaluation of the derivative can be parallised using threads by chosing
 `parallel=Val{:threads}())`.
 """

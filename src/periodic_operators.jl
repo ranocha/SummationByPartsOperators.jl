@@ -650,7 +650,7 @@ Compute `α*D*u` and store the result in `dest`.
 """
 Base.@propagate_inbounds function mul!(dest::AbstractVector, Di::PeriodicDissipationOperator,
                                        u::AbstractVector, α)
-    @inbounds mul!(dest, Di.Di, u, Di.factor*α)
+    mul!(dest, Di.Di, u, Di.factor*α)
 end
 
 
@@ -660,9 +660,9 @@ end
                          order::Int=accuracy_order(D),
                          parallel=D.coefficients.parallel)
 
-Create a `DissipationOperator` using undivided differences approximating a
-`order`-th derivative with strength `strength` adapted to the derivative
-operator `D`.
+Create a negative semidefinite `DissipationOperator` using undivided differences
+approximating a `order`-th derivative with strength `strength` adapted to the
+derivative operator `D`.
 The evaluation of the derivative can be parallised using threads by chosing
 `parallel=Val{:threads}())`.
 """
