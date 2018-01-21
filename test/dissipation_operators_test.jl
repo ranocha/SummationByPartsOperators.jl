@@ -116,7 +116,7 @@ for T in (Float32, Float64), order in (2,4,6,8)
     @test maximum(abs, dest1 - dest3) < u[end]*N*eps(T)
 end
 
-#=
+
 # Compare periodic and nonperiodic.
 for T in (Float32, Float64), order in (2,4,6,8)
     xmin = zero(T)
@@ -130,4 +130,3 @@ for T in (Float32, Float64), order in (2,4,6,8)
 
     @test norm(full(Di)[15:35,15:35] - full(Dip)[15:35,15:35]) < eps(T)
 end
-=#

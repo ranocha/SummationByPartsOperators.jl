@@ -437,7 +437,7 @@ end
 
 
 """
-    PeriodicDerivativeOperator{T,LowerOffset,UpperOffset,Parallel,Grid}
+    PeriodicDerivativeOperator
 
 A derivative operator on a uniform periodic grid.
 """
@@ -655,9 +655,9 @@ end
 
 
 """
-    dissipation_operator(D::PeriodicDerivativeOperator{T};
-                         strength=one(T),
-                         order::Int=accuracy_order(D),
+    dissipation_operator(D::PeriodicDerivativeOperator;
+                         strength=one(eltype(D)),
+                         order=accuracy_order(D),
                          parallel=D.coefficients.parallel)
 
 Create a negative semidefinite `DissipationOperator` using undivided differences
@@ -666,12 +666,12 @@ derivative operator `D`.
 The evaluation of the derivative can be parallised using threads by chosing
 `parallel=Val{:threads}())`.
 """
-function dissipation_operator(D::PeriodicDerivativeOperator{T};
-                              strength=one(T),
-                              order::Int=accuracy_order(D),
-                              parallel=D.coefficients.parallel) where {T}
-    # account for the grid spacing
+function dissipation_operator(D::PeriodicDerivativeOperator;
+                              strength=eltype(D)(1),
+                              order=accuracy_order(D),
+                              parallel=D.coefficients.parallel)
     @argcheck iseven(order) ArgumentError("Dissipation operators require even derivatives.")
+    # account for the grid spacing
     factor = strength * (-1)^(1 + order÷2) * D.Δx^order
     x = D.grid_evaluate
     Di = periodic_derivative_operator(order, order, first(x), last(x), length(x), parallel)
