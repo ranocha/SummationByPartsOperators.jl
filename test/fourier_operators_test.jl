@@ -41,6 +41,7 @@ end
 
 # Spectral Viscosity.
 source_SV = (Tadmor1989(), MadayTadmor1989(), TadmorWaagan2012Standard(), TadmorWaagan2012Convergent())
+source_SSV = (Tadmor1993(),)
 
 for T in (Float32, Float64), source in source_SV
     xmin = -one(T)
@@ -58,5 +59,24 @@ for T in (Float32, Float64), source in source_SV
         @test maximum(abs, Di_full-Di_full') < 80*eps(T)
 
         @test maximum(eigvals(Symmetric(Di_full))) < 5N*eps(T)
+    end
+end
+
+for T in (Float32, Float64), source in source_SSV
+    xmin = -one(T)
+    xmax = one(T)
+
+    for N in 2 .^ (3:6), order in 1:3
+        D = fourier_derivative_operator(xmin, xmax, N)
+        println(DevNull, D)
+        @test issymmetric(D) == false
+
+        Di = super_spectral_viscosity_operator(source, D, order)
+        println(DevNull, Di)
+        @test issymmetric(Di) == true
+        Di_full = full(Di)
+        @test maximum(abs, Di_full-Di_full') < 80*eps(T)
+
+        @test maximum(eigvals(Symmetric(Di_full))) < 10N*eps(T)
     end
 end
