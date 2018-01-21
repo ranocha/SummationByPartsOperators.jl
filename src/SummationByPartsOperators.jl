@@ -55,7 +55,8 @@ include("conservation_laws/cubic.jl")
 
 
 # exports
-export PeriodicDerivativeOperator, DerivativeOperator, DissipationOperator,
+export PeriodicDerivativeOperator, PeriodicDissipationOperator, 
+       DerivativeOperator, DissipationOperator,
        VarCoefDerivativeOperator, SourceOfCoefficients,
        FourierDerivativeOperator, FourierSpectralViscosity
 export derivative_order, accuracy_order, source_of_coeffcients, grid, semidiscretise

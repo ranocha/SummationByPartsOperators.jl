@@ -536,7 +536,7 @@ The evaluation of the derivative can be parallised using threads by chosing
 `parallel=Val{:threads}())`.
 """
 function periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N, parallel=Val{:serial}())
-    grid = linspace(xmin, xmax, N+1) # N+1 because of the two identical boundary nodes
+    grid = linspace(xmin, xmax, N) # N includes two identical boundary nodes
     coefficients = periodic_central_derivative_coefficients(derivative_order, accuracy_order, eltype(grid), parallel)
     PeriodicDerivativeOperator(coefficients, grid)
 end
@@ -566,7 +566,7 @@ The evaluation of the derivative can be parallised using threads by chosing
 """
 function periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N, left_offset::Int=-(accuracy_order+1)÷2,
                                       parallel::Union{Val{:serial},Val{:threads}}=Val{:serial}())
-    grid = linspace(xmin, xmax, N+1) # N+1 because of the two identical boundary nodes
+    grid = linspace(xmin, xmax, N) # N includes two identical boundary nodes
     coefficients = periodic_derivative_coefficients(derivative_order, accuracy_order, left_offset, eltype(grid), parallel)
     PeriodicDerivativeOperator(coefficients, grid)
 end
@@ -596,3 +596,79 @@ end
     periodic_derivative_operator(derivative_order, accuracy_order, grid, left_offset, parallel)
 end
 
+
+
+"""
+    PeriodicDissipationOperator
+
+A dissipation operator on a periodic finite difference grid.
+"""
+struct PeriodicDissipationOperator{T,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients,Grid} <: AbstractPeriodicDerivativeOperator{T}
+    factor::T
+    Di::PeriodicDerivativeOperator{T,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients,Grid}
+
+    function PeriodicDissipationOperator(factor::T, Di::PeriodicDerivativeOperator{T,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients,Grid}) where {T,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients,Grid}
+        # check validity
+        @argcheck iseven(derivative_order(Di))
+        @argcheck (-1)^(1+derivative_order(Di)÷2)*factor >= 0
+        new{T,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients,Grid}(factor, Di)
+    end
+end
+
+grid(Di::PeriodicDissipationOperator) = grid(Di.Di)
+derivative_order(Di::PeriodicDissipationOperator) = derivative_order(Di.Di)
+accuracy_order(Di::PeriodicDissipationOperator) = accuracy_order(Di.Di)
+source_of_coeffcients(Di::PeriodicDissipationOperator) = MattssonSvärdNordström2004()
+
+function Base.show(io::IO, Di::PeriodicDissipationOperator{T}) where {T}
+    if  derivative_order(Di) == 2
+        print(io, "SBP 2nd derivative dissipation operator of order ")
+    else
+        print(io, "SBP ", derivative_order(D), "th derivative dissipation operator of order ")
+    end
+    print(io, accuracy_order(Di), " {T=", T, ", Parallel=", typeof(Di.Di.coefficients.parallel), "} \n")
+    print(io, "on a grid in [", first(grid(Di)), ", ", last(grid(Di)),
+                "] using ", length(grid(Di)), " nodes \n")
+    print(io, "and coefficients given in \n")
+    print(io, source_of_coeffcients(Di))
+end
+
+
+"""
+    mul!(dest::AbstractVector, D::PeriodicDissipationOperator, u::AbstractVector, α, β)
+
+Compute `α*D*u + β*dest` and store the result in `dest`.
+"""
+Base.@propagate_inbounds function mul!(dest::AbstractVector, Di::PeriodicDissipationOperator,
+                                       u::AbstractVector, α, β)
+    mul!(dest, Di.Di, u, Di.factor*α, β)
+end
+
+"""
+    mul!(dest::AbstractVector, D::PeriodicDissipationOperator, u::AbstractVector, α)
+
+Compute `α*D*u` and store the result in `dest`.
+"""
+Base.@propagate_inbounds function mul!(dest::AbstractVector, Di::PeriodicDissipationOperator,
+                                       u::AbstractVector, α)
+    @inbounds mul!(dest, Di.Di, u, Di.factor*α)
+end
+
+
+"""
+    dissipation_operator(D::PeriodicDerivativeOperator, order::Int=accuracy_order(D), parallel=D.coefficients.parallel)
+
+Create a `DissipationOperator` approximating a weighted `order`-th derivative
+adapted to the derivative operator `D`.
+The evaluation of the derivative can be parallised using threads by chosing
+`parallel=Val{:threads}())`.
+"""
+function dissipation_operator(D::PeriodicDerivativeOperator,
+                              order::Int=accuracy_order(D), parallel=D.coefficients.parallel)
+    # account for the grid spacing
+    @argcheck iseven(order) ArgumentError("Dissipation operators require even derivatives.")
+    factor = (-1)^(1 + order÷2) * D.Δx^order
+    x = D.grid_evaluate
+    Di = periodic_derivative_operator(order, 2, first(x), last(x), length(x), parallel)
+    PeriodicDissipationOperator(factor, Di)
+end
