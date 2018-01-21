@@ -65,12 +65,12 @@ export mul!, integrate, derivative_left, derivative_right,
        compute_coefficients, compute_coefficients!
 export periodic_central_derivative_operator, periodic_derivative_operator, derivative_operator,
        dissipation_operator, var_coef_derivative_operator,
-       fourier_derivative_operator, spectral_viscosity_operator
+       fourier_derivative_operator, spectral_viscosity_operator, super_spectral_viscosity_operator
 
 export MattssonNordström2004, MattssonSvärdNordström2004, MattssonSvärdShoeybi2008,
        Mattsson2012, Mattsson2014,
        MattssonAlmquistCarpenter2014Extended, MattssonAlmquistCarpenter2014Optimal
-export Tadmor1989, MadayTadmor1989, 
+export Tadmor1989, MadayTadmor1989, Tadmor1993,
        TadmorWaagan2012Standard, TadmorWaagan2012Convergent
 
 export BurgersPeriodicSemidiscretisation, CubicPeriodicSemidiscretisation

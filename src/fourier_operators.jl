@@ -107,55 +107,14 @@ end
 
 
 
-"""
-    FourierSpectralViscosity
+abstract type AbstractFourierViscosity{T} <: AbstractDerivativeOperator{T} end
 
-A spectral viscosity operator on a periodic grid computing the derivative using
-a spectral Fourier expansion via real discrete Fourier transforms.
-"""
-struct FourierSpectralViscosity{T<:Real, Grid, RFFT, BRFFT, SourceOfCoefficients} <: AbstractDerivativeOperator{T}
-    strength::T
-    cutoff::Int
-    coefficients::Vector{T}
-    D::FourierDerivativeOperator{T,Grid,RFFT,BRFFT}
-    source_of_coefficients::SourceOfCoefficients
+@inline source_of_coefficients(Di::AbstractFourierViscosity) = (Di.source_of_coefficients)
 
-    function FourierSpectralViscosity(source_of_coefficients::SourceOfCoefficients, 
-                                        strength::T, cutoff::Int,
-                                        D::FourierDerivativeOperator{T,Grid,RFFT,BRFFT}) where {T<:Real, Grid, RFFT, BRFFT, SourceOfCoefficients}
-        # precompute coefficients
-        N = size(D, 1)
-        jac = N * D.jac^2 # ^2: 2nd derivative; # *N: brfft instead of irfft
-        cutoff = max(1, cutoff+1) # +1 because of 1 based indexing in Julia
-        coefficients = Array{T}(length(D.brfft_plan))
-        set_filter_coefficients!(coefficients, source_of_coefficients, jac, strength, cutoff)
-        new{T, Grid, RFFT, BRFFT, SourceOfCoefficients}(strength, cutoff, coefficients, D, source_of_coefficients)
-    end
-end
+Base.issymmetric(Di::AbstractFourierViscosity) = true
+grid(Di::AbstractFourierViscosity) = grid(Di.D)
 
-function spectral_viscosity_operator(source,
-                                     D::FourierDerivativeOperator{T},
-                                     strength=T(1)/size(D,2),
-                                     cutoff=round(Int, sqrt(size(D,2)))) where {T}
-    FourierSpectralViscosity(source, strength, cutoff, D)
-end
-
-@inline source_of_coefficients(Di::FourierSpectralViscosity) = (Di.source_of_coefficients)
-
-function Base.show(io::IO, Di::FourierSpectralViscosity{T}) where {T}
-    grid = Di.D.grid_evaluate
-    print(io, "Spectral viscosity operator for the periodic 1st derivative Fourier operator\n")
-    print(io, "{T=", T, "} on a grid in [", first(grid), ", ", last(grid),
-                "] using ", length(Di.D.rfft_plan), " nodes and ",
-                length(Di.D.brfft_plan), " modes\n")
-    print(io, "with strength ε = ", Di.strength, ", cutoff m = ", Di.cutoff, ", and coefficients from\n")
-    print(io, Di.source_of_coefficients)
-end
-
-Base.issymmetric(Di::FourierSpectralViscosity) = true
-grid(Di::FourierSpectralViscosity) = grid(Di.D)
-
-function Base.A_mul_B!(dest::AbstractVector{T}, Di::FourierSpectralViscosity{T},
+function Base.A_mul_B!(dest::AbstractVector{T}, Di::AbstractFourierViscosity{T},
                         u::AbstractVector{T}) where {T}
     @unpack strength, cutoff, coefficients, D = Di
     @unpack jac, tmp, rfft_plan, brfft_plan = D
@@ -173,6 +132,57 @@ function Base.A_mul_B!(dest::AbstractVector{T}, Di::FourierSpectralViscosity{T},
     A_mul_B!(dest, brfft_plan, tmp)
 
     nothing
+end
+
+
+"""
+    FourierSpectralViscosity
+
+A spectral viscosity operator on a periodic grid computing the derivative using
+a spectral Fourier expansion via real discrete Fourier transforms.
+"""
+struct FourierSpectralViscosity{T<:Real, Grid, RFFT, BRFFT, SourceOfCoefficients} <: AbstractFourierViscosity{T}
+    strength::T
+    cutoff::Int
+    coefficients::Vector{T}
+    D::FourierDerivativeOperator{T,Grid,RFFT,BRFFT}
+    source_of_coefficients::SourceOfCoefficients
+
+    function FourierSpectralViscosity(source_of_coefficients::SourceOfCoefficients, 
+                                        strength::T, cutoff::Int,
+                                        D::FourierDerivativeOperator{T,Grid,RFFT,BRFFT}) where {T<:Real, Grid, RFFT, BRFFT, SourceOfCoefficients}
+        # precompute coefficients
+        N = size(D, 1)
+        jac = (N * D.jac)^2 / N # ^2: 2nd derivative; # *N / N: brfft instead of irfft
+        cutoff = max(1, cutoff+1) # +1 because of 1 based indexing in Julia
+        coefficients = Array{T}(length(D.brfft_plan))
+        set_filter_coefficients!(coefficients, source_of_coefficients, jac, strength, cutoff)
+        new{T, Grid, RFFT, BRFFT, SourceOfCoefficients}(strength, cutoff, coefficients, D, source_of_coefficients)
+    end
+end
+
+"""
+    spectral_viscosity_operator(source, D::FourierDerivativeOperator, 
+                                strength=1/size(D,2), cutoff=sqrt(size(D,2)))
+
+Construct the spectral viscosity operator for the Fourier derivative operator
+`D` given in `source` with parameters `strength`, `cutoff`.
+"""
+function spectral_viscosity_operator(source,
+                                     D::FourierDerivativeOperator{T},
+                                     strength=T(1)/size(D,2),
+                                     cutoff=round(Int, sqrt(size(D,2)))) where {T}
+    FourierSpectralViscosity(source, strength, cutoff, D)
+end
+
+function Base.show(io::IO, Di::FourierSpectralViscosity{T}) where {T}
+    grid = Di.D.grid_evaluate
+    print(io, "Spectral viscosity operator for the periodic 1st derivative Fourier operator\n")
+    print(io, "{T=", T, "} on a grid in [", first(grid), ", ", last(grid),
+                "] using ", length(Di.D.rfft_plan), " nodes and ",
+                length(Di.D.brfft_plan), " modes\n")
+    print(io, "with strength ε = ", Di.strength, ", cutoff m = ", Di.cutoff, ", and coefficients from\n")
+    print(io, Di.source_of_coefficients)
 end
 
 
@@ -200,39 +210,6 @@ function set_filter_coefficients!(coefficients::AbstractVector{T},
     @argcheck cutoff >= 1
     fill!(coefficients, zero(T))
     @inbounds @simd for j in cutoff:length(coefficients)
-        coefficients[j] = -strength * (j-1)^2 * jac
-    end
-end
-
-
-"""
-    MadayTadmor1989
-
-Coefficients of the Fourier spectral viscosity given in
-  Maday, Tadmor (1989)
-  Analysis of the Spectral Vanishing Viscosity Method for Periodic Conservation
-    Laws.
-  SIAM Journal on Numerical Analysis 26.4, pp. 854-870.
-"""
-struct MadayTadmor1989 <: SourceOfCoefficients end
-
-function Base.show(io::IO, ::MadayTadmor1989)
-    print(io,
-        "  Maday, Tadmor (1989) \n",
-        "  Analysis of the Spectral Vanishing Viscosity Method for Periodic Conservation\n",
-        "    Laws. \n",
-        "  SIAM Journal on Numerical Analysis 26.4, pp. 854-870. \n")
-end
-
-function set_filter_coefficients!(coefficients::AbstractVector{T},
-                                    source::MadayTadmor1989,
-                                    jac::T, strength::T, cutoff::Int) where {T<:Real}
-    @argcheck cutoff >= 1
-    fill!(coefficients, zero(T))
-    @inbounds @simd for j in cutoff:min(2cutoff,length(coefficients))
-        coefficients[j] = -strength * (j-1)^2 * jac * (j-cutoff)/cutoff
-    end
-    @inbounds @simd for j in 2cutoff:length(coefficients)
         coefficients[j] = -strength * (j-1)^2 * jac
     end
 end
@@ -331,5 +308,92 @@ function set_filter_coefficients!(coefficients::AbstractVector{T},
     end
     @inbounds @simd for j in 2cutoff:length(coefficients)
         coefficients[j] = -strength * (j-1)^2 * jac
+    end
+end
+
+
+"""
+    FourierSuperSpectralViscosity
+
+A super spectral viscosity operator on a periodic grid computing the derivative
+using a spectral Fourier expansion via real discrete Fourier transforms.
+"""
+struct FourierSuperSpectralViscosity{T<:Real, Grid, RFFT, BRFFT, SourceOfCoefficients} <: AbstractFourierViscosity{T}
+    strength::T
+    cutoff::Int
+    order::Int
+    coefficients::Vector{T}
+    D::FourierDerivativeOperator{T,Grid,RFFT,BRFFT}
+    source_of_coefficients::SourceOfCoefficients
+
+    function FourierSuperSpectralViscosity(source_of_coefficients::SourceOfCoefficients, 
+                                        strength::T, cutoff::Int, order::Int,
+                                        D::FourierDerivativeOperator{T,Grid,RFFT,BRFFT}) where {T<:Real, Grid, RFFT, BRFFT, SourceOfCoefficients}
+        # precompute coefficients
+        @argcheck order >= 1
+
+        N = size(D, 1)
+        jac = (N * D.jac)^2order / N # ^2order: order-th derivative; # *N / N: brfft instead of irfft
+        cutoff = max(1, cutoff+1) # +1 because of 1 based indexing in Julia
+        coefficients = Array{T}(length(D.brfft_plan))
+        set_filter_coefficients!(coefficients, source_of_coefficients, jac, strength, cutoff, order)
+        new{T, Grid, RFFT, BRFFT, SourceOfCoefficients}(strength, cutoff, order, coefficients, D, source_of_coefficients)
+    end
+end
+
+"""
+    super_spectral_viscosity_operator(source, D::FourierDerivativeOperator, 
+                                      order=1, 
+                                      strength=1/size(D,2), 
+                                      cutoff=sqrt(size(D,2)))
+
+Construct the super spectral viscosity operator for the Fourier derivative
+operator `D` given in `source` with parameters `order`, `strength`, `cutoff`.
+"""
+function super_spectral_viscosity_operator(source,
+                                           D::FourierDerivativeOperator{T},
+                                           order::Int=1,
+                                           strength=T(1)/size(D,2)^(2order-1),
+                                           cutoff::Int=round(Int, size(D,2)^(1-1/2order))) where {T}
+    FourierSuperSpectralViscosity(source, strength, cutoff, order, D)
+end
+
+function Base.show(io::IO, Di::FourierSuperSpectralViscosity{T}) where {T}
+    grid = Di.D.grid_evaluate
+    print(io, "Super spectral viscosity operator for the periodic 1st derivative Fourier\n")
+    print(io, "operator {T=", T, "} on a grid in [", first(grid), ", ", last(grid),
+                "] using ", length(Di.D.rfft_plan), " nodes and ",
+                length(Di.D.brfft_plan), " modes\n")
+    print(io, "with strength ε = ", Di.strength, ", cutoff m = ", Di.cutoff,
+              "order s = ", Di.order, ", and coefficients from\n")
+    print(io, Di.source_of_coefficients)
+end
+
+
+"""
+    Tadmor1993
+
+Coefficients of the Fourier super spectral viscosity given in
+  Tadmor (1993)
+  Super Viscosity and Spectral Approximations of Nonlinear Conservation Laws.
+  Numerical Methods for Fluid Dynamics IV, pp. 69-82.
+"""
+struct Tadmor1993 <: SourceOfCoefficients end
+
+function Base.show(io::IO, ::Tadmor1993)
+    print(io,
+        "  Tadmor (1993) \n",
+        "  Super Viscosity and Spectral Approximations of Nonlinear Conservation Laws. \n",
+        "  Numerical Methods for Fluid Dynamics IV, pp. 69-82. \n")
+end
+
+function set_filter_coefficients!(coefficients::AbstractVector{T},
+                                    source::Tadmor1993,
+                                    jac::T, strength::T, cutoff::Int, order::Int) where {T<:Real}
+    @argcheck cutoff >= 1
+    @argcheck order >= 1
+    fill!(coefficients, zero(T))
+    @inbounds @simd for j in cutoff:length(coefficients)
+        coefficients[j] = -strength * (j-1)^2order * jac * (1 - (cutoff/j)^2order)
     end
 end
