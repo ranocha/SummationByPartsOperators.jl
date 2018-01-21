@@ -42,7 +42,7 @@ for T in (Float32, Float64), acc_order in (2,4,6,8), diss_order in (2,4,6,8), D_
 
 
     Di_serial = try
-        dissipation_operator(Di_source, D_serial, diss_order)
+        dissipation_operator(Di_source, D_serial, order=diss_order)
     catch err
         !isa(err, ArgumentError) && throw(err)
         nothing
