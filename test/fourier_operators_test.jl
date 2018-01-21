@@ -56,5 +56,7 @@ for T in (Float32, Float64), source in source_SV
         @test issymmetric(Di) == true
         Di_full = full(Di)
         @test maximum(abs, Di_full-Di_full') < 80*eps(T)
+
+        @test maximum(eigvals(Symmetric(Di_full))) < 5N*eps(T)
     end
 end

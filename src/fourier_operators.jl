@@ -239,6 +239,39 @@ end
 
 
 """
+    MadayTadmor1989
+
+Coefficients of the Fourier spectral viscosity given in
+  Maday, Tadmor (1989)
+  Analysis of the Spectral Vanishing Viscosity Method for Periodic Conservation
+    Laws.
+  SIAM Journal on Numerical Analysis 26.4, pp. 854-870.
+"""
+struct MadayTadmor1989 <: SourceOfCoefficients end
+
+function Base.show(io::IO, ::MadayTadmor1989)
+    print(io,
+        "  Maday, Tadmor (1989) \n",
+        "  Analysis of the Spectral Vanishing Viscosity Method for Periodic Conservation\n",
+        "    Laws. \n",
+        "  SIAM Journal on Numerical Analysis 26.4, pp. 854-870. \n")
+end
+
+function set_filter_coefficients!(coefficients::AbstractVector{T},
+                                    source::MadayTadmor1989,
+                                    jac::T, strength::T, cutoff::Int) where {T<:Real}
+    @argcheck cutoff >= 1
+    fill!(coefficients, zero(T))
+    @inbounds @simd for j in cutoff:min(2cutoff,length(coefficients))
+        coefficients[j] = -strength * (j-1)^2 * jac * (j-cutoff)/cutoff
+    end
+    @inbounds @simd for j in 2cutoff:length(coefficients)
+        coefficients[j] = -strength * (j-1)^2 * jac
+    end
+end
+
+
+"""
     TadmorWaagan2012Standard
 
 Coefficients of the Fourier spectral viscosity given in
