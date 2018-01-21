@@ -180,7 +180,7 @@ end
 Coefficients of the Fourier spectral viscosity given in
   Tadmor (1989)
   Convergence of Spectral Methods for Nonlinear Conservation Laws.
-  SIAM Journal of Numerical Analysis 26, pp. 30-44.
+  SIAM Journal on Numerical Analysis 26.1, pp. 30-44.
 """
 struct Tadmor1989 <: SourceOfCoefficients end
 
@@ -188,7 +188,7 @@ function Base.show(io::IO, ::Tadmor1989)
     print(io,
         "  Tadmor (1989) \n",
         "  Convergence of Spectral Methods for Nonlinear Conservation Laws. \n",
-        "  SIAM Journal of Numerical Analysis 26, pp. 30-44. \n")
+        "  SIAM Journal on Numerical Analysis 26.1, pp. 30-44. \n")
 end
 
 function set_filter_coefficients!(coefficients::AbstractVector{T},
@@ -197,7 +197,40 @@ function set_filter_coefficients!(coefficients::AbstractVector{T},
     @argcheck cutoff >= 1
     fill!(coefficients, zero(T))
     @inbounds @simd for j in cutoff:length(coefficients)
-        coefficients[j] = -strength * (j-1)^2 * jac * exp(-((N-j+1)/(j-1-cutoff))^2)
+        coefficients[j] = -strength * (j-1)^2 * jac
+    end
+end
+
+
+"""
+    MadayTadmor1989
+
+Coefficients of the Fourier spectral viscosity given in
+  Maday, Tadmor (1989)
+  Analysis of the Spectral Vanishing Viscosity Method for Periodic Conservation
+    Laws.
+  SIAM Journal on Numerical Analysis 26.4, pp. 854-870.
+"""
+struct MadayTadmor1989 <: SourceOfCoefficients end
+
+function Base.show(io::IO, ::MadayTadmor1989)
+    print(io,
+        "  Maday, Tadmor (1989) \n",
+        "  Analysis of the Spectral Vanishing Viscosity Method for Periodic Conservation\n",
+        "    Laws. \n",
+        "  SIAM Journal on Numerical Analysis 26.4, pp. 854-870. \n")
+end
+
+function set_filter_coefficients!(coefficients::AbstractVector{T},
+                                    source::MadayTadmor1989,
+                                    N::Int, jac::T, strength::T, cutoff::Int) where {T<:Real}
+    @argcheck cutoff >= 1
+    fill!(coefficients, zero(T))
+    @inbounds @simd for j in cutoff:min(2cutoff,length(coefficients))
+        coefficients[j] = -strength * (j-1)^2 * jac * (j-cutoff)/cutoff
+    end
+    @inbounds @simd for j in 2cutoff:length(coefficients)
+        coefficients[j] = -strength * (j-1)^2 * jac
     end
 end
 
@@ -209,7 +242,7 @@ Coefficients of the Fourier spectral viscosity given in
   Schochet (1990)
   The Rate of Convergence of Spectral-Viscosity Methods for Periodic Scalar
     Conservation Laws.
-  SIAM Journal of Numerical Analysis 27, pp. 1142-1159.
+  SIAM Journal on Numerical Analysis 27.5, pp. 1142-1159.
 """
 struct Schochet1990 <: SourceOfCoefficients end
 
@@ -218,7 +251,7 @@ function Base.show(io::IO, ::Schochet1990)
         "  Schochet (1990) \n",
         "  The Rate of Convergence of Spectral-Viscosity Methods for Periodic Scalar\n",
         "    Conservation Laws. \n",
-        "  SIAM Journal of Numerical Analysis 27, pp. 1142-1159. \n")
+        "  SIAM Journal on Numerical Analysis 27.5, pp. 1142-1159. \n")
 end
 
 function set_filter_coefficients!(coefficients::AbstractVector{T},
@@ -231,5 +264,33 @@ function set_filter_coefficients!(coefficients::AbstractVector{T},
     end
     @inbounds @simd for j in 2cutoff:length(coefficients)
         coefficients[j] = -strength * (j-1)^2 * jac
+    end
+end
+
+
+"""
+    TadmorWaagan2012
+
+Coefficients of the Fourier spectral viscosity given in
+  Tadmor, Waagan (2012)
+  Adaptive Spectral Viscosity for Hyperbolic Conservation Laws.
+  SIAM Journal on Scientific Computing 34.2, pp. A993-A1009.
+"""
+struct TadmorWaagan2012 <: SourceOfCoefficients end
+
+function Base.show(io::IO, ::TadmorWaagan2012)
+    print(io,
+        "  Tadmor, Waagan (2012) \n",
+        "  Adaptive Spectral Viscosity for Hyperbolic Conservation Laws. \n",
+        "  SIAM Journal on Scientific Computing 34.2, pp. A993-A1009. \n")
+end
+
+function set_filter_coefficients!(coefficients::AbstractVector{T},
+                                    source::TadmorWaagan2012,
+                                    N::Int, jac::T, strength::T, cutoff::Int) where {T<:Real}
+    @argcheck cutoff >= 1
+    fill!(coefficients, zero(T))
+    @inbounds @simd for j in cutoff:length(coefficients)
+        coefficients[j] = -strength * (j-1)^2 * jac * exp(-((N-j+1)/(j-1-cutoff))^2)
     end
 end

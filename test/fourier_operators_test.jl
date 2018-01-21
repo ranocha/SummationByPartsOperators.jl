@@ -40,7 +40,9 @@ end
 
 
 # Spectral Viscosity.
-for T in (Float32, Float64), source in (Tadmor1989(), Schochet1990())
+source_SV = (Tadmor1989(), MadayTadmor1989(), Schochet1990(), TadmorWaagan2012())
+
+for T in (Float32, Float64), source in source_SV
     xmin = -one(T)
     xmax = one(T)
 
