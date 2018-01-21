@@ -624,7 +624,7 @@ function Base.show(io::IO, Di::PeriodicDissipationOperator{T}) where {T}
     if  derivative_order(Di) == 2
         print(io, "SBP 2nd derivative dissipation operator of order ")
     else
-        print(io, "SBP ", derivative_order(D), "th derivative dissipation operator of order ")
+        print(io, "SBP ", derivative_order(Di), "th derivative dissipation operator of order ")
     end
     print(io, accuracy_order(Di), " {T=", T, ", Parallel=", typeof(Di.Di.coefficients.parallel), "} \n")
     print(io, "on a grid in [", first(grid(Di)), ", ", last(grid(Di)),
