@@ -82,7 +82,7 @@ for acc_order in 2:2:8, T in (Float32,Float64)
 
     D = periodic_derivative_operator(der_order, acc_order, xmin, xmax, N)
     for order in 2:2:8
-        Di = dissipation_operator(D, order)
+        Di = dissipation_operator(D, order=order)
         println(DevNull, Di)
         HDi = full(Di)
         @test norm(HDi - HDi') < 10*eps(T)
@@ -102,8 +102,8 @@ for T in (Float32, Float64), order in (2,4,6,8)
     dest1 = zeros(u)
     dest2 = zeros(u)
 
-    Di_serial = dissipation_operator(D, order, Val{:serial}())
-    Di_threads= dissipation_operator(D, order, Val{:threads}())
+    Di_serial = dissipation_operator(D, order=order, parallel=Val{:serial}())
+    Di_threads= dissipation_operator(D, order=order, parallel=Val{:threads}())
     Di_full   = full(Di_serial)
 
     mul!(dest1, Di_serial, u, one(T), zero(T))

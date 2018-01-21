@@ -656,18 +656,24 @@ end
 
 
 """
-    dissipation_operator(D::PeriodicDerivativeOperator, order::Int=accuracy_order(D), parallel=D.coefficients.parallel)
+    dissipation_operator(D::PeriodicDerivativeOperator{T};
+                         strength=one(T),
+                         order::Int=accuracy_order(D),
+                         parallel=D.coefficients.parallel)
 
-Create a `DissipationOperator` approximating a weighted `order`-th derivative
-adapted to the derivative operator `D`.
+Create a `DissipationOperator` using undivided differences approximating a
+`order`-th derivative with strength `strength` adapted to the derivative
+operator `D`.
 The evaluation of the derivative can be parallised using threads by chosing
 `parallel=Val{:threads}())`.
 """
-function dissipation_operator(D::PeriodicDerivativeOperator,
-                              order::Int=accuracy_order(D), parallel=D.coefficients.parallel)
+function dissipation_operator(D::PeriodicDerivativeOperator{T};
+                              strength=one(T),
+                              order::Int=accuracy_order(D),
+                              parallel=D.coefficients.parallel) where {T}
     # account for the grid spacing
     @argcheck iseven(order) ArgumentError("Dissipation operators require even derivatives.")
-    factor = (-1)^(1 + order÷2) * D.Δx^order
+    factor = strength * (-1)^(1 + order÷2) * D.Δx^order
     x = D.grid_evaluate
     Di = periodic_derivative_operator(order, 2, first(x), last(x), length(x), parallel)
     PeriodicDissipationOperator(factor, Di)
