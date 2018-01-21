@@ -154,17 +154,20 @@ end
 A dissipation operator on a nonperiodic finite difference grid.
 """
 struct DissipationOperator{T,CoefficientCache,Parallel,SourceOfCoefficients,Grid} <: AbstractVariableCoefficientDerivativeOperator{T}
+    factor::T
     coefficients::VarCoefDerivativeCoefficients{T,CoefficientCache,Parallel,SourceOfCoefficients}
     grid::Grid
     b::Vector{T}
 
-    function DissipationOperator(coefficients::VarCoefDerivativeCoefficients{T,CoefficientCache,Parallel,SourceOfCoefficients},
-                                grid::Grid, b::Vector{T}) where {T,CoefficientCache,Parallel,SourceOfCoefficients,Grid}
+    function DissipationOperator(factor::T, 
+                                 coefficients::VarCoefDerivativeCoefficients{T,CoefficientCache,Parallel,SourceOfCoefficients},
+                                 grid::Grid, b::Vector{T}) where {T,CoefficientCache,Parallel,SourceOfCoefficients,Grid}
         @argcheck checkbounds(Bool, grid, coefficients.coefficient_cache) DimensionMismatch
         @argcheck length(grid) == length(b)
+        factor > 0 && warn("Negative dissipation strength shouldn't be used.")
 
         new{T,CoefficientCache,Parallel,SourceOfCoefficients,Grid}(
-            coefficients, grid, b)
+            factor,coefficients, grid, b)
     end
 end
 
@@ -188,12 +191,13 @@ end
 
 Compute `α*D*u + β*dest` and store the result in `dest`.
 """
-Base.@propagate_inbounds function mul!(dest::AbstractVector, D::DissipationOperator, u::AbstractVector, α, β)
+Base.@propagate_inbounds function mul!(dest::AbstractVector, D::DissipationOperator, 
+                                       u::AbstractVector, α, β)
     @boundscheck begin
         @argcheck size(D, 2) == length(u) DimensionMismatch
         @argcheck size(D, 1) == length(dest) DimensionMismatch
     end
-    @inbounds mul!(dest, D.coefficients, u, D.b, α, β)
+    @inbounds mul!(dest, D.coefficients, u, D.b, D.factor*α, β)
 end
 
 """
@@ -201,39 +205,66 @@ end
 
 Compute `α*D*u` and store the result in `dest`.
 """
-Base.@propagate_inbounds function mul!(dest::AbstractVector, D::DissipationOperator, u::AbstractVector, α)
+Base.@propagate_inbounds function mul!(dest::AbstractVector, D::DissipationOperator, 
+                                       u::AbstractVector, α)
     @boundscheck begin
         @argcheck size(D, 2) == length(u) DimensionMismatch
         @argcheck size(D, 1) == length(dest) DimensionMismatch
     end
-    @inbounds mul!(dest, D.coefficients, u, D.b, α)
+    @inbounds mul!(dest, D.coefficients, u, D.b, D.factor*α)
 end
 
 
 """
-    dissipation_operator(source_of_coefficients, order, xmin, xmax, N, left_weights, right_weights, parallel=Val{:serial}())
+    dissipation_operator(source_of_coefficients, order, xmin, xmax, N, 
+                         left_weights, right_weights, parallel=Val{:serial}())
 
-Create a `DissipationOperator` approximating a weighted `order`-th derivative on
-a grid between `xmin` and `xmax` with `N` grid points up to order of accuracy 2
-with coefficients given by `source_of_coefficients`. The norm matrix is given by
-`left_weights` and `right_weights`.
+Create a `DissipationOperator` using undivided differences approximating a
+weighted `order`-th derivative on a grid between `xmin` and `xmax` with `N`
+grid points up to order of accuracy 2 with coefficients given by
+`source_of_coefficients`. 
+The norm matrix is given by `left_weights` and `right_weights`.
 The evaluation of the derivative can be parallised using threads by chosing
 `parallel=Val{:threads}())`.
 """
-function dissipation_operator(source_of_coefficients, order, xmin, xmax, N, left_weights, right_weights, parallel=Val{:serial}())
+function dissipation_operator(source_of_coefficients, order, xmin, xmax, N, 
+                              left_weights, right_weights, 
+                              strength=one(xmin+xmax),
+                              parallel=Val{:serial}())
     grid = construct_grid(source_of_coefficients, order, xmin, xmax, N)
     coefficients, b = dissipation_coefficients(source_of_coefficients, order, grid, left_weights, right_weights, parallel)
-    DissipationOperator(coefficients, grid, b)
+    DissipationOperator(-strength, coefficients, grid, b)
 end
 
 """
-    dissipation_operator(source_of_coefficients, D::DerivativeOperator, order::Int=accuracy_order(D), parallel=D.coefficients.parallel)
+    dissipation_operator(source_of_coefficients, D::DerivativeOperator{T};
+                         strength=one(T),
+                         order::Int=accuracy_order(D), 
+                         parallel=D.coefficients.parallel)
 
-Create a `DissipationOperator` approximating a weighted `order`-th derivative
-adapted to the derivative operator `D`.
+Create a `DissipationOperator` using undivided differences approximating a
+weighted `order`-th derivative adapted to the derivative operator `D` with
+coefficients given in `source_of_coefficients`.
 The evaluation of the derivative can be parallised using threads by chosing
 `parallel=Val{:threads}())`.
 """
-function dissipation_operator(source_of_coefficients, D::DerivativeOperator, order::Int=accuracy_order(D), parallel=D.coefficients.parallel)
-    dissipation_operator(source_of_coefficients, order, first(grid(D)), last(grid(D)), length(grid(D)), D.coefficients.left_weights, D.coefficients.right_weights, parallel)
+function dissipation_operator(source_of_coefficients, D::DerivativeOperator{T};
+                              strength=one(T),
+                              order::Int=accuracy_order(D),
+                              parallel=D.coefficients.parallel) where {T}
+    x = grid(D)
+    dissipation_operator(source_of_coefficients, order, first(x), last(x), length(x), D.coefficients.left_weights, D.coefficients.right_weights, strength, parallel)
+end
+
+"""
+    dissipation_operator(D::DerivativeOperator; kwargs...)
+
+Create a `DissipationOperator` using undivided differences approximating a
+weighted `order`-th derivative adapted to the derivative operator `D`.
+The evaluation of the derivative can be parallised using threads by chosing
+`parallel=Val{:threads}())`.
+"""
+function dissipation_operator(D::DerivativeOperator; kwargs...)
+    source = MattssonSvärdNordström2004()
+    dissipation_operator(source, D; kwargs...)
 end
