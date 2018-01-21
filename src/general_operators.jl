@@ -44,11 +44,12 @@ end
 
 function Base.full(D::AbstractDerivativeOperator{T}) where {T}
     v = Array{T}(size(D, 2))
+    fill!(v, T(0))
     A = Array{T}(size(D)...)
     for i in 1:size(D,2)
-        v .= zero(T)
-        v[i] = one(T)
+        v[i] = T(1)
         A_mul_B!(view(A,:,i), D, v)
+        v[i] = T(0)
     end
     A
 end
@@ -59,20 +60,20 @@ function Base.sparse(D::AbstractDerivativeOperator{T}) where {T}
     rowind = Vector{Int}()
     nzval = Vector{T}()
     colptr = Vector{Int}(N+1)
-    u = Array{T}(N)
-    fill!(u, zero(T))
+    v = Array{T}(N)
+    fill!(v, T(0))
     dest = Array{T}(M)
 
     for i = 1:N
-        u[i] = one(T)
-        A_mul_B!(dest, D, u)
+        v[i] = T(1)
+        A_mul_B!(dest, D, v)
         js = find(dest)
         colptr[i] = length(nzval)+1
         if length(js) > 0
             append!(rowind, js)
             append!(nzval, dest[js])
         end
-        u[i] = zero(T)
+        v[i] = T(0)
     end
     colptr[N+1] = length(nzval)+1
 
