@@ -115,3 +115,18 @@ for T in (Float32, Float64), order in (2,4,6,8)
     dest3 = Di_full*u
     @test all(i->isapprox(dest1[i], dest3[i], atol=500000*eps(T)), eachindex(u))
 end
+
+
+# Compare periodic and nonperiodic.
+for T in (Float32, Float64), order in (2,4,6,8)
+    xmin = zero(T)
+    xmax = 5*one(T)
+    N = 51
+    D = derivative_operator(MattssonSvärdNordström2004(), 1, order, xmin, xmax, N)
+    Dp = periodic_derivative_operator(1, order, xmin, xmax, N)
+
+    Di = dissipation_operator(D)
+    Dip = dissipation_operator(Dp)
+
+    @test norm(full(Di)[25:35,15:35] - full(Dip)[15:35,15:35]) < eps(T)
+end

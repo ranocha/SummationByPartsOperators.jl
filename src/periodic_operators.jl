@@ -463,7 +463,7 @@ end
 
 
 function Base.show(io::IO, D::PeriodicDerivativeOperator{T,LowerOffset,UpperOffset}) where {T,LowerOffset,UpperOffset}
-    grid = D.grid_evaluate
+    x = D.grid_evaluate
     if derivative_order(D) == 1
         print(io, "Periodic 1st derivative operator of order ")
     elseif  derivative_order(D) == 2
@@ -474,8 +474,7 @@ function Base.show(io::IO, D::PeriodicDerivativeOperator{T,LowerOffset,UpperOffs
         print(io, "Periodic ", derivative_order(D), "th derivative operator of order ")
     end
     print(io, accuracy_order(D), " {T=", T, ", Parallel=", typeof(D.coefficients.parallel), "} \n")
-    print(io, "on a grid in [", first(grid), ", ", last(grid),
-                "] using ", length(grid)-1, " nodes, \n")
+    print(io, "on a grid in [", first(x), ", ", last(x), "] using ", length(x), " nodes, \n")
     print(io, "stencils with ", LowerOffset, " nodes to the left, ", UpperOffset,
                 " nodes to the right, and coefficients from \n", source_of_coeffcients(D))
 end
@@ -626,9 +625,9 @@ function Base.show(io::IO, Di::PeriodicDissipationOperator{T}) where {T}
     else
         print(io, "SBP ", derivative_order(Di), "th derivative dissipation operator of order ")
     end
+    x = Di.Di.grid_evaluate
     print(io, accuracy_order(Di), " {T=", T, ", Parallel=", typeof(Di.Di.coefficients.parallel), "} \n")
-    print(io, "on a grid in [", first(grid(Di)), ", ", last(grid(Di)),
-                "] using ", length(grid(Di)), " nodes \n")
+    print(io, "on a grid in [", first(x), ", ", last(x), "] using ", length(x), " nodes \n")
     print(io, "and coefficients given in \n")
     print(io, source_of_coeffcients(Di))
 end
@@ -675,6 +674,6 @@ function dissipation_operator(D::PeriodicDerivativeOperator{T};
     @argcheck iseven(order) ArgumentError("Dissipation operators require even derivatives.")
     factor = strength * (-1)^(1 + order÷2) * D.Δx^order
     x = D.grid_evaluate
-    Di = periodic_derivative_operator(order, 2, first(x), last(x), length(x), parallel)
+    Di = periodic_derivative_operator(order, order, first(x), last(x), length(x), parallel)
     PeriodicDissipationOperator(factor, Di)
 end
