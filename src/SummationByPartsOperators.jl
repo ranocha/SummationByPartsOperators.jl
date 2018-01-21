@@ -70,7 +70,8 @@ export periodic_central_derivative_operator, periodic_derivative_operator, deriv
 export MattssonNordström2004, MattssonSvärdNordström2004, MattssonSvärdShoeybi2008,
        Mattsson2012, Mattsson2014,
        MattssonAlmquistCarpenter2014Extended, MattssonAlmquistCarpenter2014Optimal
-export Tadmor1989, MadayTadmor1989, Schochet1990, TadmorWaagan2012
+export Tadmor1989, MadayTadmor1989, 
+       TadmorWaagan2012Standard, TadmorWaagan2012Convergent
 
 export BurgersPeriodicSemidiscretisation, CubicPeriodicSemidiscretisation
 

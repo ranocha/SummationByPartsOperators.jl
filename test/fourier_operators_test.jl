@@ -40,7 +40,7 @@ end
 
 
 # Spectral Viscosity.
-source_SV = (Tadmor1989(), MadayTadmor1989(), Schochet1990(), TadmorWaagan2012())
+source_SV = (Tadmor1989(), MadayTadmor1989(), TadmorWaagan2012Standard(), TadmorWaagan2012Convergent())
 
 for T in (Float32, Float64), source in source_SV
     xmin = -one(T)
