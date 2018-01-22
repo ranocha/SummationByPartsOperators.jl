@@ -70,4 +70,13 @@ function Base.A_mul_B!(dest::AbstractVector{T}, D::LegendreDerivativeOperator,
 end
 
 
+function left_boundary_weight(D::LegendreDerivativeOperator)
+    @inbounds retval = D.Δx * D.basis.weights[1]
+    retval
+end
+
+function right_boundary_weight(D::LegendreDerivativeOperator)
+    @inbounds retval = D.Δx * D.basis.weights[end]
+    retval
+end
 

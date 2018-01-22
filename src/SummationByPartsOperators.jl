@@ -78,6 +78,7 @@ export MattssonNordström2004, MattssonSvärdNordström2004, MattssonSvärdShoey
 export Tadmor1989, MadayTadmor1989, Tadmor1993,
        TadmorWaagan2012Standard, TadmorWaagan2012Convergent
 
-export BurgersPeriodicSemidiscretisation, CubicPeriodicSemidiscretisation
+export BurgersPeriodicSemidiscretisation, BurgersNonperiodicSemidiscretisation, 
+       CubicPeriodicSemidiscretisation
 
 end # module
