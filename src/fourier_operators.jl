@@ -1,6 +1,6 @@
 
 """
-    FourierDerivativeOperator{T<:Real, GridCompute, GridEvaluate, RFFT, BRFFT}
+    FourierDerivativeOperator{T<:Real, Grid, RFFT, BRFFT}
 
 A derivative operator on a periodic grid with scalar type `T` computing the
 first derivative using a spectral Fourier expansion via real discrete Fourier
@@ -33,7 +33,7 @@ end
     FourierDerivativeOperator(xmin::T, xmax::T, N::Int) where {T<:Real}
 
 Construct the `FourierDerivativeOperator` on a uniform grid between `xmin` and
-`xmax` using `N` nodes and `N÷2+1` Fourier modes.
+`xmax` using `N` nodes and `N÷2+1` complex Fourier modes.
 """
 function FourierDerivativeOperator(xmin::T, xmax::T, N::Int) where {T<:Real}
     @argcheck N >= 1
