@@ -80,3 +80,6 @@ function right_boundary_weight(D::LegendreDerivativeOperator)
     retval
 end
 
+
+
+# TODO: LegendreSuperSpectralViscosity

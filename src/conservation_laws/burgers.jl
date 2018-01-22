@@ -158,7 +158,7 @@ function (disc::BurgersNonperiodicSemidiscretisation)(t, u, du)
         @. du = m1_2 * tmp1
     end
 
-    # dissipation:TODO
+    # dissipation
     A_mul_B!(tmp1, dissipation, u)
     @. du += tmp1
 
