@@ -40,7 +40,7 @@ function FourierDerivativeOperator(xmin::T, xmax::T, N::Int) where {T<:Real}
 
     jac = 2*T(π) / (xmax - xmin) / N # / N because of brfft instead of BRFFT
     Δx = (xmax - xmin) / N
-    grid_evaluate = linspace(xmin, xmax, N+1)
+    grid_evaluate = linspace(xmin, xmax, N+1) # two boundary nodes
     grid_compute = linspace(xmin, grid_evaluate[end-1], N)
     u = zero.(grid_compute)
     rfft_plan = plan_rfft(u)
@@ -363,7 +363,7 @@ function Base.show(io::IO, Di::FourierSuperSpectralViscosity{T}) where {T}
     print(io, "Super spectral viscosity operator for the periodic 1st derivative Fourier\n")
     print(io, "operator {T=", T, "} on a grid in [", first(grid), ", ", last(grid),
                 "] using ", length(Di.D.rfft_plan), " nodes and ",
-                length(Di.D.brfft_plan), " modes\n")
+                length(Di.D.brfft_plan), " complex modes\n")
     print(io, "with strength ε = ", Di.strength, ", cutoff m = ", Di.cutoff,
               "order s = ", Di.order, ", and coefficients from\n")
     print(io, Di.source_of_coefficients)
