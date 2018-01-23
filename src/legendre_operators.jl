@@ -81,15 +81,21 @@ function right_boundary_weight(D::LegendreDerivativeOperator)
 end
 
 
-function ConstantFilter(basis::LobattoLegendre{T}, filter, TmpEltype=T) where {T}
+function ConstantFilter(basis::LobattoLegendre{T}, filter, tmp::Array) where {T}
     Np1 = length(basis.nodes)
     coefficients = Array{T}(Np1)
     set_filter_coefficients!(coefficients, filter)
-    tmp = Array{TmpEltype}(Np1)
     modal2nodal = legendre_vandermonde(basis)
     nodal2modal = FactorisationWrapper(factorize(modal2nodal))
 
     ConstantFilter(coefficients, nodal2modal, modal2nodal, tmp, filter)
+end
+
+function ConstantFilter(basis::LobattoLegendre{T}, filter, TmpEltype::DataType=T) where {T}
+    Np1 = length(basis.nodes)
+    tmp = Array{TmpEltype}(Np1)
+
+    ConstantFilter(basis, filter, tmp)
 end
 
 """

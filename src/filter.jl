@@ -34,16 +34,44 @@ struct ConstantFilter{T<:Real,Nodal2Modal,Modal2Nodal,Tmp,FilterFunction} <: Abs
     filter::FilterFunction
 
     function ConstantFilter(coefficients::Vector{T}, nodal2modal::Nodal2Modal, modal2nodal::Modal2Nodal, tmp::Tmp, filter::FilterFunction) where {T<:Real,Nodal2Modal,Modal2Nodal,Tmp,FilterFunction}
-        @argcheck size(coefficients) == size(tmp)
+        @argcheck length(coefficients) == size(tmp,1)
 
         new{T,Nodal2Modal,Modal2Nodal,Tmp,FilterFunction}(coefficients, nodal2modal, modal2nodal, tmp, filter)
     end
 end
 
-function (filter::ConstantFilter)(u::AbstractVector)
-    @unpack coefficients, nodal2modal, modal2nodal, tmp = filter
+(filter::ConstantFilter)(u) = filter(u, filter.tmp)
+
+function (filter::ConstantFilter)(u::AbstractVector, tmp::AbstractVector)
+    @unpack coefficients, nodal2modal, modal2nodal = filter
     @boundscheck begin
         length(coefficients) == length(tmp)
+    end
+
+    A_mul_B!(tmp, nodal2modal, u)
+    @inbounds tmp .*= coefficients
+    A_mul_B!(u, modal2nodal, tmp)
+
+    nothing
+end
+
+function (filter::ConstantFilter)(u::AbstractMatrix, tmp::AbstractVector)
+    @boundscheck begin 
+        length(tmp) == size(u,1)
+    end
+
+    for j in Base.OneTo(size(u,2))
+        v = view(u, :, j)
+        @inbounds filter(v, tmp)
+    end
+
+    nothing
+end
+
+function (filter::ConstantFilter)(u::AbstractMatrix, tmp::AbstractMatrix)
+    @unpack coefficients, nodal2modal, modal2nodal = filter
+    @boundscheck begin 
+        size(tmp) == size(u)
     end
 
     A_mul_B!(tmp, nodal2modal, u)
