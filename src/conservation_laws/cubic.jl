@@ -166,9 +166,9 @@ function (disc::CubicNonperiodicSemidiscretisation)(t, u, du)
 
     # boundary conditions via Godunov's flux
     @inbounds fnum_left = godunov_flux_cubic(left_bc(t), u[1])
-    @inbounds du[1] += (fnum_left - u[1]^2/2) / left_boundary_weight(derivative)
+    @inbounds du[1] += (fnum_left - u[1]^3) / left_boundary_weight(derivative)
     @inbounds fnum_right = godunov_flux_cubic(u[end], right_bc(t))
-    @inbounds du[end] -= (fnum_right - u[end]^2/2) / right_boundary_weight(derivative)
+    @inbounds du[end] -= (fnum_right - u[end]^3) / right_boundary_weight(derivative)
 
     nothing
 end
