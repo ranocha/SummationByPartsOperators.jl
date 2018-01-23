@@ -43,9 +43,9 @@ include("var_coef_operators.jl")
 @require BandedMatrices begin
         include("banded_matrices.jl")
 end
+include("filter.jl")
 include("fourier_operators.jl")
 include("legendre_operators.jl")
-include("filter.jl")
 include("SBP_coefficients/MattssonNordström2004.jl")
 include("SBP_coefficients/MattssonSvärdNordström2004.jl")
 include("SBP_coefficients/MattssonSvärdShoeybi2008.jl")

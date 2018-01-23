@@ -136,6 +136,23 @@ end
 
 
 """
+    ConstantFilter(D::FourierDerivativeOperator, filter, TmpEltype=T)
+
+Create a modal filter with constant parameters adapted to the Fourier
+derivative operator `D` with parameters given by the filter function `filter`.
+"""
+function ConstantFilter(D::FourierDerivativeOperator{T}, filter) where {T}
+    Np1 = length(D.brfft_plan)
+    coefficients = Array{T}(Np1)
+    set_filter_coefficients!(coefficients, filter)
+    tmp = copy(D.tmp)
+    modal2nodal = plan_irfft(D.tmp, length(D.rfft_plan))
+    nodal2modal = D.rfft_plan
+    ConstantFilter(coefficients, nodal2modal, modal2nodal, tmp, filter)
+end
+
+
+"""
     FourierSpectralViscosity
 
 A spectral viscosity operator on a periodic grid computing the derivative using

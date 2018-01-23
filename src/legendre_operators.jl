@@ -81,5 +81,26 @@ function right_boundary_weight(D::LegendreDerivativeOperator)
 end
 
 
+function ConstantFilter(basis::LobattoLegendre{T}, filter, TmpEltype=T) where {T}
+    Np1 = length(basis.nodes)
+    coefficients = Array{T}(Np1)
+    set_filter_coefficients!(coefficients, filter)
+    tmp = Array{TmpEltype}(Np1)
+    modal2nodal = legendre_vandermonde(basis)
+    nodal2modal = FactorisationWrapper(factorize(modal2nodal))
+
+    ConstantFilter(coefficients, nodal2modal, modal2nodal, tmp, filter)
+end
+
+"""
+    ConstantFilter(D::LegendreDerivativeOperator, filter, TmpEltype=T)
+
+Create a modal filter with constant parameters adapted to the Legendre
+derivative operator `D` with parameters given by the filter function `filter`.
+"""
+function ConstantFilter(D::LegendreDerivativeOperator{T}, filter, TmpEltype=T) where {T}
+    ConstantFilter(D.basis, filter, TmpEltype)
+end
+
 
 # TODO: LegendreSuperSpectralViscosity

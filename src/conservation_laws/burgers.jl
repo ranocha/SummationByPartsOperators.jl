@@ -16,8 +16,10 @@ struct BurgersPeriodicSemidiscretisation{T,Derivative<:AbstractDerivativeOperato
     split_form::SplitForm
 
     function BurgersPeriodicSemidiscretisation(derivative::Derivative, dissipation::Dissipation, split_form::SplitForm=Val{false}()) where {T, Derivative<:AbstractDerivativeOperator{T}, Dissipation, SplitForm<:Union{Val{false}, Val{true}}}
-        @argcheck size(derivative) == size(dissipation) DimensionMismatch
-        @argcheck grid(derivative) == grid(dissipation) ArgumentError
+        if dissipation != nothing
+            @argcheck size(derivative) == size(dissipation) DimensionMismatch
+            @argcheck grid(derivative) == grid(dissipation) ArgumentError
+        end
         N = size(derivative, 2)
         tmp1 = Array{T}(N)
         tmp2 = Array{T}(N)
