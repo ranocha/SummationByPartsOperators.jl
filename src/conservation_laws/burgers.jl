@@ -7,7 +7,7 @@ A semidiscretisation of Burgers' equation
 with periodic boundary conditions.
 "
 struct BurgersPeriodicSemidiscretisation{T,Derivative<:AbstractDerivativeOperator{T},
-                                            Dissipation<:AbstractDerivativeOperator{T},
+                                            Dissipation,
                                             SplitForm<:Union{Val{false}, Val{true}}} <: AbstractSemidiscretisation
     derivative::Derivative
     dissipation::Dissipation
@@ -15,7 +15,7 @@ struct BurgersPeriodicSemidiscretisation{T,Derivative<:AbstractDerivativeOperato
     tmp2::Vector{T}
     split_form::SplitForm
 
-    function BurgersPeriodicSemidiscretisation(derivative::Derivative, dissipation::Dissipation, split_form::SplitForm=Val{false}()) where {T, Derivative<:AbstractDerivativeOperator{T}, Dissipation<:AbstractDerivativeOperator{T}, SplitForm<:Union{Val{false}, Val{true}}}
+    function BurgersPeriodicSemidiscretisation(derivative::Derivative, dissipation::Dissipation, split_form::SplitForm=Val{false}()) where {T, Derivative<:AbstractDerivativeOperator{T}, Dissipation, SplitForm<:Union{Val{false}, Val{true}}}
         @argcheck size(derivative) == size(dissipation) DimensionMismatch
         @argcheck grid(derivative) == grid(dissipation) ArgumentError
         N = size(derivative, 2)
@@ -29,7 +29,7 @@ end
 function Base.show(io::IO, semidisc::BurgersPeriodicSemidiscretisation)
     print(io, "Semidiscretisation of Burgers' equation\n")
     print(io, "  \$ \partial_t u(t,x) + \partial_x \frac{u(t,x)^2}{2} = 0 \$ \n")
-    print(io, "with periodic boundary conditions using")
+    print(io, "with periodic boundaries using")
     if semidisc.split_form == Val{true}()
         print(io, " a split form and: \n")
     else
@@ -67,8 +67,10 @@ function (disc::BurgersPeriodicSemidiscretisation)(t, u, du)
     end
 
     # dissipation
-    A_mul_B!(tmp1, dissipation, u)
-    @. du += tmp1
+    if dissipation != nothing
+        A_mul_B!(tmp1, dissipation, u)
+        @. du += tmp1
+    end
 
     nothing
 end
@@ -84,7 +86,7 @@ A semidiscretisation of Burgers' equation
 with boundary conditions `left_bc(t)`, `right_bc(t)`.
 "
 struct BurgersNonperiodicSemidiscretisation{T,Derivative<:AbstractDerivativeOperator{T},
-                                            Dissipation<:AbstractDerivativeOperator{T},
+                                            Dissipation,
                                             SplitForm<:Union{Val{false}, Val{true}},
                                             LeftBC, RightBC} <: AbstractSemidiscretisation
     derivative::Derivative
@@ -95,9 +97,11 @@ struct BurgersNonperiodicSemidiscretisation{T,Derivative<:AbstractDerivativeOper
     left_bc::LeftBC
     right_bc::RightBC
 
-    function BurgersNonperiodicSemidiscretisation(derivative::Derivative, dissipation::Dissipation, split_form::SplitForm, left_bc::LeftBC, right_bc::RightBC) where {T, Derivative<:AbstractDerivativeOperator{T}, Dissipation<:AbstractDerivativeOperator{T}, SplitForm<:Union{Val{false}, Val{true}}, LeftBC, RightBC}
-        @argcheck size(derivative) == size(dissipation) DimensionMismatch
-        @argcheck grid(derivative) == grid(dissipation) ArgumentError
+    function BurgersNonperiodicSemidiscretisation(derivative::Derivative, dissipation::Dissipation, split_form::SplitForm, left_bc::LeftBC, right_bc::RightBC) where {T, Derivative<:AbstractDerivativeOperator{T}, Dissipation, SplitForm<:Union{Val{false}, Val{true}}, LeftBC, RightBC}
+        if dissipation != nothing
+            @argcheck size(derivative) == size(dissipation) DimensionMismatch
+            @argcheck grid(derivative) == grid(dissipation) ArgumentError
+        end
         N = size(derivative, 2)
         tmp1 = Array{T}(N)
         tmp2 = Array{T}(N)
@@ -159,8 +163,10 @@ function (disc::BurgersNonperiodicSemidiscretisation)(t, u, du)
     end
 
     # dissipation
-    A_mul_B!(tmp1, dissipation, u)
-    @. du += tmp1
+    if dissipation != nothing
+        A_mul_B!(tmp1, dissipation, u)
+        @. du += tmp1
+    end
 
     # boundary conditions via Godunov's flux
     @inbounds fnum_left = godunov_flux_burgers(left_bc(t), u[1])

@@ -65,7 +65,7 @@ export PeriodicDerivativeOperator, PeriodicDissipationOperator,
        VarCoefDerivativeOperator, SourceOfCoefficients,
        FourierDerivativeOperator, FourierSpectralViscosity,
        LegendreDerivativeOperator
-export ConstantFilter,
+export FilterCallback, ConstantFilter,
        ExponentialFilter
 export derivative_order, accuracy_order, source_of_coeffcients, grid, semidiscretise
 export mass_matrix
@@ -84,6 +84,6 @@ export Tadmor1989, MadayTadmor1989, Tadmor1993,
        TadmorWaagan2012Standard, TadmorWaagan2012Convergent
 
 export BurgersPeriodicSemidiscretisation, BurgersNonperiodicSemidiscretisation, 
-       CubicPeriodicSemidiscretisation
+       CubicPeriodicSemidiscretisation, CubicNonperiodicSemidiscretisation
 
 end # module
