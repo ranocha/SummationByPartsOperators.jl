@@ -14,9 +14,10 @@ Base.eltype(fact::FactorisationWrapper) = eltype(fact.fact)
 Base.A_mul_B!(dest, fact::FactorisationWrapper, u) = A_ldiv_B!(dest, fact.fact, u)
 
 
-struct AdaptiveFilter{T<:Real} <: AbstractFilter{T}
-
-end
+#TODO
+#struct AdaptiveFilter{T<:Real} <: AbstractFilter{T}
+#
+#end
 
 
 """
