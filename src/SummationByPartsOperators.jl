@@ -13,7 +13,7 @@ using StaticArrays
 using DiffEqCallbacks
 
 import Base: *, -
-using PolynomialBases
+@reexport using PolynomialBases
 import PolynomialBases: integrate, evaluate_coefficients, evaluate_coefficients!,
                         compute_coefficients, compute_coefficients!
 
@@ -24,6 +24,8 @@ abstract type AbstractPeriodicDerivativeOperator{T} <: AbstractDerivativeOperato
 abstract type AbstractDerivativeCoefficients{T} end
 abstract type AbstractMassMatrix{T} end
 abstract type AbstractSemidiscretisation end #TODO: HyperbolicDiffEq.jl; also semidiscretise
+abstract type AbstractFilter{T<:Real} end
+abstract type AbstractFilterFunction end
 """
     SourceOfCoefficients
 
@@ -43,6 +45,7 @@ include("var_coef_operators.jl")
 end
 include("fourier_operators.jl")
 include("legendre_operators.jl")
+include("filter.jl")
 include("SBP_coefficients/MattssonNordström2004.jl")
 include("SBP_coefficients/MattssonSvärdNordström2004.jl")
 include("SBP_coefficients/MattssonSvärdShoeybi2008.jl")
@@ -62,6 +65,8 @@ export PeriodicDerivativeOperator, PeriodicDissipationOperator,
        VarCoefDerivativeOperator, SourceOfCoefficients,
        FourierDerivativeOperator, FourierSpectralViscosity,
        LegendreDerivativeOperator
+export ConstantFilter,
+       ExponentialFilter
 export derivative_order, accuracy_order, source_of_coeffcients, grid, semidiscretise
 export mass_matrix
 export mul!, integrate, derivative_left, derivative_right,
