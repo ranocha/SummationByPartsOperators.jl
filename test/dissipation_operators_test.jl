@@ -113,7 +113,7 @@ for T in (Float32, Float64), order in (2,4,6,8)
     dest3 = Di_serial*u
     @test maximum(abs, dest1 - dest3) < u[end]*N*eps(T)
     dest3 = Di_full*u
-    @test maximum(abs, dest1 - dest3) < u[end]*N*eps(T)
+    @test maximum(abs, dest1 - dest3) < 5*u[end]*N*eps(T)
 end
 
 
