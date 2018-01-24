@@ -232,6 +232,7 @@ struct SumOfDerivativeOperators{T,N,Operators<:Tuple{Vararg{AbstractDerivativeOp
 
     function SumOfDerivativeOperators(operators::Operators) where {T,N,Operators<:Tuple{Vararg{AbstractDerivativeOperator{T},N}}}
         @argcheck all(i->size(operators[i]) == size(first(operators)), eachindex(operators)) DimensionMismatch
+        @argcheck all(i->grid(operators[i]) == grid(first(operators)), eachindex(operators)) ArgumentError
         new{T,N,Operators}(operators)
     end
 end
@@ -242,7 +243,8 @@ Base.size(sum::SumOfDerivativeOperators) = size(first(sum.operators))
 Base.size(sum::SumOfDerivativeOperators, i::Int) = size(first(sum.operators), i)
 function Base.length(::Type{SumOfDerivativeOperators{T,N,Operators}}) where {T,N,Operators}
     N
-end 
+end
+grid(sum::SumOfDerivativeOperators) = grid(first(sum.operators))
 
 function Base.:+(D1::AbstractDerivativeOperator, D2::AbstractDerivativeOperator)
     SumOfDerivativeOperators(D1, D2)
