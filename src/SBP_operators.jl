@@ -417,3 +417,12 @@ function upper_bandwidth(D::DerivativeOperator)
     u
 end
 
+function left_boundary_weight(D::DerivativeOperator)
+    @inbounds retval = D.Δx * D.coefficients.left_weights[1]
+    retval
+end
+
+function right_boundary_weight(D::DerivativeOperator)
+    @inbounds retval = D.Δx * D.coefficients.right_weights[1]
+    retval
+end

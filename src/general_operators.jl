@@ -219,3 +219,88 @@ function integrate(func, u::AbstractVector, D::AbstractPeriodicDerivativeOperato
 
     Δx * res
 end
+
+
+
+"""
+    SumOfDerivativeOperators
+
+Sum several derivative operators lazily.
+"""
+struct SumOfDerivativeOperators{T,N,Operators<:Tuple{Vararg{AbstractDerivativeOperator{T},N}}} <: AbstractDerivativeOperator{T}
+    operators::Operators
+
+    function SumOfDerivativeOperators(operators::Operators) where {T,N,Operators<:Tuple{Vararg{AbstractDerivativeOperator{T},N}}}
+        @argcheck all(i->size(operators[i]) == size(first(operators)), eachindex(operators)) DimensionMismatch
+        @argcheck all(i->grid(operators[i]) == grid(first(operators)), eachindex(operators)) ArgumentError
+        new{T,N,Operators}(operators)
+    end
+end
+
+SumOfDerivativeOperators(ops...) = SumOfDerivativeOperators(ops)
+
+Base.size(sum::SumOfDerivativeOperators) = size(first(sum.operators))
+Base.size(sum::SumOfDerivativeOperators, i::Int) = size(first(sum.operators), i)
+function Base.length(::Type{SumOfDerivativeOperators{T,N,Operators}}) where {T,N,Operators}
+    N
+end
+grid(sum::SumOfDerivativeOperators) = grid(first(sum.operators))
+
+function Base.:+(D1::AbstractDerivativeOperator, D2::AbstractDerivativeOperator)
+    SumOfDerivativeOperators(D1, D2)
+end
+
+function Base.:+(sum::SumOfDerivativeOperators, D::AbstractDerivativeOperator)
+    SumOfDerivativeOperators(sum.operators..., D)
+end
+
+function Base.:+(D::AbstractDerivativeOperator, sum::SumOfDerivativeOperators)
+    SumOfDerivativeOperators(D, sum.operators...)
+end
+
+function Base.:+(sum1::SumOfDerivativeOperators, sum2::SumOfDerivativeOperators)
+    SumOfDerivativeOperators(sum1.operators..., sum2.operators...)
+end
+
+function Base.show(io::IO, sum::SumOfDerivativeOperators)
+    print(io, "Sum of operators:\n")
+    for D in sum.operators
+        print(io, D)
+    end
+end
+
+@unroll function mul!(dest::AbstractVector, sum::SumOfDerivativeOperators, u::AbstractVector,
+                      α, β)
+    @unpack operators = sum
+    @boundscheck begin
+        @argcheck size(first(operators), 2) == length(u) DimensionMismatch
+        @argcheck size(first(operators), 1) == length(dest) DimensionMismatch
+    end
+
+    @inbounds mul!(dest, operators[1], u, α, β)
+    @unroll for i in 1:length(sum)
+        if i != 1
+            @inbounds mul!(dest, operators[i], u, α, one(β))
+        end
+    end
+
+    nothing
+end
+
+@unroll function mul!(dest::AbstractVector, sum::SumOfDerivativeOperators, u::AbstractVector,
+                      α)
+    @unpack operators = sum
+    @boundscheck begin
+        @argcheck size(first(operators), 2) == length(u) DimensionMismatch
+        @argcheck size(first(operators), 1) == length(dest) DimensionMismatch
+    end
+
+    @inbounds mul!(dest, operators[1], u, α)
+    @unroll for i in 1:length(sum)
+        if i != 1
+            @inbounds mul!(dest, operators[i], u, α, one(α))
+        end
+    end
+
+    nothing
+end

@@ -21,6 +21,7 @@ function integrate(func, u, semidisc::AbstractSemidiscretisation)
 end
 
 
+
 struct ScalarIntegralQuantities{T} <: FieldVector{2,T}
     mass::T 
     energy::T
@@ -33,4 +34,13 @@ function DiffEqCallbacks.SavingCallback(semidisc::AbstractSemidiscretisation; kw
                                                 u, integrator.f)
     saved_values = SavedValues(T, ScalarIntegralQuantities{T})
     SavingCallback(save_func, saved_values; kwargs...)
+end
+
+
+
+function FilterCallback(filter::AbstractFilter)
+    condition = (t, u, integrator) -> true
+    affect!(integrator) = filter(integrator.u)
+
+    DiscreteCallback(condition, affect!, save_positions=(false,false))
 end

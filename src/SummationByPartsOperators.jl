@@ -13,6 +13,7 @@ using StaticArrays
 using DiffEqCallbacks
 
 import Base: *, -
+@reexport using PolynomialBases
 import PolynomialBases: integrate, evaluate_coefficients, evaluate_coefficients!,
                         compute_coefficients, compute_coefficients!
 
@@ -23,6 +24,8 @@ abstract type AbstractPeriodicDerivativeOperator{T} <: AbstractDerivativeOperato
 abstract type AbstractDerivativeCoefficients{T} end
 abstract type AbstractMassMatrix{T} end
 abstract type AbstractSemidiscretisation end #TODO: HyperbolicDiffEq.jl; also semidiscretise
+abstract type AbstractFilter{T<:Real} end
+abstract type AbstractFilterFunction end
 """
     SourceOfCoefficients
 
@@ -40,7 +43,9 @@ include("var_coef_operators.jl")
 @require BandedMatrices begin
         include("banded_matrices.jl")
 end
+include("filter.jl")
 include("fourier_operators.jl")
+include("legendre_operators.jl")
 include("SBP_coefficients/MattssonNordström2004.jl")
 include("SBP_coefficients/MattssonSvärdNordström2004.jl")
 include("SBP_coefficients/MattssonSvärdShoeybi2008.jl")
@@ -58,7 +63,10 @@ include("conservation_laws/cubic.jl")
 export PeriodicDerivativeOperator, PeriodicDissipationOperator, 
        DerivativeOperator, DissipationOperator,
        VarCoefDerivativeOperator, SourceOfCoefficients,
-       FourierDerivativeOperator, FourierSpectralViscosity
+       FourierDerivativeOperator, FourierConstantViscosity,
+       LegendreDerivativeOperator
+export FilterCallback, ConstantFilter,
+       ExponentialFilter
 export derivative_order, accuracy_order, source_of_coeffcients, grid, semidiscretise
 export mass_matrix
 export mul!, integrate, derivative_left, derivative_right,
@@ -66,7 +74,8 @@ export mul!, integrate, derivative_left, derivative_right,
        compute_coefficients, compute_coefficients!
 export periodic_central_derivative_operator, periodic_derivative_operator, derivative_operator,
        dissipation_operator, var_coef_derivative_operator,
-       fourier_derivative_operator, spectral_viscosity_operator, super_spectral_viscosity_operator
+       fourier_derivative_operator, spectral_viscosity_operator, super_spectral_viscosity_operator,
+       legendre_derivative_operator
 
 export MattssonNordström2004, MattssonSvärdNordström2004, MattssonSvärdShoeybi2008,
        Mattsson2012, Mattsson2014,
@@ -74,6 +83,7 @@ export MattssonNordström2004, MattssonSvärdNordström2004, MattssonSvärdShoey
 export Tadmor1989, MadayTadmor1989, Tadmor1993,
        TadmorWaagan2012Standard, TadmorWaagan2012Convergent
 
-export BurgersPeriodicSemidiscretisation, CubicPeriodicSemidiscretisation
+export BurgersPeriodicSemidiscretisation, BurgersNonperiodicSemidiscretisation, 
+       CubicPeriodicSemidiscretisation, CubicNonperiodicSemidiscretisation
 
 end # module

@@ -8,5 +8,10 @@ tic()
 @time @testset "Variable Coefficient Operators" begin include("var_coef_operators_test.jl") end
 @time @testset "Banded Matrices" begin include("banded_matrices_test.jl") end
 @time @testset "Fourier Operators" begin include("fourier_operators_test.jl") end
-
+@time @testset "Legendre Operators" begin include("legendre_operators_test.jl") end
+@time @testset "Sum of Operators" begin include("sum_of_operators_test.jl") end
+@time @testset "Conservation Laws" begin 
+    include("conservation_laws/burgers_test.jl")
+    include("conservation_laws/cubic_test.jl")
+end
 toc()

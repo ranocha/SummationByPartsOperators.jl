@@ -8,7 +8,7 @@ function accuracy_test!(res, ufunc, dufunc, D)
     maximum(abs, du-res) < 5*length(res)*eps(eltype(res))
 end
 
-# Accuracy tests.
+# Accuracy Tests
 for T in (Float32, Float64)
     xmin = -one(T)
     xmax = one(T)
@@ -39,7 +39,7 @@ for T in (Float32, Float64)
 end
 
 
-# Spectral Viscosity.
+# (Super) Spectral Viscosity
 source_SV = (Tadmor1989(), MadayTadmor1989(), TadmorWaagan2012Standard(), TadmorWaagan2012Convergent())
 source_SSV = (Tadmor1993(),)
 
@@ -52,7 +52,7 @@ for T in (Float32, Float64), source in source_SV
         println(DevNull, D)
         @test issymmetric(D) == false
 
-        Di = spectral_viscosity_operator(source, D)
+        Di = dissipation_operator(source, D)
         println(DevNull, Di)
         @test issymmetric(Di) == true
         Di_full = full(Di)
@@ -71,12 +71,32 @@ for T in (Float32, Float64), source in source_SSV
         println(DevNull, D)
         @test issymmetric(D) == false
 
-        Di = super_spectral_viscosity_operator(source, D, order)
+        Di = dissipation_operator(source, D, order=order)
         println(DevNull, Di)
         @test issymmetric(Di) == true
         Di_full = full(Di)
         @test maximum(abs, Di_full-Di_full') < 80*eps(T)
 
         @test maximum(eigvals(Symmetric(Di_full))) < 15N*eps(T)
+    end
+end
+
+
+# Modal Filtering
+for T in (Float32, Float64), filter_type in (ExponentialFilter(),)
+    xmin = -one(T)
+    xmax = one(T)
+
+    for N in 2 .^ (1:4)
+        D = fourier_derivative_operator(xmin, xmax, N)
+        filter! = ConstantFilter(D, filter_type)
+        u = compute_coefficients(zero, D)
+        res = D*u
+        for k in 1:N-1
+            compute_coefficients!(u, x->exp(sinpi(x)), D)
+            norm2_u = integrate(u->u^2, u, D)
+            filter!(u)
+            @test integrate(u->u^2, u, D) <= norm2_u
+        end
     end
 end
