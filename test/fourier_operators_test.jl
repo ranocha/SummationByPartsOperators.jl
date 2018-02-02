@@ -52,7 +52,7 @@ for T in (Float32, Float64), source in source_SV
         println(DevNull, D)
         @test issymmetric(D) == false
 
-        Di = spectral_viscosity_operator(source, D)
+        Di = dissipation_operator(source, D)
         println(DevNull, Di)
         @test issymmetric(Di) == true
         Di_full = full(Di)
@@ -71,7 +71,7 @@ for T in (Float32, Float64), source in source_SSV
         println(DevNull, D)
         @test issymmetric(D) == false
 
-        Di = super_spectral_viscosity_operator(source, D, order)
+        Di = dissipation_operator(source, D, order=order)
         println(DevNull, Di)
         @test issymmetric(Di) == true
         Di_full = full(Di)
