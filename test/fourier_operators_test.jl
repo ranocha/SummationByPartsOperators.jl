@@ -80,3 +80,23 @@ for T in (Float32, Float64), source in source_SSV
         @test maximum(eigvals(Symmetric(Di_full))) < 15N*eps(T)
     end
 end
+
+
+# Modal Filtering
+for T in (Float32, Float64), filter_type in (ExponentialFilter(),)
+    xmin = -one(T)
+    xmax = one(T)
+
+    for N in 2 .^ (1:4)
+        D = fourier_derivative_operator(xmin, xmax, N)
+        filter! = ConstantFilter(D, filter_type)
+        u = compute_coefficients(zero, D)
+        res = D*u
+        for k in 1:N-1
+            compute_coefficients!(u, x->exp(sinpi(x)), D)
+            norm2_u = integrate(u->u^2, u, D)
+            filter!(u)
+            @test integrate(u->u^2, u, D) <= norm2_u
+        end
+    end
+end
