@@ -107,6 +107,24 @@ end
 
 
 
+"""
+    ConstantFilter(D::FourierDerivativeOperator, filter, TmpEltype=T)
+
+Create a modal filter with constant parameters adapted to the Fourier
+derivative operator `D` with parameters given by the filter function `filter`.
+"""
+function ConstantFilter(D::FourierDerivativeOperator{T}, filter) where {T}
+    Np1 = length(D.brfft_plan)
+    coefficients = Array{T}(Np1)
+    set_filter_coefficients!(coefficients, filter)
+    tmp = copy(D.tmp)
+    modal2nodal = plan_irfft(D.tmp, length(D.rfft_plan))
+    nodal2modal = D.rfft_plan
+    ConstantFilter(coefficients, nodal2modal, modal2nodal, tmp, filter)
+end
+
+
+
 abstract type AbstractFourierViscosity{T} <: AbstractDerivativeOperator{T} end
 
 @inline source_of_coefficients(Di::AbstractFourierViscosity) = (Di.source_of_coefficients)
@@ -132,23 +150,6 @@ function Base.A_mul_B!(dest::AbstractVector{T}, Di::AbstractFourierViscosity{T},
     A_mul_B!(dest, brfft_plan, tmp)
 
     nothing
-end
-
-
-"""
-    ConstantFilter(D::FourierDerivativeOperator, filter, TmpEltype=T)
-
-Create a modal filter with constant parameters adapted to the Fourier
-derivative operator `D` with parameters given by the filter function `filter`.
-"""
-function ConstantFilter(D::FourierDerivativeOperator{T}, filter) where {T}
-    Np1 = length(D.brfft_plan)
-    coefficients = Array{T}(Np1)
-    set_filter_coefficients!(coefficients, filter)
-    tmp = copy(D.tmp)
-    modal2nodal = plan_irfft(D.tmp, length(D.rfft_plan))
-    nodal2modal = D.rfft_plan
-    ConstantFilter(coefficients, nodal2modal, modal2nodal, tmp, filter)
 end
 
 
@@ -191,60 +192,6 @@ function dissipation_operator(source_of_coefficients, D::FourierDerivativeOperat
 end
 
 
-
-
-"""
-    FourierSpectralViscosity
-
-A spectral viscosity operator on a periodic grid computing the derivative using
-a spectral Fourier expansion via real discrete Fourier transforms.
-"""
-struct FourierSpectralViscosity{T<:Real, Grid, RFFT, BRFFT, SourceOfCoefficients} <: AbstractFourierViscosity{T}
-    strength::T
-    cutoff::Int
-    coefficients::Vector{T}
-    D::FourierDerivativeOperator{T,Grid,RFFT,BRFFT}
-    source_of_coefficients::SourceOfCoefficients
-
-    function FourierSpectralViscosity(source_of_coefficients::SourceOfCoefficients, 
-                                        strength::T, cutoff::Int,
-                                        D::FourierDerivativeOperator{T,Grid,RFFT,BRFFT}) where {T<:Real, Grid, RFFT, BRFFT, SourceOfCoefficients}
-        # precompute coefficients
-        N = size(D, 1)
-        jac = (N * D.jac)^2 / N # ^2: 2nd derivative; # *N / N: brfft instead of irfft
-        cutoff = max(1, cutoff+1) # +1 because of 1 based indexing in Julia
-        coefficients = Array{T}(length(D.brfft_plan))
-        set_filter_coefficients!(coefficients, source_of_coefficients, jac, strength, cutoff)
-        new{T, Grid, RFFT, BRFFT, SourceOfCoefficients}(strength, cutoff, coefficients, D, source_of_coefficients)
-    end
-end
-
-"""
-    spectral_viscosity_operator(source, D::FourierDerivativeOperator, 
-                                strength=1/size(D,2), cutoff=sqrt(size(D,2)))
-
-Construct the spectral viscosity operator for the Fourier derivative operator
-`D` given in `source` with parameters `strength`, `cutoff`.
-"""
-function spectral_viscosity_operator(source,
-                                     D::FourierDerivativeOperator{T},
-                                     strength=T(1)/size(D,2),
-                                     cutoff=round(Int, sqrt(size(D,2)))) where {T}
-    FourierSpectralViscosity(source, strength, cutoff, D)
-end
-
-function Base.show(io::IO, Di::FourierSpectralViscosity{T}) where {T}
-    grid = Di.D.grid_evaluate
-    print(io, "Spectral viscosity operator for the periodic 1st derivative Fourier operator\n")
-    print(io, "{T=", T, "} on a grid in [", first(grid), ", ", last(grid),
-                "] using ", length(Di.D.rfft_plan), " nodes and ",
-                length(Di.D.brfft_plan), " modes\n")
-    print(io, "with strength ε = ", Di.strength, ", cutoff m = ", Di.cutoff, ", and coefficients from\n")
-    print(io, Di.source_of_coefficients)
-end
-
-
-
 """
     Tadmor1989
 
@@ -269,16 +216,6 @@ function set_filter_coefficients!(coefficients::AbstractVector{T},
     @argcheck cutoff >= 1
     fill!(coefficients, zero(T))
     jac = jac^2 / N # ^2: 2nd derivative; /N: brfft instead of irfft
-    @inbounds @simd for j in cutoff:length(coefficients)
-        coefficients[j] = -strength * (j-1)^2 * jac
-    end
-end
-
-function set_filter_coefficients!(coefficients::AbstractVector{T},
-                                    source::Tadmor1989,
-                                    jac::T, strength::T, cutoff::Int) where {T<:Real}
-    @argcheck cutoff >= 1
-    fill!(coefficients, zero(T))
     @inbounds @simd for j in cutoff:length(coefficients)
         coefficients[j] = -strength * (j-1)^2 * jac
     end
@@ -319,19 +256,6 @@ function set_filter_coefficients!(coefficients::AbstractVector{T},
     end
 end
 
-function set_filter_coefficients!(coefficients::AbstractVector{T},
-                                    source::MadayTadmor1989,
-                                    jac::T, strength::T, cutoff::Int) where {T<:Real}
-    @argcheck cutoff >= 1
-    fill!(coefficients, zero(T))
-    @inbounds @simd for j in cutoff:min(2cutoff,length(coefficients))
-        coefficients[j] = -strength * (j-1)^2 * jac * (j-cutoff)/cutoff
-    end
-    @inbounds @simd for j in 2cutoff:length(coefficients)
-        coefficients[j] = -strength * (j-1)^2 * jac
-    end
-end
-
 
 """
     TadmorWaagan2012Standard
@@ -357,16 +281,6 @@ function set_filter_coefficients!(coefficients::AbstractVector{T},
     @argcheck cutoff >= 1
     fill!(coefficients, zero(T))
     jac = jac^2 / N # ^2: 2nd derivative; /N: brfft instead of irfft
-    @inbounds @simd for j in cutoff+1:length(coefficients)
-        coefficients[j] = -strength * (j-1)^2 * jac * exp(-((length(coefficients)-j)/(j-cutoff))^2)
-    end
-end
-
-function set_filter_coefficients!(coefficients::AbstractVector{T},
-                                    source::TadmorWaagan2012Standard,
-                                    jac::T, strength::T, cutoff::Int) where {T<:Real}
-    @argcheck cutoff >= 1
-    fill!(coefficients, zero(T))
     @inbounds @simd for j in cutoff+1:length(coefficients)
         coefficients[j] = -strength * (j-1)^2 * jac * exp(-((length(coefficients)-j)/(j-cutoff))^2)
     end
@@ -410,19 +324,6 @@ function set_filter_coefficients!(coefficients::AbstractVector{T},
     end
 end
 
-function set_filter_coefficients!(coefficients::AbstractVector{T},
-                                  source::TadmorWaagan2012Convergent,
-                                  jac::T, strength::T, cutoff::Int) where {T<:Real}
-    @argcheck cutoff >= 1
-    fill!(coefficients, zero(T))
-    @inbounds @simd for j in cutoff:min(2cutoff,length(coefficients))
-        coefficients[j] = -strength * (j-1)^2 * jac * exp(-((2cutoff-j)/(j-cutoff))^2)
-    end
-    @inbounds @simd for j in 2cutoff:length(coefficients)
-        coefficients[j] = -strength * (j-1)^2 * jac
-    end
-end
-
 
 const FourierSpectralViscosityCoefficients = Union{Tadmor1989,MadayTadmor1989,TadmorWaagan2012Standard,TadmorWaagan2012Convergent}
 
@@ -434,64 +335,6 @@ function get_parameters(source_of_coefficients::FourierSpectralViscosityCoeffici
     @argcheck cutoff >= 1
 
     Dict(:strength=>strength, :cutoff=>cutoff)
-end
-
-
-"""
-    FourierSuperSpectralViscosity
-
-A super spectral viscosity operator on a periodic grid computing the derivative
-using a spectral Fourier expansion via real discrete Fourier transforms.
-"""
-struct FourierSuperSpectralViscosity{T<:Real, Grid, RFFT, BRFFT, SourceOfCoefficients} <: AbstractFourierViscosity{T}
-    strength::T
-    cutoff::Int
-    order::Int
-    coefficients::Vector{T}
-    D::FourierDerivativeOperator{T,Grid,RFFT,BRFFT}
-    source_of_coefficients::SourceOfCoefficients
-
-    function FourierSuperSpectralViscosity(source_of_coefficients::SourceOfCoefficients, 
-                                        strength::T, cutoff::Int, order::Int,
-                                        D::FourierDerivativeOperator{T,Grid,RFFT,BRFFT}) where {T<:Real, Grid, RFFT, BRFFT, SourceOfCoefficients}
-        # precompute coefficients
-        @argcheck order >= 1
-
-        N = size(D, 1)
-        jac = (N * D.jac)^2order / N # ^2order: order-th derivative; # *N / N: brfft instead of irfft
-        cutoff = max(1, cutoff+1) # +1 because of 1 based indexing in Julia
-        coefficients = Array{T}(length(D.brfft_plan))
-        set_filter_coefficients!(coefficients, source_of_coefficients, jac, strength, cutoff, order)
-        new{T, Grid, RFFT, BRFFT, SourceOfCoefficients}(strength, cutoff, order, coefficients, D, source_of_coefficients)
-    end
-end
-
-"""
-    super_spectral_viscosity_operator(source, D::FourierDerivativeOperator, 
-                                      order=1, 
-                                      strength=1/size(D,2), 
-                                      cutoff=sqrt(size(D,2)))
-
-Construct the super spectral viscosity operator for the Fourier derivative
-operator `D` given in `source` with parameters `order`, `strength`, `cutoff`.
-"""
-function super_spectral_viscosity_operator(source,
-                                           D::FourierDerivativeOperator{T},
-                                           order::Int=1,
-                                           strength=T(1)/size(D,2)^(2order-1),
-                                           cutoff::Int=round(Int, size(D,2)^(1-1/2order))) where {T}
-    FourierSuperSpectralViscosity(source, strength, cutoff, order, D)
-end
-
-function Base.show(io::IO, Di::FourierSuperSpectralViscosity{T}) where {T}
-    grid = Di.D.grid_evaluate
-    print(io, "Super spectral viscosity operator for the periodic 1st derivative Fourier\n")
-    print(io, "operator {T=", T, "} on a grid in [", first(grid), ", ", last(grid),
-                "] using ", length(Di.D.rfft_plan), " nodes and ",
-                length(Di.D.brfft_plan), " complex modes\n")
-    print(io, "with strength ε = ", Di.strength, ", cutoff m = ", Di.cutoff,
-              "order s = ", Di.order, ", and coefficients from\n")
-    print(io, Di.source_of_coefficients)
 end
 
 
@@ -520,17 +363,6 @@ function set_filter_coefficients!(coefficients::AbstractVector{T},
     @argcheck cutoff >= 1
     fill!(coefficients, zero(T))
     jac = jac^2order / N # ^2order: order-th derivative; /N: brfft instead of irfft
-    @inbounds @simd for j in cutoff:length(coefficients)
-        coefficients[j] = -strength * (j-1)^2order * jac * (1 - (cutoff/j)^2order)
-    end
-end
-
-function set_filter_coefficients!(coefficients::AbstractVector{T},
-                                    source::Tadmor1993,
-                                    jac::T, strength::T, cutoff::Int, order::Int) where {T<:Real}
-    @argcheck cutoff >= 1
-    @argcheck order >= 1
-    fill!(coefficients, zero(T))
     @inbounds @simd for j in cutoff:length(coefficients)
         coefficients[j] = -strength * (j-1)^2order * jac * (1 - (cutoff/j)^2order)
     end
