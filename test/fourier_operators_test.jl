@@ -8,7 +8,7 @@ function accuracy_test!(res, ufunc, dufunc, D)
     maximum(abs, du-res) < 5*length(res)*eps(eltype(res))
 end
 
-# Accuracy tests.
+# Accuracy Tests
 for T in (Float32, Float64)
     xmin = -one(T)
     xmax = one(T)
@@ -39,7 +39,7 @@ for T in (Float32, Float64)
 end
 
 
-# Spectral Viscosity.
+# (Super) Spectral Viscosity
 source_SV = (Tadmor1989(), MadayTadmor1989(), TadmorWaagan2012Standard(), TadmorWaagan2012Convergent())
 source_SSV = (Tadmor1993(),)
 
