@@ -63,7 +63,7 @@ include("conservation_laws/cubic.jl")
 export PeriodicDerivativeOperator, PeriodicDissipationOperator, 
        DerivativeOperator, DissipationOperator,
        VarCoefDerivativeOperator, SourceOfCoefficients,
-       FourierDerivativeOperator, FourierSpectralViscosity,
+       FourierDerivativeOperator, FourierConstantViscosity,
        LegendreDerivativeOperator
 export FilterCallback, ConstantFilter,
        ExponentialFilter
