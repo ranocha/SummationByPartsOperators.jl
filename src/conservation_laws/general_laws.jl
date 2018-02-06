@@ -30,7 +30,7 @@ end
 function DiffEqCallbacks.SavingCallback(semidisc::AbstractSemidiscretisation; kwargs...)
     T = eltype(semidisc.derivative)
 
-    save_func = (t,u,integrator) -> integrate(u->ScalarIntegralQuantities(u,u^2),
+    save_func = (u,t,integrator) -> integrate(u->ScalarIntegralQuantities(u,u^2),
                                                 u, integrator.f)
     saved_values = SavedValues(T, ScalarIntegralQuantities{T})
     SavingCallback(save_func, saved_values; kwargs...)
