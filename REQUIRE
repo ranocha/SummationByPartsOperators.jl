@@ -8,5 +8,5 @@ Parameters
 StaticArrays
 PolynomialBases
 
-DiffEqBase
+DiffEqBase 3.0.4
 DiffEqCallbacks

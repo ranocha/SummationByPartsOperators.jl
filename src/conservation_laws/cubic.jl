@@ -42,7 +42,7 @@ function Base.show(io::IO, semidisc::CubicPeriodicSemidiscretisation)
 end
 
 
-function (disc::CubicPeriodicSemidiscretisation)(t, u, du)
+function (disc::CubicPeriodicSemidiscretisation)(du, u, p, t)
     @unpack tmp1, tmp2, derivative, dissipation, split_form = disc
     @boundscheck begin
         @argcheck length(u) == length(tmp1)
@@ -131,7 +131,7 @@ function godunov_flux_cubic(uₗ::T, uᵣ::T) where {T<:Real}
     uₗ^3
 end
 
-function (disc::CubicNonperiodicSemidiscretisation)(t, u, du)
+function (disc::CubicNonperiodicSemidiscretisation)(du, u, p, t)
     @unpack tmp1, tmp2, derivative, dissipation, split_form, left_bc, right_bc = disc
     @boundscheck begin
         @argcheck length(u) == length(tmp1)

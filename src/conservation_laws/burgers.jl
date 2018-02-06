@@ -42,7 +42,7 @@ function Base.show(io::IO, semidisc::BurgersPeriodicSemidiscretisation)
 end
 
 
-function (disc::BurgersPeriodicSemidiscretisation)(t, u, du)
+function (disc::BurgersPeriodicSemidiscretisation)(du, u, p, t)
     @unpack tmp1, tmp2, derivative, dissipation, split_form = disc
     @boundscheck begin
         @argcheck length(u) == length(tmp1)
@@ -138,7 +138,7 @@ function godunov_flux_burgers(uₗ::T, uᵣ::T) where {T<:Real}
     end
 end
 
-function (disc::BurgersNonperiodicSemidiscretisation)(t, u, du)
+function (disc::BurgersNonperiodicSemidiscretisation)(du, u, p, t)
     @unpack tmp1, tmp2, derivative, dissipation, split_form, left_bc, right_bc = disc
     @boundscheck begin
         @argcheck length(u) == length(tmp1)

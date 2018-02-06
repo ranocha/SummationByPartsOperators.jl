@@ -13,7 +13,7 @@ for T in (Float32, Float64), split_form in (Val{true}(), Val{false}())
         semidisc = BurgersPeriodicSemidiscretisation(D, Di, split_form)
         ode = semidiscretise(u0func, semidisc, tspan)
         du = similar(ode.u0)
-        semidisc(first(tspan), ode.u0, du)
+        semidisc(du, ode.u0, nothing, first(tspan))
     end
 
     # Periodic FD
@@ -23,7 +23,7 @@ for T in (Float32, Float64), split_form in (Val{true}(), Val{false}())
         semidisc = BurgersPeriodicSemidiscretisation(D, Di, split_form)
         ode = semidiscretise(u0func, semidisc, tspan)
         du = similar(ode.u0)
-        semidisc(first(tspan), ode.u0, du)
+        semidisc(du, ode.u0, nothing, first(tspan))
     end
 
     # Legendre
@@ -32,7 +32,7 @@ for T in (Float32, Float64), split_form in (Val{true}(), Val{false}())
         semidisc = BurgersNonperiodicSemidiscretisation(D, Di, split_form, zero, zero)
         ode = semidiscretise(u0func, semidisc, tspan)
         du = similar(ode.u0)
-        semidisc(first(tspan), ode.u0, du)
+        semidisc(du, ode.u0, nothing, first(tspan))
     end
 
     # SBP FD
@@ -42,6 +42,6 @@ for T in (Float32, Float64), split_form in (Val{true}(), Val{false}())
         semidisc = BurgersNonperiodicSemidiscretisation(D, Di, split_form, zero, zero)
         ode = semidiscretise(u0func, semidisc, tspan)
         du = similar(ode.u0)
-        semidisc(first(tspan), ode.u0, du)
+        semidisc(du, ode.u0, nothing, first(tspan))
     end
 end
