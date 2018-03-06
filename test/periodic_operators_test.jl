@@ -654,3 +654,137 @@ let T = Float64
     xplot, duplot = evaluate_coefficients(res, D)
     @test maximum(abs, duplot-dufunc.(xplot)) < tol
 end
+
+
+# Robust methods of Holoborodko
+let T = Float32
+    xmin = one(T)
+    xmax = 2*one(T)
+    N = 100
+    x1 = compute_coefficients(identity, periodic_derivative_operator(1, 2, xmin, xmax, N))
+
+    x0 = ones(x1)
+    x2 = x1 .* x1
+    x3 = x2 .* x1
+    x4 = x2 .* x2
+    x5 = x2 .* x3
+    x6 = x3 .* x3
+    x7 = x4 .* x3
+
+    res = zeros(x0)
+
+    # first derivative operators
+    der_order = 1
+    acc_order = 2
+    for stencil_width in 5:2:11
+        D = periodic_derivative_operator(Holoborodko2008(), der_order, acc_order,
+                                         xmin, xmax, N, stencil_width=stencil_width)
+        println(DevNull, D)
+        @test derivative_order(D) == der_order
+        @test accuracy_order(D) == acc_order
+        @test issymmetric(D) == false
+        A_mul_B!(res, D, x0)
+        @test all(i->abs(res[i]) < eps(T), stencil_width:length(res)-stencil_width)
+        A_mul_B!(res, D, x1)
+        @test all(i->res[i] ≈ x0[i], stencil_width:length(res)-stencil_width)
+        A_mul_B!(res, D, x2)
+        @test all(i->res[i] ≈ 2*x1[i], stencil_width:length(res)-stencil_width)
+    end
+    @test_throws ArgumentError D = periodic_derivative_operator(Holoborodko2008(), der_order, acc_order,
+                                         xmin, xmax, N, stencil_width=3)
+    @test_throws ArgumentError D = periodic_derivative_operator(Holoborodko2008(), der_order, acc_order,
+                                         xmin, xmax, N, stencil_width=13)
+
+    acc_order = 4
+    for stencil_width in 7:2:11
+        D = periodic_derivative_operator(Holoborodko2008(), der_order, acc_order,
+                                         xmin, xmax, N, stencil_width=stencil_width)
+        println(DevNull, D)
+        @test derivative_order(D) == der_order
+        @test accuracy_order(D) == acc_order
+        @test issymmetric(D) == false
+        A_mul_B!(res, D, x0)
+        @test all(i->abs(res[i]) < 50*eps(T),  stencil_width:length(res)-stencil_width)
+        A_mul_B!(res, D, x1)
+        @test all(i->res[i] ≈ x0[i],  stencil_width:length(res)-stencil_width)
+        A_mul_B!(res, D, x2)
+        @test all(i->res[i] ≈ 2*x1[i],  stencil_width:length(res)-stencil_width)
+        A_mul_B!(res, D, x3)
+        @test all(i->res[i] ≈ 3*x2[i],  stencil_width:length(res)-stencil_width)
+        A_mul_B!(res, D, x4)
+        @test all(i->res[i] ≈ 4*x3[i],  stencil_width:length(res)-stencil_width)
+    end
+    @test_throws ArgumentError D = periodic_derivative_operator(Holoborodko2008(), der_order, acc_order,
+                                         xmin, xmax, N, stencil_width=5)
+    @test_throws ArgumentError D = periodic_derivative_operator(Holoborodko2008(), der_order, acc_order,
+                                         xmin, xmax, N, stencil_width=13)
+    
+    acc_order = 6
+    @test_throws ArgumentError D = periodic_derivative_operator(Holoborodko2008(), der_order, acc_order,
+                                         xmin, xmax, N, stencil_width=9)
+    @test_throws ArgumentError D = periodic_derivative_operator(Holoborodko2008(), der_order, acc_order,
+                                         xmin, xmax, N, stencil_width=13)
+
+    # second derivative operators
+    der_order = 2
+    acc_order = 2
+    for stencil_width in 5:2:9
+        D = periodic_derivative_operator(Holoborodko2008(), der_order, acc_order,
+                                         xmin, xmax, N, stencil_width=stencil_width)
+        println(DevNull, D)
+        @test derivative_order(D) == der_order
+        @test accuracy_order(D) == acc_order
+        @test issymmetric(D) == true
+        A_mul_B!(res, D, x0)
+        @test all(i->abs(res[i]) < eps(T),  stencil_width:length(res)-stencil_width)
+        A_mul_B!(res, D, x1)
+        @test all(i->abs(res[i]) < 100N*eps(T),  stencil_width:length(res)-stencil_width)
+        A_mul_B!(res, D, x2)
+        @test all(i->isapprox(res[i], 2*x0[i], atol=600N*eps(T)),  stencil_width:length(res)-stencil_width)
+        A_mul_B!(res, D, x3)
+        @test all(i->isapprox(res[i], 6*x1[i], atol=2000N*eps(T)),  stencil_width:length(res)-stencil_width)
+    end
+    @test_throws ArgumentError D = periodic_derivative_operator(Holoborodko2008(), der_order, acc_order,
+                                         xmin, xmax, N, stencil_width=3)
+    @test_throws ArgumentError D = periodic_derivative_operator(Holoborodko2008(), der_order, acc_order,
+                                         xmin, xmax, N, stencil_width=11)
+
+    acc_order = 4
+    for stencil_width in 7:2:9
+        D = periodic_derivative_operator(Holoborodko2008(), der_order, acc_order,
+                                         xmin, xmax, N, stencil_width=stencil_width)
+        println(DevNull, D)
+        @test derivative_order(D) == der_order
+        @test accuracy_order(D) == acc_order
+        @test issymmetric(D) == true
+        A_mul_B!(res, D, x0)
+        @test all(i->abs(res[i]) < 50N*eps(T),  stencil_width:length(res)-stencil_width)
+        A_mul_B!(res, D, x1)
+        @test all(i->abs(res[i]) < 1000N*eps(T),  stencil_width:length(res)-stencil_width)
+        A_mul_B!(res, D, x2)
+        @test all(i->isapprox(res[i], 2*x0[i], atol=5000N*eps(T)),  stencil_width:length(res)-stencil_width)
+        A_mul_B!(res, D, x3)
+        @test all(i->isapprox(res[i], 6*x1[i], atol=5000N*eps(T)),  stencil_width:length(res)-stencil_width)
+        A_mul_B!(res, D, x4)
+        @test all(i->isapprox(res[i], 12*x2[i], atol=7000N*eps(T)),  stencil_width:length(res)-stencil_width)
+        A_mul_B!(res, D, x5)
+        @test any(i->!(res[i] ≈ 30*x3[i]),  stencil_width:length(res)-stencil_width)
+    end
+    @test_throws ArgumentError D = periodic_derivative_operator(Holoborodko2008(), der_order, acc_order,
+                                         xmin, xmax, N, stencil_width=5)
+    @test_throws ArgumentError D = periodic_derivative_operator(Holoborodko2008(), der_order, acc_order,
+                                         xmin, xmax, N, stencil_width=11)
+    
+    acc_order = 6
+    @test_throws ArgumentError D = periodic_derivative_operator(Holoborodko2008(), der_order, acc_order,
+                                         xmin, xmax, N, stencil_width=9)
+    @test_throws ArgumentError D = periodic_derivative_operator(Holoborodko2008(), der_order, acc_order,
+                                         xmin, xmax, N, stencil_width=13)
+    
+    der_order = 3
+    acc_order = 2
+    @test_throws ArgumentError D = periodic_derivative_operator(Holoborodko2008(), der_order, acc_order,
+                                         xmin, xmax, N, stencil_width=5)
+    @test_throws ArgumentError D = periodic_derivative_operator(Holoborodko2008(), der_order, acc_order,
+                                         xmin, xmax, N, stencil_width=13)
+end
