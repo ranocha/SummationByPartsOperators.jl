@@ -703,7 +703,7 @@ determined by `left_offset`.
 The evaluation of the derivative can be parallised using threads by chosing
 `parallel=Val{:threads}())`.
 """
-function periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N, left_offset::Int=-(accuracy_order+1)÷2,
+function periodic_derivative_operator(derivative_order::Int, accuracy_order, xmin, xmax, N, left_offset::Int=-(accuracy_order+1)÷2,
                                       parallel::Union{Val{:serial},Val{:threads}}=Val{:serial}())
     grid = linspace(xmin, xmax, N) # N includes two identical boundary nodes
     coefficients = periodic_derivative_coefficients(derivative_order, accuracy_order, left_offset, eltype(grid), parallel)
