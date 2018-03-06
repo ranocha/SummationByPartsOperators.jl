@@ -436,6 +436,146 @@ function periodic_derivative_coefficients(derivative_order, accuracy_order, left
 end
 
 
+
+"""
+    Holoborodko2008
+
+Coefficients of the periodic operators given in
+  Holoborodko (2008)
+  Smooth Noise Robust Differentiators.
+  http://www.holoborodko.com/pavel/numerical-methods/numerical-derivative/smooth-low-noise-differentiators/
+"""
+struct Holoborodko2008 <: SourceOfCoefficients end
+
+function Base.show(io::IO, ::Holoborodko2008)
+    print(io,
+        "  Holoborodko (2008) \n",
+        "  Smooth Noise Robust Differentiators. \n",
+        "  http://www.holoborodko.com/pavel/numerical-methods/numerical-derivative/smooth-low-noise-differentiators/ \n")
+end
+
+"""
+    periodic_derivative_coefficients(source::Holoborodko2008, derivative_order, accuracy_order;
+                                     T=Float64, parallel=Val{:serial}(), 
+                                     stencil_width=accuracy_order+3)
+
+Create the `PeriodicDerivativeCoefficients` approximating the `derivative_order`-th
+derivative with an order of accuracy `accuracy_order` and scalar type `T` given
+by Holoborodko2008.
+The evaluation of the derivative can be parallised using threads by chosing
+parallel=Val{:threads}())`.
+"""
+function periodic_derivative_coefficients(source::Holoborodko2008, derivative_order, accuracy_order;
+                                          T=Float64, parallel=Val{:serial}(), 
+                                          stencil_width=accuracy_order+3)
+    method_exists = true
+    if derivative_order == 1
+        if accuracy_order == 2
+            if stencil_width == 5
+                lower_coef = SVector{2, T}([
+                    -2//8, -1//8
+                ])
+                upper_coef = -lower_coef
+                central_coef = T(0)
+            elseif stencil_width == 7
+                lower_coef = SVector{3, T}([
+                    -5//32, -4//32, -1//32
+                ])
+                upper_coef = -lower_coef
+                central_coef = T(0)
+            elseif stencil_width == 9
+                lower_coef = SVector{4, T}([
+                    -14//128, -14//128, -6//128, -1//128
+                ])
+                upper_coef = -lower_coef
+                central_coef = T(0)
+            elseif stencil_width == 11
+                lower_coef = SVector{5, T}([
+                    -42//512, -48//512, -27//512, -8//512, -1//512
+                ])
+                upper_coef = -lower_coef
+                central_coef = T(0)
+            else
+                method_exists = false
+            end
+        elseif accuracy_order == 4
+            if stencil_width == 7
+                lower_coef = SVector{3, T}([
+                    -39//96, -12//96, 5//96
+                ])
+                upper_coef = -lower_coef
+                central_coef = T(0)
+            elseif stencil_width == 9
+                lower_coef = SVector{4, T}([
+                    -27//96, -16//96, 1//96, 2//96
+                ])
+                upper_coef = -lower_coef
+                central_coef = T(0)
+            elseif stencil_width == 11
+                lower_coef = SVector{5, T}([
+                    -322//1536, -256//1536, -39//1536, 32//1536, 11//1536
+                ])
+                upper_coef = -lower_coef
+                central_coef = T(0)
+            else
+                method_exists = false
+            end
+        else
+            method_exists = false
+        end
+    elseif derivative_order == 2
+        if accuracy_order == 2
+            if stencil_width == 5
+                lower_coef = SVector{2, T}([
+                    0, 1//4
+                ])
+                upper_coef = lower_coef
+                central_coef = T(-2//4)
+            elseif stencil_width == 7
+                lower_coef = SVector{3, T}([
+                    -1//16, 2//16, 1//16
+                ])
+                upper_coef = lower_coef
+                central_coef = T(-4//16)
+            elseif stencil_width == 9
+                lower_coef = SVector{4, T}([
+                    -4//64, 4//64, 4//64, 1//64
+                ])
+                upper_coef = lower_coef
+                central_coef = T(-10//64)
+            else
+                method_exists = false
+            end
+        elseif accuracy_order == 4
+            if stencil_width == 7
+                lower_coef = SVector{3, T}([
+                    1//12, 5//12, -1//12
+                ])
+                upper_coef = lower_coef
+                central_coef = T(-10//12)
+            elseif stencil_width == 9
+                lower_coef = SVector{4, T}([
+                    -12//192, 52//192, 12//192, -7//192
+                ])
+                upper_coef = lower_coef
+                central_coef = T(-90//192)
+            else
+                method_exists = false
+            end
+        else
+            method_exists = false
+        end
+    else
+        method_exists = false
+    end
+    if method_exists == false
+        throw(ArgumentError("Method with derivative_order=$derivative_order, accuracy_order=$accuracy_order, stencil_width=$stencil_width not implemented/derived."))
+    end
+
+    PeriodicDerivativeCoefficients(lower_coef, central_coef, upper_coef, parallel, derivative_order, accuracy_order, source)
+end
+
+
 """
     PeriodicDerivativeOperator
 
@@ -573,6 +713,25 @@ end
 @inline function periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N,
                                               parallel::Union{Val{:serial},Val{:threads}}, left_offset::Int=-(accuracy_order+1)÷2)
     periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N, left_offset, parallel)
+end
+
+"""
+    periodic_derivative_operator(source::Holoborodko2008, derivative_order, accuracy_order, 
+                                 xmin, xmax, N; parallel=Val{:serial}(), kwargs...)
+
+Create a `PeriodicDerivativeOperator` approximating the `derivative_order`-th
+derivative on a uniform grid between `xmin` and `xmax` with `N` grid points up
+to order of accuracy `accuracy_order` where the leftmost grid point used is
+determined by `left_offset`.
+The evaluation of the derivative can be parallised using threads by chosing
+`parallel=Val{:threads}())`.
+"""
+function periodic_derivative_operator(source::Holoborodko2008, derivative_order, accuracy_order, 
+                                      xmin, xmax, N; parallel=Val{:serial}(), kwargs...)
+    grid = linspace(xmin, xmax, N) # N includes two identical boundary nodes
+    coefficients = periodic_derivative_coefficients(source, derivative_order, accuracy_order;
+                                                    kwargs..., T=eltype(grid), parallel=parallel)
+    PeriodicDerivativeOperator(coefficients, grid)
 end
 
 """

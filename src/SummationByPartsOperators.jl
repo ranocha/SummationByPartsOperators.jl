@@ -77,6 +77,7 @@ export periodic_central_derivative_operator, periodic_derivative_operator, deriv
        fourier_derivative_operator, spectral_viscosity_operator, super_spectral_viscosity_operator,
        legendre_derivative_operator
 
+export Fornberg1998, Holoborodko2008, BeljaddLeFlochMishraParés2017
 export MattssonNordström2004, MattssonSvärdNordström2004, MattssonSvärdShoeybi2008,
        Mattsson2012, Mattsson2014,
        MattssonAlmquistCarpenter2014Extended, MattssonAlmquistCarpenter2014Optimal
