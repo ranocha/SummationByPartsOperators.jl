@@ -57,6 +57,7 @@ include("SBP_coefficients/MattssonAlmquistCarpenter2014Optimal.jl")
 include("conservation_laws/general_laws.jl")
 include("conservation_laws/burgers.jl")
 include("conservation_laws/cubic.jl")
+include("conservation_laws/variable_linear_advection.jl")
 
 
 # exports
@@ -85,6 +86,7 @@ export Tadmor1989, MadayTadmor1989, Tadmor1993,
        TadmorWaagan2012Standard, TadmorWaagan2012Convergent
 
 export BurgersPeriodicSemidiscretisation, BurgersNonperiodicSemidiscretisation, 
-       CubicPeriodicSemidiscretisation, CubicNonperiodicSemidiscretisation
+       CubicPeriodicSemidiscretisation, CubicNonperiodicSemidiscretisation,
+       VariableLinearAdvectionNonperiodicSemidiscretisation
 
 end # module

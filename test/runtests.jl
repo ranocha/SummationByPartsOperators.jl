@@ -13,5 +13,6 @@ tic()
 @time @testset "Conservation Laws" begin 
     include("conservation_laws/burgers_test.jl")
     include("conservation_laws/cubic_test.jl")
+    include("conservation_laws/variable_linear_advection_test.jl")
 end
 toc()
