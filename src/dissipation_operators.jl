@@ -164,7 +164,7 @@ struct DissipationOperator{T,CoefficientCache,Parallel,SourceOfCoefficients,Grid
                                  grid::Grid, b::Vector{T}) where {T,CoefficientCache,Parallel,SourceOfCoefficients,Grid}
         @argcheck checkbounds(Bool, grid, coefficients.coefficient_cache) DimensionMismatch
         @argcheck length(grid) == length(b)
-        factor < 0 && warn("Negative dissipation strength shouldn't be used.")
+        factor < 0 && @warn("Negative dissipation strength shouldn't be used.")
 
         new{T,CoefficientCache,Parallel,SourceOfCoefficients,Grid}(
             factor,coefficients, grid, b)

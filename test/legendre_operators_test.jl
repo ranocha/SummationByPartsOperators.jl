@@ -1,4 +1,4 @@
-using Base.Test, SummationByPartsOperators
+using Test, SummationByPartsOperators
 
 
 function accuracy_test!(res, ufunc, dufunc, D)
@@ -15,7 +15,7 @@ for T in (Float32, Float64)
 
     for N in 2 .^ (1:4)
         D = legendre_derivative_operator(xmin, xmax, N)
-        println(DevNull, D)
+        println(devnull, D)
         @test SummationByPartsOperators.derivative_order(D) == 1
         @test issymmetric(D) == false
         u = compute_coefficients(zero, D)

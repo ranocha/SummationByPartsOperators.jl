@@ -67,7 +67,7 @@ function Base.sparse(D::AbstractDerivativeOperator{T}) where {T}
     for i = 1:N
         v[i] = T(1)
         A_mul_B!(dest, D, v)
-        js = find(dest)
+        js = findall(dest)
         colptr[i] = length(nzval)+1
         if length(js) > 0
             append!(rowind, js)

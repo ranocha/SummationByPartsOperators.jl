@@ -388,7 +388,7 @@ function derivative_operator(source_of_coefficients, derivative_order, accuracy_
 end
 
 
-@inline construct_grid(source_of_coefficients, accuracy_order, xmin, xmax, N) = linspace(xmin, xmax, N)
+@inline construct_grid(source_of_coefficients, accuracy_order, xmin, xmax, N) = range(xmin, stop=xmax, length=N)
 
 
 function lower_bandwidth(D::DerivativeOperator)

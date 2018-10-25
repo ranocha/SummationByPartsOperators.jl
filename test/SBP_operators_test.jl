@@ -1,4 +1,4 @@
-using Base.Test
+using Test
 using SummationByPartsOperators
 
 D_test_list = (MattssonNordström2004(), MattssonSvärdNordström2004(), 
@@ -20,8 +20,8 @@ for source in D_test_list, T in (Float32,Float64)
         nothing
     end
     if D != nothing
-        println(DevNull, D)
-        println(DevNull, D.coefficients)
+        println(devnull, D)
+        println(devnull, D.coefficients)
         x1 = grid(D)
         x0 = ones(x1)
         x2 = x1 .* x1
@@ -54,8 +54,8 @@ for source in D_test_list, T in (Float32,Float64)
     end
     if D != nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
-        println(DevNull, D)
-        println(DevNull, D.coefficients)
+        println(devnull, D)
+        println(devnull, D.coefficients)
         x1 = grid(D)
         x0 = ones(x1)
         x2 = x1 .* x1
@@ -100,8 +100,8 @@ for source in D_test_list, T in (Float32,Float64)
     end
     if D != nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
-        println(DevNull, D)
-        println(DevNull, D.coefficients)
+        println(devnull, D)
+        println(devnull, D.coefficients)
         x1 = grid(D)
         x0 = ones(x1)
         x2 = x1 .* x1
@@ -152,8 +152,8 @@ for source in D_test_list, T in (Float32,Float64)
     end
     if D != nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
-        println(DevNull, D)
-        println(DevNull, D.coefficients)
+        println(devnull, D)
+        println(devnull, D.coefficients)
         x1 = grid(D)
         x0 = ones(x1)
         x2 = x1 .* x1
@@ -212,8 +212,8 @@ for source in D_test_list, T in (Float32,Float64)
     end
     if D != nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
-        println(DevNull, D)
-        println(DevNull, D.coefficients)
+        println(devnull, D)
+        println(devnull, D.coefficients)
         x1 = grid(D)
         x0 = ones(x1)
         x2 = x1 .* x1
@@ -253,8 +253,8 @@ for source in D_test_list, T in (Float32,Float64)
     end
     if D != nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
-        println(DevNull, D)
-        println(DevNull, D.coefficients)
+        println(devnull, D)
+        println(devnull, D.coefficients)
         x1 = grid(D)
         x0 = ones(x1)
         x2 = x1 .* x1
@@ -303,8 +303,8 @@ for source in D_test_list, T in (Float32,Float64)
     end
     if D != nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
-        println(DevNull, D)
-        println(DevNull, D.coefficients)
+        println(devnull, D)
+        println(devnull, D.coefficients)
         x1 = grid(D)
         x0 = ones(x1)
         x2 = x1 .* x1
@@ -357,8 +357,8 @@ for source in D_test_list, T in (Float32,Float64)
     end
     if D != nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
-        println(DevNull, D)
-        println(DevNull, D.coefficients)
+        println(devnull, D)
+        println(devnull, D.coefficients)
         x1 = grid(D)
         x0 = ones(x1)
         x2 = x1 .* x1
@@ -426,8 +426,8 @@ for source in D_test_list, T in (Float32,Float64)
     end
     if D != nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
-        println(DevNull, D)
-        println(DevNull, D.coefficients)
+        println(devnull, D)
+        println(devnull, D.coefficients)
         x1 = grid(D)
         x0 = ones(x1)
         x2 = x1 .* x1
@@ -476,8 +476,8 @@ for source in D_test_list, T in (Float32,Float64)
     end
     if D != nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
-        println(DevNull, D)
-        println(DevNull, D.coefficients)
+        println(devnull, D)
+        println(devnull, D.coefficients)
         x1 = grid(D)
         x0 = ones(x1)
         x2 = x1 .* x1
@@ -531,8 +531,8 @@ for source in D_test_list, T in (Float32,Float64)
     end
     if D != nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
-        println(DevNull, D)
-        println(DevNull, D.coefficients)
+        println(devnull, D)
+        println(devnull, D.coefficients)
         x1 = grid(D)
         x0 = ones(x1)
         x2 = x1 .* x1
@@ -601,8 +601,8 @@ for source in D_test_list, T in (Float32,Float64)
     end
     if D != nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
-        println(DevNull, D)
-        println(DevNull, D.coefficients)
+        println(devnull, D)
+        println(devnull, D.coefficients)
         x1 = grid(D)
         x0 = ones(x1)
         x2 = x1 .* x1
@@ -658,8 +658,8 @@ for source in D_test_list, T in (Float32,Float64)
     end
     if D != nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
-        println(DevNull, D)
-        println(DevNull, D.coefficients)
+        println(devnull, D)
+        println(devnull, D.coefficients)
         x1 = grid(D)
         x0 = ones(x1)
         x2 = x1 .* x1
@@ -723,8 +723,8 @@ for source in D_test_list, T in (Float32,Float64)
     end
     if D != nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
-        println(DevNull, D)
-        println(DevNull, D.coefficients)
+        println(devnull, D)
+        println(devnull, D.coefficients)
         x1 = grid(D)
         x0 = ones(x1)
         x2 = x1 .* x1

@@ -40,8 +40,8 @@ function FourierDerivativeOperator(xmin::T, xmax::T, N::Int) where {T<:Real}
 
     jac = 2*T(π) / (xmax - xmin) / N # / N because of brfft instead of BRFFT
     Δx = (xmax - xmin) / N
-    grid_evaluate = linspace(xmin, xmax, N+1) # two boundary nodes
-    grid_compute = linspace(xmin, grid_evaluate[end-1], N)
+    grid_evaluate = range(xmin, stop=xmax, length=N+1) # two boundary nodes
+    grid_compute = range(xmin, stop=grid_evaluate[end-1], length=N)
     u = zero.(grid_compute)
     rfft_plan = plan_rfft(u)
     uhat = rfft_plan*u

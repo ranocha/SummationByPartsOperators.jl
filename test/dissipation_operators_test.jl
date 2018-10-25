@@ -1,4 +1,4 @@
-using Base.Test
+using Test
 using SummationByPartsOperators
 
 D_test_list = (MattssonNordström2004(), MattssonSvärdNordström2004(), 
@@ -34,8 +34,8 @@ for source_D in D_test_list, source_Di in Di_test_list, acc_order in 2:2:8, T in
         end
         Di == nothing && continue
 
-        println(DevNull, Di)
-        println(DevNull, Di.coefficients)
+        println(devnull, Di)
+        println(devnull, Di.coefficients)
         HDi = H*full(Di)
         @test norm(HDi - HDi') < 10*eps(T)
         @test minimum(real, eigvals(HDi)) < 10*eps(T)
@@ -81,7 +81,7 @@ for acc_order in 2:2:8, T in (Float32,Float64)
     D = periodic_derivative_operator(der_order, acc_order, xmin, xmax, N)
     for order in 2:2:8
         Di = dissipation_operator(D, order=order)
-        println(DevNull, Di)
+        println(devnull, Di)
         HDi = full(Di)
         @test norm(HDi - HDi') < 10*eps(T)
         @test minimum(real, eigvals(HDi)) < 10*eps(T)

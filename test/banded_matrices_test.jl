@@ -1,4 +1,4 @@
-using Base.Test
+using Test
 using SummationByPartsOperators, BandedMatrices
 
 D_test_list = (MattssonNordström2004(), MattssonSvärdNordström2004(),
