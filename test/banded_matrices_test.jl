@@ -1,4 +1,5 @@
 using Test
+using LinearAlgebra, SparseArrays
 using SummationByPartsOperators, BandedMatrices
 
 D_test_list = (MattssonNordström2004(), MattssonSvärdNordström2004(),
@@ -20,25 +21,25 @@ for T in (Float32, Float64), acc_order in (2,4,6,8), diss_order in (2,4,6,8), D_
     end
     D_serial == nothing && continue
 
-    D_full   = full(D_serial)
+    D_full   = Matrix(D_serial)
     D_sparse = sparse(D_serial)
     D_banded = BandedMatrix(D_serial)
     x = grid(D_serial)
     u = cospi.(x)
-    dest1 = zeros(u)
-    dest2 = zeros(u)
+    dest1 = fill(zero(eltype(u)), length(u))
+    dest2 = fill(zero(eltype(u)), length(u))
 
     @test BandedMatrices.isbanded(D_serial) == BandedMatrices.isbanded(D_banded)
     @test bandwidth(D_serial, 1) == bandwidth(D_banded, 1)
     @test bandwidth(D_serial, 2) == bandwidth(D_banded, 2)
 
-    A_mul_B!(dest1, D_serial, u)
-    A_mul_B!(dest2, D_full, u)
-    @test all(i->isapprox(dest1[i], dest2[i], atol=500*eps(T)), eachindex(u))
-    A_mul_B!(dest2, D_sparse, u)
-    @test all(i->isapprox(dest1[i], dest2[i], atol=500*eps(T)), eachindex(u))
-    A_mul_B!(dest2, D_banded, u)
-    @test all(i->isapprox(dest1[i], dest2[i], atol=500*eps(T)), eachindex(u))
+    mul!(dest1, D_serial, u)
+    mul!(dest2, D_full, u)
+    @test all(i->isapprox(dest1[i], dest2[i], atol=5000*eps(T)), eachindex(u))
+    mul!(dest2, D_sparse, u)
+    @test all(i->isapprox(dest1[i], dest2[i], atol=5000*eps(T)), eachindex(u))
+    mul!(dest2, D_banded, u)
+    @test all(i->isapprox(dest1[i], dest2[i], atol=5000*eps(T)), eachindex(u))
 
 
     Di_serial = try
@@ -49,7 +50,7 @@ for T in (Float32, Float64), acc_order in (2,4,6,8), diss_order in (2,4,6,8), D_
     end
     Di_serial == nothing && continue
 
-    Di_full   = full(Di_serial)
+    Di_full   = Matrix(Di_serial)
     Di_sparse = sparse(Di_serial)
     Di_banded = BandedMatrix(Di_serial)
 
@@ -57,12 +58,12 @@ for T in (Float32, Float64), acc_order in (2,4,6,8), diss_order in (2,4,6,8), D_
     @test bandwidth(Di_serial, 1) == bandwidth(Di_banded, 1)
     @test bandwidth(Di_serial, 2) == bandwidth(Di_banded, 2)
 
-    A_mul_B!(dest1, Di_serial, u)
-    A_mul_B!(dest2, Di_full, u)
+    mul!(dest1, Di_serial, u)
+    mul!(dest2, Di_full, u)
     @test all(i->isapprox(dest1[i], dest2[i], atol=500*eps(T)), eachindex(u))
-    A_mul_B!(dest2, Di_sparse, u)
+    mul!(dest2, Di_sparse, u)
     @test all(i->isapprox(dest1[i], dest2[i], atol=500*eps(T)), eachindex(u))
-    A_mul_B!(dest2, Di_banded, u)
+    mul!(dest2, Di_banded, u)
     @test all(i->isapprox(dest1[i], dest2[i], atol=500*eps(T)), eachindex(u))
 end
 
@@ -79,23 +80,23 @@ for T in (Float32, Float64), acc_order in (2,4,6), D2var_source in D2var_test_li
     end
     D2var_serial == nothing && continue
 
-    D2var_full   = full(D2var_serial)
+    D2var_full   = Matrix(D2var_serial)
     D2var_sparse = sparse(D2var_serial)
     D2var_banded = BandedMatrix(D2var_serial)
     x = grid(D2var_serial)
     u = cospi.(x)
-    dest1 = zeros(u)
-    dest2 = zeros(u)
+    dest1 = fill(zero(eltype(u)), length(u))
+    dest2 = fill(zero(eltype(u)), length(u))
 
     @test BandedMatrices.isbanded(D2var_serial) == BandedMatrices.isbanded(D2var_banded)
     @test bandwidth(D2var_serial, 1) == bandwidth(D2var_banded, 1)
     @test bandwidth(D2var_serial, 2) == bandwidth(D2var_banded, 2)
 
-    A_mul_B!(dest1, D2var_serial, u)
-    A_mul_B!(dest2, D2var_full, u)
-    @test all(i->isapprox(dest1[i], dest2[i], atol=500*eps(T)), eachindex(u))
-    A_mul_B!(dest2, D2var_sparse, u)
-    @test all(i->isapprox(dest1[i], dest2[i], atol=500*eps(T)), eachindex(u))
-    A_mul_B!(dest2, D2var_banded, u)
-    @test all(i->isapprox(dest1[i], dest2[i], atol=500*eps(T)), eachindex(u))
+    mul!(dest1, D2var_serial, u)
+    mul!(dest2, D2var_full, u)
+    @test all(i->isapprox(dest1[i], dest2[i], atol=5000*eps(T)), eachindex(u))
+    mul!(dest2, D2var_sparse, u)
+    @test all(i->isapprox(dest1[i], dest2[i], atol=5000*eps(T)), eachindex(u))
+    mul!(dest2, D2var_banded, u)
+    @test all(i->isapprox(dest1[i], dest2[i], atol=5000*eps(T)), eachindex(u))
 end

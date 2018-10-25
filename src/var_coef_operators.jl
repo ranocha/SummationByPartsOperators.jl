@@ -98,7 +98,7 @@ end
 Create the diagonal mass matrix for the SBP derivative operator `D`.
 """
 function mass_matrix(D::Union{DerivativeOperator,VarCoefDerivativeOperator})
-    m = ones(grid(D))
+    m = fill(one(eltype(D)), length(grid(D)))
     @unpack left_weights, right_weights = D.coefficients
 
     m[1:length(left_weights)] = left_weights

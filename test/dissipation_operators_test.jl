@@ -1,8 +1,9 @@
 using Test
+using LinearAlgebra
 using SummationByPartsOperators
 
-D_test_list = (MattssonNordström2004(), MattssonSvärdNordström2004(), 
-                MattssonSvärdShoeybi2008(), Mattsson2014(), 
+D_test_list = (MattssonNordström2004(), MattssonSvärdNordström2004(),
+                MattssonSvärdShoeybi2008(), Mattsson2014(),
                 MattssonAlmquistCarpenter2014Extended())
 Di_test_list = (MattssonSvärdNordström2004(),)
 
@@ -36,7 +37,7 @@ for source_D in D_test_list, source_Di in Di_test_list, acc_order in 2:2:8, T in
 
         println(devnull, Di)
         println(devnull, Di.coefficients)
-        HDi = H*full(Di)
+        HDi = H*Matrix(Di)
         @test norm(HDi - HDi') < 10*eps(T)
         @test minimum(real, eigvals(HDi)) < 10*eps(T)
     end
@@ -51,12 +52,12 @@ for T in (Float32, Float64), order in (2,4,6,8)
     D = derivative_operator(MattssonSvärdNordström2004(), 1, order, xmin, xmax, N)
     x = grid(D)
     u = x.^5
-    dest1 = zeros(u)
-    dest2 = zeros(u)
+    dest1 = fill(zero(eltype(u)), length(u))
+    dest2 = fill(zero(eltype(u)), length(u))
 
     Di_serial = dissipation_operator(D, order=order, parallel=Val{:serial}())
     Di_threads= dissipation_operator(D, order=order, parallel=Val{:threads}())
-    Di_full   = full(Di_serial)
+    Di_full   = Matrix(Di_serial)
 
     mul!(dest1, Di_serial, u, one(T), zero(T))
     mul!(dest2, Di_serial, u, one(T))
@@ -82,7 +83,7 @@ for acc_order in 2:2:8, T in (Float32,Float64)
     for order in 2:2:8
         Di = dissipation_operator(D, order=order)
         println(devnull, Di)
-        HDi = full(Di)
+        HDi = Matrix(Di)
         @test norm(HDi - HDi') < 10*eps(T)
         @test minimum(real, eigvals(HDi)) < 10*eps(T)
     end
@@ -97,12 +98,12 @@ for T in (Float32, Float64), order in (2,4,6,8)
     D = periodic_derivative_operator(1, order, xmin, xmax, N)
     x = grid(D)
     u = x.^5
-    dest1 = zeros(u)
-    dest2 = zeros(u)
+    dest1 = fill(zero(eltype(u)), length(u))
+    dest2 = fill(zero(eltype(u)), length(u))
 
     Di_serial = dissipation_operator(D, order=order, parallel=Val{:serial}())
     Di_threads= dissipation_operator(D, order=order, parallel=Val{:threads}())
-    Di_full   = full(Di_serial)
+    Di_full   = Matrix(Di_serial)
 
     mul!(dest1, Di_serial, u, one(T), zero(T))
     mul!(dest2, Di_serial, u, one(T))
@@ -128,5 +129,5 @@ for T in (Float32, Float64), order in (2,4,6,8)
     Di = dissipation_operator(D)
     Dip = dissipation_operator(Dp)
 
-    @test norm(full(Di)[15:35,15:35] - full(Dip)[15:35,15:35]) < eps(T)
+    @test norm(Matrix(Di)[15:35,15:35] - Matrix(Dip)[15:35,15:35]) < eps(T)
 end

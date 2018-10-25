@@ -2,13 +2,13 @@
 derivative_order(coefficients::AbstractDerivativeCoefficients) = coefficients.derivative_order
 accuracy_order(coefficients::AbstractDerivativeCoefficients) = coefficients.accuracy_order
 Base.eltype(coefficients::AbstractDerivativeCoefficients{T}) where {T} = T
-Base.issymmetric(coefficients::AbstractDerivativeCoefficients) = coefficients.symmetric
+LinearAlgebra.issymmetric(coefficients::AbstractDerivativeCoefficients) = coefficients.symmetric
 
 
 derivative_order(D::AbstractDerivativeOperator) = derivative_order(D.coefficients)
 accuracy_order(D::AbstractDerivativeOperator) = accuracy_order(D.coefficients)
 Base.eltype(D::AbstractDerivativeOperator{T}) where {T} = T
-Base.issymmetric(D::AbstractDerivativeOperator) = issymmetric(D.coefficients)
+LinearAlgebra.issymmetric(D::AbstractDerivativeOperator) = issymmetric(D.coefficients)
 function Base.size(D::AbstractDerivativeOperator)
     N = length(grid(D))
     (N, N)
@@ -27,7 +27,7 @@ end
 @inline grid(D::AbstractPeriodicDerivativeOperator) = D.grid_compute
 
 
-Base.@propagate_inbounds function Base.A_mul_B!(dest, D::AbstractDerivativeOperator, u)
+Base.@propagate_inbounds function mul!(dest, D::AbstractDerivativeOperator, u)
     mul!(dest, D, u, one(eltype(dest)))
 end
 
@@ -37,37 +37,36 @@ end
     end
     T = promote_type(eltype(D), eltype(u))
     dest = similar(u, T); fill!(dest, zero(T))
-    @inbounds A_mul_B!(dest, D, u)
+    @inbounds mul!(dest, D, u)
     dest
 end
 
 
-function Base.full(D::AbstractDerivativeOperator{T}) where {T}
-    v = Array{T}(size(D, 2))
+function Base.Matrix(D::AbstractDerivativeOperator{T}) where {T}
+    v = Array{T}(undef, size(D, 2)...)
     fill!(v, T(0))
-    A = Array{T}(size(D)...)
+    A = Array{T}(undef, size(D)...)
     for i in 1:size(D,2)
         v[i] = T(1)
-        A_mul_B!(view(A,:,i), D, v)
+        mul!(view(A,:,i), D, v)
         v[i] = T(0)
     end
     A
 end
 
 
-function Base.sparse(D::AbstractDerivativeOperator{T}) where {T}
+function SparseArrays.sparse(D::AbstractDerivativeOperator{T}) where {T}
     M, N = size(D)
     rowind = Vector{Int}()
     nzval = Vector{T}()
-    colptr = Vector{Int}(N+1)
-    v = Array{T}(N)
-    fill!(v, T(0))
-    dest = Array{T}(M)
+    colptr = Vector{Int}(undef, N+1)
+    v = fill(zero(T), N)
+    dest = Array{T}(undef, M)
 
     for i = 1:N
         v[i] = T(1)
-        A_mul_B!(dest, D, v)
-        js = findall(dest)
+        mul!(dest, D, v)
+        js = findall(!iszero, dest)
         colptr[i] = length(nzval)+1
         if length(js) > 0
             append!(rowind, js)
@@ -91,7 +90,7 @@ function compute_coefficients(u, D::AbstractDerivativeOperator)
     x = grid(D)
     xmin = first(x)
     xmax = last(x)
-    uval = Array{typeof(u((xmin+xmax)/2))}(length(x))
+    uval = Array{typeof(u((xmin+xmax)/2))}(undef, length(x))
     compute_coefficients!(uval, u, D)
 end
 
@@ -116,7 +115,7 @@ function compute_coefficients(u, D::AbstractPeriodicDerivativeOperator)
     x = D.grid_compute
     xmin = first(x)
     xmax = last(x)
-    uval = Array{typeof(u((xmin+xmax)/2))}(length(x))
+    uval = Array{typeof(u((xmin+xmax)/2))}(undef, length(x))
     compute_coefficients!(uval, u, D)
 end
 
@@ -135,14 +134,14 @@ end
     evaluate_coefficients(u, D::AbstractDerivativeOperator)
 
 Evaluates the nodal coefficients `u` at a grid associated to the derivative
-operator `D`. 
+operator `D`.
 Returns `xplot, uplot`, where `xplot` contains the nodes and `uplot` the
 corresponding values of `u`.
 """
 function evaluate_coefficients(u, D::AbstractDerivativeOperator)
     x = grid(D)
-    xplot = Array{eltype(x)}(length(x))
-    uplot = Array{eltype(u)}(length(x))
+    xplot = Array{eltype(x)}(undef, length(x))
+    uplot = Array{eltype(u)}(undef, length(x))
 
     evaluate_coefficients!(xplot, uplot, u, D)
 end
@@ -169,15 +168,15 @@ end
 """
     evaluate_coefficients(u, D::AbstractPeriodicDerivativeOperator)
 
-Evaluates the nodal coefficients `u` at a grid including both endpoints 
+Evaluates the nodal coefficients `u` at a grid including both endpoints
 associated to the derivative periodic operator `D`.
-Returns `xplot, uplot`, where `xplot` contains the equally spaced nodes and 
+Returns `xplot, uplot`, where `xplot` contains the equally spaced nodes and
 `uplot` the corresponding values of `u`.
 """
 function evaluate_coefficients(u, D::AbstractPeriodicDerivativeOperator)
     x = D.grid_evaluate
-    xplot = Array{eltype(x)}(length(x))
-    uplot = Array{eltype(u)}(length(x))
+    xplot = Array{eltype(x)}(undef, length(x))
+    uplot = Array{eltype(u)}(undef, length(x))
 
     evaluate_coefficients!(xplot, uplot, u, D)
 end
@@ -185,10 +184,10 @@ end
 """
     evaluate_coefficients!(xplot, uplot, u, D::AbstractPeriodicDerivativeOperator)
 
-Evaluates the nodal coefficients `u` at a grid including both endpoints 
+Evaluates the nodal coefficients `u` at a grid including both endpoints
 associated to the derivative periodic operator `D` and stores the result in
 `xplot, uplot`.
-Returns `xplot, uplot`, where `xplot` contains the equally spaced nodes and 
+Returns `xplot, uplot`, where `xplot` contains the equally spaced nodes and
 `uplot` the corresponding values of `u`.
 """
 function evaluate_coefficients!(xplot, uplot, u, D::AbstractPeriodicDerivativeOperator)

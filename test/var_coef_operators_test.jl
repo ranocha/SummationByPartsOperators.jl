@@ -1,4 +1,5 @@
 using Test
+using LinearAlgebra, SparseArrays
 using SummationByPartsOperators
 
 test_list = (Mattsson2012(),)
@@ -20,7 +21,7 @@ for source in test_list, acc_order in (2,4,6), T in (Float32,Float64)
 
     println(devnull, D2var)
     println(devnull, D2var.coefficients)
-    @test maximum(abs, full(D2) - full(D2var)) < 10000*eps(T)
+    @test maximum(abs, Matrix(D2) - Matrix(D2var)) < 10000*eps(T)
 end
 
 
@@ -33,13 +34,13 @@ for T in (Float32, Float64), acc_order in (2,4,6)
 
     D2var_serial = var_coef_derivative_operator(source, 2, acc_order, xmin, xmax, N, one, Val{:serial}())
     D2var_threads= var_coef_derivative_operator(source, 2, acc_order, xmin, xmax, N, one, Val{:threads}())
-    D2var_full   = full(D2var_serial)
+    D2var_full   = Matrix(D2var_serial)
     D2var_sparse = sparse(D2var_serial)
 
     x = grid(D2var_serial)
     u = x.^5
-    dest1 = zeros(u)
-    dest2 = zeros(u)
+    dest1 = fill(zero(eltype(u)), length(u))
+    dest2 = fill(zero(eltype(u)), length(u))
 
     mul!(dest1, D2var_serial, u, one(T), zero(T))
     mul!(dest2, D2var_serial, u, one(T))
@@ -47,8 +48,8 @@ for T in (Float32, Float64), acc_order in (2,4,6)
     mul!(dest1, D2var_threads, u, one(T), zero(T))
     mul!(dest2, D2var_threads, u, one(T))
     @test all(i->dest1[i] ≈ dest2[i], eachindex(u))
-    A_mul_B!(dest2, D2var_serial, u)
+    mul!(dest2, D2var_serial, u)
     @test all(i->dest1[i] ≈ dest2[i], eachindex(u))
-    A_mul_B!(dest2, D2var_full, u)
+    mul!(dest2, D2var_full, u)
     @test all(i->dest1[i] ≈ dest2[i], eachindex(u))
 end

@@ -1,10 +1,11 @@
 using Test, SummationByPartsOperators
+using LinearAlgebra
 
 
 function accuracy_test!(res, ufunc, dufunc, D)
     u = compute_coefficients(ufunc, D)
     du = compute_coefficients(dufunc, D)
-    A_mul_B!(res, D, u)
+    mul!(res, D, u)
     maximum(abs, du-res) < 5*length(res)*eps(eltype(res))
 end
 
@@ -55,7 +56,7 @@ for T in (Float32, Float64), source in source_SV
         Di = dissipation_operator(source, D)
         println(devnull, Di)
         @test issymmetric(Di) == true
-        Di_full = full(Di)
+        Di_full = Matrix(Di)
         @test maximum(abs, Di_full-Di_full') < 80*eps(T)
 
         @test maximum(eigvals(Symmetric(Di_full))) < 10N*eps(T)
@@ -74,7 +75,7 @@ for T in (Float32, Float64), source in source_SSV
         Di = dissipation_operator(source, D, order=order)
         println(devnull, Di)
         @test issymmetric(Di) == true
-        Di_full = full(Di)
+        Di_full = Matrix(Di)
         @test maximum(abs, Di_full-Di_full') < 80*eps(T)
 
         @test maximum(eigvals(Symmetric(Di_full))) < 15N*eps(T)

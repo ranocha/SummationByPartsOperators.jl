@@ -1,5 +1,9 @@
 module SummationByPartsOperators
 
+using LinearAlgebra
+using SparseArrays
+
+using FFTW
 using ArgCheck
 using Reexport
 using Requires
@@ -11,6 +15,7 @@ using StaticArrays
 using DiffEqCallbacks
 
 import Base: *, -
+import LinearAlgebra: mul!
 @reexport using PolynomialBases
 import PolynomialBases: integrate, evaluate_coefficients, evaluate_coefficients!,
                         compute_coefficients, compute_coefficients!
@@ -38,9 +43,11 @@ include("periodic_operators.jl")
 include("SBP_operators.jl")
 include("dissipation_operators.jl")
 include("var_coef_operators.jl")
-@require BandedMatrices begin
-        include("banded_matrices.jl")
+
+function __init__()
+  @require BandedMatrices="aae01518-5342-5314-be14-df237901396f" include("banded_matrices.jl")
 end
+
 include("filter.jl")
 include("fourier_operators.jl")
 include("legendre_operators.jl")
@@ -59,7 +66,7 @@ include("conservation_laws/variable_linear_advection.jl")
 
 
 # exports
-export PeriodicDerivativeOperator, PeriodicDissipationOperator, 
+export PeriodicDerivativeOperator, PeriodicDissipationOperator,
        DerivativeOperator, DissipationOperator,
        VarCoefDerivativeOperator, SourceOfCoefficients,
        FourierDerivativeOperator, FourierConstantViscosity,
@@ -68,7 +75,7 @@ export FilterCallback, ConstantFilter,
        ExponentialFilter
 export derivative_order, accuracy_order, source_of_coeffcients, grid, semidiscretise
 export mass_matrix
-export mul!, integrate, derivative_left, derivative_right,
+export integrate, derivative_left, derivative_right,
        evaluate_coefficients, evaluate_coefficients!,
        compute_coefficients, compute_coefficients!
 export periodic_central_derivative_operator, periodic_derivative_operator, derivative_operator,
@@ -83,7 +90,7 @@ export MattssonNordström2004, MattssonSvärdNordström2004, MattssonSvärdShoey
 export Tadmor1989, MadayTadmor1989, Tadmor1993,
        TadmorWaagan2012Standard, TadmorWaagan2012Convergent
 
-export BurgersPeriodicSemidiscretisation, BurgersNonperiodicSemidiscretisation, 
+export BurgersPeriodicSemidiscretisation, BurgersNonperiodicSemidiscretisation,
        CubicPeriodicSemidiscretisation, CubicNonperiodicSemidiscretisation,
        VariableLinearAdvectionNonperiodicSemidiscretisation
 

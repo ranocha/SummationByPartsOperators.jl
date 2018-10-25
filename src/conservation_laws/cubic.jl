@@ -1,11 +1,11 @@
 
-doc"
+"""
     CubicPeriodicSemidiscretisation{T,Derivative,Dissipation}
 
 A semidiscretisation of the cubic conservation law
-    $\partial_t u(t,x) + \partial_x u(t,x)^3 = 0$
+    \$\\partial_t u(t,x) + \\partial_x u(t,x)^3 = 0\$
 with periodic boundary conditions.
-"
+"""
 struct CubicPeriodicSemidiscretisation{T,Derivative<:AbstractDerivativeOperator{T},
                                         Dissipation,
                                         SplitForm<:Union{Val{false}, Val{true}}} <: AbstractSemidiscretisation
@@ -21,8 +21,8 @@ struct CubicPeriodicSemidiscretisation{T,Derivative<:AbstractDerivativeOperator{
             @argcheck grid(derivative) == grid(dissipation) ArgumentError
         end
         N = size(derivative, 2)
-        tmp1 = Array{T}(N)
-        tmp2 = Array{T}(N)
+        tmp1 = Array{T}(undef, N)
+        tmp2 = Array{T}(undef, N)
         new{T,Derivative,Dissipation,SplitForm}(derivative, dissipation, tmp1, tmp2, split_form)
     end
 end
@@ -30,7 +30,7 @@ end
 
 function Base.show(io::IO, semidisc::CubicPeriodicSemidiscretisation)
     print(io, "Semidiscretisation of the cubic conservation law\n")
-    print(io, "  \$ \partial_t u(t,x) + \partial_x u(t,x)^3 = 0 \$ \n")
+    print(io, "  \$ \\partial_t u(t,x) + \\partial_x u(t,x)^3 = 0 \$ \n")
     print(io, "with periodic boundaries using")
     if semidisc.split_form == Val{true}()
         print(io, " a split form and: \n")
@@ -56,24 +56,24 @@ function (disc::CubicPeriodicSemidiscretisation)(du, u, p, t)
 
         ## u^2 * D * u
         @. tmp2 = u^2
-        A_mul_B!(tmp1, derivative, u)
+        mul!(tmp1, derivative, u)
         @. du = mhalf * tmp2 * tmp1
         ## u * D * u^2
-        A_mul_B!(tmp1, derivative, tmp2)
+        mul!(tmp1, derivative, tmp2)
         @. du += mhalf * u * tmp1
         ## D * u^3
         @. tmp2 *= u
-        A_mul_B!(tmp1, derivative, tmp2)
+        mul!(tmp1, derivative, tmp2)
         @. du += mhalf * tmp1
     else
         @. tmp2 = u^3
-        A_mul_B!(tmp1, derivative, tmp2)
+        mul!(tmp1, derivative, tmp2)
         @. du = -tmp1
     end
 
     # dissipation
     if dissipation != nothing
-        A_mul_B!(tmp1, dissipation, u)
+        mul!(tmp1, dissipation, u)
         @. du += tmp1
     end
 
@@ -81,13 +81,13 @@ function (disc::CubicPeriodicSemidiscretisation)(du, u, p, t)
 end
 
 
-doc"
+"""
     CubicNonperiodicSemidiscretisation
 
 A semidiscretisation of the cubic conservation law
-    $\partial_t u(t,x) + \partial_x u(t,x)^3 = 0$
+    \$\\partial_t u(t,x) + \\partial_x u(t,x)^3 = 0\$
 with nonperiodic boundary conditions.
-"
+"""
 struct CubicNonperiodicSemidiscretisation{T,Derivative<:AbstractDerivativeOperator{T},
                                             Dissipation,
                                             SplitForm<:Union{Val{false}, Val{true}},
@@ -106,8 +106,8 @@ struct CubicNonperiodicSemidiscretisation{T,Derivative<:AbstractDerivativeOperat
             @argcheck grid(derivative) == grid(dissipation) ArgumentError
         end
         N = size(derivative, 2)
-        tmp1 = Array{T}(N)
-        tmp2 = Array{T}(N)
+        tmp1 = Array{T}(undef, N)
+        tmp2 = Array{T}(undef, N)
         new{T,Derivative,Dissipation,SplitForm,LeftBC,RightBC}(derivative, dissipation, tmp1, tmp2, split_form, left_bc, right_bc)
     end
 end
@@ -115,7 +115,7 @@ end
 
 function Base.show(io::IO, semidisc::CubicNonperiodicSemidiscretisation)
     print(io, "Semidiscretisation of the cubic conservation law\n")
-    print(io, "  \$ \partial_t u(t,x) + \partial_x u(t,x)^3 = 0 \$ \n")
+    print(io, "  \$ \\partial_t u(t,x) + \\partial_x u(t,x)^3 = 0 \$ \n")
     print(io, "with nonperiodic boundaries using")
     if semidisc.split_form == Val{true}()
         print(io, " a split form and: \n")
@@ -145,24 +145,24 @@ function (disc::CubicNonperiodicSemidiscretisation)(du, u, p, t)
 
         ## u^2 * D * u
         @. tmp2 = u^2
-        A_mul_B!(tmp1, derivative, u)
+        mul!(tmp1, derivative, u)
         @. du = mhalf * tmp2 * tmp1
         ## u * D * u^2
-        A_mul_B!(tmp1, derivative, tmp2)
+        mul!(tmp1, derivative, tmp2)
         @. du += mhalf * u * tmp1
         ## D * u^3
         @. tmp2 *= u
-        A_mul_B!(tmp1, derivative, tmp2)
+        mul!(tmp1, derivative, tmp2)
         @. du += mhalf * tmp1
     else
         @. tmp2 = u^3
-        A_mul_B!(tmp1, derivative, tmp2)
+        mul!(tmp1, derivative, tmp2)
         @. du = -tmp1
     end
 
     # dissipation
     if dissipation != nothing
-        A_mul_B!(tmp1, dissipation, u)
+        mul!(tmp1, dissipation, u)
         @. du += tmp1
     end
 
@@ -174,4 +174,3 @@ function (disc::CubicNonperiodicSemidiscretisation)(du, u, p, t)
 
     nothing
 end
-

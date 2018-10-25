@@ -269,7 +269,7 @@ function periodic_central_derivative_coefficients(derivative_order, accuracy_ord
         # Schemes with Well-Controlled Dissipation. Hyperbolic Systems in Nonconservative Form.
         # Communications in Computational Physics 21.4, pp. 913-946.
         n = (accuracy_order+1) ÷ 2
-        coef = Vector{T}(n)
+        coef = Vector{T}(undef, n)
         for j in 1:n
             tmp = one(Rational{Int128})
             if iseven(j)
@@ -290,7 +290,7 @@ function periodic_central_derivative_coefficients(derivative_order, accuracy_ord
         # Schemes with Well-Controlled Dissipation. Hyperbolic Systems in Nonconservative Form.
         # Communications in Computational Physics 21.4, pp. 913-946.
         n = (accuracy_order+1) ÷ 2
-        coef = Vector{T}(n)
+        coef = Vector{T}(undef, n)
         for j in 1:n
             tmp = one(Rational{Int128})
             if iseven(j)
@@ -311,7 +311,7 @@ function periodic_central_derivative_coefficients(derivative_order, accuracy_ord
         # Schemes with Well-Controlled Dissipation. Hyperbolic Systems in Nonconservative Form.
         # Communications in Computational Physics 21.4, pp. 913-946.
         n = (accuracy_order+1) ÷ 2
-        coef = Vector{T}(n)
+        coef = Vector{T}(undef, n)
         for j in 1:n
             tmp = one(Rational{Int128})
             if isodd(j)
@@ -374,7 +374,7 @@ function fornberg(xx::Vector{T}, m::Int) where {T}
 
     z = zero(T)
     n = length(x) - 1
-    c = zeros(T, length(x), m+1)
+    c = fill(zero(T), length(x), m+1)
     c1 = one(T)
     c4 = x[1] - z
     c[1,1] = one(T)
@@ -456,7 +456,7 @@ end
 
 """
     periodic_derivative_coefficients(source::Holoborodko2008, derivative_order, accuracy_order;
-                                     T=Float64, parallel=Val{:serial}(), 
+                                     T=Float64, parallel=Val{:serial}(),
                                      stencil_width=accuracy_order+3)
 
 Create the `PeriodicDerivativeCoefficients` approximating the `derivative_order`-th
@@ -466,7 +466,7 @@ The evaluation of the derivative can be parallised using threads by chosing
 parallel=Val{:threads}())`.
 """
 function periodic_derivative_coefficients(source::Holoborodko2008, derivative_order, accuracy_order;
-                                          T=Float64, parallel=Val{:serial}(), 
+                                          T=Float64, parallel=Val{:serial}(),
                                           stencil_width=accuracy_order+3)
     method_exists = true
     if derivative_order == 1
@@ -688,7 +688,7 @@ derivative on the uniform `grid` up to order of accuracy `accuracy_order`.
 The evaluation of the derivative can be parallised using threads by chosing
 `parallel=Val{:threads}())`.
 """
-function periodic_central_derivative_operator(derivative_order, accuracy_order, grid::Union{LinSpace,StepRangeLen}, parallel=Val{:serial}())
+function periodic_central_derivative_operator(derivative_order, accuracy_order, grid::Union{LinRange,StepRangeLen}, parallel=Val{:serial}())
     coefficients = periodic_central_derivative_coefficients(derivative_order, accuracy_order, eltype(grid), parallel)
     PeriodicDerivativeOperator(coefficients, grid)
 end
@@ -716,7 +716,7 @@ end
 end
 
 """
-    periodic_derivative_operator(source::Holoborodko2008, derivative_order, accuracy_order, 
+    periodic_derivative_operator(source::Holoborodko2008, derivative_order, accuracy_order,
                                  xmin, xmax, N; parallel=Val{:serial}(), kwargs...)
 
 Create a `PeriodicDerivativeOperator` approximating the `derivative_order`-th
@@ -726,7 +726,7 @@ determined by `left_offset`.
 The evaluation of the derivative can be parallised using threads by chosing
 `parallel=Val{:threads}())`.
 """
-function periodic_derivative_operator(source::Holoborodko2008, derivative_order, accuracy_order, 
+function periodic_derivative_operator(source::Holoborodko2008, derivative_order, accuracy_order,
                                       xmin, xmax, N; parallel=Val{:serial}(), kwargs...)
     grid = range(xmin, stop=xmax, length=N) # N includes two identical boundary nodes
     coefficients = periodic_derivative_coefficients(source, derivative_order, accuracy_order;
@@ -743,13 +743,13 @@ the leftmost grid point used is determined by `left_offset`.
 The evaluation of the derivative can be parallised using threads by chosing
 `parallel=Val{:threads}())`.
 """
-function periodic_derivative_operator(derivative_order, accuracy_order, grid::Union{LinSpace,StepRangeLen},
+function periodic_derivative_operator(derivative_order, accuracy_order, grid::Union{LinRange,StepRangeLen},
                                       left_offset::Int=-(accuracy_order+1)÷2, parallel=Val{:serial}())
     coefficients = periodic_derivative_coefficients(derivative_order, accuracy_order, left_offset, eltype(grid), parallel)
     PeriodicDerivativeOperator(coefficients, grid)
 end
 
-@inline function periodic_derivative_operator(derivative_order, accuracy_order, grid::Union{LinSpace,StepRangeLen},
+@inline function periodic_derivative_operator(derivative_order, accuracy_order, grid::Union{LinRange,StepRangeLen},
                                               parallel::Union{Val{:serial},Val{:threads}}, left_offset::Int=-(accuracy_order+1)÷2)
     periodic_derivative_operator(derivative_order, accuracy_order, grid, left_offset, parallel)
 end

@@ -12,7 +12,7 @@ struct LegendreDerivativeOperator{T<:Real} <: AbstractDerivativeOperator{T}
     basis::LobattoLegendre{T}
 
     function LegendreDerivativeOperator(xmin::T, xmax::T, basis::LobattoLegendre{T}) where {T<:Real}
-        grid = map_from_canonical(basis.nodes, xmin, xmax, basis)
+        grid = map_from_canonical.(basis.nodes, xmin, xmax, basis)
         jac = 2 / (xmax - xmin)
         Δx = inv(jac)
 
@@ -39,9 +39,9 @@ function legendre_derivative_operator(xmin::T, xmax::T, N::Int) where {T<:Real}
 end
 
 derivative_order(D::LegendreDerivativeOperator) = 1
-Base.issymmetric(D::LegendreDerivativeOperator) = false
+LinearAlgebra.issymmetric(D::LegendreDerivativeOperator) = false
 integrate(func, u, D::LegendreDerivativeOperator) = D.Δx*integrate(func, u, D.basis)
-function evaluate_coefficients(u, D::LegendreDerivativeOperator, 
+function evaluate_coefficients(u, D::LegendreDerivativeOperator,
                                npoints=2*size(D,2)+1)
     evaluate_coefficients(u, D.basis, npoints)
 end
@@ -54,8 +54,7 @@ function Base.show(io::IO, D::LegendreDerivativeOperator{T}) where {T}
 end
 
 
-function Base.A_mul_B!(dest::AbstractVector{T}, D::LegendreDerivativeOperator,
-                        u::AbstractVector{T}) where {T}
+function mul!(dest::AbstractVector{T}, D::LegendreDerivativeOperator, u::AbstractVector{T}) where {T}
     @unpack jac, basis = D
     N, _ = size(D)
     @boundscheck begin
@@ -63,7 +62,7 @@ function Base.A_mul_B!(dest::AbstractVector{T}, D::LegendreDerivativeOperator,
         @argcheck N == length(dest)
     end
 
-    A_mul_B!(dest, basis.D, u)
+    mul!(dest, basis.D, u)
     dest .*= jac
 
     nothing
@@ -83,7 +82,7 @@ end
 
 function ConstantFilter(basis::LobattoLegendre{T}, filter, tmp::Array) where {T}
     Np1 = length(basis.nodes)
-    coefficients = Array{T}(Np1)
+    coefficients = Array{T}(undef, Np1)
     set_filter_coefficients!(coefficients, filter)
     modal2nodal = legendre_vandermonde(basis)
     nodal2modal = FactorisationWrapper(factorize(modal2nodal))
@@ -93,7 +92,7 @@ end
 
 function ConstantFilter(basis::LobattoLegendre{T}, filter, TmpEltype::DataType=T) where {T}
     Np1 = length(basis.nodes)
-    tmp = Array{TmpEltype}(Np1)
+    tmp = Array{TmpEltype}(undef, Np1)
 
     ConstantFilter(basis, filter, tmp)
 end

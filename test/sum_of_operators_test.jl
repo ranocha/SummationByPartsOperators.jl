@@ -1,4 +1,5 @@
 using Test
+using LinearAlgebra
 using SummationByPartsOperators
 
 for T in (Float32, Float64)
@@ -11,9 +12,9 @@ for T in (Float32, Float64)
 
     x = grid(D₁)
     u = sinpi.(x)
-    dest1 = zeros(u)
-    dest2 = zeros(u)
-    dest3 = zeros(u)
+    dest1 = fill(zero(eltype(u)), length(u))
+    dest2 = fill(zero(eltype(u)), length(u))
+    dest3 = fill(zero(eltype(u)), length(u))
 
     sum_12 = D₁ + D₂
     sum_123 = D₁ + D₂ + D₃
