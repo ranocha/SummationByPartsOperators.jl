@@ -1,4 +1,4 @@
-using Base.Test
+using Test
 using SummationByPartsOperators
 
 test_list = (Mattsson2012(),)
@@ -18,8 +18,8 @@ for source in test_list, acc_order in (2,4,6), T in (Float32,Float64)
     end
     D2var == nothing && continue
 
-    println(DevNull, D2var)
-    println(DevNull, D2var.coefficients)
+    println(devnull, D2var)
+    println(devnull, D2var.coefficients)
     @test maximum(abs, full(D2) - full(D2var)) < 10000*eps(T)
 end
 

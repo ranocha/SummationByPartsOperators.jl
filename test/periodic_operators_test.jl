@@ -1,4 +1,4 @@
-using Base.Test
+using Test
 using SummationByPartsOperators
 
 # Accuracy tests with Float32.
@@ -22,7 +22,7 @@ let T=Float32
     derivative_order = 1
     accuracy_order = 2
     D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
-    println(DevNull, D)
+    println(devnull, D)
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
@@ -35,7 +35,7 @@ let T=Float32
 
     accuracy_order = 4
     D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
-    println(DevNull, D)
+    println(devnull, D)
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
@@ -52,7 +52,7 @@ let T=Float32
 
     accuracy_order = 6
     D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
-    println(DevNull, D)
+    println(devnull, D)
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
@@ -75,7 +75,7 @@ let T=Float32
     derivative_order = 2
     accuracy_order = 2
     D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
-    println(DevNull, D)
+    println(devnull, D)
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == true
@@ -92,7 +92,7 @@ let T=Float32
 
     accuracy_order = 4
     D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
-    println(DevNull, D)
+    println(devnull, D)
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == true
@@ -111,7 +111,7 @@ let T=Float32
 
     accuracy_order = 6
     D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
-    println(DevNull, D)
+    println(devnull, D)
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == true
@@ -132,7 +132,7 @@ let T=Float32
     derivative_order = 3
     accuracy_order = 2
     D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
-    println(DevNull, D)
+    println(devnull, D)
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == true # because this operator is zero!
@@ -143,7 +143,7 @@ let T=Float32
 
     accuracy_order = 4
     D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
-    println(DevNull, D)
+    println(devnull, D)
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
@@ -156,7 +156,7 @@ let T=Float32
 
     accuracy_order = 6
     D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
-    println(DevNull, D)
+    println(devnull, D)
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
@@ -203,7 +203,7 @@ let T = Float64
     derivative_order = 1
     accuracy_order = 2
     D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
-    println(DevNull, D)
+    println(devnull, D)
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
@@ -218,7 +218,7 @@ let T = Float64
 
     accuracy_order = 4
     D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
-    println(DevNull, D)
+    println(devnull, D)
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
@@ -240,7 +240,7 @@ let T = Float64
 
     accuracy_order = 6
     D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
-    println(DevNull, D)
+    println(devnull, D)
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
@@ -269,7 +269,7 @@ let T = Float64
     derivative_order = 2
     accuracy_order = 2
     D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
-    println(DevNull, D)
+    println(devnull, D)
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == true
@@ -280,7 +280,7 @@ let T = Float64
 
     accuracy_order = 4
     D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
-    println(DevNull, D)
+    println(devnull, D)
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == true
@@ -293,7 +293,7 @@ let T = Float64
 
     accuracy_order = 6
     D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
-    println(DevNull, D)
+    println(devnull, D)
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == true
@@ -314,7 +314,7 @@ let T = Float64
     derivative_order = 3
     accuracy_order = 2
     D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
-    println(DevNull, D)
+    println(devnull, D)
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == true # because this operator is zero!
@@ -325,7 +325,7 @@ let T = Float64
 
     accuracy_order = 4
     D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
-    println(DevNull, D)
+    println(devnull, D)
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
@@ -338,7 +338,7 @@ let T = Float64
 
     accuracy_order = 6
     D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
-    println(DevNull, D)
+    println(devnull, D)
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
@@ -679,7 +679,7 @@ let T = Float32
     for stencil_width in 5:2:11
         D = periodic_derivative_operator(Holoborodko2008(), der_order, acc_order,
                                          xmin, xmax, N, stencil_width=stencil_width)
-        println(DevNull, D)
+        println(devnull, D)
         @test derivative_order(D) == der_order
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == false
@@ -699,7 +699,7 @@ let T = Float32
     for stencil_width in 7:2:11
         D = periodic_derivative_operator(Holoborodko2008(), der_order, acc_order,
                                          xmin, xmax, N, stencil_width=stencil_width)
-        println(DevNull, D)
+        println(devnull, D)
         @test derivative_order(D) == der_order
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == false
@@ -731,7 +731,7 @@ let T = Float32
     for stencil_width in 5:2:9
         D = periodic_derivative_operator(Holoborodko2008(), der_order, acc_order,
                                          xmin, xmax, N, stencil_width=stencil_width)
-        println(DevNull, D)
+        println(devnull, D)
         @test derivative_order(D) == der_order
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == true
@@ -753,7 +753,7 @@ let T = Float32
     for stencil_width in 7:2:9
         D = periodic_derivative_operator(Holoborodko2008(), der_order, acc_order,
                                          xmin, xmax, N, stencil_width=stencil_width)
-        println(DevNull, D)
+        println(devnull, D)
         @test derivative_order(D) == der_order
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == true

@@ -1,4 +1,4 @@
-using Base.Test, SummationByPartsOperators
+using Test, SummationByPartsOperators
 
 
 function accuracy_test!(res, ufunc, dufunc, D)
@@ -15,7 +15,7 @@ for T in (Float32, Float64)
 
     for N in 2 .^ (3:6)
         D = fourier_derivative_operator(xmin, xmax, N)
-        println(DevNull, D)
+        println(devnull, D)
         @test SummationByPartsOperators.derivative_order(D) == 1
         @test issymmetric(D) == false
         u = compute_coefficients(zero, D)
@@ -49,11 +49,11 @@ for T in (Float32, Float64), source in source_SV
 
     for N in 2 .^ (3:6)
         D = fourier_derivative_operator(xmin, xmax, N)
-        println(DevNull, D)
+        println(devnull, D)
         @test issymmetric(D) == false
 
         Di = dissipation_operator(source, D)
-        println(DevNull, Di)
+        println(devnull, Di)
         @test issymmetric(Di) == true
         Di_full = full(Di)
         @test maximum(abs, Di_full-Di_full') < 80*eps(T)
@@ -68,11 +68,11 @@ for T in (Float32, Float64), source in source_SSV
 
     for N in 2 .^ (3:6), order in 1:3
         D = fourier_derivative_operator(xmin, xmax, N)
-        println(DevNull, D)
+        println(devnull, D)
         @test issymmetric(D) == false
 
         Di = dissipation_operator(source, D, order=order)
-        println(DevNull, Di)
+        println(devnull, Di)
         @test issymmetric(Di) == true
         Di_full = full(Di)
         @test maximum(abs, Di_full-Di_full') < 80*eps(T)

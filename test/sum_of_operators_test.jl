@@ -1,4 +1,4 @@
-using Base.Test
+using Test
 using SummationByPartsOperators
 
 for T in (Float32, Float64)

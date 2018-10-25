@@ -27,14 +27,14 @@ struct MattssonAlmquistCarpenter2014OptimalGrid{T,Grid} <: AbstractArray{T,1}
     uniform_grid::Grid
 end
 
-function MattssonAlmquistCarpenter2014OptimalGrid{T}(xmin::T, xmax::T, d1::T, d2::T, d3::T, N::Int)
+function MattssonAlmquistCarpenter2014OptimalGrid(xmin::T, xmax::T, d1::T, d2::T, d3::T, N::Int) where T
     @argcheck xmin < xmax
     @argcheck N > 6
     @argcheck d1 > 0
     @argcheck d2 > 0
     @argcheck d3 > 0
 
-    uniform_grid = linspace(xmin+d1+d2+d3, xmax-d1-d2-d3, N-6)
+    uniform_grid = range(xmin+d1+d2+d3, stop=xmax-d1-d2-d3, length=N-6)
     MattssonAlmquistCarpenter2014OptimalGrid{T,typeof(uniform_grid)}(xmin, xmax, d1, d2, d3, uniform_grid)
 end
 
