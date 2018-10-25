@@ -1,10 +1,12 @@
 using Test, SummationByPartsOperators
+using LinearAlgebra
+using SpecialFunctions
 
 
 function accuracy_test!(res, ufunc, dufunc, D)
     u = compute_coefficients(ufunc, D)
     du = compute_coefficients(dufunc, D)
-    A_mul_B!(res, D, u)
+    mul!(res, D, u)
     maximum(abs, du-res) < 5*length(res)*eps(eltype(res))
 end
 

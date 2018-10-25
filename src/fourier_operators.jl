@@ -55,7 +55,7 @@ function fourier_derivative_operator(xmin::T, xmax::T, N::Int) where {T<:Real}
 end
 
 derivative_order(D::FourierDerivativeOperator) = 1
-Base.issymmetric(D::FourierDerivativeOperator) = false
+LinearAlgebra.issymmetric(D::FourierDerivativeOperator) = false
 
 function Base.show(io::IO, D::FourierDerivativeOperator{T}) where {T}
     grid = D.grid_evaluate
@@ -66,8 +66,7 @@ function Base.show(io::IO, D::FourierDerivativeOperator{T}) where {T}
 end
 
 
-function Base.A_mul_B!(dest::AbstractVector{T}, D::FourierDerivativeOperator,
-                        u::AbstractVector{T}) where {T}
+function mul!(dest::AbstractVector{T}, D::FourierDerivativeOperator, u::AbstractVector{T}) where {T}
     @unpack jac, tmp, rfft_plan, brfft_plan = D
     N, _ = size(D)
     @boundscheck begin
@@ -75,12 +74,12 @@ function Base.A_mul_B!(dest::AbstractVector{T}, D::FourierDerivativeOperator,
         @argcheck N == length(dest)
     end
 
-    A_mul_B!(tmp, rfft_plan, u)
+    mul!(tmp, rfft_plan, u)
     @inbounds @simd for j in Base.OneTo(length(tmp)-1)
         tmp[j] *= (j-1)*im * jac
     end
     @inbounds tmp[end] = 0
-    A_mul_B!(dest, brfft_plan, tmp)
+    mul!(dest, brfft_plan, tmp)
 
     nothing
 end
@@ -115,7 +114,7 @@ derivative operator `D` with parameters given by the filter function `filter`.
 """
 function ConstantFilter(D::FourierDerivativeOperator{T}, filter) where {T}
     Np1 = length(D.brfft_plan)
-    coefficients = Array{T}(Np1)
+    coefficients = Array{T}(undef, Np1)
     set_filter_coefficients!(coefficients, filter)
     tmp = copy(D.tmp)
     modal2nodal = plan_irfft(D.tmp, length(D.rfft_plan))
@@ -129,11 +128,10 @@ abstract type AbstractFourierViscosity{T} <: AbstractDerivativeOperator{T} end
 
 @inline source_of_coefficients(Di::AbstractFourierViscosity) = (Di.source_of_coefficients)
 
-Base.issymmetric(Di::AbstractFourierViscosity) = true
+LinearAlgebra.issymmetric(Di::AbstractFourierViscosity) = true
 grid(Di::AbstractFourierViscosity) = grid(Di.D)
 
-function Base.A_mul_B!(dest::AbstractVector{T}, Di::AbstractFourierViscosity{T},
-                        u::AbstractVector{T}) where {T}
+function mul!(dest::AbstractVector{T}, Di::AbstractFourierViscosity{T}, u::AbstractVector{T}) where {T}
     @unpack coefficients, D = Di
     @unpack tmp, rfft_plan, brfft_plan = D
     N = size(D, 1)
@@ -143,11 +141,11 @@ function Base.A_mul_B!(dest::AbstractVector{T}, Di::AbstractFourierViscosity{T},
         @argcheck length(tmp) == length(coefficients)
     end
 
-    A_mul_B!(tmp, rfft_plan, u)
+    mul!(tmp, rfft_plan, u)
     @inbounds @simd for j in Base.OneTo(length(tmp))
         tmp[j] *= coefficients[j]
     end
-    A_mul_B!(dest, brfft_plan, tmp)
+    mul!(dest, brfft_plan, tmp)
 
     nothing
 end
@@ -169,7 +167,7 @@ struct FourierConstantViscosity{T<:Real, Grid, RFFT, BRFFT} <: AbstractFourierVi
         # precompute coefficients
         N = size(D,1)
         jac = N * D.jac # *N: brfft instead of irfft
-        coefficients = Vector{T}(length(D.brfft_plan))
+        coefficients = Vector{T}(undef, length(D.brfft_plan))
         set_filter_coefficients!(coefficients, jac, N, parameters, source_of_coefficients)
         new{T,Grid,RFFT,BRFFT}(coefficients, D, parameters, source_of_coefficients)
     end
@@ -178,7 +176,7 @@ end
 function Base.show(io::IO, Di::FourierConstantViscosity{T}) where {T}
     grid = Di.D.grid_evaluate
     print(io, "Fourier viscosity operator with constant coefficients for the periodic 1st\n")
-    print(io, "derivative Fourier operator {T=", T, "} on a grid in [", 
+    print(io, "derivative Fourier operator {T=", T, "} on a grid in [",
             first(grid), ", ", last(grid), "]\n")
     print(io, "using ", length(Di.D.rfft_plan), " nodes and ",
             length(Di.D.brfft_plan), " modes with coefficients from\n")
@@ -328,8 +326,8 @@ end
 const FourierSpectralViscosityCoefficients = Union{Tadmor1989,MadayTadmor1989,TadmorWaagan2012Standard,TadmorWaagan2012Convergent}
 
 function get_parameters(source_of_coefficients::FourierSpectralViscosityCoefficients,
-                        D::FourierDerivativeOperator; 
-                        strength::Real=eltype(D)(1)/size(D,2), 
+                        D::FourierDerivativeOperator;
+                        strength::Real=eltype(D)(1)/size(D,2),
                         cutoff::Int=1+round(Int, sqrt(size(D,2))), #+1: 1 based indexing
                         kwargs...)
     @argcheck cutoff >= 1
@@ -372,7 +370,7 @@ end
 const FourierSuperSpectralViscosityCoefficients = Tadmor1993
 
 function get_parameters(source::FourierSuperSpectralViscosityCoefficients,
-                        D::FourierDerivativeOperator; 
+                        D::FourierDerivativeOperator;
                         order::Int=1,
                         strength=eltype(D)(1)/size(D,2)^(2order-1),
                         cutoff::Int=1+round(Int, size(D,2)^(1-1/2order)), #+1: 1 based indexing

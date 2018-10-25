@@ -11,7 +11,7 @@ end
 
 Base.size(fact::FactorisationWrapper) = size(fact.fact)
 Base.eltype(fact::FactorisationWrapper) = eltype(fact.fact)
-Base.A_mul_B!(dest, fact::FactorisationWrapper, u) = A_ldiv_B!(dest, fact.fact, u)
+mul!(dest, fact::FactorisationWrapper, u) = ldiv!(dest, fact.fact, u)
 
 
 #TODO
@@ -48,15 +48,15 @@ function (filter::ConstantFilter)(u::AbstractVector, tmp::AbstractVector)
         length(coefficients) == length(tmp)
     end
 
-    A_mul_B!(tmp, nodal2modal, u)
+    mul!(tmp, nodal2modal, u)
     @inbounds tmp .*= coefficients
-    A_mul_B!(u, modal2nodal, tmp)
+    mul!(u, modal2nodal, tmp)
 
     nothing
 end
 
 function (filter::ConstantFilter)(u::AbstractMatrix, tmp::AbstractVector)
-    @boundscheck begin 
+    @boundscheck begin
         length(tmp) == size(u,1)
     end
 
@@ -70,24 +70,24 @@ end
 
 function (filter::ConstantFilter)(u::AbstractMatrix, tmp::AbstractMatrix)
     @unpack coefficients, nodal2modal, modal2nodal = filter
-    @boundscheck begin 
+    @boundscheck begin
         size(tmp) == size(u)
     end
 
-    A_mul_B!(tmp, nodal2modal, u)
+    mul!(tmp, nodal2modal, u)
     @inbounds tmp .*= coefficients
-    A_mul_B!(u, modal2nodal, tmp)
+    mul!(u, modal2nodal, tmp)
 
     nothing
 end
 
 
 
-doc"
+"""
     ExponentialFilter
 
 Represents the exponential filter function `σ(η) = exp(-α*η^p)`.
-"
+"""
 struct ExponentialFilter{T<:Real} <: AbstractFilterFunction
     α::T
     p::Int

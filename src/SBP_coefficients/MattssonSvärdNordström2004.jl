@@ -28,19 +28,19 @@ function dissipation_coefficients(source::MattssonSvärdNordström2004, order::I
     inv_right_weights = one(T) ./ right_weights
     if order == 2
         coefficient_cache = MattssonSvärdNordström2004Cache2(inv_left_weights, inv_right_weights)
-        b = ones(grid)
+        b = fill(one(T), length(grid))
         b[1] = T(0)
     elseif order == 4
         coefficient_cache = MattssonSvärdNordström2004Cache4(inv_left_weights, inv_right_weights)
-        b = ones(grid)
+        b = fill(one(T), length(grid))
         b[1] = b[end] = T(0)
     elseif order == 6
         coefficient_cache = MattssonSvärdNordström2004Cache6(inv_left_weights, inv_right_weights)
-        b = ones(grid)
+        b = fill(one(T), length(grid))
         b[1] = b[2] = b[end] = T(0)
     elseif order == 8
         coefficient_cache = MattssonSvärdNordström2004Cache8(inv_left_weights, inv_right_weights)
-        b = ones(grid)
+        b = fill(one(T), length(grid))
         b[1] = b[2] = b[end] = b[end-1] = T(0)
     else
         throw(ArgumentError("Order $order not implemented/derived."))

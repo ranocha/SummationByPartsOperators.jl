@@ -1,11 +1,11 @@
 
-doc"
+"""
     BurgersPeriodicSemidiscretisation
 
 A semidiscretisation of Burgers' equation
-    $\partial_t u(t,x) + \partial_x \frac{u(t,x)^2}{2} = 0$
+    \$\\partial_t u(t,x) + \\partial_x \\frac{u(t,x)^2}{2} = 0\$
 with periodic boundary conditions.
-"
+"""
 struct BurgersPeriodicSemidiscretisation{T,Derivative<:AbstractDerivativeOperator{T},
                                             Dissipation,
                                             SplitForm<:Union{Val{false}, Val{true}}} <: AbstractSemidiscretisation
@@ -21,8 +21,8 @@ struct BurgersPeriodicSemidiscretisation{T,Derivative<:AbstractDerivativeOperato
             @argcheck grid(derivative) == grid(dissipation) ArgumentError
         end
         N = size(derivative, 2)
-        tmp1 = Array{T}(N)
-        tmp2 = Array{T}(N)
+        tmp1 = Array{T}(undef, N)
+        tmp2 = Array{T}(undef, N)
         new{T,Derivative,Dissipation,SplitForm}(derivative, dissipation, tmp1, tmp2, split_form)
     end
 end
@@ -30,7 +30,7 @@ end
 
 function Base.show(io::IO, semidisc::BurgersPeriodicSemidiscretisation)
     print(io, "Semidiscretisation of Burgers' equation\n")
-    print(io, "  \$ \partial_t u(t,x) + \partial_x \frac{u(t,x)^2}{2} = 0 \$ \n")
+    print(io, "  \$ \\partial_t u(t,x) + \\partial_x \\frac{u(t,x)^2}{2} = 0 \$ \n")
     print(io, "with periodic boundaries using")
     if semidisc.split_form == Val{true}()
         print(io, " a split form and: \n")
@@ -55,22 +55,22 @@ function (disc::BurgersPeriodicSemidiscretisation)(du, u, p, t)
         m1_3 = -one(eltype(u)) / 3
 
         ## u * D * u
-        A_mul_B!(tmp1, derivative, u)
+        mul!(tmp1, derivative, u)
         @. du = m1_3 * u * tmp1
         ## D * u^2
         @. tmp2 = u^2
-        A_mul_B!(tmp1, derivative, tmp2)
+        mul!(tmp1, derivative, tmp2)
         @. du += m1_3 * tmp1
     else
         m1_2 = -one(eltype(u)) / 2
         @. tmp2 = u^2
-        A_mul_B!(tmp1, derivative, tmp2)
+        mul!(tmp1, derivative, tmp2)
         @. du = m1_2 * tmp1
     end
 
     # dissipation
     if dissipation != nothing
-        A_mul_B!(tmp1, dissipation, u)
+        mul!(tmp1, dissipation, u)
         @. du += tmp1
     end
 
@@ -80,13 +80,13 @@ end
 
 
 
-doc"
+"""
     BurgersNonperiodicSemidiscretisation
 
 A semidiscretisation of Burgers' equation
-    $\partial_t u(t,x) + \partial_x \frac{u(t,x)^2}{2} = 0$
+    \$\\partial_t u(t,x) + \\partial_x \\frac{u(t,x)^2}{2} = 0\$
 with boundary conditions `left_bc(t)`, `right_bc(t)`.
-"
+"""
 struct BurgersNonperiodicSemidiscretisation{T,Derivative<:AbstractDerivativeOperator{T},
                                             Dissipation,
                                             SplitForm<:Union{Val{false}, Val{true}},
@@ -105,8 +105,8 @@ struct BurgersNonperiodicSemidiscretisation{T,Derivative<:AbstractDerivativeOper
             @argcheck grid(derivative) == grid(dissipation) ArgumentError
         end
         N = size(derivative, 2)
-        tmp1 = Array{T}(N)
-        tmp2 = Array{T}(N)
+        tmp1 = Array{T}(undef, N)
+        tmp2 = Array{T}(undef, N)
         new{T,Derivative,Dissipation,SplitForm,LeftBC,RightBC}(derivative, dissipation, tmp1, tmp2, split_form, left_bc, right_bc)
     end
 end
@@ -114,7 +114,7 @@ end
 
 function Base.show(io::IO, semidisc::BurgersNonperiodicSemidiscretisation)
     print(io, "Semidiscretisation of Burgers' equation\n")
-    print(io, "  \$ \partial_t u(t,x) + \partial_x \frac{u(t,x)^2}{2} = 0 \$ \n")
+    print(io, "  \$ \\partial_t u(t,x) + \\partial_x \\frac{u(t,x)^2}{2} = 0 \$ \n")
     print(io, "with nonperiodic boundaries using")
     if semidisc.split_form == Val{true}()
         print(io, " a split form and: \n")
@@ -151,22 +151,22 @@ function (disc::BurgersNonperiodicSemidiscretisation)(du, u, p, t)
         m1_3 = -one(eltype(u)) / 3
 
         ## u * D * u
-        A_mul_B!(tmp1, derivative, u)
+        mul!(tmp1, derivative, u)
         @. du = m1_3 * u * tmp1
         ## D * u^2
         @. tmp2 = u^2
-        A_mul_B!(tmp1, derivative, tmp2)
+        mul!(tmp1, derivative, tmp2)
         @. du += m1_3 * tmp1
     else
         m1_2 = -one(eltype(u)) / 2
         @. tmp2 = u^2
-        A_mul_B!(tmp1, derivative, tmp2)
+        mul!(tmp1, derivative, tmp2)
         @. du = m1_2 * tmp1
     end
 
     # dissipation
     if dissipation != nothing
-        A_mul_B!(tmp1, dissipation, u)
+        mul!(tmp1, dissipation, u)
         @. du += tmp1
     end
 

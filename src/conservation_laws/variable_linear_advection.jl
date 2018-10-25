@@ -1,10 +1,10 @@
-doc"
+"""
     VariableLinearAdvectionNonperiodicSemidiscretisation
 
 A semidiscretisation of the linear advection equation
-    $\partial_t u(t,x) + \partial_x ( a(x) u(t,x) ) = 0$
+    \$\\partial_t u(t,x) + \\partial_x ( a(x) u(t,x) ) = 0\$
 with boundary conditions `left_bc(t)`, `right_bc(t)`.
-"
+"""
 struct VariableLinearAdvectionNonperiodicSemidiscretisation{T,Derivative<:AbstractDerivativeOperator{T},
                                                             Dissipation,
                                                             SplitForm<:Union{Val{false}, Val{true}},
@@ -25,8 +25,8 @@ struct VariableLinearAdvectionNonperiodicSemidiscretisation{T,Derivative<:Abstra
         end
         N = size(derivative, 2)
         a = compute_coefficients(afunc, derivative)
-        tmp1 = Array{T}(N)
-        tmp2 = Array{T}(N)
+        tmp1 = Array{T}(undef, N)
+        tmp2 = Array{T}(undef, N)
         new{T,Derivative,Dissipation,SplitForm,LeftBC,RightBC}(derivative, dissipation, a, tmp1, tmp2, split_form, left_bc, right_bc)
     end
 end
@@ -34,7 +34,7 @@ end
 
 function Base.show(io::IO, semidisc::VariableLinearAdvectionNonperiodicSemidiscretisation)
     print(io, "Semidiscretisation of the linear advection equation\n")
-    print(io, "  \$ \partial_t u(t,x) + \partial_x ( a(x) u(t,x) ) = 0 \$ \n")
+    print(io, "  \$ \\partial_t u(t,x) + \\partial_x ( a(x) u(t,x) ) = 0 \$ \n")
     print(io, "with nonperiodic boundaries using")
     if semidisc.split_form == Val{true}()
         print(io, " a split form and: \n")
@@ -64,24 +64,24 @@ function (disc::VariableLinearAdvectionNonperiodicSemidiscretisation)(du, u, p, 
         m1_2 = -one(eltype(u)) / 2
 
         ## a * D * u
-        A_mul_B!(tmp1, derivative, u)
+        mul!(tmp1, derivative, u)
         @. du = m1_2 * a * tmp1
         ## u * D * a
-        A_mul_B!(tmp1, derivative, a)
+        mul!(tmp1, derivative, a)
         @. du += m1_2 * u * tmp1
         ## D * a*u
         @. tmp2 = a*u
-        A_mul_B!(tmp1, derivative, tmp2)
+        mul!(tmp1, derivative, tmp2)
         @. du += m1_2 * tmp1
     else
         @. tmp2 = a * u
-        A_mul_B!(tmp1, derivative, tmp2)
+        mul!(tmp1, derivative, tmp2)
         @. du = -tmp1
     end
 
     # dissipation
     if dissipation != nothing
-        A_mul_B!(tmp1, dissipation, u)
+        mul!(tmp1, dissipation, u)
         @. du += tmp1
     end
 
