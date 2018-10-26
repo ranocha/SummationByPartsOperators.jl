@@ -7,7 +7,6 @@ os:
 
 julia:
   - 1.0
-  - release
   - nightly
 
 matrix:
