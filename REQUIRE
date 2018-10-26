@@ -7,7 +7,7 @@ Reexport
 Unrolled
 Parameters
 StaticArrays
-PolynomialBases
+PolynomialBases 0.4.1
 
-DiffEqBase 3.0.4
+DiffEqBase
 DiffEqCallbacks
