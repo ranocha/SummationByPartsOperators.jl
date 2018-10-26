@@ -68,7 +68,7 @@ for T in (Float32, Float64), order in (2,4,6,8)
     dest3 = Di_serial*u
     @test all(i->dest1[i] ≈ dest3[i], eachindex(u))
     dest3 = Di_full*u
-    @test all(i->isapprox(dest1[i], dest3[i], atol=600000*eps(T)), eachindex(u))
+    @test all(i->isapprox(dest1[i], dest3[i], atol=800000*eps(T)), eachindex(u))
 end
 
 
