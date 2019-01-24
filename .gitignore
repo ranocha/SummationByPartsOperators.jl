@@ -2,4 +2,4 @@
 *.jl.*.cov
 *.jl.mem
 notebooks/.ipynb_checkpoints/
-
+notebooks/*.gif

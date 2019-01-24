@@ -13,3 +13,6 @@ using Test
     include("conservation_laws/cubic_test.jl")
     include("conservation_laws/variable_linear_advection_test.jl")
 end
+@time @testset "Second Order Equations" begin
+    include("second_order_eqs/wave_eq_test.jl")
+end

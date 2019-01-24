@@ -308,6 +308,35 @@ the right boundary of the grid.
 end
 
 
+"""
+  add_transpose_derivative_left!(u, D::DerivativeOperator, der_order::Val{N})
+
+Compute the transposed `N`-th derivative to the function given by the coefficients `u` at
+the left boundary of the grid.
+"""
+@inline function add_transpose_derivative_left!(u::AbstractVector, D::DerivativeOperator, der_order::Val{N}, α) where {N}
+    factor = α / D.Δx^N
+    coef = D.coefficients.left_boundary_derivatives[N].coef
+    for i in 1:length(coef)
+        u[i] += factor * coef[i]
+    end
+end
+
+"""
+  add_transpose_derivative_right!(u, D::DerivativeOperator, der_order::Val{N})
+
+Compute the transposed `N`-th derivative to the function given by the coefficients `u` at
+the right boundary of the grid.
+"""
+@inline function add_transpose_derivative_right!(u::AbstractVector, D::DerivativeOperator, der_order::Val{N}, α) where {N}
+    factor = α / D.Δx^N
+    coef = D.coefficients.right_boundary_derivatives[N].coef
+    for i in 1:length(coef)
+        u[end-i+1] += factor * coef[i]
+    end
+end
+
+
 
 """
     mul!(dest::AbstractVector, D::DerivativeOperator, u::AbstractVector, α, β)
