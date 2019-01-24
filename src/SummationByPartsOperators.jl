@@ -63,6 +63,7 @@ include("conservation_laws/general_laws.jl")
 include("conservation_laws/burgers.jl")
 include("conservation_laws/cubic.jl")
 include("conservation_laws/variable_linear_advection.jl")
+include("second_order_eqs/wave_eq.jl")
 
 
 # exports
@@ -92,6 +93,7 @@ export Tadmor1989, MadayTadmor1989, Tadmor1993,
 
 export BurgersPeriodicSemidiscretisation, BurgersNonperiodicSemidiscretisation,
        CubicPeriodicSemidiscretisation, CubicNonperiodicSemidiscretisation,
-       VariableLinearAdvectionNonperiodicSemidiscretisation
+       VariableLinearAdvectionNonperiodicSemidiscretisation,
+       WaveEquationNonperiodicSemidiscretisation
 
 end # module
