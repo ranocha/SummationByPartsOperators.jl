@@ -1,6 +1,6 @@
 using Test, SummationByPartsOperators
 
-BCs = (Val(:HomogeneousDirichlet), Val(:HomogeneousNeumann))
+BCs = (Val(:HomogeneousDirichlet), Val(:HomogeneousNeumann), Val(:NonReflecting))
 
 for T in (Float32, Float64), left_bc in BCs, right_bc in BCs
     xmin = T(-1)

@@ -43,8 +43,10 @@ function (disc::WaveEquationNonperiodicSemidiscretisation)(ddu, du, u, p, t)
         add_transpose_derivative_left!(ddu, derivative, Val(1), -u[1] / left_boundary_weight(derivative))
         # only a rough estimate, should probably be improved
         # see Mattsson, Ham, Iaccarino (2009) Stable boundary ...
-        # parameter α in Table 1
+        # parameter α in Table 1 instead of accuracy_order(derivative)
         @inbounds ddu[1] -= accuracy_order(derivative) * u[1] / left_boundary_weight(derivative)^2
+    elseif left_bc == Val(:NonReflecting)
+        @inbounds ddu[1] -= (du[1] - derivative_left(derivative, u, Val(1))) / left_boundary_weight(derivative)
     else
         throw(ArgumentError("Boundary condition $left_bc not implemented."))
     end
@@ -55,6 +57,8 @@ function (disc::WaveEquationNonperiodicSemidiscretisation)(ddu, du, u, p, t)
         add_transpose_derivative_right!(ddu, derivative, Val(1), u[end] / right_boundary_weight(derivative))
         # only a rough estimate, should probably be improved, see above
         @inbounds ddu[end] -= accuracy_order(derivative) * u[end] / right_boundary_weight(derivative)^2
+    elseif right_bc == Val(:NonReflecting)
+        @inbounds ddu[end] -= (du[end] + derivative_right(derivative, u, Val(1))) / right_boundary_weight(derivative)
     else
         throw(ArgumentError("Boundary condition $right_bc not implemented."))
     end
