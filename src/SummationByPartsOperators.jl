@@ -16,6 +16,7 @@ using DiffEqCallbacks
 
 import Base: *, -
 import LinearAlgebra: mul!
+export mul!
 @reexport using PolynomialBases
 import PolynomialBases: integrate, evaluate_coefficients, evaluate_coefficients!,
                         compute_coefficients, compute_coefficients!
