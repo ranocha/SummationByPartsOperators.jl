@@ -426,9 +426,9 @@ function periodic_derivative_coefficients(derivative_order, accuracy_order, left
     LowerOffset = sum(lower_idx)
     UpperOffset = sum(upper_idx)
 
-    lower_coef = SVector{LowerOffset, T}(reverse(c[lower_idx]))
+    lower_coef = SVector{LowerOffset, T}(T.(reverse(c[lower_idx])))
     central_coef = T(c[central_idx])
-    upper_coef = SVector{UpperOffset, T}(c[upper_idx])
+    upper_coef = SVector{UpperOffset, T}(T.(c[upper_idx]))
 
     source = Fornberg1998()
 
