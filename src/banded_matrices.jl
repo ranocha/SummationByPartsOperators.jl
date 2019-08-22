@@ -1,4 +1,4 @@
-import BandedMatrices: BandedMatrix, isbanded, bandwidth
+import .BandedMatrices: BandedMatrix, isbanded, bandwidth
 
 const BandedDerivativeOperator= Union{DerivativeOperator,DissipationOperator,VarCoefDerivativeOperator}
 
