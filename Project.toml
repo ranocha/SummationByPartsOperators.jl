@@ -1,6 +1,6 @@
 name = "SummationByPartsOperators"
 uuid = "9f78cca6-572e-554e-b819-917d2f1cf240"
-version = "0.1.1"
+version = "0.1.2"
 author = ["Hendrik Ranocha"]
 
 [deps]
