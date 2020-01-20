@@ -23,7 +23,7 @@ end
 
 
 struct ScalarIntegralQuantities{T} <: FieldVector{2,T}
-    mass::T 
+    mass::T
     energy::T
 end
 
@@ -31,7 +31,7 @@ function DiffEqCallbacks.SavingCallback(semidisc::AbstractSemidiscretisation; kw
     T = eltype(semidisc.derivative)
 
     save_func = (u,t,integrator) -> integrate(u->ScalarIntegralQuantities(u,u^2),
-                                                u, integrator.f)
+                                                u, integrator.f.f)
     saved_values = SavedValues(T, ScalarIntegralQuantities{T})
     SavingCallback(save_func, saved_values; kwargs...)
 end
