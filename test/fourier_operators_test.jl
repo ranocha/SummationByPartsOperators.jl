@@ -48,12 +48,19 @@ for T in (Float32, Float64)
         D = fourier_derivative_operator(xmin, xmax, N)
         x = grid(D)
         u = @. sinpi(x) - cospi(x)^2 + exp(sinpi(x))
+        println(devnull, D)
 
         # see e.g. Steven G. Johnson (2011) Notes on FFT based differentiation
         @test (Matrix(D^2) ≈ Matrix(D)^2) == isodd(N)
 
+        @test Matrix(D^2) ≈ Matrix(D * D) ≈ Matrix((I * D) * D) ≈ Matrix(D * (D * I))
+        @test issymmetric(I - D^2)
+        @test !issymmetric(I + D)
+        @test !issymmetric(D - I)
+
         poly = (I + 2D + 5*D^2) * (2I * D - D^3 * 5I) * (D*2 - D^2 * 5)
         @test poly.coef == (0.0, 0.0, 4.0, -2.0, -10.0, -45.0, 0.0, 125.0)
+        println(devnull, poly)
 
         @test (I + one(T)/2*D) * u ≈ (u + D*u ./ 2)
 
@@ -63,8 +70,16 @@ for T in (Float32, Float64)
         v = (I - D^2) \ u
         @test D * v ≈ (D / (I - D^2)) * u
 
-        v = ((I - D^2) / (I + D^4)) * u
+        rat = (I - D^2) / (I + D^4)
+        println(devnull, rat)
+        v = rat * u
         @test (I - D^2) \ (v + D^4 * v) ≈ u
+
+        rat1 = (I - D^2) / (I + D^4)
+        rat2 = (I + D^4) / (I - D^2)
+        rat3 = (I - D^4) / (I - D^2)
+        @test (rat2 + rat3) * u ≈ 2 * ((I - D^2) \ u)
+        @test (rat1 * rat2) * u ≈ u
     end
 end
 
