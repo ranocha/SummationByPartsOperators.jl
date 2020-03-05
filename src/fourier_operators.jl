@@ -119,7 +119,7 @@ Kopriva (2009) Implementing Spectral Methods for PDEs, Algorithm 18.
 function fourier_derivative_matrix(N, xmin::Real=0.0, xmax::Real=2π)
     T = promote_type(typeof(xmin), typeof(xmax))
     jac_2 = T(π) / (xmax - xmin)
-    D = Array{T}(N, N)
+    D = Array{T}(undef, N, N)
     @inbounds for j in 1:N, i in 1:N
         j == i && continue
         D[i,j] = (-1)^(i+j) * cot((i-j)*T(π)/N) * jac_2
