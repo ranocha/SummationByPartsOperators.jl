@@ -85,8 +85,6 @@ function mul!(dest::AbstractVector{T}, D::FourierDerivativeOperator, u::Abstract
         @inbounds tmp[end] *= (N-1)*im * jac
     end
     mul!(dest, brfft_plan, tmp)
-
-    nothing
 end
 
 # TODO there is no 5 argument mul! in FFTW.jl...
@@ -102,10 +100,12 @@ end
 #     @inbounds @simd for j in Base.OneTo(length(tmp)-1)
 #         tmp[j] *= (j-1)*im * jac
 #     end
-#     @inbounds tmp[end] = 0
+#     if iseven(N)
+#         @inbounds tmp[end] = zero(eltype(tmp))
+#     else
+#         @inbounds tmp[end] *= (N-1)*im * jac
+#     end
 #     mul!(dest, brfft_plan, tmp, α, β)
-
-#     nothing
 # end
 
 
@@ -381,8 +381,25 @@ function mul!(dest::AbstractVector{T}, poly::FourierPolynomialDerivativeOperator
     # see e.g. Steven G. Johnson (2011) Notes on FFT based differentiation
     @inbounds tmp[end] *= evalpoly((N-1)*im * jac*N, coef_end) / N
     mul!(dest, brfft_plan, tmp)
+end
 
-    nothing
+function LinearAlgebra.ldiv!(dest::AbstractVector{T}, rat::FourierPolynomialDerivativeOperator, u::AbstractVector{T}) where {T}
+    @unpack D1, coef, coef_end = rat
+    @unpack jac, tmp, rfft_plan, brfft_plan = D1
+    N, _ = size(D1)
+    @boundscheck begin
+        @argcheck N == length(u)
+        @argcheck N == length(dest)
+    end
+
+    mul!(tmp, rfft_plan, u)
+    @inbounds @simd for j in Base.OneTo(length(tmp)-1)
+        # *N ) / N: brfft instead of irfft
+        tmp[j] /= (evalpoly((j-1)*im * jac*N, coef) * N)
+    end
+    # see e.g. Steven G. Johnson (2011) Notes on FFT based differentiation
+    @inbounds tmp[end] /= (evalpoly((N-1)*im * jac*N, coef_end) * N)
+    mul!(dest, brfft_plan, tmp)
 end
 
 
@@ -423,6 +440,10 @@ function FourierRationalDerivativeOperator(num::FourierPolynomialDerivativeOpera
     FourierRationalDerivativeOperator(num.D1, num.coef, (one(T),))
 end
 
+function FourierRationalDerivativeOperator(D::FourierDerivativeOperator)
+    FourierRationalDerivativeOperator(FourierPolynomialDerivativeOperator(D))
+end
+
 function Base.:/(num::FourierPolynomialDerivativeOperator, den::FourierPolynomialDerivativeOperator)
     @argcheck num.D1.jac == den.D1.jac ArgumentError
     @argcheck num.D1.Δx == den.D1.Δx ArgumentError
@@ -432,17 +453,121 @@ function Base.:/(num::FourierPolynomialDerivativeOperator, den::FourierPolynomia
     FourierRationalDerivativeOperator(num.D1, num.coef, den.coef)
 end
 
+function Base.:/(num::FourierDerivativeOperator, den::FourierPolynomialDerivativeOperator)
+    FourierPolynomialDerivativeOperator(num) / den
+end
+
+function Base.:/(num::FourierPolynomialDerivativeOperator, den::FourierDerivativeOperator)
+    num / FourierPolynomialDerivativeOperator(den)
+end
+
 function Base.://(num::FourierPolynomialDerivativeOperator, den::FourierPolynomialDerivativeOperator)
     num / den
 end
 
-function Base.inv(den::FourierPolynomialDerivativeOperator)
-    T = eltype(den)
-    FourierRationalDerivativeOperator(den.D1, (one(T),), den.coef)
+function Base.inv(rat::FourierRationalDerivativeOperator)
+    FourierRationalDerivativeOperator(rat.D1, rat.den_coef, rat.num_coef)
 end
 
-function Base.inv(D::FourierDerivativeOperator)
-    inv(FourierPolynomialDerivativeOperator(D))
+function Base.inv(den::Union{FourierDerivativeOperator,FourierPolynomialDerivativeOperator})
+    inv(FourierRationalDerivativeOperator(den))
+end
+
+
+function Base.:+(rat1::FourierRationalDerivativeOperator, rat2::FourierRationalDerivativeOperator)
+    T = eltype(rat1)
+    @argcheck T == eltype(rat2) ArgumentError
+    @argcheck rat1.D1.jac == rat2.D1.jac ArgumentError
+    @argcheck rat1.D1.Δx == rat2.D1.Δx ArgumentError
+    @argcheck rat1.D1.grid_compute == rat2.D1.grid_compute DimensionMismatch
+    @argcheck rat1.D1.grid_evaluate == rat2.D1.grid_evaluate DimensionMismatch
+
+    num_coef = add_poly(mul_poly(rat1.num_coef, rat2.den_coef), mul_poly(rat1.den_coef, rat2.num_coef))
+    den_coef = mul_poly(rat1.den_coef, rat2.den_coef)
+    FourierRationalDerivativeOperator(rat1.D1, num_coef, den_coef)
+end
+
+function Base.:+(rat1::FourierRationalDerivativeOperator, rat2::Union{FourierDerivativeOperator,FourierPolynomialDerivativeOperator})
+    rat1 + FourierRationalDerivativeOperator(rat2)
+end
+
+function Base.:+(rat1::Union{FourierDerivativeOperator,FourierPolynomialDerivativeOperator}, rat2::FourierRationalDerivativeOperator)
+    FourierRationalDerivativeOperator(rat1) + rat2
+end
+
+function Base.:-(rat1::FourierRationalDerivativeOperator, rat2::FourierRationalDerivativeOperator)
+    T = eltype(rat1)
+    @argcheck T == eltype(rat2) ArgumentError
+    @argcheck rat1.D1.jac == rat2.D1.jac ArgumentError
+    @argcheck rat1.D1.Δx == rat2.D1.Δx ArgumentError
+    @argcheck rat1.D1.grid_compute == rat2.D1.grid_compute DimensionMismatch
+    @argcheck rat1.D1.grid_evaluate == rat2.D1.grid_evaluate DimensionMismatch
+
+    num_coef = subtract_poly(mul_poly(rat1.num_coef, rat2.den_coef), mul_poly(rat1.den_coef, rat2.num_coef))
+    den_coef = mul_poly(rat1.den_coef, rat2.den_coef)
+    FourierRationalDerivativeOperator(rat1.D1, num_coef, den_coef)
+end
+
+function Base.:-(rat1::FourierRationalDerivativeOperator, rat2::Union{FourierDerivativeOperator,FourierPolynomialDerivativeOperator})
+    rat1 - FourierRationalDerivativeOperator(rat2)
+end
+
+function Base.:-(rat1::Union{FourierDerivativeOperator,FourierPolynomialDerivativeOperator}, rat2::FourierRationalDerivativeOperator)
+    FourierRationalDerivativeOperator(rat1) - rat2
+end
+
+function Base.:*(rat1::FourierRationalDerivativeOperator, rat2::FourierRationalDerivativeOperator)
+    T = eltype(rat1)
+    @argcheck T == eltype(rat2) ArgumentError
+    @argcheck rat1.D1.jac == rat2.D1.jac ArgumentError
+    @argcheck rat1.D1.Δx == rat2.D1.Δx ArgumentError
+    @argcheck rat1.D1.grid_compute == rat2.D1.grid_compute DimensionMismatch
+    @argcheck rat1.D1.grid_evaluate == rat2.D1.grid_evaluate DimensionMismatch
+
+    num_coef = mul_poly(rat1.num_coef, rat2.num_coef)
+    den_coef = mul_poly(rat1.den_coef, rat2.den_coef)
+    FourierRationalDerivativeOperator(rat1.D1, num_coef, den_coef)
+end
+
+function Base.:*(rat1::FourierRationalDerivativeOperator, rat2::Union{FourierDerivativeOperator,FourierPolynomialDerivativeOperator})
+    rat1 * FourierRationalDerivativeOperator(rat2)
+end
+
+function Base.:*(rat1::Union{FourierDerivativeOperator,FourierPolynomialDerivativeOperator}, rat2::FourierRationalDerivativeOperator)
+    FourierRationalDerivativeOperator(rat1) * rat2
+end
+
+function Base.:/(rat1::FourierRationalDerivativeOperator, rat2::FourierRationalDerivativeOperator)
+    T = eltype(rat1)
+    @argcheck T == eltype(rat2) ArgumentError
+    @argcheck rat1.D1.jac == rat2.D1.jac ArgumentError
+    @argcheck rat1.D1.Δx == rat2.D1.Δx ArgumentError
+    @argcheck rat1.D1.grid_compute == rat2.D1.grid_compute DimensionMismatch
+    @argcheck rat1.D1.grid_evaluate == rat2.D1.grid_evaluate DimensionMismatch
+
+    num_coef = mul_poly(rat1.num_coef, rat2.den_coef)
+    den_coef = mul_poly(rat1.den_coef, rat2.num_coef)
+    FourierRationalDerivativeOperator(rat1.D1, num_coef, den_coef)
+end
+
+function Base.:/(rat1::FourierRationalDerivativeOperator, rat2::Union{FourierDerivativeOperator,FourierPolynomialDerivativeOperator})
+    rat1 / FourierRationalDerivativeOperator(rat2)
+end
+
+function Base.:/(rat1::Union{FourierDerivativeOperator,FourierPolynomialDerivativeOperator}, rat2::FourierRationalDerivativeOperator)
+    FourierRationalDerivativeOperator(rat1) / rat2
+end
+
+function Base.://(rat1::FourierRationalDerivativeOperator, rat2::FourierRationalDerivativeOperator)
+    rat1 / rat2
+end
+
+function Base.://(rat1::FourierRationalDerivativeOperator, rat2::Union{FourierDerivativeOperator,FourierPolynomialDerivativeOperator})
+    rat1 / rat2
+end
+
+function Base.://(rat1::Union{FourierDerivativeOperator,FourierPolynomialDerivativeOperator}, rat2::FourierRationalDerivativeOperator)
+    rat1 / rat2
 end
 
 
@@ -463,8 +588,30 @@ function mul!(dest::AbstractVector{T}, rat::FourierRationalDerivativeOperator, u
     # see e.g. Steven G. Johnson (2011) Notes on FFT based differentiation
     @inbounds tmp[end] *= evalpoly((N-1)*im * jac*N, num_coef_end) / (N * evalpoly((N-1)*im * jac*N, den_coef_end))
     mul!(dest, brfft_plan, tmp)
+end
 
-    nothing
+function LinearAlgebra.ldiv!(dest::AbstractVector{T}, rat::FourierRationalDerivativeOperator, u::AbstractVector{T}) where {T}
+    @unpack D1, num_coef, num_coef_end, den_coef, den_coef_end = rat
+    @unpack jac, tmp, rfft_plan, brfft_plan = D1
+    N, _ = size(D1)
+    @boundscheck begin
+        @argcheck N == length(u)
+        @argcheck N == length(dest)
+    end
+
+    mul!(tmp, rfft_plan, u)
+    @inbounds @simd for j in Base.OneTo(length(tmp)-1)
+        # *N ) / N: brfft instead of irfft
+        tmp[j] *= evalpoly((j-1)*im * jac*N, den_coef) / (N * evalpoly((j-1)*im * jac*N, num_coef))
+    end
+    # see e.g. Steven G. Johnson (2011) Notes on FFT based differentiation
+    @inbounds tmp[end] *= evalpoly((N-1)*im * jac*N, den_coef_end) / (N * evalpoly((N-1)*im * jac*N, num_coef_end))
+    mul!(dest, brfft_plan, tmp)
+end
+
+function Base.:\(rat::Union{FourierRationalDerivativeOperator,FourierPolynomialDerivativeOperator}, u::AbstractVector{T}) where {T}
+    dest = similar(u)
+    ldiv!(dest, rat, u)
 end
 
 

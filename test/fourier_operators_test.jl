@@ -59,6 +59,12 @@ for T in (Float32, Float64)
 
         v = (I - D^2) * u
         @test inv(I - D^2) * v ≈ u
+
+        v = (I - D^2) \ u
+        @test D * v ≈ (D / (I - D^2)) * u
+
+        v = ((I - D^2) / (I + D^4)) * u
+        @test (I - D^2) \ (v + D^4 * v) ≈ u
     end
 end
 
