@@ -40,6 +40,22 @@ for T in (Float32, Float64)
 end
 
 
+# Check Fourier polynomial operators
+for T in (Float32, Float64)
+    xmin = -one(T)
+    xmax = one(T)
+    N = 8
+    D = fourier_derivative_operator(xmin, xmax, N)
+    x = grid(D)
+    u = @. sinpi(x) - cospi(x)^2 + exp(sinpi(x))
+
+    poly = (I + 2D + 5*D^2) * (2I * D - D^3 * 5I) * (D*2 - D^2 * 5)
+    @test poly.coef == (0.0, 0.0, 4.0, -2.0, -10.0, -45.0, 0.0, 125.0)
+
+    @test (I + one(T)/2*D) * u ≈ (u + D*u ./ 2)
+end
+
+
 # (Super) Spectral Viscosity
 source_SV = (Tadmor1989(), MadayTadmor1989(), TadmorWaagan2012Standard(), TadmorWaagan2012Convergent())
 source_SSV = (Tadmor1993(),)

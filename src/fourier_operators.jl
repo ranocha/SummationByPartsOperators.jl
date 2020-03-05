@@ -50,8 +50,8 @@ function FourierDerivativeOperator(xmin::T, xmax::T, N::Int) where {T<:Real}
     FourierDerivativeOperator(jac, Δx, grid_compute, grid_evaluate, uhat, rfft_plan, brfft_plan)
 end
 
-function fourier_derivative_operator(xmin::T, xmax::T, N::Int) where {T<:Real}
-    FourierDerivativeOperator(xmin, xmax, N)
+function fourier_derivative_operator(xmin::Real, xmax::Real, N::Int)
+    FourierDerivativeOperator(promote(xmin, xmax)..., N)
 end
 
 derivative_order(D::FourierDerivativeOperator) = 1
@@ -84,6 +84,25 @@ function mul!(dest::AbstractVector{T}, D::FourierDerivativeOperator, u::Abstract
     nothing
 end
 
+# TODO there is no 5 argument mul! in FFTW.jl...
+# function mul!(dest::AbstractVector{T}, D::FourierDerivativeOperator, u::AbstractVector{T}, α, β) where {T}
+#     @unpack jac, tmp, rfft_plan, brfft_plan = D
+#     N, _ = size(D)
+#     @boundscheck begin
+#         @argcheck N == length(u)
+#         @argcheck N == length(dest)
+#     end
+
+#     mul!(tmp, rfft_plan, u)
+#     @inbounds @simd for j in Base.OneTo(length(tmp)-1)
+#         tmp[j] *= (j-1)*im * jac
+#     end
+#     @inbounds tmp[end] = 0
+#     mul!(dest, brfft_plan, tmp, α, β)
+
+#     nothing
+# end
+
 
 """
     fourier_derivative_matrix(N, xmin::Real=0.0, xmax::Real=2π)
@@ -102,6 +121,231 @@ function fourier_derivative_matrix(N, xmin::Real=0.0, xmax::Real=2π)
         D[i,i] -= D[i,j]
     end
     D
+end
+
+
+
+struct FourierPolynomialDerivativeOperator{T<:Real, Grid, RFFT, BRFFT, N} <: AbstractDerivativeOperator{T}
+    D1::FourierDerivativeOperator{T,Grid,RFFT,BRFFT}
+    coef::NTuple{N,T}
+end
+
+function FourierPolynomialDerivativeOperator(D1::FourierDerivativeOperator)
+    T = eltype(D1)
+    FourierPolynomialDerivativeOperator(D1, (zero(T), one(T)))
+end
+
+Base.size(poly::FourierPolynomialDerivativeOperator) = size(poly.D1)
+function LinearAlgebra.issymmetric(poly::FourierPolynomialDerivativeOperator)
+    @unpack coef = poly
+    all(iszero, coef[idx] for idx in eachindex(coef) if iseven(idx))
+end
+grid(poly::FourierPolynomialDerivativeOperator) = grid(poly.D1)
+
+function Base.show(io::IO, poly::FourierPolynomialDerivativeOperator)
+    print(io, "Fourier polynomial with coefficients\n")
+    print(io, poly.coef)
+    print(io, "\nof the operator:\n")
+    print(io, poly.D1)
+end
+
+function Base.:*(D1::FourierDerivativeOperator, D2::FourierDerivativeOperator)
+    T = eltype(D1)
+    @argcheck T == eltype(D2) ArgumentError
+    @argcheck D1.jac == D2.jac ArgumentError
+    @argcheck D1.Δx == D2.Δx ArgumentError
+    @argcheck D1.grid_compute == D2.grid_compute DimensionMismatch
+    @argcheck D1.grid_evaluate == D2.grid_evaluate DimensionMismatch
+
+    FourierPolynomialDerivativeOperator(D1, (zero(T), zero(T), one(T)))
+end
+
+function Base.literal_pow(::typeof(^), D1::FourierDerivativeOperator, ::Val{P}) where {P}
+    T = eltype(D1)
+    coef = Base.setindex( ntuple(_->zero(T), Val{P+1}()), one(T), P+1)
+    FourierPolynomialDerivativeOperator(D1, coef)
+end
+
+function Base.:*(factor::Union{Real,Integer}, poly::FourierPolynomialDerivativeOperator)
+    @unpack coef = poly
+    for idx in 1:length(coef)
+        coef = Base.setindex(coef, factor*coef[idx], idx)
+    end
+
+    FourierPolynomialDerivativeOperator(poly.D1, coef)
+end
+
+function Base.:*(poly::FourierPolynomialDerivativeOperator, factor::Union{Real,Integer})
+    factor * poly
+end
+
+function Base.:*(D::FourierDerivativeOperator, factor::Union{Real,Integer})
+    FourierPolynomialDerivativeOperator(D) * factor
+end
+
+function Base.:*(factor::Union{Real,Integer}, D::FourierDerivativeOperator)
+    D * factor
+end
+
+function Base.:*(poly::FourierPolynomialDerivativeOperator, scaling::UniformScaling)
+    scaling.λ * poly
+end
+
+function Base.:*(scaling::UniformScaling, poly::FourierPolynomialDerivativeOperator)
+    poly * scaling
+end
+
+function Base.:*(D::FourierDerivativeOperator, scaling::UniformScaling)
+    scaling * FourierPolynomialDerivativeOperator(D)
+end
+
+function Base.:*(scaling::UniformScaling, D::FourierDerivativeOperator)
+    FourierPolynomialDerivativeOperator(D) * scaling
+end
+
+function Base.:*(poly1::FourierPolynomialDerivativeOperator, poly2::FourierPolynomialDerivativeOperator)
+    T = eltype(poly1.D1)
+    @argcheck T == eltype(poly2.D1) ArgumentError
+    @argcheck poly1.D1.jac == poly2.D1.jac ArgumentError
+    @argcheck poly1.D1.Δx == poly2.D1.Δx ArgumentError
+    @argcheck poly1.D1.grid_compute == poly2.D1.grid_compute DimensionMismatch
+    @argcheck poly1.D1.grid_evaluate == poly2.D1.grid_evaluate DimensionMismatch
+
+    coef = ntuple(idx->zero(T), (length(poly1.coef)-1) + (length(poly2.coef)-1) + 1)
+    for idx1 in 0:length(poly1.coef)-1, idx2 in 0:length(poly2.coef)-1
+        coef = Base.setindex(coef, coef[idx1+idx2+1] + poly1.coef[idx1+1] * poly2.coef[idx2+1], idx1+idx2+1)
+    end
+
+    FourierPolynomialDerivativeOperator(poly1.D1, coef)
+end
+
+function Base.:*(poly1::FourierPolynomialDerivativeOperator, D2::FourierDerivativeOperator)
+    poly1 * FourierPolynomialDerivativeOperator(D2)
+end
+
+function Base.:*(D1::FourierDerivativeOperator, poly2::FourierPolynomialDerivativeOperator)
+    FourierPolynomialDerivativeOperator(D1) * poly2
+end
+
+
+
+function Base.:+(poly1::FourierPolynomialDerivativeOperator, poly2::FourierPolynomialDerivativeOperator)
+    T = eltype(poly1.D1)
+    @argcheck T == eltype(poly2.D1) ArgumentError
+    @argcheck poly1.D1.jac == poly2.D1.jac ArgumentError
+    @argcheck poly1.D1.Δx == poly2.D1.Δx ArgumentError
+    @argcheck poly1.D1.grid_compute == poly2.D1.grid_compute DimensionMismatch
+    @argcheck poly1.D1.grid_evaluate == poly2.D1.grid_evaluate DimensionMismatch
+
+    coef = ntuple(idx->zero(T), max(length(poly1.coef), length(poly2.coef)))
+    for idx in 1:length(poly1.coef)
+        coef = Base.setindex(coef, coef[idx] + poly1.coef[idx], idx)
+    end
+    for idx in 1:length(poly2.coef)
+        coef = Base.setindex(coef, coef[idx] + poly2.coef[idx], idx)
+    end
+
+    FourierPolynomialDerivativeOperator(poly1.D1, coef)
+end
+
+function Base.:+(D1::FourierDerivativeOperator, poly2::FourierPolynomialDerivativeOperator)
+    FourierPolynomialDerivativeOperator(D1) + poly2
+end
+
+function Base.:+(poly1::FourierPolynomialDerivativeOperator, D2::FourierDerivativeOperator)
+    poly1 + FourierPolynomialDerivativeOperator(D2)
+end
+
+function Base.:+(poly::FourierPolynomialDerivativeOperator, scaling::UniformScaling)
+    @unpack coef = poly
+    coef = Base.setindex(coef, coef[1] + scaling.λ, 1)
+
+    FourierPolynomialDerivativeOperator(poly.D1, coef)
+end
+
+function Base.:+(scaling::UniformScaling, poly::FourierPolynomialDerivativeOperator)
+    poly + scaling
+end
+
+function Base.:+(D::FourierDerivativeOperator, scaling::UniformScaling)
+    FourierPolynomialDerivativeOperator(D) + scaling
+end
+
+function Base.:+(scaling::UniformScaling, D::FourierDerivativeOperator)
+    D + scaling
+end
+
+
+function Base.:-(poly1::FourierPolynomialDerivativeOperator, poly2::FourierPolynomialDerivativeOperator)
+    T = eltype(poly1.D1)
+    @argcheck T == eltype(poly2.D1) ArgumentError
+    @argcheck poly1.D1.jac == poly2.D1.jac ArgumentError
+    @argcheck poly1.D1.Δx == poly2.D1.Δx ArgumentError
+    @argcheck poly1.D1.grid_compute == poly2.D1.grid_compute DimensionMismatch
+    @argcheck poly1.D1.grid_evaluate == poly2.D1.grid_evaluate DimensionMismatch
+
+    coef = ntuple(idx->zero(T), max(length(poly1.coef), length(poly2.coef)))
+    for idx in 1:length(poly1.coef)
+        coef = Base.setindex(coef, coef[idx] + poly1.coef[idx], idx)
+    end
+    for idx in 1:length(poly2.coef)
+        coef = Base.setindex(coef, coef[idx] - poly2.coef[idx], idx)
+    end
+
+    FourierPolynomialDerivativeOperator(poly1.D1, coef)
+end
+
+function Base.:-(D1::FourierDerivativeOperator, poly2::FourierPolynomialDerivativeOperator)
+    FourierPolynomialDerivativeOperator(D1) - poly2
+end
+
+function Base.:-(poly1::FourierPolynomialDerivativeOperator, D2::FourierDerivativeOperator)
+    poly1 - FourierPolynomialDerivativeOperator(D2)
+end
+
+function Base.:-(poly::FourierPolynomialDerivativeOperator, scaling::UniformScaling)
+    @unpack coef = poly
+    coef = Base.setindex(coef, coef[1] - scaling.λ, 1)
+
+    FourierPolynomialDerivativeOperator(poly.D1, coef)
+end
+
+function Base.:-(scaling::UniformScaling, poly::FourierPolynomialDerivativeOperator)
+    @unpack coef = poly
+    coef = Base.setindex(coef, scaling.λ - coef[1], 1)
+    for idx in 2:length(coef)
+        coef = Base.setindex(coef, -coef[idx], idx)
+    end
+
+    FourierPolynomialDerivativeOperator(poly.D1, coef)
+end
+
+function Base.:-(D::FourierDerivativeOperator, scaling::UniformScaling)
+    FourierPolynomialDerivativeOperator(D) - scaling
+end
+
+function Base.:-(scaling::UniformScaling, D::FourierDerivativeOperator)
+    scaling - D
+end
+
+
+function mul!(dest::AbstractVector{T}, poly::FourierPolynomialDerivativeOperator, u::AbstractVector{T}) where {T}
+    @unpack D1, coef = poly
+    @unpack jac, tmp, rfft_plan, brfft_plan = D1
+    N, _ = size(D1)
+    @boundscheck begin
+        @argcheck N == length(u)
+        @argcheck N == length(dest)
+    end
+
+    mul!(tmp, rfft_plan, u)
+    @inbounds @simd for j in Base.OneTo(length(tmp))
+        # *N ) / N: brfft instead of irfft
+        tmp[j] *= evalpoly((j-1)*im * jac*N, coef) / N
+    end
+    mul!(dest, brfft_plan, tmp)
+
+    nothing
 end
 
 
