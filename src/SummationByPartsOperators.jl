@@ -71,7 +71,7 @@ include("second_order_eqs/wave_eq.jl")
 export PeriodicDerivativeOperator, PeriodicDissipationOperator,
        DerivativeOperator, DissipationOperator,
        VarCoefDerivativeOperator, SourceOfCoefficients,
-       FourierDerivativeOperator, FourierConstantViscosity,
+       FourierDerivativeOperator, FourierConstantViscosity, FourierPolynomialDerivativeOperator
        LegendreDerivativeOperator
 export FilterCallback, ConstantFilter,
        ExponentialFilter
