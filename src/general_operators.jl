@@ -48,7 +48,10 @@ function Base.Matrix(D::AbstractDerivativeOperator{T}) where {T}
     A = Array{T}(undef, size(D)...)
     for i in 1:size(D,2)
         v[i] = T(1)
-        mul!(view(A,:,i), D, v)
+        # Using a view here can cause problems with FFT based operators.
+        # Since this part is not performance critical, we can also just use copies.
+        # mul!(view(A,:,i), D, v)
+        A[:,i] .= D * v
         v[i] = T(0)
     end
     A

@@ -1,7 +1,6 @@
 environment:
   matrix:
-  # - julia_version: 1.3 # latest 1.3.x
-  - julia_version: 1   # latest 1.x.y
+  - julia_version: 1.4 # latest 1.4.x
   # - julia_version: nightly
 
 platform:

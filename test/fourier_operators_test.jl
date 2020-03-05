@@ -44,15 +44,22 @@ end
 for T in (Float32, Float64)
     xmin = -one(T)
     xmax = one(T)
-    N = 8
-    D = fourier_derivative_operator(xmin, xmax, N)
-    x = grid(D)
-    u = @. sinpi(x) - cospi(x)^2 + exp(sinpi(x))
+    for N in (8, 9)
+        D = fourier_derivative_operator(xmin, xmax, N)
+        x = grid(D)
+        u = @. sinpi(x) - cospi(x)^2 + exp(sinpi(x))
 
-    poly = (I + 2D + 5*D^2) * (2I * D - D^3 * 5I) * (D*2 - D^2 * 5)
-    @test poly.coef == (0.0, 0.0, 4.0, -2.0, -10.0, -45.0, 0.0, 125.0)
+        # see e.g. Steven G. Johnson (2011) Notes on FFT based differentiation
+        @test (Matrix(D^2) ≈ Matrix(D)^2) == isodd(N)
 
-    @test (I + one(T)/2*D) * u ≈ (u + D*u ./ 2)
+        poly = (I + 2D + 5*D^2) * (2I * D - D^3 * 5I) * (D*2 - D^2 * 5)
+        @test poly.coef == (0.0, 0.0, 4.0, -2.0, -10.0, -45.0, 0.0, 125.0)
+
+        @test (I + one(T)/2*D) * u ≈ (u + D*u ./ 2)
+
+        v = (I - D^2) * u
+        @test inv(I - D^2) * v ≈ u
+    end
 end
 
 
