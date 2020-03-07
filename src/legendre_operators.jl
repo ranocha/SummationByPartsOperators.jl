@@ -46,6 +46,8 @@ function evaluate_coefficients(u, D::LegendreDerivativeOperator,
     evaluate_coefficients(u, D.basis, npoints)
 end
 
+mass_matrix(D::LegendreDerivativeOperator) = Diagonal(D.Δx * D.basis.weights)
+
 function Base.show(io::IO, D::LegendreDerivativeOperator{T}) where {T}
     x = grid(D)
     print(io, "First derivative operator {T=", T, "} \n")

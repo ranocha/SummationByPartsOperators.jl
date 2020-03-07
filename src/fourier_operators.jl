@@ -109,6 +109,26 @@ end
 # end
 
 
+
+function integrate(func, u::AbstractVector, D::FourierDerivativeOperator)
+    @boundscheck begin
+        length(u) == length(grid(D))
+    end
+    @unpack Δx = D
+
+    @inbounds res = sum(func, u)
+
+    Δx * res
+end
+
+function mass_matrix(D::FourierDerivativeOperator)
+    @unpack Δx = D
+
+    Δx * I
+end
+
+
+
 """
     fourier_derivative_matrix(N, xmin::Real=0.0, xmax::Real=2π)
 

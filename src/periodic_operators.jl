@@ -664,6 +664,12 @@ function integrate(func, u::AbstractVector, D::PeriodicDerivativeOperator)
     Δx * res
 end
 
+function mass_matrix(D::PeriodicDerivativeOperator)
+    @unpack Δx = D
+
+    Δx * I
+end
+
 
 """
     periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N, parallel=Val{:serial}())

@@ -80,6 +80,9 @@ for T in (Float32, Float64)
         rat3 = (I - D^4) / (I - D^2)
         @test (rat2 + rat3) * u ≈ 2 * ((I - D^2) \ u)
         @test (rat1 * rat2) * u ≈ u
+
+        @test integrate(u, D) ≈ sum(mass_matrix(D) * u)
+        @test integrate(u->u^2, u, D) ≈ dot(u, mass_matrix(D), u)
     end
 end
 
