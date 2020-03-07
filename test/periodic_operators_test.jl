@@ -179,6 +179,9 @@ let T=Float32
     @test_throws ArgumentError periodic_central_derivative_operator(4, accuracy_order, xmin, xmax, N)
     @test_throws ArgumentError periodic_central_derivative_operator(5, accuracy_order, xmin, xmax, N)
     @test_throws ArgumentError periodic_central_derivative_operator(6, accuracy_order, xmin, xmax, N)
+
+    @test integrate(x7, D) ≈ sum(mass_matrix(D) * x7)
+    @test integrate(u->u^2, x7, D) ≈ dot(x7, mass_matrix(D), x7)
 end
 
 # Accuracy tests with Float64.
@@ -361,6 +364,9 @@ let T = Float64
     @test_throws ArgumentError periodic_central_derivative_operator(4, accuracy_order, xmin, xmax, N)
     @test_throws ArgumentError periodic_central_derivative_operator(5, accuracy_order, xmin, xmax, N)
     @test_throws ArgumentError periodic_central_derivative_operator(6, accuracy_order, xmin, xmax, N)
+
+    @test integrate(x7, D) ≈ sum(mass_matrix(D) * x7)
+    @test integrate(u->u^2, x7, D) ≈ dot(x7, mass_matrix(D), x7)
 end
 
 # Compare Fornberg algorithm with exact representation of central derivative coefficients.

@@ -48,6 +48,8 @@ for T in (Float32, Float64), filter_type in (ExponentialFilter(),)
             norm2_u = integrate(u->u^2, u, D)
             filter!(u)
             @test integrate(u->u^2, u, D) <= norm2_u
+            @test integrate(u, D) ≈ sum(mass_matrix(D) * u)
+            @test integrate(u->u^2, u, D) ≈ dot(u, mass_matrix(D), u)
         end
     end
 end
