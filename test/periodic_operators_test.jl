@@ -795,3 +795,50 @@ let T = Float32
     @test_throws ArgumentError D = periodic_derivative_operator(Holoborodko2008(), der_order, acc_order,
                                          xmin, xmax, N, stencil_width=13)
 end
+
+
+# Check rational operators
+for T in (Float32, Float64)
+    xmin = -one(T)
+    xmax = one(T)
+    for N in (8, 9), derivative_order in (1, 2), accuracy_order in (2, 3, 4)
+        D = periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
+        x = grid(D)
+        u = @. sinpi(x) - cospi(x)^2 + exp(sinpi(x))
+        println(devnull, D)
+
+        @test Matrix(D^2) ≈ Matrix(D)^2
+
+        @test Matrix(D^2) ≈ Matrix(D * D) ≈ Matrix((I * D) * D) ≈ Matrix(D * (D * I))
+        @test issymmetric(I - D^2)
+        @test !issymmetric(I + D)
+        @test !issymmetric(D - I)
+
+        rat = (I + 2D + 5*D^2) * (2I * D - D^3 * 5I) * (D*2 - D^2 * 5)
+        @test rat.num_coef == (0.0, 0.0, 4.0, -2.0, -10.0, -45.0, 0.0, 125.0)
+        @test rat.den_coef == (1.0, )
+        println(devnull, rat)
+
+        @test (I + one(T)/2*D) * u ≈ (u + D*u ./ 2)
+
+        v = (I - D^2) * u
+        @test inv(I - D^2) * v ≈ u
+
+        v = (I - D^2) \ u
+        @test D * v ≈ (D / (I - D^2)) * u
+
+        rat = (I - D^2) / (I + D^4)
+        println(devnull, rat)
+        v = rat * u
+        @test (I - D^2) \ (v + D^4 * v) ≈ u
+
+        rat1 = (I - D^2) / (I + D^4)
+        rat2 = (I + D^4) / (I - D^2)
+        rat3 = (I - D^4) / (I - D^2)
+        @test (rat2 + rat3) * u ≈ 2 * ((I - D^2) \ u)
+        @test (rat1 * rat2) * u ≈ u
+
+        @test integrate(u, D) ≈ sum(mass_matrix(D) * u)
+        @test integrate(u->u^2, u, D) ≈ dot(u, mass_matrix(D), u)
+    end
+end

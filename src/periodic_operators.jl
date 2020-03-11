@@ -842,3 +842,331 @@ function dissipation_operator(D::PeriodicDerivativeOperator;
     Di = periodic_derivative_operator(order, order, first(x), last(x), length(x), parallel)
     PeriodicDissipationOperator(factor, Di)
 end
+
+
+
+
+struct PeriodicRationalDerivativeOperator{T<:Real, Dtype<:PeriodicDerivativeOperator{T}, Nnum, Nden, RFFT, IRFFT} <: AbstractPeriodicDerivativeOperator{T}
+    D::Dtype
+    num_coef::NTuple{Nnum,T}
+    den_coef::NTuple{Nden,T}
+    tmp::Vector{Complex{T}}
+    eigval::Vector{Complex{T}}
+    rfft_plan::RFFT
+    irfft_plan::IRFFT
+
+    function PeriodicRationalDerivativeOperator(D::Dtype, num_coef::NTuple{Nnum,T}, den_coef::NTuple{Nden,T}, tmp::Vector{Complex{T}}, eigval::Vector{Complex{T}}, rfft_plan::RFFT, irfft_plan::IRFFT) where {T<:Real, Dtype<:PeriodicDerivativeOperator{T}, Nnum, Nden, RFFT, IRFFT}
+        @argcheck length(irfft_plan) == length(tmp) DimensionMismatch
+        @argcheck length(irfft_plan) == length(eigval) DimensionMismatch
+        @argcheck length(irfft_plan) == (length(rfft_plan)÷2)+1 DimensionMismatch
+        @argcheck length(grid(D)) == length(rfft_plan) DimensionMismatch
+
+        new{T,Dtype,Nnum,Nden,RFFT,IRFFT}(D, num_coef, den_coef, tmp, eigval, rfft_plan, irfft_plan)
+    end
+end
+
+function PeriodicRationalDerivativeOperator(D::PeriodicDerivativeOperator{T}) where {T<:Real}
+    x = grid(D)
+    u = zero.(x)
+    rfft_plan = plan_rfft(u)
+    tmp = rfft_plan * u
+    irfft_plan = plan_irfft(tmp, length(x))
+
+    eigval = similar(tmp)
+    @unpack factor = D
+    @unpack lower_coef, central_coef, upper_coef = D.coefficients
+    N = length(x)
+
+    for idx in 1:length(eigval)
+        tmp_eigval = zero(T)
+        for j in Base.OneTo(length(lower_coef))
+            tmp_eigval += factor * lower_coef[j] * (exp(2π * im * (idx-1) * (-j) / N))
+        end
+        tmp_eigval += factor * central_coef
+        for j in Base.OneTo(length(upper_coef))
+            tmp_eigval += factor * upper_coef[j] * (exp(2π * im * (idx-1) * (+j) / N))
+        end
+        eigval[idx] = tmp_eigval
+    end
+
+    PeriodicRationalDerivativeOperator(D, (zero(T), one(T)), (one(T),), tmp, eigval, rfft_plan, irfft_plan)
+end
+
+function PeriodicRationalDerivativeOperator(rat::PeriodicRationalDerivativeOperator, num_coef, den_coef)
+
+    PeriodicRationalDerivativeOperator(rat.D, num_coef, den_coef, rat.tmp, rat.eigval, rat.rfft_plan, rat.irfft_plan)
+end
+
+function PeriodicRationalDerivativeOperator(D::PeriodicDerivativeOperator, num_coef, den_coef)
+
+    PeriodicRationalDerivativeOperator(PeriodicRationalDerivativeOperator(D), num_coef, den_coef)
+end
+
+Base.size(rat::PeriodicRationalDerivativeOperator) = size(rat.D)
+grid(rat::PeriodicRationalDerivativeOperator) = grid(rat.D)
+
+function Base.show(io::IO, rat::PeriodicRationalDerivativeOperator)
+    print(io, "Rational periodic operator with coefficients\n")
+    print(io, rat.num_coef)
+    print(io, "\nand\n")
+    print(io, rat.den_coef)
+    print(io, "\nof the operator:\n")
+    print(io, rat.D)
+end
+
+function LinearAlgebra.issymmetric(rat::PeriodicRationalDerivativeOperator)
+    @unpack num_coef, den_coef = rat
+    num_is_even = all(iszero, num_coef[idx] for idx in eachindex(num_coef) if iseven(idx))
+    den_is_even = all(iszero, den_coef[idx] for idx in eachindex(den_coef) if iseven(idx))
+
+    num_is_even == den_is_even
+end
+
+
+function mul_poly(coef1, coef2)
+    T = promote_type(eltype(coef1), eltype(coef2))
+
+    coef = ntuple(idx->zero(T), (length(coef1)-1) + (length(coef2)-1) + 1)
+    for idx1 in 0:length(coef1)-1, idx2 in 0:length(coef2)-1
+        coef = Base.setindex(coef, coef[idx1+idx2+1] + coef1[idx1+1] * coef2[idx2+1], idx1+idx2+1)
+    end
+
+    coef
+end
+
+function add_poly(coef1, coef2)
+    T = promote_type(eltype(coef1), eltype(coef2))
+
+    coef = ntuple(idx->zero(T), max(length(coef1), length(coef2)))
+    for idx in 1:length(coef1)
+        coef = Base.setindex(coef, coef[idx] + coef1[idx], idx)
+    end
+    for idx in 1:length(coef2)
+        coef = Base.setindex(coef, coef[idx] + coef2[idx], idx)
+    end
+
+    coef
+end
+
+function subtract_poly(coef1, coef2)
+    T = promote_type(eltype(coef1), eltype(coef2))
+
+    coef = ntuple(idx->zero(T), max(length(coef1), length(coef2)))
+    for idx in 1:length(coef1)
+        coef = Base.setindex(coef, coef[idx] + coef1[idx], idx)
+    end
+    for idx in 1:length(coef2)
+        coef = Base.setindex(coef, coef[idx] - coef2[idx], idx)
+    end
+
+    coef
+end
+
+
+function Base.inv(rat::PeriodicRationalDerivativeOperator)
+    PeriodicRationalDerivativeOperator(rat, rat.den_coef, rat.num_coef)
+end
+
+function Base.:*(D1::PeriodicDerivativeOperator, D2::PeriodicDerivativeOperator)
+    T = eltype(D1)
+    @argcheck D1 == D2 ArgumentError
+
+    PeriodicRationalDerivativeOperator(D1, (zero(T), zero(T), one(T)), (one(T),))
+end
+
+function Base.literal_pow(::typeof(^), D1::PeriodicDerivativeOperator, ::Val{P}) where {P}
+    T = eltype(D1)
+    coef = Base.setindex( ntuple(_->zero(T), Val{P+1}()), one(T), P+1)
+    PeriodicRationalDerivativeOperator(D1, coef, (one(T),))
+end
+
+function Base.:*(factor::Union{Real,Integer}, rat::PeriodicRationalDerivativeOperator)
+    @unpack num_coef = rat
+    for idx in 1:length(num_coef)
+        num_coef = Base.setindex(num_coef, factor*num_coef[idx], idx)
+    end
+
+    PeriodicRationalDerivativeOperator(rat, num_coef, rat.den_coef)
+end
+
+function Base.:*(rat::PeriodicRationalDerivativeOperator, factor::Union{Real,Integer})
+    factor * rat
+end
+
+function Base.:*(D::PeriodicDerivativeOperator, factor::Union{Real,Integer})
+    PeriodicRationalDerivativeOperator(D) * factor
+end
+
+function Base.:*(factor::Union{Real,Integer}, D::PeriodicDerivativeOperator)
+    D * factor
+end
+
+function Base.:*(rat::PeriodicRationalDerivativeOperator, scaling::UniformScaling)
+    scaling.λ * rat
+end
+
+function Base.:*(scaling::UniformScaling, rat::PeriodicRationalDerivativeOperator)
+    rat * scaling
+end
+
+function Base.:*(D::PeriodicDerivativeOperator, scaling::UniformScaling)
+    scaling * PeriodicRationalDerivativeOperator(D)
+end
+
+function Base.:*(scaling::UniformScaling, D::PeriodicDerivativeOperator)
+    PeriodicRationalDerivativeOperator(D) * scaling
+end
+
+
+function Base.:+(rat1::PeriodicRationalDerivativeOperator, rat2::PeriodicRationalDerivativeOperator)
+    @argcheck rat1.D == rat2.D ArgumentError
+
+    num_coef = add_poly(mul_poly(rat1.num_coef, rat2.den_coef), mul_poly(rat1.den_coef, rat2.num_coef))
+    den_coef = mul_poly(rat1.den_coef, rat2.den_coef)
+    PeriodicRationalDerivativeOperator(rat1, num_coef, den_coef)
+end
+
+function Base.:+(rat1::PeriodicRationalDerivativeOperator, rat2::PeriodicDerivativeOperator)
+    rat1 + PeriodicRationalDerivativeOperator(rat2)
+end
+
+function Base.:+(rat1::PeriodicDerivativeOperator, rat2::PeriodicRationalDerivativeOperator)
+    PeriodicRationalDerivativeOperator(rat1) + rat2
+end
+
+function Base.:+(rat::PeriodicRationalDerivativeOperator, scaling::UniformScaling)
+    @unpack num_coef, den_coef = rat
+    num_coef = add_poly(num_coef, den_coef)
+
+    PeriodicRationalDerivativeOperator(rat, num_coef, den_coef)
+end
+
+function Base.:+(scaling::UniformScaling, rat::PeriodicRationalDerivativeOperator)
+    rat + scaling
+end
+
+function Base.:+(D::PeriodicDerivativeOperator, scaling::UniformScaling)
+    PeriodicRationalDerivativeOperator(D) + scaling
+end
+
+function Base.:+(scaling::UniformScaling, D::PeriodicDerivativeOperator)
+    scaling + PeriodicRationalDerivativeOperator(D)
+end
+
+function Base.:-(rat1::PeriodicRationalDerivativeOperator, rat2::PeriodicRationalDerivativeOperator)
+    @argcheck rat1.D == rat2.D ArgumentError
+
+    num_coef = subtract_poly(mul_poly(rat1.num_coef, rat2.den_coef), mul_poly(rat1.den_coef, rat2.num_coef))
+    den_coef = mul_poly(rat1.den_coef, rat2.den_coef)
+    PeriodicRationalDerivativeOperator(rat1, num_coef, den_coef)
+end
+
+function Base.:-(rat1::PeriodicRationalDerivativeOperator, rat2::PeriodicDerivativeOperator)
+    rat1 - PeriodicRationalDerivativeOperator(rat2)
+end
+
+function Base.:-(rat1::PeriodicDerivativeOperator, rat2::PeriodicRationalDerivativeOperator)
+    PeriodicRationalDerivativeOperator(rat1) - rat2
+end
+
+function Base.:-(rat::PeriodicRationalDerivativeOperator, scaling::UniformScaling)
+    @unpack num_coef, den_coef = rat
+    num_coef = subtract_poly(num_coef, den_coef)
+
+    PeriodicRationalDerivativeOperator(rat, num_coef, den_coef)
+end
+
+function Base.:-(scaling::UniformScaling, rat::PeriodicRationalDerivativeOperator)
+    @unpack num_coef, den_coef = rat
+    num_coef = subtract_poly(den_coef, num_coef)
+
+    PeriodicRationalDerivativeOperator(rat, num_coef, den_coef)
+end
+
+function Base.:-(D::PeriodicDerivativeOperator, scaling::UniformScaling)
+    PeriodicRationalDerivativeOperator(D) - scaling
+end
+
+function Base.:-(scaling::UniformScaling, D::PeriodicDerivativeOperator)
+    scaling - PeriodicRationalDerivativeOperator(D)
+end
+
+function Base.:*(rat1::PeriodicRationalDerivativeOperator, rat2::PeriodicRationalDerivativeOperator)
+    @argcheck rat1.D == rat2.D ArgumentError
+
+    num_coef = mul_poly(rat1.num_coef, rat2.num_coef)
+    den_coef = mul_poly(rat1.den_coef, rat2.den_coef)
+    PeriodicRationalDerivativeOperator(rat1, num_coef, den_coef)
+end
+
+function Base.:*(rat1::PeriodicRationalDerivativeOperator, rat2::PeriodicDerivativeOperator)
+    rat1 * PeriodicRationalDerivativeOperator(rat2)
+end
+
+function Base.:*(rat1::PeriodicDerivativeOperator, rat2::PeriodicRationalDerivativeOperator)
+    PeriodicRationalDerivativeOperator(rat1) * rat2
+end
+
+function Base.:/(rat1::PeriodicRationalDerivativeOperator, rat2::PeriodicRationalDerivativeOperator)
+    @argcheck rat1.D == rat2.D ArgumentError
+
+    num_coef = mul_poly(rat1.num_coef, rat2.den_coef)
+    den_coef = mul_poly(rat1.den_coef, rat2.num_coef)
+    PeriodicRationalDerivativeOperator(rat1, num_coef, den_coef)
+end
+
+function Base.:/(rat1::PeriodicRationalDerivativeOperator, rat2::PeriodicDerivativeOperator)
+    rat1 / PeriodicRationalDerivativeOperator(rat2)
+end
+
+function Base.:/(rat1::PeriodicDerivativeOperator, rat2::PeriodicRationalDerivativeOperator)
+    PeriodicRationalDerivativeOperator(rat1) / rat2
+end
+
+function Base.://(rat1::PeriodicRationalDerivativeOperator, rat2::PeriodicRationalDerivativeOperator)
+    rat1 / rat2
+end
+
+function Base.://(rat1::PeriodicRationalDerivativeOperator, rat2::PeriodicDerivativeOperator)
+    rat1 / rat2
+end
+
+function Base.://(rat1::PeriodicDerivativeOperator, rat2::PeriodicRationalDerivativeOperator)
+    rat1 / rat2
+end
+
+
+function mul!(dest::AbstractVector{T}, rat::PeriodicRationalDerivativeOperator, u::AbstractVector{T}) where {T}
+    @unpack D, num_coef, den_coef, tmp, eigval, rfft_plan, irfft_plan = rat
+    N, _ = size(D)
+    @boundscheck begin
+        @argcheck N == length(u)
+        @argcheck N == length(dest)
+    end
+
+    mul!(tmp, rfft_plan, u)
+    @inbounds @simd for j in Base.OneTo(length(tmp))
+        tmp[j] *= evalpoly(eigval[j], num_coef) / evalpoly(eigval[j], den_coef)
+    end
+    mul!(dest, irfft_plan, tmp)
+end
+
+function LinearAlgebra.ldiv!(dest::AbstractVector{T}, rat::PeriodicRationalDerivativeOperator, u::AbstractVector{T}) where {T}
+    @unpack D, num_coef, den_coef, tmp, eigval, rfft_plan, irfft_plan = rat
+    N, _ = size(D)
+    @boundscheck begin
+        @argcheck N == length(u)
+        @argcheck N == length(dest)
+    end
+
+    mul!(tmp, rfft_plan, u)
+    @inbounds @simd for j in Base.OneTo(length(tmp))
+        tmp[j] *= evalpoly(eigval[j], den_coef) / evalpoly(eigval[j], num_coef)
+    end
+    mul!(dest, irfft_plan, tmp)
+end
+
+function Base.:\(rat::PeriodicRationalDerivativeOperator{T}, u::AbstractVector{T}) where {T}
+    dest = similar(u)
+    ldiv!(dest, rat, u)
+end
