@@ -82,7 +82,7 @@ function mul!(dest::AbstractVector{T}, D::FourierDerivativeOperator, u::Abstract
     if iseven(N)
         @inbounds tmp[end] = zero(eltype(tmp))
     else
-        @inbounds tmp[end] *= (N-1)*im * jac
+        @inbounds tmp[end] *= (length(tmp)-1)*im * jac
     end
     mul!(dest, brfft_plan, tmp)
 end
@@ -103,7 +103,7 @@ end
 #     if iseven(N)
 #         @inbounds tmp[end] = zero(eltype(tmp))
 #     else
-#         @inbounds tmp[end] *= (N-1)*im * jac
+#         @inbounds tmp[end] *= (length(tmp)-1)*im * jac
 #     end
 #     mul!(dest, brfft_plan, tmp, α, β)
 # end
@@ -149,6 +149,15 @@ function fourier_derivative_matrix(N, xmin::Real=0.0, xmax::Real=2π)
 end
 
 
+function _coef_end(coef, D1::FourierDerivativeOperator{T}) where {T}
+    if isodd(size(D1, 1))
+        return coef
+    else
+        return ntuple(i -> isodd(i) ? coef[i] : zero(T), length(coef))
+    end
+end
+# fallback for periodic FD operators etc.
+_coef_end(coef, D1) = coef
 
 struct FourierPolynomialDerivativeOperator{T<:Real, Grid, RFFT, BRFFT, N} <: AbstractPeriodicDerivativeOperator{T}
     D1::FourierDerivativeOperator{T,Grid,RFFT,BRFFT}
@@ -156,10 +165,7 @@ struct FourierPolynomialDerivativeOperator{T<:Real, Grid, RFFT, BRFFT, N} <: Abs
     coef_end::NTuple{N,T}
 
     function FourierPolynomialDerivativeOperator(D1::FourierDerivativeOperator{T,Grid,RFFT,BRFFT}, coef::NTuple{N,T}) where {T<:Real, Grid, RFFT, BRFFT, N}
-        coef_end = ntuple(i -> isodd(i) ? coef[i] : zero(T), length(coef))
-        if isodd(size(D1, 1))
-            coef_end = coef
-        end
+        coef_end = _coef_end(coef, D1)
         new{T,Grid,RFFT,BRFFT,N}(D1, coef, coef_end)
     end
 end
@@ -360,7 +366,7 @@ function mul!(dest::AbstractVector{T}, poly::FourierPolynomialDerivativeOperator
         tmp[j] *= evalpoly((j-1)*im * jac*N, coef) / N
     end
     # see e.g. Steven G. Johnson (2011) Notes on FFT based differentiation
-    @inbounds tmp[end] *= evalpoly((N-1)*im * jac*N, coef_end) / N
+    @inbounds tmp[end] *= evalpoly((length(tmp)-1)*im * jac*N, coef_end) / N
     mul!(dest, brfft_plan, tmp)
 end
 
@@ -379,7 +385,7 @@ function LinearAlgebra.ldiv!(dest::AbstractVector{T}, rat::FourierPolynomialDeri
         tmp[j] /= (evalpoly((j-1)*im * jac*N, coef) * N)
     end
     # see e.g. Steven G. Johnson (2011) Notes on FFT based differentiation
-    @inbounds tmp[end] /= (evalpoly((N-1)*im * jac*N, coef_end) * N)
+    @inbounds tmp[end] /= (evalpoly((length(tmp)-1)*im * jac*N, coef_end) * N)
     mul!(dest, brfft_plan, tmp)
 end
 
@@ -393,12 +399,8 @@ struct FourierRationalDerivativeOperator{T<:Real, Grid, RFFT, BRFFT, Nnum, Nden}
     den_coef_end::NTuple{Nden,T}
 
     function FourierRationalDerivativeOperator(D1::FourierDerivativeOperator{T,Grid,RFFT,BRFFT}, num_coef::NTuple{Nnum,T}, den_coef::NTuple{Nden,T}) where {T<:Real, Grid, RFFT, BRFFT, Nnum, Nden}
-        num_coef_end = ntuple(i -> isodd(i) ? num_coef[i] : zero(T), length(num_coef))
-        den_coef_end = ntuple(i -> isodd(i) ? den_coef[i] : zero(T), length(den_coef))
-        if isodd(size(D1, 1))
-            num_coef_end = num_coef
-            den_coef_end = den_coef
-        end
+        num_coef_end = _coef_end(num_coef, D1)
+        den_coef_end = _coef_end(den_coef, D1)
         new{T,Grid,RFFT,BRFFT,Nnum,Nden}(D1, num_coef, num_coef_end, den_coef, den_coef_end)
     end
 end
@@ -448,10 +450,6 @@ end
 
 function Base.:/(num::FourierPolynomialDerivativeOperator, den::FourierDerivativeOperator)
     num / FourierPolynomialDerivativeOperator(den)
-end
-
-function Base.://(num::FourierPolynomialDerivativeOperator, den::FourierPolynomialDerivativeOperator)
-    num / den
 end
 
 function Base.inv(rat::FourierRationalDerivativeOperator)
@@ -547,18 +545,6 @@ function Base.:/(rat1::Union{FourierDerivativeOperator,FourierPolynomialDerivati
     FourierRationalDerivativeOperator(rat1) / rat2
 end
 
-function Base.://(rat1::FourierRationalDerivativeOperator, rat2::FourierRationalDerivativeOperator)
-    rat1 / rat2
-end
-
-function Base.://(rat1::FourierRationalDerivativeOperator, rat2::Union{FourierDerivativeOperator,FourierPolynomialDerivativeOperator})
-    rat1 / rat2
-end
-
-function Base.://(rat1::Union{FourierDerivativeOperator,FourierPolynomialDerivativeOperator}, rat2::FourierRationalDerivativeOperator)
-    rat1 / rat2
-end
-
 
 function mul!(dest::AbstractVector{T}, rat::FourierRationalDerivativeOperator, u::AbstractVector{T}) where {T}
     @unpack D1, num_coef, num_coef_end, den_coef, den_coef_end = rat
@@ -575,7 +561,7 @@ function mul!(dest::AbstractVector{T}, rat::FourierRationalDerivativeOperator, u
         tmp[j] *= evalpoly((j-1)*im * jac*N, num_coef) / (N * evalpoly((j-1)*im * jac*N, den_coef))
     end
     # see e.g. Steven G. Johnson (2011) Notes on FFT based differentiation
-    @inbounds tmp[end] *= evalpoly((N-1)*im * jac*N, num_coef_end) / (N * evalpoly((N-1)*im * jac*N, den_coef_end))
+    @inbounds tmp[end] *= evalpoly((length(tmp)-1)*im * jac*N, num_coef_end) / (N * evalpoly((length(tmp)-1)*im * jac*N, den_coef_end))
     mul!(dest, brfft_plan, tmp)
 end
 
@@ -601,6 +587,227 @@ end
 function Base.:\(rat::Union{FourierRationalDerivativeOperator,FourierPolynomialDerivativeOperator}, u::AbstractVector{T}) where {T}
     dest = similar(u)
     ldiv!(dest, rat, u)
+end
+
+
+
+
+struct PeriodicDerivativeOperatorQuotient{T<:Real, numDtype<:Union{PeriodicDerivativeOperator{T},FourierDerivativeOperator{T}}, denDtype<:Union{PeriodicDerivativeOperator{T},FourierDerivativeOperator{T}}, Nnum, Nden, RFFT, IRFFT} <: AbstractPeriodicDerivativeOperator{T}
+    num_D::numDtype
+    den_D::denDtype
+    num_coef::NTuple{Nnum,T}
+    den_coef::NTuple{Nden,T}
+    num_coef_end::NTuple{Nnum,T}
+    den_coef_end::NTuple{Nden,T}
+    tmp::Vector{Complex{T}}
+    num_eigval::Vector{Complex{T}}
+    den_eigval::Vector{Complex{T}}
+    rfft_plan::RFFT
+    irfft_plan::IRFFT
+
+    function PeriodicDerivativeOperatorQuotient(num_D::numDtype, den_D::denDtype, num_coef::NTuple{Nnum,T}, den_coef::NTuple{Nden,T}, tmp::Vector{Complex{T}}, num_eigval::Vector{Complex{T}}, den_eigval::Vector{Complex{T}}, rfft_plan::RFFT, irfft_plan::IRFFT) where {T<:Real, numDtype<:Union{PeriodicDerivativeOperator{T},FourierDerivativeOperator{T}}, denDtype<:Union{PeriodicDerivativeOperator{T},FourierDerivativeOperator{T}}, Nnum, Nden, RFFT, IRFFT}
+        @argcheck length(irfft_plan) == length(tmp) DimensionMismatch
+        @argcheck length(irfft_plan) == length(num_eigval) DimensionMismatch
+        @argcheck length(irfft_plan) == length(den_eigval) DimensionMismatch
+        @argcheck length(irfft_plan) == (length(rfft_plan)÷2)+1 DimensionMismatch
+        @argcheck length(grid(num_D)) == length(rfft_plan) DimensionMismatch
+        @argcheck length(grid(den_D)) == length(rfft_plan) DimensionMismatch
+
+        num_coef_end = _coef_end(num_coef, num_D)
+        den_coef_end = _coef_end(den_coef, den_D)
+
+        new{T,numDtype,denDtype,Nnum,Nden,RFFT,IRFFT}(num_D, den_D, num_coef, den_coef, num_coef_end, den_coef_end, tmp, num_eigval, den_eigval, rfft_plan, irfft_plan)
+    end
+end
+
+Base.size(quot::PeriodicDerivativeOperatorQuotient) = size(quot.num_D)
+grid(quot::PeriodicDerivativeOperatorQuotient) = grid(quot.num_D)
+
+function Base.show(io::IO, quot::PeriodicDerivativeOperatorQuotient)
+    print(io, "Quotient of the polynomial with coefficients\n")
+    print(io, quot.num_coef)
+    print(io, "\nof the operator:\n")
+    print(io, quot.num_D)
+    print(io, "\nand the polynomial with coefficients\n")
+    print(io, quot.den_coef)
+    print(io, "\nof the operator:\n")
+    print(io, quot.den_D)
+end
+
+
+function _eigvals!(eigval::Vector{Complex{T}}, D::FourierDerivativeOperator{T}) where {T<:Real}
+    N = length(grid(D))
+    jac = D.jac * N
+    @inbounds for idx in 1:(length(eigval))
+        eigval[idx] = (idx-1)*im * jac
+    end
+
+    eigval
+end
+
+function Base.://(num::FourierDerivativeOperator, den::PeriodicRationalDerivativeOperator)
+    T = eltype(num)
+    @argcheck T == eltype(den) ArgumentError
+    @argcheck grid(num) == grid(den) ArgumentError
+    @argcheck den.den_coef == (one(T),) ArgumentError
+
+    @unpack tmp, rfft_plan = num
+    irfft_plan = plan_irfft(tmp, length(grid(num)))
+
+    num_eigval = similar(tmp)
+    _eigvals!(num_eigval, num)
+
+    den_eigval = similar(tmp)
+    _eigvals!(den_eigval, den.D)
+
+    PeriodicDerivativeOperatorQuotient(num, den.D, (zero(T), one(T)), den.num_coef, tmp, num_eigval, den_eigval, rfft_plan, irfft_plan)
+end
+
+function Base.://(num::FourierPolynomialDerivativeOperator, den::PeriodicRationalDerivativeOperator)
+    T = eltype(num)
+    @argcheck T == eltype(den) ArgumentError
+    @argcheck grid(num) == grid(den) ArgumentError
+    @argcheck den.den_coef == (one(T),) ArgumentError
+
+    @unpack tmp, rfft_plan = num.D1
+    irfft_plan = plan_irfft(tmp, length(grid(num)))
+
+    num_eigval = similar(tmp)
+    _eigvals!(num_eigval, num.D1)
+
+    den_eigval = similar(tmp)
+    _eigvals!(den_eigval, den.D)
+
+    PeriodicDerivativeOperatorQuotient(num.D1, den.D, num.coef, den.num_coef, tmp, num_eigval, den_eigval, rfft_plan, irfft_plan)
+end
+
+function Base.://(num::PeriodicDerivativeOperator, den::PeriodicRationalDerivativeOperator)
+    T = eltype(num)
+    @argcheck T == eltype(den) ArgumentError
+    @argcheck grid(num) == grid(den) ArgumentError
+    @argcheck den.den_coef == (one(T),) ArgumentError
+
+    x = grid(num)
+    u = zero.(x)
+    rfft_plan = plan_rfft(u)
+    tmp = rfft_plan * u
+    irfft_plan = plan_irfft(tmp, length(grid(num)))
+
+    num_eigval = similar(tmp)
+    _eigvals!(num_eigval, num)
+
+    den_eigval = similar(tmp)
+    _eigvals!(den_eigval, den.D)
+
+    PeriodicDerivativeOperatorQuotient(num, den.D, (zero(T), one(T)), den.num_coef, tmp, num_eigval, den_eigval, rfft_plan, irfft_plan)
+end
+
+function Base.://(num::PeriodicRationalDerivativeOperator, den::PeriodicRationalDerivativeOperator)
+    T = eltype(num)
+    @argcheck T == eltype(den) ArgumentError
+    @argcheck grid(num) == grid(den) ArgumentError
+    @argcheck num.den_coef == (one(T),) ArgumentError
+    @argcheck den.den_coef == (one(T),) ArgumentError
+
+    x = grid(num)
+    u = zero.(x)
+    rfft_plan = plan_rfft(u)
+    tmp = rfft_plan * u
+    irfft_plan = plan_irfft(tmp, length(grid(num)))
+
+    num_eigval = similar(tmp)
+    _eigvals!(num_eigval, num.D)
+
+    den_eigval = similar(tmp)
+    _eigvals!(den_eigval, den.D)
+
+    PeriodicDerivativeOperatorQuotient(num.D, den.D, num.num_coef, den.num_coef, tmp, num_eigval, den_eigval, rfft_plan, irfft_plan)
+end
+
+function Base.://(num::FourierDerivativeOperator, den::FourierPolynomialDerivativeOperator)
+    T = eltype(num)
+    @argcheck T == eltype(den) ArgumentError
+    @argcheck grid(num) == grid(den) ArgumentError
+
+    @unpack tmp, rfft_plan = den.D1
+    irfft_plan = plan_irfft(tmp, length(grid(num)))
+
+    num_eigval = similar(tmp)
+    _eigvals!(num_eigval, num)
+
+    den_eigval = similar(tmp)
+    _eigvals!(den_eigval, den.D1)
+
+    PeriodicDerivativeOperatorQuotient(num, den.D1, (zero(T), one(T)), den.coef, tmp, num_eigval, den_eigval, rfft_plan, irfft_plan)
+end
+
+function Base.://(num::FourierPolynomialDerivativeOperator, den::FourierPolynomialDerivativeOperator)
+    T = eltype(num)
+    @argcheck T == eltype(den) ArgumentError
+    @argcheck grid(num) == grid(den) ArgumentError
+
+    @unpack tmp, rfft_plan = den.D1
+    irfft_plan = plan_irfft(tmp, length(grid(num)))
+
+    num_eigval = similar(tmp)
+    _eigvals!(num_eigval, num.D1)
+
+    den_eigval = similar(tmp)
+    _eigvals!(den_eigval, den.D1)
+
+    PeriodicDerivativeOperatorQuotient(num.D1, den.D1, num.coef, den.coef, tmp, num_eigval, den_eigval, rfft_plan, irfft_plan)
+end
+
+function Base.://(num::PeriodicDerivativeOperator, den::FourierPolynomialDerivativeOperator)
+    T = eltype(num)
+    @argcheck T == eltype(den) ArgumentError
+    @argcheck grid(num) == grid(den) ArgumentError
+
+    @unpack tmp, rfft_plan = den.D1
+    irfft_plan = plan_irfft(tmp, length(grid(num)))
+
+    num_eigval = similar(tmp)
+    _eigvals!(num_eigval, num)
+
+    den_eigval = similar(tmp)
+    _eigvals!(den_eigval, den.D1)
+
+    PeriodicDerivativeOperatorQuotient(num, den.D1, (zero(T), one(T)), den.coef, tmp, num_eigval, den_eigval, rfft_plan, irfft_plan)
+end
+
+function Base.://(num::PeriodicRationalDerivativeOperator, den::FourierPolynomialDerivativeOperator)
+    T = eltype(num)
+    @argcheck T == eltype(den) ArgumentError
+    @argcheck grid(num) == grid(den) ArgumentError
+    @argcheck num.den_coef == (one(T),) ArgumentError
+
+    @unpack tmp, rfft_plan = den.D1
+    irfft_plan = plan_irfft(tmp, length(grid(num)))
+
+    num_eigval = similar(tmp)
+    _eigvals!(num_eigval, num.D)
+
+    den_eigval = similar(tmp)
+    _eigvals!(den_eigval, den.D1)
+
+    PeriodicDerivativeOperatorQuotient(num.D, den.D1, num.num_coef, den.coef, tmp, num_eigval, den_eigval, rfft_plan, irfft_plan)
+end
+
+
+function mul!(dest::AbstractVector{T}, quot::PeriodicDerivativeOperatorQuotient, u::AbstractVector{T}) where {T}
+    @unpack num_D, num_coef, den_coef, num_coef_end, den_coef_end, tmp, num_eigval, den_eigval, rfft_plan, irfft_plan = quot
+    N, _ = size(num_D)
+    @boundscheck begin
+        @argcheck N == length(u)
+        @argcheck N == length(dest)
+    end
+
+    mul!(tmp, rfft_plan, u)
+    @inbounds @simd for j in Base.OneTo(length(tmp)-1)
+        tmp[j] *= evalpoly(num_eigval[j], num_coef) / evalpoly(den_eigval[j], den_coef)
+    end
+    tmp[end] *= evalpoly(num_eigval[end], num_coef_end) / evalpoly(den_eigval[end], den_coef_end)
+    mul!(dest, irfft_plan, tmp)
 end
 
 

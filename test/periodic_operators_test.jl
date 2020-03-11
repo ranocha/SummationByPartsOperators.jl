@@ -801,8 +801,8 @@ end
 for T in (Float32, Float64)
     xmin = -one(T)
     xmax = one(T)
-    for N in (8, 9), derivative_order in (1, 2), accuracy_order in (2, 3, 4)
-        D = periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
+    for N in (8, 9), der_order in (1, 2), acc_order in (2, 3, 4)
+        D = periodic_derivative_operator(der_order, acc_order, xmin, xmax, N)
         x = grid(D)
         u = @. sinpi(x) - cospi(x)^2 + exp(sinpi(x))
         println(devnull, D)
@@ -810,9 +810,9 @@ for T in (Float32, Float64)
         @test Matrix(D^2) ≈ Matrix(D)^2
 
         @test Matrix(D^2) ≈ Matrix(D * D) ≈ Matrix((I * D) * D) ≈ Matrix(D * (D * I))
-        @test issymmetric(I - D^2)
-        @test !issymmetric(I + D)
-        @test !issymmetric(D - I)
+        @test Matrix(I - D^2) ≈ I - Matrix(D^2)
+        @test Matrix(I + D) ≈ I + Matrix(D)
+        @test Matrix(D - I) ≈ Matrix(D) - I
 
         rat = (I + 2D + 5*D^2) * (2I * D - D^3 * 5I) * (D*2 - D^2 * 5)
         @test rat.num_coef == (0.0, 0.0, 4.0, -2.0, -10.0, -45.0, 0.0, 125.0)
@@ -840,5 +840,29 @@ for T in (Float32, Float64)
 
         @test integrate(u, D) ≈ sum(mass_matrix(D) * u)
         @test integrate(u->u^2, u, D) ≈ dot(u, mass_matrix(D), u)
+    end
+
+    for N in (8, 9), acc_order in (2, 3, 4)
+        D1a = periodic_derivative_operator(1, acc_order, xmin, xmax, N+1)
+        D2a = D1a^2
+        D1b = fourier_derivative_operator(xmin, xmax, N)
+        D2b = D1b^2
+        D2c = periodic_derivative_operator(2, acc_order, xmin, xmax, N+1)
+
+        @test Matrix(D1a // (I - D2a)) ≈ Matrix(D1a) / (I - Matrix(D2a))
+        @test Matrix(D1b // (I - D2a)) ≈ Matrix(D1b) / (I - Matrix(D2a))
+        @test Matrix(D1a // (I - D2b)) ≈ Matrix(D1a) / (I - Matrix(D2b))
+        @test Matrix(D1b // (I - D2b)) ≈ Matrix(D1b) / (I - Matrix(D2b))
+        @test Matrix(D1b // (I - D2b)) ≈ Matrix(D1b / (I - D2b))
+        @test Matrix(D1a // (I - D2c)) ≈ Matrix(D1a) / (I - Matrix(D2c))
+        @test Matrix(D1b // (I - D2c)) ≈ Matrix(D1b) / (I - Matrix(D2c))
+
+        @test Matrix((I + D1a) // (I - D2a)) ≈ (I + Matrix(D1a)) / (I - Matrix(D2a))
+        @test Matrix((I + D1b) // (I - D2a)) ≈ (I + Matrix(D1b)) / (I - Matrix(D2a))
+        @test Matrix((I + D1a) // (I - D2b)) ≈ (I + Matrix(D1a)) / (I - Matrix(D2b))
+        @test Matrix((I + D1b) // (I - D2b)) ≈ (I + Matrix(D1b)) / (I - Matrix(D2b))
+        @test Matrix((I + D1b) // (I - D2b)) ≈ Matrix((I + D1b) / (I - D2b))
+        @test Matrix((I + D1a) // (I - D2c)) ≈ (I + Matrix(D1a)) / (I - Matrix(D2c))
+        @test Matrix((I + D1b) // (I - D2c)) ≈ (I + Matrix(D1b)) / (I - Matrix(D2c))
     end
 end
