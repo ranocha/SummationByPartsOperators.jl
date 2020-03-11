@@ -69,6 +69,7 @@ include("second_order_eqs/wave_eq.jl")
 
 # exports
 export PeriodicDerivativeOperator, PeriodicDissipationOperator,
+       PeriodicRationalDerivativeOperator,
        DerivativeOperator, DissipationOperator,
        VarCoefDerivativeOperator, SourceOfCoefficients,
        FourierDerivativeOperator, FourierConstantViscosity,

@@ -150,7 +150,7 @@ end
 
 
 
-struct FourierPolynomialDerivativeOperator{T<:Real, Grid, RFFT, BRFFT, N} <: AbstractDerivativeOperator{T}
+struct FourierPolynomialDerivativeOperator{T<:Real, Grid, RFFT, BRFFT, N} <: AbstractPeriodicDerivativeOperator{T}
     D1::FourierDerivativeOperator{T,Grid,RFFT,BRFFT}
     coef::NTuple{N,T}
     coef_end::NTuple{N,T}
@@ -238,17 +238,6 @@ function Base.:*(scaling::UniformScaling, D::FourierDerivativeOperator)
     FourierPolynomialDerivativeOperator(D) * scaling
 end
 
-function mul_poly(coef1, coef2)
-    T = promote_type(eltype(coef1), eltype(coef2))
-
-    coef = ntuple(idx->zero(T), (length(coef1)-1) + (length(coef2)-1) + 1)
-    for idx1 in 0:length(coef1)-1, idx2 in 0:length(coef2)-1
-        coef = Base.setindex(coef, coef[idx1+idx2+1] + coef1[idx1+1] * coef2[idx2+1], idx1+idx2+1)
-    end
-
-    coef
-end
-
 function Base.:*(poly1::FourierPolynomialDerivativeOperator, poly2::FourierPolynomialDerivativeOperator)
     T = eltype(poly1.D1)
     @argcheck T == eltype(poly2.D1) ArgumentError
@@ -269,20 +258,6 @@ function Base.:*(D1::FourierDerivativeOperator, poly2::FourierPolynomialDerivati
     FourierPolynomialDerivativeOperator(D1) * poly2
 end
 
-
-function add_poly(coef1, coef2)
-    T = promote_type(eltype(coef1), eltype(coef2))
-
-    coef = ntuple(idx->zero(T), max(length(coef1), length(coef2)))
-    for idx in 1:length(coef1)
-        coef = Base.setindex(coef, coef[idx] + coef1[idx], idx)
-    end
-    for idx in 1:length(coef2)
-        coef = Base.setindex(coef, coef[idx] + coef2[idx], idx)
-    end
-
-    coef
-end
 
 function Base.:+(poly1::FourierPolynomialDerivativeOperator, poly2::FourierPolynomialDerivativeOperator)
     T = eltype(poly1.D1)
@@ -323,20 +298,6 @@ function Base.:+(scaling::UniformScaling, D::FourierDerivativeOperator)
     D + scaling
 end
 
-
-function subtract_poly(coef1, coef2)
-    T = promote_type(eltype(coef1), eltype(coef2))
-
-    coef = ntuple(idx->zero(T), max(length(coef1), length(coef2)))
-    for idx in 1:length(coef1)
-        coef = Base.setindex(coef, coef[idx] + coef1[idx], idx)
-    end
-    for idx in 1:length(coef2)
-        coef = Base.setindex(coef, coef[idx] - coef2[idx], idx)
-    end
-
-    coef
-end
 
 function Base.:-(poly1::FourierPolynomialDerivativeOperator, poly2::FourierPolynomialDerivativeOperator)
     T = eltype(poly1.D1)
@@ -424,7 +385,7 @@ end
 
 
 
-struct FourierRationalDerivativeOperator{T<:Real, Grid, RFFT, BRFFT, Nnum, Nden} <: AbstractDerivativeOperator{T}
+struct FourierRationalDerivativeOperator{T<:Real, Grid, RFFT, BRFFT, Nnum, Nden} <: AbstractPeriodicDerivativeOperator{T}
     D1::FourierDerivativeOperator{T,Grid,RFFT,BRFFT}
     num_coef::NTuple{Nnum,T}
     num_coef_end::NTuple{Nnum,T}
@@ -448,15 +409,23 @@ grid(rat::FourierRationalDerivativeOperator) = grid(rat.D1)
 function Base.show(io::IO, rat::FourierRationalDerivativeOperator)
     print(io, "Rational Fourier operator with coefficients\n")
     print(io, rat.num_coef)
-    print(io, "and\n")
+    print(io, "\nand\n")
     print(io, rat.den_coef)
     print(io, "\nof the operator:\n")
     print(io, rat.D1)
 end
 
+function LinearAlgebra.issymmetric(rat::FourierRationalDerivativeOperator)
+    @unpack num_coef, den_coef = rat
+    num_is_even = all(iszero, num_coef[idx] for idx in eachindex(num_coef) if iseven(idx))
+    den_is_even = all(iszero, den_coef[idx] for idx in eachindex(den_coef) if iseven(idx))
+
+    num_is_even == den_is_even
+end
+
 
 function FourierRationalDerivativeOperator(num::FourierPolynomialDerivativeOperator)
-    T = eltype(num )
+    T = eltype(num)
     FourierRationalDerivativeOperator(num.D1, num.coef, (one(T),))
 end
 
@@ -655,7 +624,7 @@ end
 
 
 
-abstract type AbstractFourierViscosity{T} <: AbstractDerivativeOperator{T} end
+abstract type AbstractFourierViscosity{T} <: AbstractPeriodicDerivativeOperator{T} end
 
 @inline source_of_coefficients(Di::AbstractFourierViscosity) = (Di.source_of_coefficients)
 
