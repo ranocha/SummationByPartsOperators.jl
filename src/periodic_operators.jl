@@ -865,19 +865,13 @@ struct PeriodicRationalDerivativeOperator{T<:Real, Dtype<:PeriodicDerivativeOper
     end
 end
 
-function PeriodicRationalDerivativeOperator(D::PeriodicDerivativeOperator{T}) where {T<:Real}
-    x = grid(D)
-    u = zero.(x)
-    rfft_plan = plan_rfft(u)
-    tmp = rfft_plan * u
-    irfft_plan = plan_irfft(tmp, length(x))
 
-    eigval = similar(tmp)
+function _eigvals!(eigval::Vector{Complex{T}}, D::PeriodicDerivativeOperator{T}) where {T<:Real}
     @unpack factor = D
     @unpack lower_coef, central_coef, upper_coef = D.coefficients
-    N = length(x)
+    N = length(grid(D))
 
-    for idx in 1:length(eigval)
+    @inbounds for idx in 1:length(eigval)
         tmp_eigval = zero(T)
         for j in Base.OneTo(length(lower_coef))
             tmp_eigval += factor * lower_coef[j] * (exp(2π * im * (idx-1) * (-j) / N))
@@ -888,6 +882,19 @@ function PeriodicRationalDerivativeOperator(D::PeriodicDerivativeOperator{T}) wh
         end
         eigval[idx] = tmp_eigval
     end
+
+    eigval
+end
+
+function PeriodicRationalDerivativeOperator(D::PeriodicDerivativeOperator{T}) where {T<:Real}
+    x = grid(D)
+    u = zero.(x)
+    rfft_plan = plan_rfft(u)
+    tmp = rfft_plan * u
+    irfft_plan = plan_irfft(tmp, length(x))
+
+    eigval = similar(tmp)
+    _eigvals!(eigval, D)
 
     PeriodicRationalDerivativeOperator(D, (zero(T), one(T)), (one(T),), tmp, eigval, rfft_plan, irfft_plan)
 end
@@ -912,14 +919,6 @@ function Base.show(io::IO, rat::PeriodicRationalDerivativeOperator)
     print(io, rat.den_coef)
     print(io, "\nof the operator:\n")
     print(io, rat.D)
-end
-
-function LinearAlgebra.issymmetric(rat::PeriodicRationalDerivativeOperator)
-    @unpack num_coef, den_coef = rat
-    num_is_even = all(iszero, num_coef[idx] for idx in eachindex(num_coef) if iseven(idx))
-    den_is_even = all(iszero, den_coef[idx] for idx in eachindex(den_coef) if iseven(idx))
-
-    num_is_even == den_is_even
 end
 
 
@@ -1121,18 +1120,6 @@ end
 
 function Base.:/(rat1::PeriodicDerivativeOperator, rat2::PeriodicRationalDerivativeOperator)
     PeriodicRationalDerivativeOperator(rat1) / rat2
-end
-
-function Base.://(rat1::PeriodicRationalDerivativeOperator, rat2::PeriodicRationalDerivativeOperator)
-    rat1 / rat2
-end
-
-function Base.://(rat1::PeriodicRationalDerivativeOperator, rat2::PeriodicDerivativeOperator)
-    rat1 / rat2
-end
-
-function Base.://(rat1::PeriodicDerivativeOperator, rat2::PeriodicRationalDerivativeOperator)
-    rat1 / rat2
 end
 
 
