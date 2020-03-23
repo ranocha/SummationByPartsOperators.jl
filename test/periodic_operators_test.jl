@@ -866,3 +866,21 @@ for T in (Float32, Float64)
         @test Matrix((I + D1b) // (I - D2c)) ≈ (I + Matrix(D1b)) / (I - Matrix(D2c))
     end
 end
+
+
+# check construction of upwind operators
+let N = 5
+    @test_throws ArgumentError periodic_derivative_operator(1, 2, 0//1, (N-1)//1, N, 1)
+    D = periodic_derivative_operator(1, 2, 0//1, (N-1)//1, N, 0)
+    @test Matrix(D) ≈ [
+        -3//2   2//1  -1//2   0//1
+        0//1  -3//2   2//1  -1//2
+        -1//2   0//1  -3//2   2//1
+        2//1  -1//2   0//1  -3//2]
+    D = periodic_derivative_operator(1, 2, 0//1, (N-1)//1, N, -2)
+    @test Matrix(D) ≈ [
+        3//2   0//1   1//2  -2//1
+    -2//1   3//2   0//1   1//2
+        1//2  -2//1   3//2   0//1
+        0//1   1//2  -2//1   3//2]
+end
