@@ -102,7 +102,83 @@ function first_derivative_coefficients(source::Mattsson2017, order::Int, T=Float
                                 left_boundary_derivatives, right_boundary_derivatives,
                                 lower_coef, central_coef, upper_coef,
                                 left_weights, right_weights, parallel, 1, order, source)
-    else
+    elseif order == 3
+      left_boundary_plus = (
+          DerivativeCoefficientRow{T,1,3}(SVector(T(-7//5),
+                                                  T(9//5),
+                                                  T(-2//5), )),
+          DerivativeCoefficientRow{T,1,4}(SVector(T(-5//13),
+                                                  T(-5//13),
+                                                  T(12//13),
+                                                  T(-2//13), )),
+      )
+      right_boundary_plus = (
+          DerivativeCoefficientRow{T,1,2}(SVector(T(1),
+                                                  T(-1), )),
+          DerivativeCoefficientRow{T,1,3}(SVector(T(9//13),
+                                                  T(-5//13),
+                                                  T(-4//13), )),
+      )
+      upper_coef_plus = SVector( T(1),
+                                 T(-1//6), )
+      central_coef_plus = T(-1//2)
+      lower_coef_plus = SVector( T(-1//3), )
+      left_weights = SVector( T(5//12),
+                              T(13//12), )
+      right_weights = left_weights
+      left_boundary_derivatives = Tuple{}()
+      right_boundary_derivatives = left_boundary_derivatives
+
+      left_boundary_minus = (
+          DerivativeCoefficientRow{T,1,2}(SVector(T(-1),
+                                                  T(1), )),
+          DerivativeCoefficientRow{T,1,3}(SVector(T(-9//13),
+                                                  T(5//13),
+                                                  T(4//13), )),
+      )
+      right_boundary_minus = (
+          DerivativeCoefficientRow{T,1,3}(SVector(T(7//5),
+                                                  T(-9//5),
+                                                  T(2//5), )),
+          DerivativeCoefficientRow{T,1,4}(SVector(T(5//13),
+                                                  T(5//13),
+                                                  T(-12//13),
+                                                  T(2//13), )),
+      )
+      upper_coef_minus     = .- lower_coef_plus
+      central_coef_minus   = .- central_coef_plus
+      lower_coef_minus     = .- upper_coef_plus
+
+      left_boundary_central  = (left_boundary_plus  .+ left_boundary_minus)  ./ 2
+      right_boundary_central = (right_boundary_plus .+ right_boundary_minus) ./ 2
+      upper_coef_central     = widening_plus(upper_coef_plus, upper_coef_minus) / 2
+      central_coef_central   = (central_coef_plus   + central_coef_minus) / 2
+      lower_coef_central     = widening_plus(lower_coef_plus, lower_coef_minus) / 2
+
+      if source.kind === :plus
+        left_boundary  = left_boundary_plus
+        right_boundary = right_boundary_plus
+        upper_coef     = upper_coef_plus
+        central_coef   = central_coef_plus
+        lower_coef     = lower_coef_plus
+      elseif source.kind === :minus
+        left_boundary  = left_boundary_minus
+        right_boundary = right_boundary_minus
+        upper_coef     = upper_coef_minus
+        central_coef   = central_coef_minus
+        lower_coef     = lower_coef_minus
+      elseif source.kind === :central
+        left_boundary  = left_boundary_central
+        right_boundary = right_boundary_central
+        upper_coef     = upper_coef_central
+        central_coef   = central_coef_central
+        lower_coef     = lower_coef_central
+      end
+      DerivativeCoefficients(left_boundary, right_boundary,
+                              left_boundary_derivatives, right_boundary_derivatives,
+                              lower_coef, central_coef, upper_coef,
+                              left_weights, right_weights, parallel, 1, order, source)
+  else
         throw(ArgumentError("Order $order not implemented/derived."))
     end
 end
