@@ -14,9 +14,7 @@ using StaticArrays
 @reexport using DiffEqBase
 using DiffEqCallbacks
 
-import Base: *, -
 import LinearAlgebra: mul!
-export mul!
 @reexport using PolynomialBases
 import PolynomialBases: integrate, evaluate_coefficients, evaluate_coefficients!,
                         compute_coefficients, compute_coefficients!
@@ -59,6 +57,7 @@ include("SBP_coefficients/Mattsson2012.jl")
 include("SBP_coefficients/Mattsson2014.jl")
 include("SBP_coefficients/MattssonAlmquistCarpenter2014Extended.jl")
 include("SBP_coefficients/MattssonAlmquistCarpenter2014Optimal.jl")
+include("SBP_coefficients/Mattsson2017.jl")
 
 include("conservation_laws/general_laws.jl")
 include("conservation_laws/burgers.jl")
@@ -91,7 +90,8 @@ export periodic_central_derivative_operator, periodic_derivative_operator, deriv
 export Fornberg1998, Holoborodko2008, BeljaddLeFlochMishraParés2017
 export MattssonNordström2004, MattssonSvärdNordström2004, MattssonSvärdShoeybi2008,
        Mattsson2012, Mattsson2014,
-       MattssonAlmquistCarpenter2014Extended, MattssonAlmquistCarpenter2014Optimal
+       MattssonAlmquistCarpenter2014Extended, MattssonAlmquistCarpenter2014Optimal,
+       Mattsson2017
 export Tadmor1989, MadayTadmor1989, Tadmor1993,
        TadmorWaagan2012Standard, TadmorWaagan2012Convergent
 

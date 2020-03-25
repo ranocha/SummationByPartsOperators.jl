@@ -31,7 +31,7 @@ Base.@propagate_inbounds function mul!(dest, D::AbstractDerivativeOperator, u)
     mul!(dest, D, u, one(eltype(dest)))
 end
 
-@noinline function *(D::AbstractDerivativeOperator, u)
+@noinline function Base.:*(D::AbstractDerivativeOperator, u)
     @boundscheck begin
         @argcheck size(D,1) == size(D,2) == length(u) DimensionMismatch
     end
