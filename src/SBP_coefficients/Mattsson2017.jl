@@ -311,6 +311,144 @@ function first_derivative_coefficients(source::Mattsson2017, order::Int, T=Float
                               left_boundary_derivatives, right_boundary_derivatives,
                               lower_coef, central_coef, upper_coef,
                               left_weights, right_weights, parallel, 1, order, source)
+    elseif order == 5
+      left_boundary_plus = (
+          DerivativeCoefficientRow{T,1,4}(SVector(T(-366//251),
+                                                  T(941//502),
+                                                  T(-94//251),
+                                                  T(-21//502), )),
+          DerivativeCoefficientRow{T,1,5}(SVector(T(-869//1794),
+                                                  T(-22//299),
+                                                  T(375//598),
+                                                  T(-86//897),
+                                                  T(8//299), )),
+          DerivativeCoefficientRow{T,1,6}(SVector(T(58//633),
+                                                  T(-255//422),
+                                                  T(-58//211),
+                                                  T(1309//1266),
+                                                  T(-60//211),
+                                                  T(8//211), )),
+          DerivativeCoefficientRow{T,1,7}(SVector(T(45//1478),
+                                                  T(-22//739),
+                                                  T(-661//1478),
+                                                  T(-234//739),
+                                                  T(720//739),
+                                                  T(-180//739),
+                                                  T(24//739), )),
+      )
+      right_boundary_plus = (
+          DerivativeCoefficientRow{T,1,4}(SVector(T(354//251),
+                                                  T(-869//502),
+                                                  T(58//251),
+                                                  T(45//502), )),
+          DerivativeCoefficientRow{T,1,4}(SVector(T(941//1794),
+                                                  T(-22//299),
+                                                  T(-255//598),
+                                                  T(-22//897), )),
+          DerivativeCoefficientRow{T,1,5}(SVector(T(-94//633),
+                                                  T(375//422),
+                                                  T(-58//211),
+                                                  T(-661//1266),
+                                                  T(12//211), )),
+          DerivativeCoefficientRow{T,1,6}(SVector(T(-21//1478),
+                                                  T(-86//739),
+                                                  T(1309//1478),
+                                                  T(-234//739),
+                                                  T(-360//739),
+                                                  T(36//739), )),
+      )
+      upper_coef_plus = SVector( T(1),
+                                 T(-1//4),
+                                 T(1//30), )
+      central_coef_plus = T(-1//3)
+      lower_coef_plus = SVector( T(-1//2),
+                                 T(1//20), )
+      left_weights = SVector( T(251//720),
+                              T(299//240),
+                              T(211//240),
+                              T(739//720), )
+      right_weights = left_weights
+      left_boundary_derivatives = Tuple{}()
+      right_boundary_derivatives = left_boundary_derivatives
+
+      left_boundary_minus = (
+          DerivativeCoefficientRow{T,1,4}(SVector(T(-354//251),
+                                                  T(869//502),
+                                                  T(-58//251),
+                                                  T(-45//502), )),
+          DerivativeCoefficientRow{T,1,4}(SVector(T(-941//1794),
+                                                  T(22//299),
+                                                  T(255//598),
+                                                  T(22//897), )),
+          DerivativeCoefficientRow{T,1,5}(SVector(T(94//633),
+                                                  T(-375//422),
+                                                  T(58//211),
+                                                  T(661//1266),
+                                                  T(-12//211), )),
+          DerivativeCoefficientRow{T,1,6}(SVector(T(21//1478),
+                                                  T(86//739),
+                                                  T(-1309//1478),
+                                                  T(234//739),
+                                                  T(360//739),
+                                                  T(-36//739), )),
+      )
+      right_boundary_minus = (
+          DerivativeCoefficientRow{T,1,4}(SVector(T(366//251),
+                                                  T(-941//502),
+                                                  T(94//251),
+                                                  T(21//502), )),
+          DerivativeCoefficientRow{T,1,5}(SVector(T(869//1794),
+                                                  T(22//299),
+                                                  T(-375//598),
+                                                  T(86//897),
+                                                  T(-8//299), )),
+          DerivativeCoefficientRow{T,1,6}(SVector(T(-58//633),
+                                                  T(255//422),
+                                                  T(58//211),
+                                                  T(-1309//1266),
+                                                  T(60//211),
+                                                  T(-8//211), )),
+          DerivativeCoefficientRow{T,1,7}(SVector(T(-45//1478),
+                                                  T(22//739),
+                                                  T(661//1478),
+                                                  T(234//739),
+                                                  T(-720//739),
+                                                  T(180//739),
+                                                  T(-24//739), )),
+      )
+      upper_coef_minus     = .- lower_coef_plus
+      central_coef_minus   = .- central_coef_plus
+      lower_coef_minus     = .- upper_coef_plus
+
+      left_boundary_central  = (left_boundary_plus  .+ left_boundary_minus)  ./ 2
+      right_boundary_central = (right_boundary_plus .+ right_boundary_minus) ./ 2
+      upper_coef_central     = widening_plus(upper_coef_plus, upper_coef_minus) / 2
+      central_coef_central   = (central_coef_plus   + central_coef_minus) / 2
+      lower_coef_central     = widening_plus(lower_coef_plus, lower_coef_minus) / 2
+
+      if source.kind === :plus
+        left_boundary  = left_boundary_plus
+        right_boundary = right_boundary_plus
+        upper_coef     = upper_coef_plus
+        central_coef   = central_coef_plus
+        lower_coef     = lower_coef_plus
+      elseif source.kind === :minus
+        left_boundary  = left_boundary_minus
+        right_boundary = right_boundary_minus
+        upper_coef     = upper_coef_minus
+        central_coef   = central_coef_minus
+        lower_coef     = lower_coef_minus
+      elseif source.kind === :central
+        left_boundary  = left_boundary_central
+        right_boundary = right_boundary_central
+        upper_coef     = upper_coef_central
+        central_coef   = central_coef_central
+        lower_coef     = lower_coef_central
+      end
+      DerivativeCoefficients(left_boundary, right_boundary,
+                              left_boundary_derivatives, right_boundary_derivatives,
+                              lower_coef, central_coef, upper_coef,
+                              left_weights, right_weights, parallel, 1, order, source)
     # elseif order == 4
     #   left_boundary_plus = (
     #       DerivativeCoefficientRow{T,1,4}(SVector(T(),
