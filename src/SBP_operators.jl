@@ -175,11 +175,15 @@ end
 
 
 @generated function convolve_interior_coefficients!(dest::AbstractVector, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset}, u::AbstractVector, α, β, left_boundary_width, right_boundary_width, parallel) where {LowerOffset, UpperOffset}
-    ex = :( lower_coef[$LowerOffset]*u[i-$LowerOffset] )
-    for j in LowerOffset-1:-1:1
-        ex = :( $ex + lower_coef[$j]*u[i-$j] )
+    if LowerOffset > 0
+        ex = :( lower_coef[$LowerOffset]*u[i-$LowerOffset] )
+        for j in LowerOffset-1:-1:1
+            ex = :( $ex + lower_coef[$j]*u[i-$j] )
+        end
+        ex = :( $ex + central_coef*u[i] )
+    else
+        ex = :( central_coef*u[i] )
     end
-    ex = :( $ex + central_coef*u[i] )
     for j in 1:UpperOffset
         ex = :( $ex + upper_coef[$j]*u[i+$j] )
     end
@@ -206,11 +210,15 @@ function convolve_interior_coefficients!(dest::AbstractVector{T}, lower_coef::SV
 end
 
 @generated function convolve_interior_coefficients!(dest::AbstractVector, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset}, u::AbstractVector, α, left_boundary_width, right_boundary_width, parallel) where {LowerOffset, UpperOffset}
-    ex = :( lower_coef[$LowerOffset]*u[i-$LowerOffset] )
-    for j in LowerOffset-1:-1:1
-        ex = :( $ex + lower_coef[$j]*u[i-$j] )
+    if LowerOffset > 0
+        ex = :( lower_coef[$LowerOffset]*u[i-$LowerOffset] )
+        for j in LowerOffset-1:-1:1
+            ex = :( $ex + lower_coef[$j]*u[i-$j] )
+        end
+        ex = :( $ex + central_coef*u[i] )
+    else
+        ex = :( central_coef*u[i] )
     end
-    ex = :( $ex + central_coef*u[i] )
     for j in 1:UpperOffset
         ex = :( $ex + upper_coef[$j]*u[i+$j] )
     end
