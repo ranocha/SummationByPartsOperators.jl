@@ -678,6 +678,242 @@ function first_derivative_coefficients(source::Mattsson2017, order::Int, T=Float
                               left_boundary_derivatives, right_boundary_derivatives,
                               lower_coef, central_coef, upper_coef,
                               left_weights, right_weights, parallel, 1, order, source)
+    elseif order == 7
+      left_boundary_plus = (
+          DerivativeCoefficientRow{T,1,6}(SVector(T(-81216540//51172247),
+                                                  T(1587945773//767583705),
+                                                  T(-17337249//73103210),
+                                                  T(-84398989//255861235),
+                                                  T(48781961//1535167410),
+                                                  T(13716476//255861235), )),
+          DerivativeCoefficientRow{T,1,6}(SVector(T(-1570125773//3386062785),
+                                                  T(-2863836//225737519),
+                                                  T(240029831//677212557),
+                                                  T(202934303//1354425114),
+                                                  T(1418484//225737519),
+                                                  T(-231357719//6772125570), )),
+          DerivativeCoefficientRow{T,1,7}(SVector(T(14637249//144536540),
+                                                  T(-206937767//303526734),
+                                                  T(-6595236//50587789),
+                                                  T(49602727//50587789),
+                                                  T(-218919665//607053468),
+                                                  T(51815011//505877890),
+                                                  T(-216//18869), )),
+          DerivativeCoefficientRow{T,1,8}(SVector(T(91418989//1008619010),
+                                                  T(-266570495//1210342812),
+                                                  T(-33094279//100861901),
+                                                  T(-1973052//14408843),
+                                                  T(440626231//605171406),
+                                                  T(-365711063//2017238020),
+                                                  T(2016//37621),
+                                                  T(-216//37621), )),
+          DerivativeCoefficientRow{T,1,9}(SVector(T(-62551961//4426143330),
+                                                  T(9588//385217),
+                                                  T(82588241//885228666),
+                                                  T(-279245719//442614333),
+                                                  T(-37430964//147538111),
+                                                  T(2312302333//2213071665),
+                                                  T(-18144//55031),
+                                                  T(4032//55031),
+                                                  T(-432//55031), )),
+          DerivativeCoefficientRow{T,1,10}(SVector(T(-13500476//822302915),
+                                                  T(202087559//4933817490),
+                                                  T(-11297731//822302915),
+                                                  T(61008503//1644605830),
+                                                  T(-1360092253//2466908745),
+                                                  T(-5765580//23494369),
+                                                  T(60480//61343),
+                                                  T(-18144//61343),
+                                                  T(4032//61343),
+                                                  T(-432//61343), )),
+      )
+      right_boundary_plus = (
+          DerivativeCoefficientRow{T,1,6}(SVector(T(80930340//51172247),
+                                                  T(-1570125773//767583705),
+                                                  T(14637249//73103210),
+                                                  T(91418989//255861235),
+                                                  T(-62551961//1535167410),
+                                                  T(-13500476//255861235), )),
+          DerivativeCoefficientRow{T,1,6}(SVector(T(1587945773//3386062785),
+                                                  T(-2863836//225737519),
+                                                  T(-206937767//677212557),
+                                                  T(-266570495//1354425114),
+                                                  T(9588//589393),
+                                                  T(202087559//6772125570), )),
+          DerivativeCoefficientRow{T,1,6}(SVector(T(-17337249//144536540),
+                                                  T(240029831//303526734),
+                                                  T(-6595236//50587789),
+                                                  T(-33094279//50587789),
+                                                  T(82588241//607053468),
+                                                  T(-11297731//505877890), )),
+          DerivativeCoefficientRow{T,1,7}(SVector(T(-84398989//1008619010),
+                                                  T(202934303//1210342812),
+                                                  T(49602727//100861901),
+                                                  T(-1973052//14408843),
+                                                  T(-279245719//605171406),
+                                                  T(61008503//2017238020),
+                                                  T(-288//37621), )),
+          DerivativeCoefficientRow{T,1,8}(SVector(T(48781961//4426143330),
+                                                  T(1418484//147538111),
+                                                  T(-218919665//885228666),
+                                                  T(440626231//442614333),
+                                                  T(-37430964//147538111),
+                                                  T(-1360092253//2213071665),
+                                                  T(6048//55031),
+                                                  T(-576//55031), )),
+          DerivativeCoefficientRow{T,1,9}(SVector(T(13716476//822302915),
+                                                  T(-231357719//4933817490),
+                                                  T(51815011//822302915),
+                                                  T(-365711063//1644605830),
+                                                  T(2312302333//2466908745),
+                                                  T(-5765580//23494369),
+                                                  T(-36288//61343),
+                                                  T(6048//61343),
+                                                  T(-576//61343), )),
+      )
+      upper_coef_plus = SVector( T(1),
+                                 T(-3//10),
+                                 T(1//15),
+                                 T(-1//140), )
+      central_coef_plus = T(-1//4)
+      lower_coef_plus = SVector( T(-3//5),
+                                 T(1//10),
+                                 T(-1//105), )
+      left_weights = SVector( T(19087//60480),
+                              T(84199//60480),
+                              T(18869//30240),
+                              T(37621//30240),
+                              T(55031//60480),
+                              T(61343//60480), )
+      right_weights = left_weights
+      left_boundary_derivatives = Tuple{}()
+      right_boundary_derivatives = left_boundary_derivatives
+
+      left_boundary_minus = (
+          DerivativeCoefficientRow{T,1,6}(SVector(T(-80930340//51172247),
+                                                  T(1570125773//767583705),
+                                                  T(-14637249//73103210),
+                                                  T(-91418989//255861235),
+                                                  T(62551961//1535167410),
+                                                  T(13500476//255861235), )),
+          DerivativeCoefficientRow{T,1,6}(SVector(T(-1587945773//3386062785),
+                                                  T(2863836//225737519),
+                                                  T(206937767//677212557),
+                                                  T(266570495//1354425114),
+                                                  T(-9588//589393),
+                                                  T(-202087559//6772125570), )),
+          DerivativeCoefficientRow{T,1,6}(SVector(T(17337249//144536540),
+                                                  T(-240029831//303526734),
+                                                  T(6595236//50587789),
+                                                  T(33094279//50587789),
+                                                  T(-82588241//607053468),
+                                                  T(11297731//505877890), )),
+          DerivativeCoefficientRow{T,1,7}(SVector(T(84398989//1008619010),
+                                                  T(-202934303//1210342812),
+                                                  T(-49602727//100861901),
+                                                  T(1973052//14408843),
+                                                  T(279245719//605171406),
+                                                  T(-61008503//2017238020),
+                                                  T(288//37621), )),
+          DerivativeCoefficientRow{T,1,8}(SVector(T(-48781961//4426143330),
+                                                  T(-1418484//147538111),
+                                                  T(218919665//885228666),
+                                                  T(-440626231//442614333),
+                                                  T(37430964//147538111),
+                                                  T(1360092253//2213071665),
+                                                  T(-6048//55031),
+                                                  T(576//55031), )),
+          DerivativeCoefficientRow{T,1,9}(SVector(T(-13716476//822302915),
+                                                  T(231357719//4933817490),
+                                                  T(-51815011//822302915),
+                                                  T(365711063//1644605830),
+                                                  T(-2312302333//2466908745),
+                                                  T(5765580//23494369),
+                                                  T(36288//61343),
+                                                  T(-6048//61343),
+                                                  T(576//61343), )),
+      )
+      right_boundary_minus = (
+          DerivativeCoefficientRow{T,1,6}(SVector(T(81216540//51172247),
+                                                  T(-1587945773//767583705),
+                                                  T(17337249//73103210),
+                                                  T(84398989//255861235),
+                                                  T(-48781961//1535167410),
+                                                  T(-13716476//255861235), )),
+          DerivativeCoefficientRow{T,1,6}(SVector(T(1570125773//3386062785),
+                                                  T(2863836//225737519),
+                                                  T(-240029831//677212557),
+                                                  T(-202934303//1354425114),
+                                                  T(-1418484//225737519),
+                                                  T(231357719//6772125570), )),
+          DerivativeCoefficientRow{T,1,7}(SVector(T(-14637249//144536540),
+                                                  T(206937767//303526734),
+                                                  T(6595236//50587789),
+                                                  T(-49602727//50587789),
+                                                  T(218919665//607053468),
+                                                  T(-51815011//505877890),
+                                                  T(216//18869), )),
+          DerivativeCoefficientRow{T,1,8}(SVector(T(-91418989//1008619010),
+                                                  T(266570495//1210342812),
+                                                  T(33094279//100861901),
+                                                  T(1973052//14408843),
+                                                  T(-440626231//605171406),
+                                                  T(365711063//2017238020),
+                                                  T(-2016//37621),
+                                                  T(216//37621), )),
+          DerivativeCoefficientRow{T,1,9}(SVector(T(62551961//4426143330),
+                                                  T(-9588//385217),
+                                                  T(-82588241//885228666),
+                                                  T(279245719//442614333),
+                                                  T(37430964//147538111),
+                                                  T(-2312302333//2213071665),
+                                                  T(18144//55031),
+                                                  T(-4032//55031),
+                                                  T(432//55031), )),
+          DerivativeCoefficientRow{T,1,10}(SVector(T(13500476//822302915),
+                                                  T(-202087559//4933817490),
+                                                  T(11297731//822302915),
+                                                  T(-61008503//1644605830),
+                                                  T(1360092253//2466908745),
+                                                  T(5765580//23494369),
+                                                  T(-60480//61343),
+                                                  T(18144//61343),
+                                                  T(-4032//61343),
+                                                  T(432//61343), )),
+      )
+      upper_coef_minus     = .- lower_coef_plus
+      central_coef_minus   = .- central_coef_plus
+      lower_coef_minus     = .- upper_coef_plus
+
+      left_boundary_central  = (left_boundary_plus  .+ left_boundary_minus)  ./ 2
+      right_boundary_central = (right_boundary_plus .+ right_boundary_minus) ./ 2
+      upper_coef_central     = widening_plus(upper_coef_plus, upper_coef_minus) / 2
+      central_coef_central   = (central_coef_plus   + central_coef_minus) / 2
+      lower_coef_central     = widening_plus(lower_coef_plus, lower_coef_minus) / 2
+
+      if source.kind === :plus
+        left_boundary  = left_boundary_plus
+        right_boundary = right_boundary_plus
+        upper_coef     = upper_coef_plus
+        central_coef   = central_coef_plus
+        lower_coef     = lower_coef_plus
+      elseif source.kind === :minus
+        left_boundary  = left_boundary_minus
+        right_boundary = right_boundary_minus
+        upper_coef     = upper_coef_minus
+        central_coef   = central_coef_minus
+        lower_coef     = lower_coef_minus
+      elseif source.kind === :central
+        left_boundary  = left_boundary_central
+        right_boundary = right_boundary_central
+        upper_coef     = upper_coef_central
+        central_coef   = central_coef_central
+        lower_coef     = lower_coef_central
+      end
+      DerivativeCoefficients(left_boundary, right_boundary,
+                              left_boundary_derivatives, right_boundary_derivatives,
+                              lower_coef, central_coef, upper_coef,
+                              left_weights, right_weights, parallel, 1, order, source)
     # elseif order == 6
     #   left_boundary_plus = (
     #       DerivativeCoefficientRow{T,1,6}(SVector(T(),
@@ -772,7 +1008,8 @@ function first_derivative_coefficients(source::Mattsson2017, order::Int, T=Float
     #                              T(),
     #                              T(), )
     #   central_coef_plus = T()
-    #   lower_coef_plus = SVector( T(), )
+    #   lower_coef_plus = SVector( T(),
+    #                              T(),
     #                              T(), )
     #   left_weights = SVector( T(),
     #                           T(),
