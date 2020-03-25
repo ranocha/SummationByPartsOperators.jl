@@ -5,12 +5,12 @@ using SummationByPartsOperators
 # check construction of interior part of upwind operators
 @testset "Check interior parts" begin
   N = 21
-  xmin = 0//1
-  xmax = (N + 1) // 1
+  xmin = 0.
+  xmax = Float64(N + 1)
   interior = 10:N-10
 
 
-  for acc_order in 2:5
+  for acc_order in 2:6
     Dp_bounded = derivative_operator(Mattsson2017(:plus   ), 1, acc_order, xmin, xmax, N)
     Dm_bounded = derivative_operator(Mattsson2017(:minus  ), 1, acc_order, xmin, xmax, N)
     Dc_bounded = derivative_operator(Mattsson2017(:central), 1, acc_order, xmin, xmax, N)
