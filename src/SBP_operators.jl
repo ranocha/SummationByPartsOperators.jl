@@ -130,8 +130,40 @@ function offset(::DerivativeCoefficientRow{T,Start,Length}) where {T,Start,Lengt
     Start
 end
 
-function -(coef_row::DerivativeCoefficientRow{T,Start,Length}) where {T,Start,Length}
+function Base.:-(coef_row::DerivativeCoefficientRow{T,Start,Length}) where {T,Start,Length}
     DerivativeCoefficientRow{T,Start,Length}(-coef_row.coef)
+end
+
+function widening_plus(row1::SVector{Length1,T}, row2::SVector{Length2,T}) where {T,Length1,Length2}
+    Length = max(Length1, Length2)
+    row = SVector{Length,T}(ntuple(i -> zero(T), Length))
+    for i in 1:Length1
+        row = Base.setindex(row, row[i] + row1[i], i)
+    end
+    for i in 1:Length2
+        row = Base.setindex(row, row[i] + row2[i], i)
+    end
+    row
+end
+
+function Base.:+(coef_row1::DerivativeCoefficientRow{T,Start1,Length1}, coef_row2::DerivativeCoefficientRow{T,Start2,Length2}) where {T,Start1,Length1,Start2,Length2}
+    End = max(Start1+Length1, Start2+Length2)
+    Start = min(Start1, Start2)
+    Length = End - Start
+    row = SVector{Length,T}(ntuple(i -> zero(T), Length))
+    for i in 1:Length1
+        j = i-Start1+Start
+        row = Base.setindex(row, row[j] + coef_row1.coef[i], j)
+    end
+    for i in 1:Length2
+        j = i-Start2+Start
+        row = Base.setindex(row, row[j] + coef_row2.coef[i], j)
+    end
+    DerivativeCoefficientRow{T,Start,Length}(row)
+end
+
+function Base.:/(coef_row::DerivativeCoefficientRow{T,Start,Length}, α::Number) where {T,Start,Length}
+    DerivativeCoefficientRow{T,Start,Length}(coef_row.coef / α)
 end
 
 @inline function convolve_left_row(coef_row::DerivativeCoefficientRow{T,Start,Length}, u) where {T,Start,Length}
