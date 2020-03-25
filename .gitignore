@@ -1,5 +1,6 @@
 *.jl.cov
 *.jl.*.cov
 *.jl.mem
+*.jl.*.mem
 notebooks/.ipynb_checkpoints/
 notebooks/*.gif
