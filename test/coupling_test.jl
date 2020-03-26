@@ -51,7 +51,8 @@ using SummationByPartsOperators
         @test mass_matrix(cD1) ≈ mass_matrix(cD2)
         @test Matrix(cD1) ≈ Matrix(cD2)
 
-        # Mcont = mass_matrix(cD_continuous)
+        Mcont = mass_matrix(cD_continuous)
+        @test sum(Mcont) ≈ xmax - xmin
         # TODO
         # Dcont = Matrix(cD_continuous)
         # res = Mcont * Dcont + Dcont' * Mcont
@@ -89,7 +90,8 @@ using SummationByPartsOperators
         res = M * Dp + Dm' * M
         @test norm(res) < degree * 10N * eps(T)
 
-        # Mcont = mass_matrix(cD_continuous)
+        Mcont = mass_matrix(cD_continuous)
+        @test sum(Mcont) ≈ xmax - xmin
         # TODO
         # Dcont = Matrix(cD_continuous)
         # res = Mcont * Dcont + Dcont' * Mcont
