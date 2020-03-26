@@ -42,6 +42,7 @@ include("periodic_operators.jl")
 include("SBP_operators.jl")
 include("dissipation_operators.jl")
 include("var_coef_operators.jl")
+include("coupling.jl")
 
 function __init__()
   @require BandedMatrices="aae01518-5342-5314-be14-df237901396f" include("banded_matrices.jl")
@@ -63,8 +64,8 @@ include("conservation_laws/general_laws.jl")
 include("conservation_laws/burgers.jl")
 include("conservation_laws/cubic.jl")
 include("conservation_laws/variable_linear_advection.jl")
-include("second_order_eqs/wave_eq.jl")
 include("conservation_laws/quartic_nonconvex.jl")
+include("second_order_eqs/wave_eq.jl")
 
 
 # exports

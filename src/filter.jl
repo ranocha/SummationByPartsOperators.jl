@@ -3,7 +3,7 @@
     FactorisationWrapper
 
 A small wrapper around a a factorisation `fact`, allowing to represent
-multiplication with the inverse of `fact`.
+multiplication by the inverse of `fact`.
 """
 struct FactorisationWrapper{Fact}
     fact::Fact
