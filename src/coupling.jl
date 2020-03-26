@@ -225,11 +225,29 @@ function mass_matrix(cD::UniformCoupledOperator)
     cell = 1
     xmin, xmax = bounds(cell, mesh)
     factor = (xmax - xmin) / (ymax - ymin)
-    m[1:num_nodes_per_cell+1] = diag(mass_matrix(D)) * factor
-    for cell in 2:numcells(mesh)
+    if isperiodic(mesh) && numcells(mesh) == 1
+      m[1:num_nodes_per_cell] = diag(mass_matrix(D))[1:end-1] * factor
+    else
+      m[1:num_nodes_per_cell+1] = diag(mass_matrix(D)) * factor
+    end
+    for cell in 2:numcells(mesh)-1
       xmin, xmax = bounds(cell, mesh)
       factor = (xmax - xmin) / (ymax - ymin)
-      m[(cell-1)*num_nodes_per_cell+1:cell*num_nodes_per_cell+2] += diag(mass_matrix(D)) * factor
+      m[(cell-1)*num_nodes_per_cell+1:cell*num_nodes_per_cell+1] += diag(mass_matrix(D)) * factor
+    end
+
+    if numcells(mesh) > 1
+      cell = numcells(mesh)
+      xmin, xmax = bounds(cell, mesh)
+      factor = (xmax - xmin) / (ymax - ymin)
+      if isperiodic(mesh)
+        m[(cell-1)*num_nodes_per_cell+1:cell*num_nodes_per_cell] += diag(mass_matrix(D))[1:end-1] * factor
+      else
+        m[(cell-1)*num_nodes_per_cell+1:cell*num_nodes_per_cell+1] += diag(mass_matrix(D)) * factor
+      end
+    end
+    if isperiodic(mesh)
+      m[1] += right_boundary_weight(D) * factor
     end
   else
     m = zeros(eltype(D), length(grid), numcells(mesh))
