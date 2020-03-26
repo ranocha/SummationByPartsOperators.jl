@@ -52,11 +52,11 @@ function Base.show(io::IO, D::LegendreDerivativeOperator{T}) where {T}
     x = grid(D)
     print(io, "First derivative operator {T=", T, "} \n")
     print(io, "on the Lobatto Legendre nodes in [", first(x), ", ", last(x),
-                "] using ", length(x), " nodes. \n")
+                "] using ", length(x), " nodes \n")
 end
 
 
-function mul!(dest::AbstractVector{T}, D::LegendreDerivativeOperator, u::AbstractVector{T}) where {T}
+function mul!(dest::AbstractVector, D::LegendreDerivativeOperator, u::AbstractVector, α=true, β=false)
     @unpack jac, basis = D
     N, _ = size(D)
     @boundscheck begin
@@ -64,8 +64,7 @@ function mul!(dest::AbstractVector{T}, D::LegendreDerivativeOperator, u::Abstrac
         @argcheck N == length(dest)
     end
 
-    mul!(dest, basis.D, u)
-    dest .*= jac
+    mul!(dest, basis.D, u, α*jac, β)
 
     nothing
 end
