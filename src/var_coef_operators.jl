@@ -105,3 +105,62 @@ function mass_matrix(D::Union{DerivativeOperator,VarCoefDerivativeOperator})
     m[end:-1:end-length(right_weights)+1] = right_weights
     Diagonal(D.Δx * m)
 end
+
+function scale_by_mass_matrix!(u::AbstractVector, D::Union{DerivativeOperator,VarCoefDerivativeOperator}, factor=true)
+    @unpack Δx = D
+    @unpack left_weights, right_weights = D.coefficients
+    N, _ = size(D)
+    @boundscheck begin
+        @argcheck N == length(u)
+    end
+
+    @inbounds @simd for i in eachindex(left_weights)
+        u[i] = factor * u[i] * (Δx * left_weights[i])
+    end
+    @inbounds @simd for i in length(left_weights)+1:N-length(right_weights)
+        u[i] = factor * u[i] * Δx
+    end
+    @inbounds @simd for i in eachindex(right_weights)
+        u[end-i+1] = factor * u[end-i+1] * (Δx * right_weights[i])
+    end
+
+    u
+end
+
+function scale_by_inverse_mass_matrix!(u::AbstractVector, D::Union{DerivativeOperator,VarCoefDerivativeOperator}, factor=true)
+    @unpack Δx = D
+    @unpack left_weights, right_weights = D.coefficients
+    N, _ = size(D)
+    @boundscheck begin
+        @argcheck N == length(u)
+    end
+
+    @inbounds @simd for i in eachindex(left_weights)
+        u[i] = factor * u[i] / (Δx * left_weights[i])
+    end
+    @inbounds @simd for i in length(left_weights)+1:N-length(right_weights)
+        u[i] = factor * u[i] / Δx
+    end
+    @inbounds @simd for i in eachindex(right_weights)
+        u[end-i+1] = factor * u[end-i+1] / (Δx * right_weights[i])
+    end
+
+    u
+end
+
+function get_weight(D::Union{DerivativeOperator,VarCoefDerivativeOperator}, i::Int)
+    @unpack Δx = D
+    @unpack left_weights, right_weights = D.coefficients
+    N, _ = size(D)
+    @boundscheck begin
+        @argcheck 1 <= i <= N
+    end
+    @inbounds if i <= length(left_weights)
+        ω = Δx * left_weights[i]
+    elseif i > N - length(right_weights)
+        ω = Δx * right_weights[N - i + 1]
+    else
+        ω = Δx
+    end
+    ω
+end
