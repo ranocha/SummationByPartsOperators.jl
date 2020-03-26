@@ -19,6 +19,7 @@ using SummationByPartsOperators
         cD_minus      = couple_discontinuosly(D, mesh, Val(:minus))
         for cD in (cD_central, cD_plus, cD_minus) #TODO
         # for cD in (cD_continuous, cD_central, cD_plus, cD_minus)
+          print(devnull, cD)
           x = grid(cD)
           @test norm(cD * x.^0) < degree * N * eps(T)
           for k in 1:degree
@@ -43,6 +44,20 @@ using SummationByPartsOperators
         res[1, 1] += 1
         res[end, end] -= 1
         @test norm(res) < degree * 10N * eps(T)
+
+        cD1 = couple_discontinuosly(cD_central, mesh)
+        cD2 = couple_discontinuosly(D, UniformMesh1D(xmin, xmax, N^2))
+        @test grid(cD1) ≈ grid(cD2)
+        @test mass_matrix(cD1) ≈ mass_matrix(cD2)
+        @test Matrix(cD1) ≈ Matrix(cD2)
+
+        # Mcont = mass_matrix(cD_continuous)
+        # TODO
+        # Dcont = Matrix(cD_continuous)
+        # res = Mcont * Dcont + Dcont' * Mcont
+        # res[1, 1] += 1
+        # res[end, end] -= 1
+        # @test norm(res) < degree * 10N * eps(T)
       end
 
       for N in 1:3
@@ -55,6 +70,7 @@ using SummationByPartsOperators
         cD_minus      = couple_discontinuosly(D, mesh, Val(:minus))
         for cD in (cD_central, cD_plus, cD_minus) #TODO
         # for cD in (cD_continuous, cD_central, cD_plus, cD_minus)
+          print(devnull, cD)
           x = grid(cD)
           @test norm(cD * x.^0) < degree * N * eps(T)
         end
@@ -72,6 +88,12 @@ using SummationByPartsOperators
         @test norm(res) < degree * 10N * eps(T)
         res = M * Dp + Dm' * M
         @test norm(res) < degree * 10N * eps(T)
+
+        # Mcont = mass_matrix(cD_continuous)
+        # TODO
+        # Dcont = Matrix(cD_continuous)
+        # res = Mcont * Dcont + Dcont' * Mcont
+        # @test norm(res) < degree * 10N * eps(T)
       end
     end
   end
