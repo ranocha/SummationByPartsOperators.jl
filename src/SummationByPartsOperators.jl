@@ -88,6 +88,7 @@ export periodic_central_derivative_operator, periodic_derivative_operator, deriv
        dissipation_operator, var_coef_derivative_operator,
        fourier_derivative_operator, spectral_viscosity_operator, super_spectral_viscosity_operator,
        legendre_derivative_operator
+export UniformMesh1D, UniformPeriodicMesh1D
 
 export Fornberg1998, Holoborodko2008, BeljaddLeFlochMishraParés2017
 export MattssonNordström2004, MattssonSvärdNordström2004, MattssonSvärdShoeybi2008,
