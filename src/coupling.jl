@@ -180,6 +180,7 @@ function Base.show(io::IO, cD::UniformCoupledOperator)
   print(io, cD.meshgrid.mesh, "\n ")
 end
 
+Base.eltype(cD::UniformCoupledOperator) = eltype(cD.D)
 derivative_order(cD::UniformCoupledOperator) = derivative_order(cD.D)
 accuracy_order(cD::UniformCoupledOperator) = accuracy_order(cD.D)
 source_of_coefficients(cD::UniformCoupledOperator) = source_of_coefficients(cD.D)
@@ -214,55 +215,84 @@ end
 
 grid(cD::UniformCoupledOperator) = cD.meshgrid
 
+
 function mass_matrix(cD::UniformCoupledOperator)
-  @unpack D, meshgrid = cD
-  @unpack mesh, grid = meshgrid
-  ymin, ymax = first(grid), last(grid)
-
-  if iscontinuous(meshgrid)
-    m = zeros(eltype(D), length(meshgrid))
-    num_nodes_per_cell = length(grid) - 1
-    cell = 1
-    xmin, xmax = bounds(cell, mesh)
-    factor = (xmax - xmin) / (ymax - ymin)
-    if isperiodic(mesh) && numcells(mesh) == 1
-      m[1:num_nodes_per_cell] = diag(mass_matrix(D))[1:end-1] * factor
-    else
-      m[1:num_nodes_per_cell+1] = diag(mass_matrix(D)) * factor
-    end
-    for cell in 2:numcells(mesh)-1
-      xmin, xmax = bounds(cell, mesh)
-      factor = (xmax - xmin) / (ymax - ymin)
-      m[(cell-1)*num_nodes_per_cell+1:cell*num_nodes_per_cell+1] += diag(mass_matrix(D)) * factor
-    end
-
-    if numcells(mesh) > 1
-      cell = numcells(mesh)
-      xmin, xmax = bounds(cell, mesh)
-      factor = (xmax - xmin) / (ymax - ymin)
-      if isperiodic(mesh)
-        m[(cell-1)*num_nodes_per_cell+1:cell*num_nodes_per_cell] += diag(mass_matrix(D))[1:end-1] * factor
-      else
-        m[(cell-1)*num_nodes_per_cell+1:cell*num_nodes_per_cell+1] += diag(mass_matrix(D)) * factor
-      end
-    end
-    if isperiodic(mesh)
-      m[1] += right_boundary_weight(D) * factor
-    end
-  else
-    m = zeros(eltype(D), length(grid), numcells(mesh))
-    for cell in 1:numcells(mesh)
-      xmin, xmax = bounds(cell, mesh)
-      factor = (xmax - xmin) / (ymax - ymin)
-      m[:, cell] = diag(mass_matrix(D)) * factor
-    end
-  end
-
+  m = ones(eltype(cD), size(cD, 1))
+  scale_by_mass_matrix!(m, cD)
   Diagonal(vec(m))
 end
 
+for (fname, op) in ((:scale_by_mass_matrix!, Base.:*), (:scale_by_inverse_mass_matrix!, Base.:/))
+  @eval function $fname(u::AbstractVector, cD::UniformCoupledOperator, factor=true)
+    @unpack D, meshgrid = cD
+    @unpack mesh, grid = meshgrid
+    ymin, ymax = first(grid), last(grid)
 
-function mul!(dest::AbstractVector, cD::UniformCoupledOperator, u::AbstractVector, α=true, β=false)
+    if iscontinuous(meshgrid)
+      num_nodes_per_cell = length(grid) - 1
+
+      cell = 1
+      xmin, xmax = bounds(cell, mesh)
+      jac = (xmax - xmin) / (ymax - ymin)
+      if isperiodic(mesh)
+        next_cell = left_cell(cell, mesh)
+        xmin, xmax = bounds(next_cell, mesh)
+        next_jac = (xmax - xmin) / (ymax - ymin)
+        u[1] *= $op(factor, jac * get_weight(D, 1) + next_jac * get_weight(D, num_nodes_per_cell+1))
+      else
+        u[1] *= $op(factor, jac * get_weight(D, 1))
+      end
+      for i in 2:num_nodes_per_cell
+        u[i] *= $op(factor, jac * get_weight(D, i))
+      end
+      if !isperiodic(mesh) && numcells(mesh) == 1
+        u[num_nodes_per_cell+1] *= $op(factor, jac * get_weight(D, num_nodes_per_cell+1))
+      end
+      if numcells(mesh) == 1
+        return u
+      end
+
+      for cell in 2:numcells(mesh)-1
+        xmin, xmax = bounds(cell, mesh)
+        jac = (xmax - xmin) / (ymax - ymin)
+        next_cell = left_cell(cell, mesh)
+        xmin, xmax = bounds(next_cell, mesh)
+        next_jac = (xmax - xmin) / (ymax - ymin)
+        u[(cell-1)*num_nodes_per_cell+1] *= $op(factor, jac * get_weight(D, 1) + next_jac * get_weight(D, num_nodes_per_cell+1))
+        for i in 2:num_nodes_per_cell
+          u[(cell-1)*num_nodes_per_cell+i] *= $op(factor, jac * get_weight(D, i))
+        end
+      end
+
+      cell = numcells(mesh)
+      xmin, xmax = bounds(cell, mesh)
+      jac = (xmax - xmin) / (ymax - ymin)
+      next_cell = left_cell(cell, mesh)
+      xmin, xmax = bounds(next_cell, mesh)
+      next_jac = (xmax - xmin) / (ymax - ymin)
+      u[(cell-1)*num_nodes_per_cell+1] *= $op(factor, jac * get_weight(D, 1) + next_jac * get_weight(D, num_nodes_per_cell+1))
+      for i in 2:num_nodes_per_cell
+        u[(cell-1)*num_nodes_per_cell+i] *= $op(factor, jac * get_weight(D, i))
+      end
+      if !isperiodic(mesh)
+        u[(cell-1)*num_nodes_per_cell+num_nodes_per_cell+1] *= $op(factor, jac * get_weight(D, num_nodes_per_cell+1))
+      end
+    else # discontinuous coupling
+      num_nodes_per_cell = length(grid)
+      for cell in 1:numcells(mesh)
+        xmin, xmax = bounds(cell, mesh)
+        jac = (xmax - xmin) / (ymax - ymin)
+        idx = (cell-1)*num_nodes_per_cell+1:cell*num_nodes_per_cell
+        $fname(view(u, idx), D, $op(factor, jac))
+      end
+    end
+
+    u
+  end
+end
+
+
+function mul!(dest::AbstractVector, cD::UniformCoupledOperator, u::AbstractVector, α=true)
   N, _ = size(cD)
   @boundscheck begin
     @argcheck N == length(u)
@@ -270,10 +300,16 @@ function mul!(dest::AbstractVector, cD::UniformCoupledOperator, u::AbstractVecto
   end
 
   @unpack D, meshgrid, coupling = cD
-  mul!(dest, D, meshgrid, coupling, u, α, β)
+  if coupling === Val(:continuous)
+    mul!(dest, D, meshgrid, coupling, u, α)
+    scale_by_inverse_mass_matrix!(dest, cD)
+  else
+    mul!(dest, D, meshgrid, coupling, u, α)
+  end
+  dest
 end
 
-function mul!(_dest::AbstractVector, D::AbstractNonperiodicDerivativeOperator, meshgrid::UniformMeshGrid1D, coupling::Union{Val{:plus}, Val{:central}, Val{:minus}}, _u::AbstractVector, α=true, β=false)
+function mul!(_dest::AbstractVector, D::AbstractNonperiodicDerivativeOperator, meshgrid::UniformMeshGrid1D, coupling::Union{Val{:plus}, Val{:central}, Val{:minus}}, _u::AbstractVector, α=true)
   @unpack mesh, grid = meshgrid
   dest = reshape(_dest, length(grid), numcells(mesh))
   u    = reshape(_u,    length(grid), numcells(mesh))
@@ -283,7 +319,7 @@ function mul!(_dest::AbstractVector, D::AbstractNonperiodicDerivativeOperator, m
   cell = 1
   xmin, xmax = bounds(cell, mesh)
   factor = (ymax - ymin) / (xmax - xmin)
-  mul!(view(dest, :, cell), D, view(u, :, cell), α*factor, β)
+  mul!(view(dest, :, cell), D, view(u, :, cell), α*factor)
   if numcells(mesh) == 1 && !isperiodic(mesh)
     return _dest
   end
@@ -306,7 +342,7 @@ function mul!(_dest::AbstractVector, D::AbstractNonperiodicDerivativeOperator, m
   for cell in 2:numcells(mesh)-1
     xmin, xmax = bounds(cell, mesh)
     factor = (ymax - ymin) / (xmax - xmin)
-    mul!(view(dest, :, cell), D, view(u, :, cell), α*factor, β)
+    mul!(view(dest, :, cell), D, view(u, :, cell), α*factor)
     if coupling === Val(:central)
       dest[1  , cell] += half * (u[1, cell] - u[end,  left_cell(cell, mesh)]) * α*factor / left_boundary_weight(D)
       dest[end, cell] += half * (u[1, right_cell(cell, mesh)] - u[end, cell]) * α*factor / right_boundary_weight(D)
@@ -320,7 +356,7 @@ function mul!(_dest::AbstractVector, D::AbstractNonperiodicDerivativeOperator, m
   cell = numcells(mesh)
   xmin, xmax = bounds(cell, mesh)
   factor = (ymax - ymin) / (xmax - xmin)
-  mul!(view(dest, :, cell), D, view(u, :, cell), α*factor, β)
+  mul!(view(dest, :, cell), D, view(u, :, cell), α*factor)
   if coupling === Val(:central)
     dest[1  , cell] += half * (u[1, cell] - u[end,  left_cell(cell, mesh)]) * α*factor / left_boundary_weight(D)
   elseif coupling === Val(:minus)
@@ -335,4 +371,68 @@ function mul!(_dest::AbstractVector, D::AbstractNonperiodicDerivativeOperator, m
   end
 
   _dest
+end
+
+function mul!(dest::AbstractVector, D::AbstractNonperiodicDerivativeOperator, meshgrid::UniformMeshGrid1D, coupling::Val{:continuous}, u::AbstractVector, α=true)
+  @unpack mesh, grid = meshgrid
+  ymin, ymax = first(grid), last(grid)
+  num_nodes_per_cell = length(grid) - 1
+  # TODO: remove these allocations?
+  utmp = similar(u, length(grid))
+  desttmp = similar(dest, length(grid))
+
+  cell = 1
+  xmin, xmax = bounds(cell, mesh)
+  factor = (ymax - ymin) / (xmax - xmin)
+  if isperiodic(mesh) && numcells(mesh) == 1
+    utmp[1:end-1] .= u
+    utmp[end]      = u[1]
+    mul!(desttmp, D, utmp, α*factor)
+    scale_by_mass_matrix!(desttmp, D, inv(factor))
+    @. dest = desttmp[1:end-1]
+    dest[1] += desttmp[end]
+  else
+    idx = (cell-1)*num_nodes_per_cell+1:cell*num_nodes_per_cell+1
+    utmp .= u[idx]
+    mul!(desttmp, D, utmp, α*factor)
+    scale_by_mass_matrix!(desttmp, D, inv(factor))
+    @. dest[idx] = desttmp
+  end
+  if numcells(mesh) == 1
+    return dest
+  end
+
+  for cell in 2:numcells(mesh)-1
+    xmin, xmax = bounds(cell, mesh)
+    factor = (ymax - ymin) / (xmax - xmin)
+    idx = (cell-1)*num_nodes_per_cell+1:cell*num_nodes_per_cell+1
+    utmp .= u[idx]
+    mul!(desttmp, D, utmp, α*factor)
+    scale_by_mass_matrix!(desttmp, D, inv(factor))
+    dest[idx[1]] += desttmp[1]
+    @. dest[idx[2:end]] = desttmp[2:end]
+  end
+
+  cell = numcells(mesh)
+  xmin, xmax = bounds(cell, mesh)
+  factor = (ymax - ymin) / (xmax - xmin)
+  if isperiodic(mesh)
+    idx = (cell-1)*num_nodes_per_cell+1:cell*num_nodes_per_cell
+    utmp[1:end-1] .= u[idx]
+    utmp[end]      = u[1]
+    mul!(desttmp, D, utmp, α*factor)
+    scale_by_mass_matrix!(desttmp, D, inv(factor))
+    dest[idx[1]] += desttmp[1]
+    @. dest[idx[2:end]] = desttmp[2:end-1]
+    dest[1] += desttmp[end]
+  else
+    idx = (cell-1)*num_nodes_per_cell+1:cell*num_nodes_per_cell+1
+    utmp .= u[idx]
+    mul!(desttmp, D, utmp, α*factor)
+    scale_by_mass_matrix!(desttmp, D, inv(factor))
+    dest[idx[1]] += desttmp[1]
+    @. dest[idx[2:end]] = desttmp[2:end]
+  end
+
+  dest
 end

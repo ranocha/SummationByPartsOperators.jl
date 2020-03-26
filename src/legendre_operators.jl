@@ -48,6 +48,47 @@ end
 
 mass_matrix(D::LegendreDerivativeOperator) = Diagonal(D.Δx * D.basis.weights)
 
+Base.eltype(D::LegendreDerivativeOperator{T}) where {T} = T
+
+function scale_by_mass_matrix!(u::AbstractVector, D::LegendreDerivativeOperator, factor=true)
+    @unpack Δx, basis = D
+    N, _ = size(D)
+    @boundscheck begin
+        @argcheck N == length(u)
+    end
+
+    @inbounds @simd for i in eachindex(u, basis.weights)
+        u[i] = factor * u[i] * (Δx * basis.weights[i])
+    end
+
+    u
+end
+
+function scale_by_inverse_mass_matrix!(u::AbstractVector, D::LegendreDerivativeOperator, factor=true)
+    @unpack Δx, basis = D
+    N, _ = size(D)
+    @boundscheck begin
+        @argcheck N == length(u)
+    end
+
+    @inbounds @simd for i in eachindex(u, basis.weights)
+        u[i] = factor * u[i] / (Δx * basis.weights[i])
+    end
+
+    u
+end
+
+function get_weight(D::LegendreDerivativeOperator, i::Int)
+    @unpack Δx, basis = D
+    @unpack weights = basis
+    N, _ = size(D)
+    @boundscheck begin
+        @argcheck 1 <= i <= N
+    end
+    @inbounds ω = Δx * weights[i]
+    ω
+end
+
 function Base.show(io::IO, D::LegendreDerivativeOperator{T}) where {T}
     x = grid(D)
     print(io, "First derivative operator {T=", T, "} \n")
@@ -65,8 +106,6 @@ function mul!(dest::AbstractVector, D::LegendreDerivativeOperator, u::AbstractVe
     end
 
     mul!(dest, basis.D, u, α*jac, β)
-
-    nothing
 end
 
 

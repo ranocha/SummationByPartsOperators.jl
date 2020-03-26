@@ -17,14 +17,19 @@ using SummationByPartsOperators
         cD_central    = couple_discontinuosly(D, mesh)
         cD_plus       = couple_discontinuosly(D, mesh, Val(:plus))
         cD_minus      = couple_discontinuosly(D, mesh, Val(:minus))
-        for cD in (cD_central, cD_plus, cD_minus) #TODO
-        # for cD in (cD_continuous, cD_central, cD_plus, cD_minus)
+        for cD in (cD_continuous, cD_central, cD_plus, cD_minus)
           print(devnull, cD)
           x = grid(cD)
           @test norm(cD * x.^0) < degree * N * eps(T)
           for k in 1:degree
             @test cD * x.^k ≈ k .* x.^(k-1)
           end
+
+          u = sinpi.(x)
+          v = copy(u)
+          SummationByPartsOperators.scale_by_mass_matrix!(u, cD)
+          SummationByPartsOperators.scale_by_inverse_mass_matrix!(u, cD)
+          @test u ≈ v
         end
         M = mass_matrix(cD_central)
         @test M ≈ mass_matrix(cD_plus)
@@ -53,12 +58,11 @@ using SummationByPartsOperators
 
         Mcont = mass_matrix(cD_continuous)
         @test sum(Mcont) ≈ xmax - xmin
-        # TODO
-        # Dcont = Matrix(cD_continuous)
-        # res = Mcont * Dcont + Dcont' * Mcont
-        # res[1, 1] += 1
-        # res[end, end] -= 1
-        # @test norm(res) < degree * 10N * eps(T)
+        Dcont = Matrix(cD_continuous)
+        res = Mcont * Dcont + Dcont' * Mcont
+        res[1, 1] += 1
+        res[end, end] -= 1
+        @test norm(res) < degree * 10N * eps(T)
       end
 
       for N in 1:3
@@ -69,8 +73,7 @@ using SummationByPartsOperators
         cD_central    = couple_discontinuosly(D, mesh)
         cD_plus       = couple_discontinuosly(D, mesh, Val(:plus))
         cD_minus      = couple_discontinuosly(D, mesh, Val(:minus))
-        for cD in (cD_central, cD_plus, cD_minus) #TODO
-        # for cD in (cD_continuous, cD_central, cD_plus, cD_minus)
+        for cD in (cD_continuous, cD_central, cD_plus, cD_minus)
           print(devnull, cD)
           x = grid(cD)
           @test norm(cD * x.^0) < degree * N * eps(T)
@@ -92,10 +95,9 @@ using SummationByPartsOperators
 
         Mcont = mass_matrix(cD_continuous)
         @test sum(Mcont) ≈ xmax - xmin
-        # TODO
-        # Dcont = Matrix(cD_continuous)
-        # res = Mcont * Dcont + Dcont' * Mcont
-        # @test norm(res) < degree * 10N * eps(T)
+        Dcont = Matrix(cD_continuous)
+        res = Mcont * Dcont + Dcont' * Mcont
+        @test norm(res) < degree * 10N * eps(T)
       end
     end
   end
