@@ -412,7 +412,7 @@ function fornberg(xx::Vector{T}, m::Int) where {T}
 end
 
 """
-    function periodic_derivative_coefficients(derivative_order, accuracy_order, left_offset=-(accuracy_order+1)÷2, T=Float64, parallel=Val{:serial}())
+    periodic_derivative_coefficients(derivative_order, accuracy_order, left_offset=-(accuracy_order+1)÷2, T=Float64, parallel=Val{:serial}())
 
 Create the `PeriodicDerivativeCoefficients` approximating the `derivative_order`-th
 derivative with an order of accuracy `accuracy_order` and scalar type `T` where
