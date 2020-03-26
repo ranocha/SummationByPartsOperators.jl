@@ -134,15 +134,17 @@ end
 
 
 
-abstract type AbstractVariableCoefficientDerivativeOperator{T} <: AbstractDerivativeOperator{T} end
+abstract type AbstractVariableCoefficientNonperiodicDerivativeOperator{T} <: AbstractNonperiodicDerivativeOperator{T} end
+abstract type AbstractVariableCoefficientPeriodicDerivativeOperator{T} <: AbstractPeriodicDerivativeOperator{T} end
 
-@inline source_of_coeffcients(D::AbstractVariableCoefficientDerivativeOperator) = source_of_coeffcients(D.coefficients)
 
-@inline function lower_bandwidth(D::AbstractVariableCoefficientDerivativeOperator)
+@inline source_of_coeffcients(D::Union{AbstractVariableCoefficientNonperiodicDerivativeOperator,AbstractVariableCoefficientNonperiodicDerivativeOperator}) = source_of_coeffcients(D.coefficients)
+
+@inline function lower_bandwidth(D::AbstractVariableCoefficientNonperiodicDerivativeOperator)
     lower_bandwidth(D.coefficients.coefficient_cache)
 end
 
-@inline function upper_bandwidth(D::AbstractVariableCoefficientDerivativeOperator)
+@inline function upper_bandwidth(D::AbstractVariableCoefficientNonperiodicDerivativeOperator)
     upper_bandwidth((D.coefficients.coefficient_cache))
 end
 
@@ -153,13 +155,13 @@ end
 
 A dissipation operator on a nonperiodic finite difference grid.
 """
-struct DissipationOperator{T,CoefficientCache,Parallel,SourceOfCoefficients,Grid} <: AbstractVariableCoefficientDerivativeOperator{T}
+struct DissipationOperator{T,CoefficientCache,Parallel,SourceOfCoefficients,Grid} <: AbstractVariableCoefficientNonperiodicDerivativeOperator{T}
     factor::T
     coefficients::VarCoefDerivativeCoefficients{T,CoefficientCache,Parallel,SourceOfCoefficients}
     grid::Grid
     b::Vector{T}
 
-    function DissipationOperator(factor::T, 
+    function DissipationOperator(factor::T,
                                  coefficients::VarCoefDerivativeCoefficients{T,CoefficientCache,Parallel,SourceOfCoefficients},
                                  grid::Grid, b::Vector{T}) where {T,CoefficientCache,Parallel,SourceOfCoefficients,Grid}
         @argcheck checkbounds(Bool, grid, coefficients.coefficient_cache) DimensionMismatch
@@ -191,7 +193,7 @@ end
 
 Compute `α*D*u + β*dest` and store the result in `dest`.
 """
-Base.@propagate_inbounds function mul!(dest::AbstractVector, D::DissipationOperator, 
+Base.@propagate_inbounds function mul!(dest::AbstractVector, D::DissipationOperator,
                                        u::AbstractVector, α, β)
     @boundscheck begin
         @argcheck size(D, 2) == length(u) DimensionMismatch
@@ -205,7 +207,7 @@ end
 
 Compute `α*D*u` and store the result in `dest`.
 """
-Base.@propagate_inbounds function mul!(dest::AbstractVector, D::DissipationOperator, 
+Base.@propagate_inbounds function mul!(dest::AbstractVector, D::DissipationOperator,
                                        u::AbstractVector, α)
     @boundscheck begin
         @argcheck size(D, 2) == length(u) DimensionMismatch
@@ -216,19 +218,19 @@ end
 
 
 """
-    dissipation_operator(source_of_coefficients, order, xmin, xmax, N, 
+    dissipation_operator(source_of_coefficients, order, xmin, xmax, N,
                          left_weights, right_weights, parallel=Val{:serial}())
 
 Create a negative semidefinite `DissipationOperator` using undivided differences
-approximating a weighted `order`-th derivative on a grid between `xmin` and 
+approximating a weighted `order`-th derivative on a grid between `xmin` and
 `xmax` with `N` grid points up to order of accuracy 2 with coefficients given
-by `source_of_coefficients`. 
+by `source_of_coefficients`.
 The norm matrix is given by `left_weights` and `right_weights`.
 The evaluation of the derivative can be parallised using threads by chosing
 `parallel=Val{:threads}())`.
 """
-function dissipation_operator(source_of_coefficients, order, xmin, xmax, N, 
-                              left_weights, right_weights, 
+function dissipation_operator(source_of_coefficients, order, xmin, xmax, N,
+                              left_weights, right_weights,
                               strength=one(xmin+xmax),
                               parallel=Val{:serial}())
     grid = construct_grid(source_of_coefficients, order, xmin, xmax, N)
@@ -239,7 +241,7 @@ end
 """
     dissipation_operator(source_of_coefficients, D::DerivativeOperator{T};
                          strength=one(T),
-                         order::Int=accuracy_order(D), 
+                         order::Int=accuracy_order(D),
                          parallel=D.coefficients.parallel)
 
 Create a negative semidefinite `DissipationOperator` using undivided differences

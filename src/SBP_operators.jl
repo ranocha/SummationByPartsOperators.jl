@@ -284,7 +284,7 @@ end
 A derivative operator on a nonperiodic finite difference grid.
 """
 struct DerivativeOperator{T,LeftBoundary,RightBoundary,LeftBoundaryDerivatives,RightBoundaryDerivatives,
-                          LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel,SourceOfCoefficients,Grid} <: AbstractDerivativeOperator{T}
+                          LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel,SourceOfCoefficients,Grid} <: AbstractNonperiodicDerivativeOperator{T}
     coefficients::DerivativeCoefficients{T,LeftBoundary,RightBoundary,LeftBoundaryDerivatives,RightBoundaryDerivatives,
                                          LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel,SourceOfCoefficients}
     grid::Grid

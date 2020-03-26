@@ -109,31 +109,6 @@ end
 
 
 """
-    compute_coefficients(u, D::AbstractPeriodicDerivativeOperator)
-
-Compute the nodal values of the function `u` at the grid associated to the
-derivative operator `D`.
-"""
-function compute_coefficients(u, D::AbstractPeriodicDerivativeOperator)
-    x = D.grid_compute
-    xmin = first(x)
-    xmax = last(x)
-    uval = Array{typeof(u((xmin+xmax)/2))}(undef, length(x))
-    compute_coefficients!(uval, u, D)
-end
-
-"""
-    compute_coefficients!(uval::AbstractVector, u, D::AbstractPeriodicDerivativeOperator)
-
-Compute the nodal values of the function `u` at the grid associated to the
-derivative operator `D` and stores the result in `uval`.
-"""
-function compute_coefficients!(uval::AbstractVector, u, D::AbstractPeriodicDerivativeOperator)
-    uval .= u.(D.grid_compute)
-end
-
-
-"""
     evaluate_coefficients(u, D::AbstractDerivativeOperator)
 
 Evaluates the nodal coefficients `u` at a grid associated to the derivative
@@ -163,43 +138,6 @@ function evaluate_coefficients!(xplot, uplot, u, D::AbstractDerivativeOperator)
 
     xplot .= grid(D)
     uplot .= u
-
-    xplot, uplot
-end
-
-
-"""
-    evaluate_coefficients(u, D::AbstractPeriodicDerivativeOperator)
-
-Evaluates the nodal coefficients `u` at a grid including both endpoints
-associated to the derivative periodic operator `D`.
-Returns `xplot, uplot`, where `xplot` contains the equally spaced nodes and
-`uplot` the corresponding values of `u`.
-"""
-function evaluate_coefficients(u, D::AbstractPeriodicDerivativeOperator)
-    x = D.grid_evaluate
-    xplot = Array{eltype(x)}(undef, length(x))
-    uplot = Array{eltype(u)}(undef, length(x))
-
-    evaluate_coefficients!(xplot, uplot, u, D)
-end
-
-"""
-    evaluate_coefficients!(xplot, uplot, u, D::AbstractPeriodicDerivativeOperator)
-
-Evaluates the nodal coefficients `u` at a grid including both endpoints
-associated to the derivative periodic operator `D` and stores the result in
-`xplot, uplot`.
-Returns `xplot, uplot`, where `xplot` contains the equally spaced nodes and
-`uplot` the corresponding values of `u`.
-"""
-function evaluate_coefficients!(xplot, uplot, u, D::AbstractPeriodicDerivativeOperator)
-    @argcheck length(uplot) == length(xplot)
-    @argcheck length(uplot) == length(D.grid_evaluate)
-
-    xplot .= D.grid_evaluate
-    uplot[1:end-1] = u
-    uplot[end] = uplot[1]
 
     xplot, uplot
 end
