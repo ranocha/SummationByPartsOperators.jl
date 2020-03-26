@@ -27,10 +27,10 @@ using SummationByPartsOperators
     res = M * Dp + Dm' * M
     res[1,1] += 1
     res[end,end] -= 1
-    @test norm(res) < 10N * eps()
+    @test norm(res) < N * eps()
     x = grid(Dp_bounded)
     for D in (Dp_bounded, Dm_bounded, Dc_bounded)
-      @test norm(D * x.^0) < 10N * eps()
+      @test norm(D * x.^0) < N * eps()
       for k in 1:acc_order÷2
         @test D * x.^k ≈ k .* x.^(k-1)
       end
@@ -38,5 +38,8 @@ using SummationByPartsOperators
         @test (D * x.^k)[interior] ≈ (k .* x.^(k-1))[interior]
       end
     end
+    diss = M * (Dp - Dm)
+    @test diss ≈ diss'
+    @test maximum(eigvals(Symmetric(diss))) < N * eps()
   end
 end
