@@ -77,6 +77,22 @@ end
 
 @inline bounds(mesh::Union{UniformMesh1D,UniformPeriodicMesh1D}) = mesh.xmin, mesh.xmax
 
+function left_cell(cell::Int, mesh::AbstractMesh1D)
+  N = numcells(mesh)
+  @boundscheck begin
+    @assert(1 <= cell <= N)
+  end
+  isperiodic(mesh) && cell == 1 ? N : cell-1
+end
+
+function right_cell(cell::Int, mesh::AbstractMesh1D)
+  N = numcells(mesh)
+  @boundscheck begin
+    @assert(1 <= cell <= N)
+  end
+  isperiodic(mesh) && cell == N ? 1 : cell+1
+end
+
 
 
 struct UniformMeshGrid1D{T, Mesh<:Union{UniformMesh1D,UniformPeriodicMesh1D}, Grid<:AbstractVector{T}} <: AbstractArray{T,1}
@@ -136,12 +152,132 @@ end
 Base.size(meshgrid::UniformMeshGrid1D) = (length(meshgrid),)
 
 
-struct UniformCoupledOperator{T, Dtype<:AbstractNonperiodicDerivativeOperator{T}, MeshGrid <: UniformMeshGrid1D{T}} <: AbstractNonperiodicDerivativeOperator{T}
+
+struct UniformCoupledOperator{T, Dtype<:AbstractNonperiodicDerivativeOperator{T}, MeshGrid <: UniformMeshGrid1D{T}, Coupling<:Union{Val{:continuous}, Val{:plus}, Val{:central}, Val{:minus}}} <: AbstractNonperiodicDerivativeOperator{T}
   D::Dtype
   meshgrid::MeshGrid
+  coupling::Coupling
 
-  function UniformCoupledOperator(D::Dtype, mesh::Mesh, continuous::Bool) where {T, Dtype<:AbstractNonperiodicDerivativeOperator{T}, Mesh<:AbstractMesh1D}
-    meshgrid = UniformMeshGrid1D(mesh, grid(D), continuous)
-    new{T, Dtype, typeof(meshgrid)}(D, meshgrid)
+  function UniformCoupledOperator(D::Dtype, mesh::Mesh, coupling::Coupling) where {T, Dtype<:AbstractNonperiodicDerivativeOperator{T}, Mesh<:AbstractMesh1D, Coupling<:Union{Val{:continuous}, Val{:plus}, Val{:central}, Val{:minus}}}
+    meshgrid = UniformMeshGrid1D(mesh, grid(D), coupling===Val(:continuous))
+    if derivative_order(D) != 1
+      throw(ArgumentError("Not implemented yet"))
+    end
+    new{T, Dtype, typeof(meshgrid), Coupling}(D, meshgrid, coupling)
   end
+end
+
+iscontinuous(cD::UniformCoupledOperator) = iscontinuous(cD.meshgrid)
+
+function Base.show(io::IO, cD::UniformCoupledOperator)
+  print(io, cD.D)
+  if iscontinuous(cD)
+    print(io, "coupled continuously")
+  else
+    print(io, "coupled discontinuously (upwind: ", cD.coupling, ")")
+  end
+  print(io, " on the mesh \n")
+  print(io, cD.meshgrid.mesh)
+end
+
+function couple_continuosly(D::AbstractNonperiodicDerivativeOperator, mesh::AbstractMesh1D)
+  UniformCoupledOperator(D, mesh, Val(:continuous))
+end
+
+function couple_discontinuosly(D::AbstractNonperiodicDerivativeOperator, mesh::AbstractMesh1D, coupling::Union{Val{:plus}, Val{:central}, Val{:minus}}=Val(:central))
+  UniformCoupledOperator(D, mesh, coupling)
+end
+
+grid(cD::UniformCoupledOperator) = cD.meshgrid
+
+function mass_matrix(cD::UniformCoupledOperator)
+  @unpack D, meshgrid = cD
+  @unpack mesh, grid = meshgrid
+  ymin, ymax = first(grid), last(grid)
+
+  if iscontinuous(meshgrid)
+    throw(ArgumentError("Not implemented yet"))
+  else
+    m = zeros(eltype(D), length(grid), numcells(mesh))
+    for cell in 1:numcells(mesh)
+      xmin, xmax = bounds(cell, mesh)
+      factor = (xmax - xmin) / (ymax - ymin)
+      m[:, cell] = diag(mass_matrix(D)) * factor
+    end
+  end
+
+  Diagonal(vec(m))
+end
+
+
+function mul!(dest::AbstractVector, cD::UniformCoupledOperator, u::AbstractVector, α=true, β=false)
+  N, _ = size(cD)
+  @boundscheck begin
+    @argcheck N == length(u)
+    @argcheck N == length(dest)
+  end
+
+  @unpack D, meshgrid, coupling = cD
+  mul!(dest, D, meshgrid, coupling, u, α, β)
+end
+
+function mul!(_dest::AbstractVector, D::AbstractNonperiodicDerivativeOperator, meshgrid::UniformMeshGrid1D, coupling::Union{Val{:plus}, Val{:central}, Val{:minus}}, _u::AbstractVector, α=true, β=false)
+  @unpack mesh, grid = meshgrid
+  dest = reshape(_dest, length(grid), numcells(mesh))
+  u    = reshape(_u,    length(grid), numcells(mesh))
+  ymin, ymax = first(grid), last(grid)
+  half = one(eltype(D)) / 2
+
+  cell = 1
+  xmin, xmax = bounds(cell, mesh)
+  factor = (ymax - ymin) / (xmax - xmin)
+  mul!(view(dest, :, cell), D, view(u, :, cell), α*factor, β)
+  if numcells(mesh) == 1 && !isperiodic(mesh)
+    return _dest
+  end
+  if coupling === Val(:central)
+    dest[end, cell] += half * (u[1, right_cell(cell, mesh)] - u[end, cell]) * factor / right_boundary_weight(D)
+  elseif coupling === Val(:plus)
+    dest[end, cell] +=        (u[1, right_cell(cell, mesh)] - u[end, cell]) * factor / right_boundary_weight(D)
+  end
+  if isperiodic(mesh)
+    if coupling === Val(:central)
+      dest[1  , cell] += half * (u[1, cell] - u[end, left_cell(cell, mesh)]) * factor / left_boundary_weight(D)
+    elseif coupling === Val(:minus)
+      dest[1  , cell] +=        (u[1, cell] - u[end, left_cell(cell, mesh)]) * factor / left_boundary_weight(D)
+    end
+  end
+
+  for cell in 2:numcells(mesh)-1
+    xmin, xmax = bounds(cell, mesh)
+    factor = (ymax - ymin) / (xmax - xmin)
+    mul!(view(dest, :, cell), D, view(u, :, cell), α*factor, β)
+    if coupling === Val(:central)
+      dest[1  , cell] += half * (u[1, cell] - u[end, left_cell(cell, mesh)]) * factor / left_boundary_weight(D)
+      dest[end, cell] += half * (u[1, right_cell(cell, mesh)] - u[end, cell]) * factor / right_boundary_weight(D)
+    elseif coupling === Val(:plus)
+      dest[end, cell] +=        (u[1, right_cell(cell, mesh)] - u[end, cell]) * factor / right_boundary_weight(D)
+    elseif coupling === Val(:minus)
+      dest[1  , cell] +=        (u[1, cell] - u[end, left_cell(cell, mesh)]) * factor / left_boundary_weight(D)
+    end
+  end
+
+  cell = numcells(mesh)
+  xmin, xmax = bounds(cell, mesh)
+  factor = (ymax - ymin) / (xmax - xmin)
+  mul!(view(dest, :, cell), D, view(u, :, cell), α*factor, β)
+  if coupling === Val(:central)
+    dest[1  , cell] += half * (u[1, cell] - u[end, left_cell(cell, mesh)]) * factor / left_boundary_weight(D)
+  elseif coupling === Val(:minus)
+    dest[1  , cell] +=        (u[1, cell] - u[end, left_cell(cell, mesh)]) * factor / left_boundary_weight(D)
+  end
+  if isperiodic(mesh)
+    if coupling === Val(:central)
+      dest[end, cell] += half * (u[1, right_cell(cell, mesh)] - u[end, cell]) * factor / right_boundary_weight(D)
+    elseif coupling === Val(:plus)
+      dest[end, cell] +=        (u[1, right_cell(cell, mesh)] - u[end, cell]) * factor / right_boundary_weight(D)
+    end
+  end
+
+  _dest
 end
