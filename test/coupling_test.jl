@@ -26,6 +26,7 @@ using SummationByPartsOperators
           for k in 1:degree
             @test cD * x.^k ≈ k .* x.^(k-1)
           end
+          @test accuracy_order(cD) == accuracy_order(D)
 
           u = sinpi.(x)
           v = copy(u)
@@ -33,6 +34,7 @@ using SummationByPartsOperators
           SummationByPartsOperators.scale_by_inverse_mass_matrix!(u, cD)
           @test u ≈ v
           @test integrate(u, cD) ≈ sum(mass_matrix(cD) * u)
+          @test integrate(u->u^2, u, cD) ≈ sum(u' * mass_matrix(cD) * u)
           if N > 1
             @test cD * u ≈ BandedMatrix(cD) * u
           end
@@ -85,6 +87,7 @@ using SummationByPartsOperators
           print(devnull, cD)
           x = grid(cD)
           @test norm(cD * x.^0) < 100N * eps(T)
+          @test accuracy_order(cD) == accuracy_order(D)
 
           u = sinpi.(x)
           v = copy(u)
@@ -92,6 +95,7 @@ using SummationByPartsOperators
           SummationByPartsOperators.scale_by_inverse_mass_matrix!(u, cD)
           @test u ≈ v
           @test integrate(u, cD) ≈ sum(mass_matrix(cD) * u)
+          @test integrate(u->u^2, u, cD) ≈ sum(u' * mass_matrix(cD) * u)
           @test cD * u ≈ Matrix(cD) * u
           @test cD * u ≈ sparse(cD) * u
         end
@@ -143,6 +147,7 @@ end
             print(devnull, cD)
             x = grid(cD)
             @test norm(cD * x.^0) < 100N * eps(T)
+            @test accuracy_order(cD) == accuracy_order(D)
 
             u = sinpi.(x)
             v = copy(u)
@@ -150,6 +155,7 @@ end
             SummationByPartsOperators.scale_by_inverse_mass_matrix!(u, cD)
             @test u ≈ v
             @test integrate(u, cD) ≈ sum(mass_matrix(cD) * u)
+            @test integrate(u->u^2, u, cD) ≈ sum(u' * mass_matrix(cD) * u)
             @test cD * u ≈ BandedMatrix(cD) * u
             @test cD * u ≈ Matrix(cD) * u
             @test cD * u ≈ sparse(cD) * u
@@ -200,6 +206,7 @@ end
             print(devnull, cD)
             x = grid(cD)
             @test norm(cD * x.^0) < 100N * eps(T)
+            @test accuracy_order(cD) == accuracy_order(D)
 
             u = sinpi.(x)
             v = copy(u)
@@ -207,6 +214,7 @@ end
             SummationByPartsOperators.scale_by_inverse_mass_matrix!(u, cD)
             @test u ≈ v
             @test integrate(u, cD) ≈ sum(mass_matrix(cD) * u)
+            @test integrate(u->u^2, u, cD) ≈ sum(u' * mass_matrix(cD) * u)
             @test cD * u ≈ Matrix(cD) * u
             @test cD * u ≈ sparse(cD) * u
           end
