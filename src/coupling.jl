@@ -60,8 +60,6 @@ function UniformMesh1D(_xmin::Real, _xmax::Real, Nx::Integer)
 end
 
 @inline numcells(mesh::Union{UniformMesh1D,UniformPeriodicMesh1D}) = mesh.Nx
-@inline cell_indices(mesh::Union{UniformMesh1D,UniformPeriodicMesh1D}) = Base.OneTo(numcells(mesh))
-@inline volume(cell::Int, mesh::Union{UniformMesh1D,UniformPeriodicMesh1D}) = mesh.Δx
 
 function bounds(cell::Int, mesh::Union{UniformMesh1D,UniformPeriodicMesh1D})
   @unpack Δx = mesh
@@ -376,12 +374,12 @@ function integrate(func, u::AbstractVector, cD::UniformCoupledOperator)
     xmin, xmax = bounds(cell, mesh)
     jac = (xmax - xmin) / (ymax - ymin)
     idx = (cell-1)*num_nodes_per_cell+1:cell*num_nodes_per_cell
-    res = jac * integrate(view(u, idx), D)
+    res = jac * integrate(func, view(u, idx), D)
     for cell in 2:numcells(mesh)
       xmin, xmax = bounds(cell, mesh)
       jac = (xmax - xmin) / (ymax - ymin)
       idx = (cell-1)*num_nodes_per_cell+1:cell*num_nodes_per_cell
-      res += jac * integrate(view(u, idx), D)
+      res += jac * integrate(func, view(u, idx), D)
     end
   end
 
