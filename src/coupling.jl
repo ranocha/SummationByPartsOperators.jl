@@ -296,7 +296,7 @@ function integrate(func, u::AbstractVector, cD::UniformCoupledOperator)
   @unpack mesh, grid = meshgrid
   ymin, ymax = first(grid), last(grid)
 
-  if iscontinuous(meshgrid)
+  @inbounds if iscontinuous(meshgrid)
     num_nodes_per_cell = length(grid) - 1
 
     cell = 1
@@ -310,7 +310,7 @@ function integrate(func, u::AbstractVector, cD::UniformCoupledOperator)
     else
       res = func(u[1]) * (jac * get_weight(D, 1))
     end
-    for i in 2:num_nodes_per_cell
+    @simd for i in 2:num_nodes_per_cell
       res += func(u[i]) * (jac * get_weight(D, i))
     end
     if !isperiodic(mesh) && numcells(mesh) == 1
@@ -327,7 +327,7 @@ function integrate(func, u::AbstractVector, cD::UniformCoupledOperator)
       xmin, xmax = bounds(next_cell, mesh)
       next_jac = (xmax - xmin) / (ymax - ymin)
       res += func(u[(cell-1)*num_nodes_per_cell+1]) * (jac * get_weight(D, 1) + next_jac * get_weight(D, num_nodes_per_cell+1))
-      for i in 2:num_nodes_per_cell
+      @simd for i in 2:num_nodes_per_cell
         res += func(u[(cell-1)*num_nodes_per_cell+i]) * (jac * get_weight(D, i))
       end
     end
@@ -339,7 +339,7 @@ function integrate(func, u::AbstractVector, cD::UniformCoupledOperator)
     xmin, xmax = bounds(next_cell, mesh)
     next_jac = (xmax - xmin) / (ymax - ymin)
     res += func(u[(cell-1)*num_nodes_per_cell+1]) * (jac * get_weight(D, 1) + next_jac * get_weight(D, num_nodes_per_cell+1))
-    for i in 2:num_nodes_per_cell
+    @simd for i in 2:num_nodes_per_cell
       res += func(u[(cell-1)*num_nodes_per_cell+i]) * (jac * get_weight(D, i))
     end
     if !isperiodic(mesh)
