@@ -291,6 +291,78 @@ for (fname, op) in ((:scale_by_mass_matrix!, Base.:*), (:scale_by_inverse_mass_m
   end
 end
 
+function integrate(func, u::AbstractVector, cD::UniformCoupledOperator)
+  @unpack D, meshgrid = cD
+  @unpack mesh, grid = meshgrid
+  ymin, ymax = first(grid), last(grid)
+
+  if iscontinuous(meshgrid)
+    num_nodes_per_cell = length(grid) - 1
+
+    cell = 1
+    xmin, xmax = bounds(cell, mesh)
+    jac = (xmax - xmin) / (ymax - ymin)
+    if isperiodic(mesh)
+      next_cell = left_cell(cell, mesh)
+      xmin, xmax = bounds(next_cell, mesh)
+      next_jac = (xmax - xmin) / (ymax - ymin)
+      res = func(u[1]) * (jac * get_weight(D, 1) + next_jac * get_weight(D, num_nodes_per_cell+1))
+    else
+      res = func(u[1]) * (jac * get_weight(D, 1))
+    end
+    for i in 2:num_nodes_per_cell
+      res += func(u[i]) * (jac * get_weight(D, i))
+    end
+    if !isperiodic(mesh) && numcells(mesh) == 1
+      res += func(u[num_nodes_per_cell+1]) * (jac * get_weight(D, num_nodes_per_cell+1))
+    end
+    if numcells(mesh) == 1
+      return res
+    end
+
+    for cell in 2:numcells(mesh)-1
+      xmin, xmax = bounds(cell, mesh)
+      jac = (xmax - xmin) / (ymax - ymin)
+      next_cell = left_cell(cell, mesh)
+      xmin, xmax = bounds(next_cell, mesh)
+      next_jac = (xmax - xmin) / (ymax - ymin)
+      res += func(u[(cell-1)*num_nodes_per_cell+1]) * (jac * get_weight(D, 1) + next_jac * get_weight(D, num_nodes_per_cell+1))
+      for i in 2:num_nodes_per_cell
+        res += func(u[(cell-1)*num_nodes_per_cell+i]) * (jac * get_weight(D, i))
+      end
+    end
+
+    cell = numcells(mesh)
+    xmin, xmax = bounds(cell, mesh)
+    jac = (xmax - xmin) / (ymax - ymin)
+    next_cell = left_cell(cell, mesh)
+    xmin, xmax = bounds(next_cell, mesh)
+    next_jac = (xmax - xmin) / (ymax - ymin)
+    res += func(u[(cell-1)*num_nodes_per_cell+1]) * (jac * get_weight(D, 1) + next_jac * get_weight(D, num_nodes_per_cell+1))
+    for i in 2:num_nodes_per_cell
+      res += func(u[(cell-1)*num_nodes_per_cell+i]) * (jac * get_weight(D, i))
+    end
+    if !isperiodic(mesh)
+      res += func(u[(cell-1)*num_nodes_per_cell+num_nodes_per_cell+1]) * (jac * get_weight(D, num_nodes_per_cell+1))
+    end
+  else # discontinuous coupling
+    num_nodes_per_cell = length(grid)
+    cell = 1
+    xmin, xmax = bounds(cell, mesh)
+    jac = (xmax - xmin) / (ymax - ymin)
+    idx = (cell-1)*num_nodes_per_cell+1:cell*num_nodes_per_cell
+    res = jac * integrate(view(u, idx), D)
+    for cell in 2:numcells(mesh)
+      xmin, xmax = bounds(cell, mesh)
+      jac = (xmax - xmin) / (ymax - ymin)
+      idx = (cell-1)*num_nodes_per_cell+1:cell*num_nodes_per_cell
+      res += jac * integrate(view(u, idx), D)
+    end
+  end
+
+  res
+end
+
 
 function mul!(dest::AbstractVector, cD::UniformCoupledOperator, u::AbstractVector, α=true)
   N, _ = size(cD)

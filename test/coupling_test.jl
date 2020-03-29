@@ -30,6 +30,7 @@ using SummationByPartsOperators
           SummationByPartsOperators.scale_by_mass_matrix!(u, cD)
           SummationByPartsOperators.scale_by_inverse_mass_matrix!(u, cD)
           @test u ≈ v
+          @test integrate(u, cD) ≈ sum(mass_matrix(cD) * u)
         end
         M = mass_matrix(cD_central)
         @test M ≈ mass_matrix(cD_plus)
@@ -77,6 +78,13 @@ using SummationByPartsOperators
           print(devnull, cD)
           x = grid(cD)
           @test norm(cD * x.^0) < 100N * eps(T)
+
+          u = sinpi.(x)
+          v = copy(u)
+          SummationByPartsOperators.scale_by_mass_matrix!(u, cD)
+          SummationByPartsOperators.scale_by_inverse_mass_matrix!(u, cD)
+          @test u ≈ v
+          @test integrate(u, cD) ≈ sum(mass_matrix(cD) * u)
         end
         M = mass_matrix(cD_central)
         @test M ≈ mass_matrix(cD_plus)
@@ -132,6 +140,7 @@ end
             SummationByPartsOperators.scale_by_mass_matrix!(u, cD)
             SummationByPartsOperators.scale_by_inverse_mass_matrix!(u, cD)
             @test u ≈ v
+            @test integrate(u, cD) ≈ sum(mass_matrix(cD) * u)
           end
           M = mass_matrix(cD_central)
           @test M ≈ mass_matrix(cD_plus)
@@ -179,6 +188,13 @@ end
             print(devnull, cD)
             x = grid(cD)
             @test norm(cD * x.^0) < 100N * eps(T)
+
+            u = sinpi.(x)
+            v = copy(u)
+            SummationByPartsOperators.scale_by_mass_matrix!(u, cD)
+            SummationByPartsOperators.scale_by_inverse_mass_matrix!(u, cD)
+            @test u ≈ v
+            @test integrate(u, cD) ≈ sum(mass_matrix(cD) * u)
           end
           M = mass_matrix(cD_central)
           @test M ≈ mass_matrix(cD_plus)
