@@ -1,6 +1,6 @@
 import .BandedMatrices: BandedMatrix, isbanded, bandwidth
 
-const BandedDerivativeOperator= Union{DerivativeOperator,DissipationOperator,VarCoefDerivativeOperator}
+const BandedDerivativeOperator = Union{DerivativeOperator, DissipationOperator, VarCoefDerivativeOperator, UniformNonperiodicCoupledOperator}
 
 @inline function bandwidth(D::BandedDerivativeOperator, k::Int)
     if k == 1

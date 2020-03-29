@@ -1,5 +1,7 @@
 using Test
 using LinearAlgebra
+using SparseArrays
+using BandedMatrices
 using SummationByPartsOperators
 
 @testset "Coupled Legendre operators" begin
@@ -31,6 +33,11 @@ using SummationByPartsOperators
           SummationByPartsOperators.scale_by_inverse_mass_matrix!(u, cD)
           @test u ≈ v
           @test integrate(u, cD) ≈ sum(mass_matrix(cD) * u)
+          if N > 1
+            @test cD * u ≈ BandedMatrix(cD) * u
+          end
+          @test cD * u ≈ Matrix(cD) * u
+          @test cD * u ≈ sparse(cD) * u
         end
         M = mass_matrix(cD_central)
         @test M ≈ mass_matrix(cD_plus)
@@ -85,6 +92,8 @@ using SummationByPartsOperators
           SummationByPartsOperators.scale_by_inverse_mass_matrix!(u, cD)
           @test u ≈ v
           @test integrate(u, cD) ≈ sum(mass_matrix(cD) * u)
+          @test cD * u ≈ Matrix(cD) * u
+          @test cD * u ≈ sparse(cD) * u
         end
         M = mass_matrix(cD_central)
         @test M ≈ mass_matrix(cD_plus)
@@ -141,6 +150,9 @@ end
             SummationByPartsOperators.scale_by_inverse_mass_matrix!(u, cD)
             @test u ≈ v
             @test integrate(u, cD) ≈ sum(mass_matrix(cD) * u)
+            @test cD * u ≈ BandedMatrix(cD) * u
+            @test cD * u ≈ Matrix(cD) * u
+            @test cD * u ≈ sparse(cD) * u
           end
           M = mass_matrix(cD_central)
           @test M ≈ mass_matrix(cD_plus)
@@ -195,6 +207,8 @@ end
             SummationByPartsOperators.scale_by_inverse_mass_matrix!(u, cD)
             @test u ≈ v
             @test integrate(u, cD) ≈ sum(mass_matrix(cD) * u)
+            @test cD * u ≈ Matrix(cD) * u
+            @test cD * u ≈ sparse(cD) * u
           end
           M = mass_matrix(cD_central)
           @test M ≈ mass_matrix(cD_plus)

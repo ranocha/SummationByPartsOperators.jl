@@ -109,6 +109,15 @@ function mul!(dest::AbstractVector, D::LegendreDerivativeOperator, u::AbstractVe
 end
 
 
+function lower_bandwidth(D::LegendreDerivativeOperator)
+    size(D, 1) - 1
+end
+
+function upper_bandwidth(D::LegendreDerivativeOperator)
+    size(D, 1) - 1
+end
+
+
 function left_boundary_weight(D::LegendreDerivativeOperator)
     @inbounds retval = D.Δx * D.basis.weights[1]
     retval

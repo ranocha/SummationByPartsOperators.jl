@@ -533,3 +533,14 @@ function mul!(dest::AbstractVector, D::AbstractNonperiodicDerivativeOperator, me
 
   dest
 end
+
+
+function lower_bandwidth(cD::UniformNonperiodicCoupledOperator)
+  @unpack D = cD
+  lower_bandwidth(D)
+end
+
+function upper_bandwidth(cD::UniformNonperiodicCoupledOperator)
+  @unpack D = cD
+  upper_bandwidth(D)
+end
