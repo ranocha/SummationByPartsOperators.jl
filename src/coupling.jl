@@ -153,19 +153,36 @@ Base.size(meshgrid::UniformMeshGrid1D) = (length(meshgrid),)
 
 
 
-struct UniformCoupledOperator{T, Dtype<:AbstractNonperiodicDerivativeOperator{T}, MeshGrid <: UniformMeshGrid1D{T}, Coupling<:Union{Val{:continuous}, Val{:plus}, Val{:central}, Val{:minus}}} <: AbstractNonperiodicDerivativeOperator{T}
+struct UniformNonperiodicCoupledOperator{T, Dtype<:AbstractNonperiodicDerivativeOperator{T}, Mesh<:UniformMesh1D{T}, MeshGrid<:UniformMeshGrid1D{T, Mesh}, Coupling<:Union{Val{:continuous}, Val{:plus}, Val{:central}, Val{:minus}}} <: AbstractNonperiodicDerivativeOperator{T}
   D::Dtype
   meshgrid::MeshGrid
   coupling::Coupling
 
-  function UniformCoupledOperator(D::Dtype, mesh::Mesh, coupling::Coupling) where {T, Dtype<:AbstractNonperiodicDerivativeOperator{T}, Mesh<:AbstractMesh1D, Coupling<:Union{Val{:continuous}, Val{:plus}, Val{:central}, Val{:minus}}}
+  function UniformNonperiodicCoupledOperator(D::Dtype, mesh::Mesh, coupling::Coupling) where {T, Dtype<:AbstractNonperiodicDerivativeOperator{T}, Mesh<:UniformMesh1D{T}, Coupling<:Union{Val{:continuous}, Val{:plus}, Val{:central}, Val{:minus}}}
     meshgrid = UniformMeshGrid1D(mesh, grid(D), coupling===Val(:continuous))
     if derivative_order(D) != 1
       throw(ArgumentError("Not implemented yet"))
     end
-    new{T, Dtype, typeof(meshgrid), Coupling}(D, meshgrid, coupling)
+    new{T, Dtype, Mesh, typeof(meshgrid), Coupling}(D, meshgrid, coupling)
   end
 end
+
+struct UniformPeriodicCoupledOperator{T, Dtype<:AbstractNonperiodicDerivativeOperator{T}, Mesh<:UniformPeriodicMesh1D{T}, MeshGrid<:UniformMeshGrid1D{T, Mesh}, Coupling<:Union{Val{:continuous}, Val{:plus}, Val{:central}, Val{:minus}}} <: AbstractPeriodicDerivativeOperator{T}
+  D::Dtype
+  meshgrid::MeshGrid
+  coupling::Coupling
+
+  function UniformPeriodicCoupledOperator(D::Dtype, mesh::Mesh, coupling::Coupling) where {T, Dtype<:AbstractNonperiodicDerivativeOperator{T}, Mesh<:UniformPeriodicMesh1D{T}, Coupling<:Union{Val{:continuous}, Val{:plus}, Val{:central}, Val{:minus}}}
+    meshgrid = UniformMeshGrid1D(mesh, grid(D), coupling===Val(:continuous))
+    if derivative_order(D) != 1
+      throw(ArgumentError("Not implemented yet"))
+    end
+    new{T, Dtype, Mesh, typeof(meshgrid), Coupling}(D, meshgrid, coupling)
+  end
+end
+
+const UniformCoupledOperator = Union{UniformNonperiodicCoupledOperator, UniformPeriodicCoupledOperator}
+
 
 iscontinuous(cD::UniformCoupledOperator) = iscontinuous(cD.meshgrid)
 
@@ -205,12 +222,20 @@ function right_boundary_weight(cD::UniformCoupledOperator)
   factor * right_boundary_weight(D)
 end
 
-function couple_continuosly(D::AbstractNonperiodicDerivativeOperator, mesh::AbstractMesh1D)
-  UniformCoupledOperator(D, mesh, Val(:continuous))
+function couple_continuosly(D::AbstractNonperiodicDerivativeOperator, mesh::UniformMesh1D)
+  UniformNonperiodicCoupledOperator(D, mesh, Val(:continuous))
 end
 
-function couple_discontinuosly(D::AbstractNonperiodicDerivativeOperator, mesh::AbstractMesh1D, coupling::Union{Val{:plus}, Val{:central}, Val{:minus}}=Val(:central))
-  UniformCoupledOperator(D, mesh, coupling)
+function couple_continuosly(D::AbstractNonperiodicDerivativeOperator, mesh::UniformPeriodicMesh1D)
+  UniformPeriodicCoupledOperator(D, mesh, Val(:continuous))
+end
+
+function couple_discontinuosly(D::AbstractNonperiodicDerivativeOperator, mesh::UniformMesh1D, coupling::Union{Val{:plus}, Val{:central}, Val{:minus}}=Val(:central))
+  UniformNonperiodicCoupledOperator(D, mesh, coupling)
+end
+
+function couple_discontinuosly(D::AbstractNonperiodicDerivativeOperator, mesh::UniformPeriodicMesh1D, coupling::Union{Val{:plus}, Val{:central}, Val{:minus}}=Val(:central))
+  UniformPeriodicCoupledOperator(D, mesh, coupling)
 end
 
 grid(cD::UniformCoupledOperator) = cD.meshgrid
