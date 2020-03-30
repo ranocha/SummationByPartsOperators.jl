@@ -26,25 +26,25 @@ function BandedMatrix(D::BandedDerivativeOperator)
     e = fill(zero(T), length(grid(D)))
     dest = similar(e)
     # left boundary
-    for j in 1:l
+    for j in 1:max(l,u)
         e[j] = 1
         mul!(dest, D, e)
         e[j] = 0
-        B.data[end-j-u+1:end,j] = dest[1:j+u]
+        B.data[end-j-l+1:end,j] = dest[1:j+l]
     end
     # inner part
-    for j in l+1:length(e)-u
+    for j in max(l,u)+1:length(e)-max(l,u)
         e[j] = 1
         mul!(dest, D, e)
         e[j] = 0
-        B.data[:,j] = dest[j-l:j+u]
+        B.data[:,j] = dest[j-u:j+l]
     end
     # right boundary
-    for j in length(e)-u+1:length(e)
+    for j in length(e)-max(l,u)+1:length(e)
         e[j] = 1
         mul!(dest, D, e)
         e[j] = 0
-        B.data[1:length(e)+1-j+l,j] = dest[j-l:end]
+        B.data[1:length(e)+1-j+u,j] = dest[j-u:end]
      end
 
     B
