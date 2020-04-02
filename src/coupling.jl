@@ -65,6 +65,16 @@ function bounds(cell::Int, mesh::Union{UniformMesh1D,UniformPeriodicMesh1D})
   @unpack Δx = mesh
 
   xmin = mesh.xmin + (cell-1)*Δx
+  xmax = mesh.xmin + cell*Δx
+
+  xmin, xmax
+end
+
+function bounds(cell::Int, mesh::Union{UniformMesh1D{T},UniformPeriodicMesh1D{T}}) where {T<:AbstractFloat}
+  @unpack Δx = mesh
+
+  # fix for functions with possible discontinuities on the edges
+  xmin = mesh.xmin + (cell-1)*Δx
   xmin = nextfloat(xmin)
 
   xmax = mesh.xmin + cell*Δx
