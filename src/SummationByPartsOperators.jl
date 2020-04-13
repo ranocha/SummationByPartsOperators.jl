@@ -60,6 +60,7 @@ include("SBP_coefficients/Mattsson2014.jl")
 include("SBP_coefficients/MattssonAlmquistCarpenter2014Extended.jl")
 include("SBP_coefficients/MattssonAlmquistCarpenter2014Optimal.jl")
 include("SBP_coefficients/Mattsson2017.jl")
+include("SBP_coefficients/MattssonAlmquistVanDerWeide2018Minimal.jl")
 
 include("conservation_laws/general_laws.jl")
 include("conservation_laws/burgers.jl")
@@ -95,7 +96,8 @@ export Fornberg1998, Holoborodko2008, BeljaddLeFlochMishraParés2017
 export MattssonNordström2004, MattssonSvärdNordström2004, MattssonSvärdShoeybi2008,
        Mattsson2012, Mattsson2014,
        MattssonAlmquistCarpenter2014Extended, MattssonAlmquistCarpenter2014Optimal,
-       Mattsson2017
+       Mattsson2017,
+       MattssonAlmquistVanDerWeide2018Minimal
 export Tadmor1989, MadayTadmor1989, Tadmor1993,
        TadmorWaagan2012Standard, TadmorWaagan2012Convergent
 

@@ -5,7 +5,8 @@ using SummationByPartsOperators
 D_test_list = (MattssonNordström2004(), MattssonSvärdNordström2004(),
                 MattssonSvärdShoeybi2008(), Mattsson2014(),
                 MattssonAlmquistCarpenter2014Extended(),
-                MattssonAlmquistCarpenter2014Optimal())
+                MattssonAlmquistCarpenter2014Optimal(),
+                MattssonAlmquistVanDerWeide2018Minimal())
 
 # Accuracy tests of first derivative operators.
 for source in D_test_list, T in (Float32,Float64)
