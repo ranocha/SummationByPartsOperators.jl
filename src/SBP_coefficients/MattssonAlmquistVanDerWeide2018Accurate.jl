@@ -12,7 +12,7 @@ struct MattssonAlmquistVanDerWeide2018Accurate <: SourceOfCoefficients end
 function Base.show(io::IO, ::MattssonAlmquistVanDerWeide2018Accurate)
   print(io,
       "  Mattsson, Almquist, van der Weide (2018) \n",
-      "  Boundary optimized diagonal-norm SBP operators. \n",
+      "  Boundary optimized diagonal-norm SBP operators ('Accurate'). \n",
       "  Journal of Computational Physics 374, pp. 1261-1266. \n")
 end
 
@@ -122,12 +122,13 @@ function first_derivative_coefficients(source::MattssonAlmquistVanDerWeide2018Ac
         DerivativeCoefficientRow{T,1,6}(SVector(T(0.23226893958753303),
                                                 T(-0.9178972823223088),
                                                 T(0),
+                                                T(0.8585728949642006),
                                                 T(-0.19840158580452047),
                                                 T(0.0254570335750956) )),
         # d4
         DerivativeCoefficientRow{T,1,7}(SVector(T(-0.07693308450770664),
                                                 T(0.2682207441654631),
-                                                T(0.1905185095473035),
+                                                T(-0.8244592785032373),
                                                 T(0),
                                                 T(0.7749305933808132),
                                                 T(-0.15857634324473752),
@@ -135,18 +136,18 @@ function first_derivative_coefficients(source::MattssonAlmquistVanDerWeide2018Ac
         # d5
         DerivativeCoefficientRow{T,1,8}(SVector(T(0.017248604775379643),
                                                 T(-0.057293724956320936),
-                                                T(-0.024157023606080553),
+                                                T(0.1882698460378496),
                                                 T(-0.7657841952075574),
                                                 T(0),
                                                 T(0.7505104744873311),
                                                 T(-0.14956988077877112),
                                                 T(0.01661887564208568) )),
         # d6
-        DerivativeCoefficientRow{T,1,9}(SVector(T(0),
-                                                T(0),
-                                                T(-0.016674978958261432),
-                                                T(0.15007481062435288),
-                                                T(-0.7503740531217644),
+        DerivativeCoefficientRow{T,1,9}(SVector(T(-0.0016761725437960326),
+                                                T(0.004750928272020083),
+                                                T(-0.02423857479897864),
+                                                T(0.15723370478311835),
+                                                T(-0.753044107168037),
                                                 T(0),
                                                 T(0.7503740531217644),
                                                 T(-0.15007481062435288),

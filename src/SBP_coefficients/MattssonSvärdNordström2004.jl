@@ -18,7 +18,7 @@ function Base.show(io::IO, ::MattssonSvärdNordström2004)
         "  Mattsson, Nordström (2004) \n",
         "  Summation by parts operators for finite difference approximations of second \n",
         "    derivaties. \n",
-        "  Journal of Computational Physics 199, pp.503-540. \n")
+        "  Journal of Computational Physics 199, pp. 503-540. \n")
 end
 
 
