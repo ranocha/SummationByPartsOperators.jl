@@ -12,7 +12,7 @@ struct MattssonAlmquistVanDerWeide2018Minimal <: SourceOfCoefficients end
 function Base.show(io::IO, ::MattssonAlmquistVanDerWeide2018Minimal)
   print(io,
       "  Mattsson, Almquist, van der Weide (2018) \n",
-      "  Boundary optimized diagonal-norm SBP operators. \n",
+      "  Boundary optimized diagonal-norm SBP operators ('Minimal'). \n",
       "  Journal of Computational Physics 374, pp. 1261-1266. \n")
 end
 
@@ -127,9 +127,9 @@ function first_derivative_coefficients(source::MattssonAlmquistVanDerWeide2018Mi
     upper_coef = SVector(T(2//3), T(-1//12))
     central_coef = zero(T)
     lower_coef = -upper_coef
-    left_weights = SVector( T(0.26864248295847),
-                            T(1.00946671535),
-                            T(1.00946671535) )
+    left_weights = SVector( T(2.6864248295847e-01),
+                            T(1.0094667153500e+00),
+                            T(9.9312068011715e-01) )
     right_weights = left_weights
     left_boundary_derivatives = Tuple{}()
     right_boundary_derivatives = left_boundary_derivatives

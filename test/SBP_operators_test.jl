@@ -23,8 +23,8 @@ for source in D_test_list, T in (Float32,Float64)
         nothing
     end
     if D != nothing
-        println(devnull, D)
-        println(devnull, D.coefficients)
+        println(D)
+        println(D.coefficients)
         x1 = grid(D)
         x0 = fill(one(eltype(x1)), length(x1))
         x2 = x1 .* x1
@@ -36,7 +36,7 @@ for source in D_test_list, T in (Float32,Float64)
         @test issymmetric(D) == false
         # interior and boundary
         mul!(res, D, x0)
-        @test all(i->abs(res[i]) < 50*eps(T), eachindex(res))
+        @test all(i->abs(res[i]) < 1000*eps(T), eachindex(res))
         mul!(res, D, x1)
         @test all(i->res[i] ≈ x0[i], eachindex(res))
         # only interior
@@ -57,8 +57,8 @@ for source in D_test_list, T in (Float32,Float64)
     end
     if D != nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
-        println(devnull, D)
-        println(devnull, D.coefficients)
+        println(D)
+        println(D.coefficients)
         x1 = grid(D)
         x0 = fill(one(eltype(x1)), length(x1))
         x2 = x1 .* x1
@@ -74,7 +74,7 @@ for source in D_test_list, T in (Float32,Float64)
         @test issymmetric(D) == false
         # interior and boundary
         mul!(res, D, x0)
-        @test all(i->abs(res[i]) < 50*eps(T), eachindex(res))
+        @test all(i->abs(res[i]) < 1000*eps(T), eachindex(res))
         mul!(res, D, x1)
         @test all(i->res[i] ≈ x0[i], eachindex(res))
         if source != Mattsson2014()
@@ -103,8 +103,8 @@ for source in D_test_list, T in (Float32,Float64)
     end
     if D != nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
-        println(devnull, D)
-        println(devnull, D.coefficients)
+        println(D)
+        println(D.coefficients)
         x1 = grid(D)
         x0 = fill(one(eltype(x1)), length(x1))
         x2 = x1 .* x1
@@ -120,7 +120,7 @@ for source in D_test_list, T in (Float32,Float64)
         @test issymmetric(D) == false
         # interior and boundary
         mul!(res, D, x0)
-        @test all(i->abs(res[i]) < 500*eps(T), eachindex(res))
+        @test all(i->abs(res[i]) < 1000*eps(T), eachindex(res))
         mul!(res, D, x1)
         @test all(i->res[i] ≈ x0[i], eachindex(res))
         mul!(res, D, x2)
@@ -155,8 +155,8 @@ for source in D_test_list, T in (Float32,Float64)
     end
     if D != nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
-        println(devnull, D)
-        println(devnull, D.coefficients)
+        println(D)
+        println(D.coefficients)
         x1 = grid(D)
         x0 = fill(one(eltype(x1)), length(x1))
         x2 = x1 .* x1
@@ -172,13 +172,13 @@ for source in D_test_list, T in (Float32,Float64)
         @test issymmetric(D) == false
         # interior and boundary
         mul!(res, D, x0)
-        @test all(i->abs(res[i]) < 8000*eps(T), eachindex(res))
+        @test all(i->abs(res[i]) < 16000*eps(T), eachindex(res))
         mul!(res, D, x1)
-        @test all(i->isapprox(res[i], x0[i], rtol=18000*eps(T)), eachindex(res))
+        @test all(i->isapprox(res[i], x0[i], rtol=28000*eps(T)), eachindex(res))
         mul!(res, D, x2)
-        @test all(i->isapprox(res[i], 2*x1[i], rtol=8000*eps(T)), eachindex(res))
+        @test all(i->isapprox(res[i], 2*x1[i], rtol=18000*eps(T)), eachindex(res))
         mul!(res, D, x3)
-        @test all(i->isapprox(res[i], 3*x2[i], rtol=8000*eps(T)), eachindex(res))
+        @test all(i->isapprox(res[i], 3*x2[i], rtol=18000*eps(T)), eachindex(res))
         mul!(res, D, x4)
         @test all(i->res[i] ≈ 4*x3[i], inner_indices)
         # only interior
@@ -215,8 +215,8 @@ for source in D_test_list, T in (Float32,Float64)
     end
     if D != nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
-        println(devnull, D)
-        println(devnull, D.coefficients)
+        println(D)
+        println(D.coefficients)
         x1 = grid(D)
         x0 = fill(one(eltype(x1)), length(x1))
         x2 = x1 .* x1
@@ -256,8 +256,8 @@ for source in D_test_list, T in (Float32,Float64)
     end
     if D != nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
-        println(devnull, D)
-        println(devnull, D.coefficients)
+        println(D)
+        println(D.coefficients)
         x1 = grid(D)
         x0 = fill(one(eltype(x1)), length(x1))
         x2 = x1 .* x1
@@ -306,8 +306,8 @@ for source in D_test_list, T in (Float32,Float64)
     end
     if D != nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
-        println(devnull, D)
-        println(devnull, D.coefficients)
+        println(D)
+        println(D.coefficients)
         x1 = grid(D)
         x0 = fill(one(eltype(x1)), length(x1))
         x2 = x1 .* x1
@@ -360,8 +360,8 @@ for source in D_test_list, T in (Float32,Float64)
     end
     if D != nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
-        println(devnull, D)
-        println(devnull, D.coefficients)
+        println(D)
+        println(D.coefficients)
         x1 = grid(D)
         x0 = fill(one(eltype(x1)), length(x1))
         x2 = x1 .* x1
@@ -429,8 +429,8 @@ for source in D_test_list, T in (Float32,Float64)
     end
     if D != nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
-        println(devnull, D)
-        println(devnull, D.coefficients)
+        println(D)
+        println(D.coefficients)
         x1 = grid(D)
         x0 = fill(one(eltype(x1)), length(x1))
         x2 = x1 .* x1
@@ -479,8 +479,8 @@ for source in D_test_list, T in (Float32,Float64)
     end
     if D != nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
-        println(devnull, D)
-        println(devnull, D.coefficients)
+        println(D)
+        println(D.coefficients)
         x1 = grid(D)
         x0 = fill(one(eltype(x1)), length(x1))
         x2 = x1 .* x1
@@ -534,8 +534,8 @@ for source in D_test_list, T in (Float32,Float64)
     end
     if D != nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
-        println(devnull, D)
-        println(devnull, D.coefficients)
+        println(D)
+        println(D.coefficients)
         x1 = grid(D)
         x0 = fill(one(eltype(x1)), length(x1))
         x2 = x1 .* x1
@@ -604,8 +604,8 @@ for source in D_test_list, T in (Float32,Float64)
     end
     if D != nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
-        println(devnull, D)
-        println(devnull, D.coefficients)
+        println(D)
+        println(D.coefficients)
         x1 = grid(D)
         x0 = fill(one(eltype(x1)), length(x1))
         x2 = x1 .* x1
@@ -661,8 +661,8 @@ for source in D_test_list, T in (Float32,Float64)
     end
     if D != nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
-        println(devnull, D)
-        println(devnull, D.coefficients)
+        println(D)
+        println(D.coefficients)
         x1 = grid(D)
         x0 = fill(one(eltype(x1)), length(x1))
         x2 = x1 .* x1
@@ -726,8 +726,8 @@ for source in D_test_list, T in (Float32,Float64)
     end
     if D != nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
-        println(devnull, D)
-        println(devnull, D.coefficients)
+        println(D)
+        println(D.coefficients)
         x1 = grid(D)
         x0 = fill(one(eltype(x1)), length(x1))
         x2 = x1 .* x1
