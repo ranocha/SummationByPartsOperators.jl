@@ -102,62 +102,74 @@ function first_derivative_coefficients(source::MattssonAlmquistVanDerWeide2018Ac
                             left_boundary_derivatives, right_boundary_derivatives,
                             lower_coef, central_coef, upper_coef,
                             left_weights, right_weights, parallel, 1, order, source)
-  # elseif order == 6
-  #   left_boundary = (
-  #       # d1
-  #       DerivativeCoefficientRow{T,1,5}(SVector(T(),
-  #                                               T(),
-  #                                               T(),
-  #                                               T(),
-  #                                               T() )),
-  #       # d2
-  #       DerivativeCoefficientRow{T,1,5}(SVector(T(),
-  #                                               T(0),
-  #                                               T(),
-  #                                               T(),
-  #                                               T() )),
-  #       # d3
-  #       DerivativeCoefficientRow{T,1,6}(SVector(T(),
-  #                                               T(),
-  #                                               T(0),
-  #                                               T(),
-  #                                               T(),
-  #                                               T() )),
-  #       # d4
-  #       DerivativeCoefficientRow{T,1,7}(SVector(T(),
-  #                                               T(),
-  #                                               T(),
-  #                                               T(0),
-  #                                               T(),
-  #                                               T(),
-  #                                               T() )),
-  #       # d5
-  #       DerivativeCoefficientRow{T,1,8}(SVector(T(),
-  #                                               T(),
-  #                                               T(),
-  #                                               T(),
-  #                                               T(0),
-  #                                               T(),
-  #                                               T(),
-  #                                               T() )),
-  #   )
-  #   right_boundary = .- left_boundary
-  #   upper_coef = SVector(T(3//4), T(-3//20), T(1//60))
-  #   central_coef = zero(T)
-  #   lower_coef = -upper_coef
-  #   left_weights = SVector( T(),
-  #                           T(),
-  #                           T(),
-  #                           T(),
-  #                           T() )
-  #   right_weights = left_weights
-  #   left_boundary_derivatives = Tuple{}()
-  #   right_boundary_derivatives = left_boundary_derivatives
+  elseif order == 6
+    left_boundary = (
+        # d1
+        DerivativeCoefficientRow{T,1,6}(SVector(T(-3.837232862086773),
+                                                T(5.068376175016296),
+                                                T(-1.6963756420892036),
+                                                T(0.5851295073874213),
+                                                T(-0.13275449453716695),
+                                                T(0.012857316309426029) )),
+        # d2
+        DerivativeCoefficientRow{T,1,6}(SVector(T(-0.9591958116075092),
+                                                T(0),
+                                                T(1.2687130518352143),
+                                                T(-0.3860731957925361),
+                                                T(0.08345276954506707),
+                                                T(-0.006896813980236088) )),
+        # d3
+        DerivativeCoefficientRow{T,1,6}(SVector(T(0.23226893958753303),
+                                                T(-0.9178972823223088),
+                                                T(0),
+                                                T(-0.19840158580452047),
+                                                T(0.0254570335750956) )),
+        # d4
+        DerivativeCoefficientRow{T,1,7}(SVector(T(-0.07693308450770664),
+                                                T(0.2682207441654631),
+                                                T(0.1905185095473035),
+                                                T(0),
+                                                T(0.7749305933808132),
+                                                T(-0.15857634324473752),
+                                                T(0.016817368709408833) )),
+        # d5
+        DerivativeCoefficientRow{T,1,8}(SVector(T(0.017248604775379643),
+                                                T(-0.057293724956320936),
+                                                T(-0.024157023606080553),
+                                                T(-0.7657841952075574),
+                                                T(0),
+                                                T(0.7505104744873311),
+                                                T(-0.14956988077877112),
+                                                T(0.01661887564208568) )),
+        # d6
+        DerivativeCoefficientRow{T,1,9}(SVector(T(0),
+                                                T(0),
+                                                T(-0.016674978958261432),
+                                                T(0.15007481062435288),
+                                                T(-0.7503740531217644),
+                                                T(0),
+                                                T(0.7503740531217644),
+                                                T(-0.15007481062435288),
+                                                T(0.016674978958261432) )),
+    )
+    right_boundary = .- left_boundary
+    upper_coef = SVector(T(3//4), T(-3//20), T(1//60))
+    central_coef = zero(T)
+    lower_coef = -upper_coef
+    left_weights = SVector( T(0.13030223027124),
+                            T(0.68851501587715),
+                            T(0.95166202564389),
+                            T(0.99103890475697),
+                            T(1.0028757074552),
+                            T(0.99950151111941) )
+    right_weights = left_weights
+    left_boundary_derivatives = Tuple{}()
+    right_boundary_derivatives = left_boundary_derivatives
 
-  #   DerivativeCoefficients(left_boundary, right_boundary,
-  #                           left_boundary_derivatives, right_boundary_derivatives,
-  #                           lower_coef, central_coef, upper_coef,
-  #                           left_weights, right_weights, parallel, 1, order, source)
+    DerivativeCoefficients(left_boundary, right_boundary,
+                            left_boundary_derivatives, right_boundary_derivatives,
+                            lower_coef, central_coef, upper_coef,
+                            left_weights, right_weights, parallel, 1, order, source)
   # elseif order == 8
   #   left_boundary = (
   #       # d1
