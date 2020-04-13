@@ -2,7 +2,7 @@
 """
     MattssonAlmquistVanDerWeide2018Minimal
 
-Coefficients of the optimal SBP operators with nonuniform grid given in
+Coefficients of the optimized SBP operators with nonuniform grid given in
   Mattsson, Almquist, van der Weide (2018)
   Boundary optimized diagonal-norm SBP operators.
   Journal of Computational Physics 374, pp. 1261-1266.
@@ -83,7 +83,7 @@ function construct_grid(::MattssonAlmquistVanDerWeide2018Minimal, accuracy_order
       T(4.0842950991998e-01),
       T(1.1968523189207e+00),
       T(2.1968523189207e+00),
-      T(3.1968523189207e+00;),
+      T(3.1968523189207e+00),
       T(4.1968523189207e+00),
     )
   elseif accuracy_order == 8
