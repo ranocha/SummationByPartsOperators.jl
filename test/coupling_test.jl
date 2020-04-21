@@ -355,6 +355,8 @@ end
     D2op2 = couple_continuosly(D2op1, UniformMesh1D(xmin, xmax, 1))
     @test Matrix(D2op1) ≈ Matrix(D2op2) ≈ BandedMatrix(D2op1) ≈ BandedMatrix(D2op2)
 
+    D2op2 = couple_continuosly(D2op1, UniformPeriodicMesh1D(xmin, xmax, 1))
+
     D2op2 = couple_continuosly(derivative_operator(MattssonNordström2004(), 2, 2, xmin, xmax, 5),
                                UniformMesh1D(xmin, xmax, 2))
     @test Matrix(D2op1) ≈ Matrix(D2op2) ≈ BandedMatrix(D2op1) ≈ BandedMatrix(D2op2)
@@ -369,5 +371,7 @@ end
     D2op1 = legendre_second_derivative_operator(xmin, xmax, 5)
     D2op2 = couple_continuosly(D2op1, UniformMesh1D(xmin, xmax, 1))
     @test Matrix(D2op1) ≈ Matrix(D2op2)
+
+    D2op2 = couple_continuosly(D2op1, UniformPeriodicMesh1D(xmin, xmax, 1))
   end
 end
