@@ -161,31 +161,35 @@ Base.size(meshgrid::UniformMeshGrid1D) = (length(meshgrid),)
 
 
 
-struct UniformNonperiodicCoupledOperator{T, Dtype<:AbstractNonperiodicDerivativeOperator{T}, Mesh<:UniformMesh1D{T}, MeshGrid<:UniformMeshGrid1D{T, Mesh}, Coupling<:Union{Val{:continuous}, Val{:plus}, Val{:central}, Val{:minus}}} <: AbstractNonperiodicDerivativeOperator{T}
+struct UniformNonperiodicCoupledOperator{T, Dtype<:AbstractNonperiodicDerivativeOperator{T}, Mesh<:UniformMesh1D{T}, MeshGrid<:UniformMeshGrid1D{T, Mesh}, Coupling<:Union{Val{:continuous}, Val{:plus}, Val{:central}, Val{:minus}}, DerOrder} <: AbstractNonperiodicDerivativeOperator{T}
   D::Dtype
   meshgrid::MeshGrid
   coupling::Coupling
+  der_order::DerOrder
 
-  function UniformNonperiodicCoupledOperator(D::Dtype, mesh::Mesh, coupling::Coupling) where {T, Dtype<:AbstractNonperiodicDerivativeOperator{T}, Mesh<:UniformMesh1D{T}, Coupling<:Union{Val{:continuous}, Val{:plus}, Val{:central}, Val{:minus}}}
+  function UniformNonperiodicCoupledOperator(D::Dtype, mesh::Mesh, coupling::Coupling) where {T, Dtype<:AbstractNonperiodicDerivativeOperator{T}, Mesh<:UniformMesh1D{T}, Coupling<:Union{Val{:continuous}, Val{:plus}, Val{:central}, Val{:minus}}, DerOrder}
     meshgrid = UniformMeshGrid1D(mesh, grid(D), coupling===Val(:continuous))
-    if derivative_order(D) != 1
+    if !(derivative_order(D) == 1 || (derivative_order(D) == 2 && coupling===Val(:continuous)))
       throw(ArgumentError("Not implemented yet"))
     end
-    new{T, Dtype, Mesh, typeof(meshgrid), Coupling}(D, meshgrid, coupling)
+    der_order = Val(derivative_order(D))
+    new{T, Dtype, Mesh, typeof(meshgrid), Coupling, typeof(der_order)}(D, meshgrid, coupling, der_order)
   end
 end
 
-struct UniformPeriodicCoupledOperator{T, Dtype<:AbstractNonperiodicDerivativeOperator{T}, Mesh<:UniformPeriodicMesh1D{T}, MeshGrid<:UniformMeshGrid1D{T, Mesh}, Coupling<:Union{Val{:continuous}, Val{:plus}, Val{:central}, Val{:minus}}} <: AbstractPeriodicDerivativeOperator{T}
+struct UniformPeriodicCoupledOperator{T, Dtype<:AbstractNonperiodicDerivativeOperator{T}, Mesh<:UniformPeriodicMesh1D{T}, MeshGrid<:UniformMeshGrid1D{T, Mesh}, Coupling<:Union{Val{:continuous}, Val{:plus}, Val{:central}, Val{:minus}}, DerOrder} <: AbstractPeriodicDerivativeOperator{T}
   D::Dtype
   meshgrid::MeshGrid
   coupling::Coupling
+  der_order::DerOrder
 
-  function UniformPeriodicCoupledOperator(D::Dtype, mesh::Mesh, coupling::Coupling) where {T, Dtype<:AbstractNonperiodicDerivativeOperator{T}, Mesh<:UniformPeriodicMesh1D{T}, Coupling<:Union{Val{:continuous}, Val{:plus}, Val{:central}, Val{:minus}}}
+  function UniformPeriodicCoupledOperator(D::Dtype, mesh::Mesh, coupling::Coupling) where {T, Dtype<:AbstractNonperiodicDerivativeOperator{T}, Mesh<:UniformPeriodicMesh1D{T}, Coupling<:Union{Val{:continuous}, Val{:plus}, Val{:central}, Val{:minus}}, DerOrder}
     meshgrid = UniformMeshGrid1D(mesh, grid(D), coupling===Val(:continuous))
     if derivative_order(D) != 1
       throw(ArgumentError("Not implemented yet"))
     end
-    new{T, Dtype, Mesh, typeof(meshgrid), Coupling}(D, meshgrid, coupling)
+    der_order = Val(derivative_order(D))
+    new{T, Dtype, Mesh, typeof(meshgrid), Coupling, typeof(der_order)}(D, meshgrid, coupling, der_order)
   end
 end
 
@@ -404,17 +408,17 @@ function mul!(dest::AbstractVector, cD::UniformCoupledOperator, u::AbstractVecto
     @argcheck N == length(dest)
   end
 
-  @unpack D, meshgrid, coupling = cD
+  @unpack D, meshgrid, coupling, der_order = cD
   if coupling === Val(:continuous)
-    mul!(dest, D, meshgrid, coupling, u, α)
+    mul!(dest, D, meshgrid, coupling, der_order, u, α)
     scale_by_inverse_mass_matrix!(dest, cD)
   else
-    mul!(dest, D, meshgrid, coupling, u, α)
+    mul!(dest, D, meshgrid, coupling, der_order, u, α)
   end
   dest
 end
 
-function mul!(_dest::AbstractVector, D::AbstractNonperiodicDerivativeOperator, meshgrid::UniformMeshGrid1D, coupling::Union{Val{:plus}, Val{:central}, Val{:minus}}, _u::AbstractVector, α=true)
+function mul!(_dest::AbstractVector, D::AbstractNonperiodicDerivativeOperator, meshgrid::UniformMeshGrid1D, coupling::Union{Val{:plus}, Val{:central}, Val{:minus}}, der_order::Val{1}, _u::AbstractVector, α=true)
   @unpack mesh, grid = meshgrid
   dest = reshape(_dest, length(grid), numcells(mesh))
   u    = reshape(_u,    length(grid), numcells(mesh))
@@ -478,7 +482,7 @@ function mul!(_dest::AbstractVector, D::AbstractNonperiodicDerivativeOperator, m
   _dest
 end
 
-function mul!(dest::AbstractVector, D::AbstractNonperiodicDerivativeOperator, meshgrid::UniformMeshGrid1D, coupling::Val{:continuous}, u::AbstractVector, α=true)
+function mul!(dest::AbstractVector, D::AbstractNonperiodicDerivativeOperator, meshgrid::UniformMeshGrid1D, coupling::Val{:continuous}, der_order::Val{1}, u::AbstractVector, α=true)
   @unpack mesh, grid = meshgrid
   ymin, ymax = first(grid), last(grid)
   num_nodes_per_cell = length(grid) - 1
@@ -535,6 +539,82 @@ function mul!(dest::AbstractVector, D::AbstractNonperiodicDerivativeOperator, me
     utmp .= u[idx]
     mul!(desttmp, D, utmp, α*factor)
     scale_by_mass_matrix!(desttmp, D, inv(factor))
+    dest[idx[1]] += desttmp[1]
+    @. dest[idx[2:end]] = desttmp[2:end]
+  end
+
+  dest
+end
+
+
+function mul!(dest::AbstractVector, D::AbstractNonperiodicDerivativeOperator, meshgrid::UniformMeshGrid1D, coupling::Val{:continuous}, der_order::Val{2}, u::AbstractVector, α=true)
+  @unpack mesh, grid = meshgrid
+  ymin, ymax = first(grid), last(grid)
+  num_nodes_per_cell = length(grid) - 1
+  # TODO: remove these allocations?
+  utmp = similar(u, length(grid))
+  desttmp = similar(dest, length(grid))
+
+  cell = 1
+  xmin, xmax = bounds(cell, mesh)
+  factor1 = (ymax - ymin) / (xmax - xmin)
+  factor = factor1^2
+  if isperiodic(mesh) && numcells(mesh) == 1
+    utmp[1:end-1] .= u
+    utmp[end]      = u[1]
+    mul!(desttmp, D, utmp, α*factor)
+    scale_by_mass_matrix!(desttmp, D, inv(factor1))
+    desttmp[1]   +=  α * factor1 * derivative_left(D, utmp, Val(1))
+    desttmp[end] -=  α * factor1 * derivative_right(D, utmp, Val(1))
+    @. dest = desttmp[1:end-1]
+    dest[1] += desttmp[end]
+  else
+    idx = (cell-1)*num_nodes_per_cell+1:cell*num_nodes_per_cell+1
+    utmp .= u[idx]
+    mul!(desttmp, D, utmp, α*factor)
+    scale_by_mass_matrix!(desttmp, D, inv(factor1))
+    desttmp[end] -=  α * factor1 * derivative_right(D, utmp, Val(1))
+    @. dest[idx] = desttmp
+  end
+  if numcells(mesh) == 1
+    return dest
+  end
+
+  for cell in 2:numcells(mesh)-1
+    xmin, xmax = bounds(cell, mesh)
+    factor1 = (ymax - ymin) / (xmax - xmin)
+    factor = factor1^2
+    idx = (cell-1)*num_nodes_per_cell+1:cell*num_nodes_per_cell+1
+    utmp .= u[idx]
+    mul!(desttmp, D, utmp, α*factor)
+    scale_by_mass_matrix!(desttmp, D, inv(factor1))
+    desttmp[1]   +=  α * factor1 * derivative_left(D, utmp, Val(1))
+    desttmp[end] -=  α * factor1 * derivative_right(D, utmp, Val(1))
+    dest[idx[1]] += desttmp[1]
+    @. dest[idx[2:end]] = desttmp[2:end]
+  end
+
+  cell = numcells(mesh)
+  xmin, xmax = bounds(cell, mesh)
+  factor1 = (ymax - ymin) / (xmax - xmin)
+  factor = factor1^2
+  if isperiodic(mesh)
+    idx = (cell-1)*num_nodes_per_cell+1:cell*num_nodes_per_cell
+    utmp[1:end-1] .= u[idx]
+    utmp[end]      = u[1]
+    mul!(desttmp, D, utmp, α*factor)
+    scale_by_mass_matrix!(desttmp, D, inv(factor1))
+    desttmp[1]   +=  α * factor1 * derivative_left(D, utmp, Val(1))
+    desttmp[end] -=  α * factor1 * derivative_right(D, utmp, Val(1))
+    dest[idx[1]] += desttmp[1]
+    @. dest[idx[2:end]] = desttmp[2:end-1]
+    dest[1] += desttmp[end]
+  else
+    idx = (cell-1)*num_nodes_per_cell+1:cell*num_nodes_per_cell+1
+    utmp .= u[idx]
+    mul!(desttmp, D, utmp, α*factor)
+    scale_by_mass_matrix!(desttmp, D, inv(factor1))
+    desttmp[1]   +=  α * factor1 * derivative_left(D, utmp, Val(1))
     dest[idx[1]] += desttmp[1]
     @. dest[idx[2:end]] = desttmp[2:end]
   end

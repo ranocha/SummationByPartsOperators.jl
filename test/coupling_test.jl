@@ -345,3 +345,15 @@ end
     end
   end
 end
+
+
+@testset "Coupled 2nd derivative FD operators" begin
+  for T in (Float32, Float64)
+    xmin = zero(T)
+    xmax = one(T)
+    D2op1 = derivative_operator(MattssonNordström2004(), 2, 2, xmin, xmax, 9)
+    D2op2 = couple_continuosly(derivative_operator(MattssonNordström2004(), 2, 2, xmin, xmax, 5),
+                               UniformMesh1D(xmin, xmax, 2))
+    @test Matrix(D2op1) ≈ Matrix(D2op2) ≈ BandedMatrix(D2op1) ≈ BandedMatrix(D2op2)
+  end
+end
