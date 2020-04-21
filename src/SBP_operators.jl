@@ -468,7 +468,7 @@ function lower_bandwidth(D::DerivativeOperator)
         l = max(l, i-offset(coef_row))
     end
     for (i,coef_row) in enumerate(right_boundary)
-        l = max(l, i-offset(coef_row))
+        l = max(l, 1+length(coef_row)-offset(coef_row)-i)
     end
     l
 end
@@ -481,7 +481,7 @@ function upper_bandwidth(D::DerivativeOperator)
         u = max(u, 1+length(coef_row)-offset(coef_row)-i)
     end
     for (i,coef_row) in enumerate(right_boundary)
-        u = max(u, 1+length(coef_row)-offset(coef_row)-i)
+        u = max(u, i-offset(coef_row))
     end
     u
 end
