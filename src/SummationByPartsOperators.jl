@@ -78,7 +78,7 @@ export PeriodicDerivativeOperator, PeriodicDissipationOperator,
        VarCoefDerivativeOperator, SourceOfCoefficients,
        FourierDerivativeOperator, FourierConstantViscosity,
        FourierPolynomialDerivativeOperator, FourierRationalDerivativeOperator
-       LegendreDerivativeOperator
+       LegendreDerivativeOperator, LegendreSecondDerivativeOperator
 export FilterCallback, ConstantFilter,
        ExponentialFilter
 export derivative_order, accuracy_order, source_of_coeffcients, grid, semidiscretise
@@ -89,7 +89,7 @@ export integrate, derivative_left, derivative_right,
 export periodic_central_derivative_operator, periodic_derivative_operator, derivative_operator,
        dissipation_operator, var_coef_derivative_operator,
        fourier_derivative_operator, spectral_viscosity_operator, super_spectral_viscosity_operator,
-       legendre_derivative_operator
+       legendre_derivative_operator, legendre_second_derivative_operator
 export UniformMesh1D, UniformPeriodicMesh1D
 export couple_continuosly, couple_discontinuosly
 

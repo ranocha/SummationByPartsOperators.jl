@@ -573,7 +573,9 @@ function mul!(dest::AbstractVector, D::AbstractNonperiodicDerivativeOperator, me
     utmp .= u[idx]
     mul!(desttmp, D, utmp, α*factor)
     scale_by_mass_matrix!(desttmp, D, inv(factor1))
-    desttmp[end] -=  α * factor1 * derivative_right(D, utmp, Val(1))
+    if numcells(mesh) > 1
+      desttmp[end] -=  α * factor1 * derivative_right(D, utmp, Val(1))
+    end
     @. dest[idx] = desttmp
   end
   if numcells(mesh) == 1
