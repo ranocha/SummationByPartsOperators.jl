@@ -185,7 +185,7 @@ struct UniformPeriodicCoupledOperator{T, Dtype<:AbstractNonperiodicDerivativeOpe
 
   function UniformPeriodicCoupledOperator(D::Dtype, mesh::Mesh, coupling::Coupling) where {T, Dtype<:AbstractNonperiodicDerivativeOperator{T}, Mesh<:UniformPeriodicMesh1D{T}, Coupling<:Union{Val{:continuous}, Val{:plus}, Val{:central}, Val{:minus}}, DerOrder}
     meshgrid = UniformMeshGrid1D(mesh, grid(D), coupling===Val(:continuous))
-    if derivative_order(D) != 1
+    if !(derivative_order(D) == 1 || (derivative_order(D) == 2 && coupling===Val(:continuous)))
       throw(ArgumentError("Not implemented yet"))
     end
     der_order = Val(derivative_order(D))
@@ -573,6 +573,9 @@ function mul!(dest::AbstractVector, D::AbstractNonperiodicDerivativeOperator, me
     utmp .= u[idx]
     mul!(desttmp, D, utmp, α*factor)
     scale_by_mass_matrix!(desttmp, D, inv(factor1))
+    if isperiodic(mesh)
+      desttmp[1]   +=  α * factor1 * derivative_left(D, utmp, Val(1))
+    end
     if numcells(mesh) > 1
       desttmp[end] -=  α * factor1 * derivative_right(D, utmp, Val(1))
     end
