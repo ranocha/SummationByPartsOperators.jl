@@ -36,9 +36,7 @@ using SummationByPartsOperators
           @test u ≈ v
           @test integrate(u, cD) ≈ sum(mass_matrix(cD) * u)
           @test integrate(u->u^2, u, cD) ≈ sum(u' * mass_matrix(cD) * u)
-          if N > 1
-            @test cD * u ≈ BandedMatrix(cD) * u
-          end
+          @test cD * u ≈ BandedMatrix(cD) * u
           @test cD * u ≈ Matrix(cD) * u
           @test cD * u ≈ sparse(cD) * u
         end

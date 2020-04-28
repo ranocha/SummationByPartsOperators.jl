@@ -30,7 +30,7 @@ function BandedMatrix(D::BandedDerivativeOperator)
         e[j] = 1
         mul!(dest, D, e)
         e[j] = 0
-        B.data[end-j-l+1:end,j] = dest[1:j+l]
+        B.data[end-j-l+1:end-j-l+min(j+l,length(e)),j] = dest[1:min(j+l,length(e))]
     end
     # inner part
     for j in max(l,u)+1:length(e)-max(l,u)
@@ -44,7 +44,8 @@ function BandedMatrix(D::BandedDerivativeOperator)
         e[j] = 1
         mul!(dest, D, e)
         e[j] = 0
-        B.data[1:length(e)+1-j+u,j] = dest[j-u:end]
+        # B.data[1:length(e)+1-j+u,j] = dest[j-u:end]
+        B.data[1+max(1,j-u)-(j-u):length(e)+1-j+u,j] = dest[max(1,j-u):end]
      end
 
     B
