@@ -6,8 +6,8 @@ os:
   # - osx
 
 julia:
-  - 1.4
-  - nightly
+  - 1
+  # - nightly
 
 matrix:
   allow_failures:
@@ -15,6 +15,12 @@ matrix:
 
 notifications:
   email: false
+
+# avoid duplicate tests in PRs
+branches:
+  only:
+    - master
+    - dev
 
 after_success:
   # push coverage results to Coveralls
