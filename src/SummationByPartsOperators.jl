@@ -51,6 +51,7 @@ end
 
 include("filter.jl")
 include("fourier_operators.jl")
+include("fourier_operators_2d.jl")
 include("legendre_operators.jl")
 include("SBP_coefficients/MattssonNordström2004.jl")
 include("SBP_coefficients/MattssonSvärdNordström2004.jl")
@@ -77,10 +78,10 @@ export PeriodicDerivativeOperator, PeriodicDissipationOperator,
        DerivativeOperator, DissipationOperator,
        VarCoefDerivativeOperator, SourceOfCoefficients,
        FourierDerivativeOperator, FourierConstantViscosity,
-       FourierPolynomialDerivativeOperator, FourierRationalDerivativeOperator
+       FourierPolynomialDerivativeOperator, FourierRationalDerivativeOperator,
+       FourierDerivativeOperator2D,
        LegendreDerivativeOperator, LegendreSecondDerivativeOperator
-export FilterCallback, ConstantFilter,
-       ExponentialFilter
+export FilterCallback, ConstantFilter, ExponentialFilter
 export derivative_order, accuracy_order, source_of_coeffcients, grid, semidiscretise
 export mass_matrix
 export integrate, derivative_left, derivative_right,

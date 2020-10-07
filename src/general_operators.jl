@@ -93,17 +93,17 @@ function compute_coefficients(u, D::AbstractDerivativeOperator)
     x = grid(D)
     xmin = first(x)
     xmax = last(x)
-    uval = Array{typeof(u((xmin+xmax)/2))}(undef, length(x))
+    uval = Array{typeof(u((xmin+xmax)/2))}(undef, size(x)...)
     compute_coefficients!(uval, u, D)
 end
 
 """
-    compute_coefficients!(uval::AbstractVector, u, D::AbstractDerivativeOperator)
+    compute_coefficients!(uval, u, D::AbstractDerivativeOperator)
 
 Compute the nodal values of the function `u` at the grid associated to the
 derivative operator `D` and stores the result in `uval`.
 """
-function compute_coefficients!(uval::AbstractVector, u, D::AbstractDerivativeOperator)
+function compute_coefficients!(uval, u, D::AbstractDerivativeOperator)
     uval .= u.(grid(D))
 end
 
@@ -118,8 +118,8 @@ corresponding values of `u`.
 """
 function evaluate_coefficients(u, D::AbstractDerivativeOperator)
     x = grid(D)
-    xplot = Array{eltype(x)}(undef, length(x))
-    uplot = Array{eltype(u)}(undef, length(x))
+    xplot = Array{eltype(x)}(undef, size(x)...)
+    uplot = Array{eltype(u)}(undef, size(x)...)
 
     evaluate_coefficients!(xplot, uplot, u, D)
 end
@@ -133,8 +133,8 @@ Returns `xplot, uplot`, where `xplot` contains the nodes and `uplot` the
 corresponding values of `u`.
 """
 function evaluate_coefficients!(xplot, uplot, u, D::AbstractDerivativeOperator)
-    @argcheck length(uplot) == length(xplot)
-    @argcheck length(uplot) == length(grid(D))
+    @argcheck size(uplot) == size(xplot)
+    @argcheck size(uplot) == size(grid(D))
 
     xplot .= grid(D)
     uplot .= u
