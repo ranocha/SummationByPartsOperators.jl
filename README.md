@@ -1,21 +1,25 @@
-# SummationByPartsOperators
+# SummationByPartsOperators.jl: A Julia library of provably stable semidiscretization techniques with mimetic properties
 
 [![Build Status](https://github.com/ranocha/SummationByPartsOperators.jl/workflows/CI/badge.svg)](https://github.com/ranocha/SummationByPartsOperators.jl/actions)
 [![Codecov](http://codecov.io/github/ranocha/SummationByPartsOperators.jl/coverage.svg?branch=master)](http://codecov.io/github/ranocha/SummationByPartsOperators.jl?branch=master)
 [![Coveralls](https://coveralls.io/repos/github/ranocha/SummationByPartsOperators.jl/badge.svg?branch=master)](https://coveralls.io/github/ranocha/SummationByPartsOperators.jl?branch=master)
 [![License: MIT](https://img.shields.io/badge/License-MIT-success.svg)](https://opensource.org/licenses/MIT)
 [![GitHub commits since tagged version](https://img.shields.io/github/commits-since/ranocha/SummationByPartsOperators.jl/v0.4.4.svg?style=social&logo=github)](https://github.com/ranocha/SummationByPartsOperators.jl)
-<!-- [![Build status](https://ci.appveyor.com/api/projects/status/i1saoodeqrepiodl?svg=true)](https://ci.appveyor.com/project/ranocha/SummationByPartsOperators-jl)
-[![PkgEval](https://juliaci.github.io/NanosoldierReports/pkgeval_badges/S/SummationByPartsOperators.svg)](https://juliaci.github.io/NanosoldierReports/pkgeval_badges/report.html) -->
+<!-- [![PkgEval](https://juliaci.github.io/NanosoldierReports/pkgeval_badges/S/SummationByPartsOperators.svg)](https://juliaci.github.io/NanosoldierReports/pkgeval_badges/report.html) -->
 
-A library of classical summation-by-parts (SBP) operators used in finite difference
-methods to get provably stable semidiscretisations, paying special attention to
-boundary conditions.
+SummationByPartsOperators.jl is a Julia library of summation-by-parts (SBP)
+operators used in finite difference, Fourier pseudospectral, continuous Galerkin,
+and discontinuous Galerkin methods to get provably stable semidiscretizations,
+paying special attention to boundary conditions. Its main aim is to be useful
+for researchers and students to learn the basic concepts by providing a unified
+framework of all of these seemingly different discretizations.
 
 
 ## Basic Operators
 
-The following derivative operators are implemented as "lazy operators", i.e. no matrix is formed explicitly.
+The following derivative operators are implemented as "lazy"/matrix-free
+operators, i.e. no large (size of the computational grid) matrix is formed
+explicitly.
 
 
 ### Periodic Domains
@@ -50,7 +54,8 @@ The following derivative operators are implemented as "lazy operators", i.e. no 
 
 ### Dissipation Operators
 
-Additionally, some artificial dissipation/viscosity operators are implemented. The most basic usage is `Di = dissipation_operator(D)`,
+Additionally, some artificial dissipation/viscosity operators are implemented.
+The most basic usage is `Di = dissipation_operator(D)`,
 where `D` can be a (periodic, Fourier, Legendre, SBP FD) derivative
 operator. Use `?dissipation_operator` for more details.
 
@@ -107,7 +112,8 @@ julia> BandedMatrix(D)
 
 ## Documentation
 
-Examples can e found in the directory [`notebooks`](https://github.com/ranocha/SummationByPartsOperators.jl/tree/master/notebooks). In particular, examples of complete discretisations of
+Examples can be found in the directory [`notebooks`](https://github.com/ranocha/SummationByPartsOperators.jl/tree/master/notebooks).
+In particular, examples of complete discretisations of
 [the linear advection equation](https://github.com/ranocha/SummationByPartsOperators.jl/blob/master/notebooks/Advection_equation.ipynb),
 [the heat equation](https://github.com/ranocha/SummationByPartsOperators.jl/blob/master/notebooks/Heat_equation.ipynb),
 and the [wave equation](https://github.com/ranocha/SummationByPartsOperators.jl/blob/master/notebooks/Wave_equation.ipynb) are supplied.
