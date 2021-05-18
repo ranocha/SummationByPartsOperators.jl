@@ -7,7 +7,34 @@ on:
     branches:
       - master
       - dev
+    paths-ignore:
+      - 'AUTHORS.md'
+      - 'CONTRIBUTING.md'
+      - 'LICENSE.md'
+      - 'NEWS.md'
+      - 'README.md'
+      - '.zenodo.json'
+      - '.github/workflows/benchmark.yml'
+      - '.github/workflows/CompatHelper.yml'
+      - '.github/workflows/TagBot.yml'
+      - 'benchmark/**'
+      - 'docs/**'
+      - 'utils/**'
   pull_request:
+    paths-ignore:
+      - 'AUTHORS.md'
+      - 'CONTRIBUTING.md'
+      - 'LICENSE.md'
+      - 'NEWS.md'
+      - 'README.md'
+      - '.zenodo.json'
+      - '.github/workflows/benchmark.yml'
+      - '.github/workflows/CompatHelper.yml'
+      - '.github/workflows/TagBot.yml'
+      - 'benchmark/**'
+      - 'docs/**'
+      - 'utils/**'
+  workflow_dispatch:
 
 jobs:
   test:
@@ -18,7 +45,7 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1.5'
+          - '1'
           # - 'nightly'
         os:
           - ubuntu-latest
