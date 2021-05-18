@@ -1,0 +1,14 @@
+{
+  "description": "A Julia library of summation-by-parts (SBP) operators used in finite difference, Fourier pseudospectral, continuous Galerkin, and discontinuous Galerkin methods to get provably stable semidiscretizations, paying special attention to boundary conditions. ",
+  "license": "MIT",
+  "title": "SummationByPartsOperators.jl: A Julia library of provably stable semidiscretization techniques with mimetic properties",
+  "upload_type": "software",
+  "creators": [
+      {
+          "affiliation": "Applied Mathematics Münster, University of Münster, Germany",
+          "name": "Ranocha, Hendrik",
+          "orcid": "0000-0002-3456-2277"
+      }
+  ],
+  "access_right": "open"
+}

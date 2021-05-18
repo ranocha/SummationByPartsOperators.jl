@@ -1,4 +1,4 @@
-# SummationByPartsOperators
+# SummationByPartsOperators.jl: A Julia library of provably stable semidiscretization techniques with mimetic properties
 
 [![Build Status](https://github.com/ranocha/SummationByPartsOperators.jl/workflows/CI/badge.svg)](https://github.com/ranocha/SummationByPartsOperators.jl/actions)
 [![Codecov](http://codecov.io/github/ranocha/SummationByPartsOperators.jl/coverage.svg?branch=master)](http://codecov.io/github/ranocha/SummationByPartsOperators.jl?branch=master)
@@ -7,14 +7,19 @@
 [![GitHub commits since tagged version](https://img.shields.io/github/commits-since/ranocha/SummationByPartsOperators.jl/v0.4.4.svg?style=social&logo=github)](https://github.com/ranocha/SummationByPartsOperators.jl)
 <!-- [![PkgEval](https://juliaci.github.io/NanosoldierReports/pkgeval_badges/S/SummationByPartsOperators.svg)](https://juliaci.github.io/NanosoldierReports/pkgeval_badges/report.html) -->
 
-A library of classical summation-by-parts (SBP) operators used in finite difference
-methods to get provably stable semidiscretisations, paying special attention to
-boundary conditions.
+SummationByPartsOperators.jl is a Julia library of summation-by-parts (SBP)
+operators used in finite difference, Fourier pseudospectral, continuous Galerkin,
+and discontinuous Galerkin methods to get provably stable semidiscretizations,
+paying special attention to boundary conditions. Its main aim is to be useful
+for researchers and students to learn the basic concepts by providing a unified
+framework of all of these seemingly different discretizations.
 
 
 ## Basic Operators
 
-The following derivative operators are implemented as "lazy operators", i.e. no matrix is formed explicitly.
+The following derivative operators are implemented as "lazy"/matrix-free
+operators, i.e. no large (size of the computational grid) matrix is formed
+explicitly.
 
 
 ### Periodic Domains
