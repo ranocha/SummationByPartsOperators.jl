@@ -3,13 +3,13 @@ module SummationByPartsOperators
 using LinearAlgebra
 using SparseArrays
 
-using FFTW
 using ArgCheck
+using FFTW
+using Parameters
 using Reexport
 using Requires
-using Unrolled
-using Parameters
 using StaticArrays
+using Unrolled
 
 @reexport using DiffEqBase
 using DiffEqCallbacks
@@ -93,6 +93,7 @@ export periodic_central_derivative_operator, periodic_derivative_operator, deriv
        legendre_derivative_operator, legendre_second_derivative_operator
 export UniformMesh1D, UniformPeriodicMesh1D
 export couple_continuosly, couple_discontinuosly
+export mul!
 
 export Fornberg1998, Holoborodko2008, BeljaddLeFlochMishraParés2017
 export MattssonNordström2004, MattssonSvärdNordström2004, MattssonSvärdShoeybi2008,
