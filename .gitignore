@@ -5,3 +5,6 @@
 **/.ipynb_checkpoints/
 **/*.gif
 **/Manifest.toml
+docs/build
+docs/src/contributing.md
+docs/src/license.md
