@@ -12,7 +12,9 @@ operators used in finite difference, Fourier pseudospectral, continuous Galerkin
 and discontinuous Galerkin methods to get provably stable semidiscretizations,
 paying special attention to boundary conditions. Its main aim is to be useful
 for researchers and students to learn the basic concepts by providing a unified
-framework of all of these seemingly different discretizations.
+framework of all of these seemingly different discretizations. At the same time,
+the implementation is optimized to achieve good performance without sacrificing
+flexibility.
 
 
 ## Basic Operators
