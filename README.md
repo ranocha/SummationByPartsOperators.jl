@@ -6,7 +6,7 @@
 [![Codecov](http://codecov.io/github/ranocha/SummationByPartsOperators.jl/coverage.svg?branch=master)](http://codecov.io/github/ranocha/SummationByPartsOperators.jl?branch=master)
 [![Coveralls](https://coveralls.io/repos/github/ranocha/SummationByPartsOperators.jl/badge.svg?branch=master)](https://coveralls.io/github/ranocha/SummationByPartsOperators.jl?branch=master)
 [![License: MIT](https://img.shields.io/badge/License-MIT-success.svg)](https://opensource.org/licenses/MIT)
-[![GitHub commits since tagged version](https://img.shields.io/github/commits-since/ranocha/SummationByPartsOperators.jl/v0.4.4.svg?style=social&logo=github)](https://github.com/ranocha/SummationByPartsOperators.jl)
+[![GitHub commits since tagged version](https://img.shields.io/github/commits-since/ranocha/SummationByPartsOperators.jl/v0.4.5.svg?style=social&logo=github)](https://github.com/ranocha/SummationByPartsOperators.jl)
 <!-- [![PkgEval](https://juliaci.github.io/NanosoldierReports/pkgeval_badges/S/SummationByPartsOperators.svg)](https://juliaci.github.io/NanosoldierReports/pkgeval_badges/report.html) -->
 
 [SummationByPartsOperators.jl](https://github.com/ranocha/SummationByPartsOperators.jl)
