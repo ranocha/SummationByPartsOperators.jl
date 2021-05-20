@@ -27,16 +27,12 @@ makedocs(
     sitename="SummationByPartsOperators.jl",
     format = Documenter.HTML(
         prettyurls = get(ENV, "CI", nothing) == "true",
-        # assets = ["assets/favicon.ico"],
         canonical = "https://ranocha.github.io/SummationByPartsOperators.jl/stable"
     ),
     # Explicitly specify documentation structure
     pages = [
         "Home" => "index.md",
-        # "Getting started" => [
-        #     "Overview" => "overview.md",
-        #     "Visualization" => "visualization.md",
-        # ],
+        "Benchmarks" => "benchmarks.md",
         "API reference" => "api_reference.md",
         "Contributing" => "contributing.md",
         "License" => "license.md"
