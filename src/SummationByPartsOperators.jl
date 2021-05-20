@@ -26,12 +26,12 @@ module SummationByPartsOperators
 using LinearAlgebra
 using SparseArrays
 
-using ArgCheck
+using ArgCheck: @argcheck
 using FFTW
-using Parameters
-using Reexport
+using Reexport: @reexport
 using Requires
 using StaticArrays
+using UnPack: @unpack
 using Unrolled
 
 @reexport using DiffEqBase
