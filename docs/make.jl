@@ -32,6 +32,10 @@ makedocs(
     # Explicitly specify documentation structure
     pages = [
         "Home" => "index.md",
+        "Introduction" => "introduction.md",
+        "Tutorials" => [
+          "tutorials/linear_advection.md",
+        ],
         "Benchmarks" => "benchmarks.md",
         "API reference" => "api_reference.md",
         "Contributing" => "contributing.md",
