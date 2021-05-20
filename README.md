@@ -23,7 +23,17 @@ At the same time, the implementation is optimized to achieve good performance
 without sacrificing flexibility.
 
 
+## Installation
+
+[SummationByPartsOperators.jl](https://github.com/ranocha/SummationByPartsOperators.jl)
+is a registered Julia package. Thus, you can install it from the Julia REPL via
+```julia
+julia> using Pkg; Pkg.add("SummationByPartsOperators")
+```
+
+
 ## Basic example
+
 
 
 
