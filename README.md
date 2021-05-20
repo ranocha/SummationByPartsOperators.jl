@@ -34,8 +34,9 @@ julia> using Pkg; Pkg.add("SummationByPartsOperators")
 
 ## Basic example
 
+```julia
 
-
+```
 
 
 ## Brief overview
@@ -55,24 +56,29 @@ explicitly.
 - `periodic_derivative_operator(Holoborodko2008(), derivative_order, accuracy_order, xmin, xmax, N)`
 
   These are central finite difference operators using `N` nodes on the
-  interval `[xmin, xmax]` and the coefficients of [Pavel Holoborodko](http://www.holoborodko.com/pavel/numerical-methods/numerical-derivative/smooth-low-noise-differentiators/).
+  interval `[xmin, xmax]` and the coefficients of
+  [Pavel Holoborodko](http://www.holoborodko.com/pavel/numerical-methods/numerical-derivative/smooth-low-noise-differentiators/).
 
 - `fourier_derivative_operator(xmin, xmax, N)`
 
-  Fourier derivative operators are implemented using the fast Fourier transform of [FFTW.jl](https://github.com/JuliaMath/FFTW.jl).
+  Fourier derivative operators are implemented using the fast Fourier transform of
+  [FFTW.jl](https://github.com/JuliaMath/FFTW.jl).
 
 
 ### Finite (nonperiodic) domains
 
 - `derivative_operator(source_of_coefficients, derivative_order, accuracy_order, xmin, xmax, N)`
 
-  Finite difference SBP operators for first and second derivatives can be obained by using `MattssonNordström2004()` as `source_of_coefficients`.
-  Other sources of coefficients are implemented as well. To obtain a full list for all operators, use `subtypes(SourceOfCoefficients)`.
+  Finite difference SBP operators for first and second derivatives can be obtained
+  by using `MattssonNordström2004()` as `source_of_coefficients`.
+  Other sources of coefficients are implemented as well. To obtain a full list
+  of all operators, use `subtypes(SourceOfCoefficients)`.
 
 - `legendre_derivative_operator(xmin, xmax, N)`
 
   Use Lobatto Legendre polynomial collocation schemes on `N`, i.e.
-  polynomials of degree `N-1`, implemented via [PolynomialBases.jl](https://github.com/ranocha/PolynomialBases.jl).
+  polynomials of degree `N-1`, implemented via
+  [PolynomialBases.jl](https://github.com/ranocha/PolynomialBases.jl).
 
 
 ### Dissipation operators
@@ -82,6 +88,21 @@ The most basic usage is `Di = dissipation_operator(D)`,
 where `D` can be a (periodic, Fourier, Legendre, SBP FD) derivative
 operator. Use `?dissipation_operator` for more details.
 
+### Continuous and discontinuous Galerkin methods
+
+SBP operators on bounded domains can be coupled continuously or discontinuously
+to obtain CG//DG-type methods. You need to create an appropriate `mesh` and
+a basic operator `D` that should be used on each element.
+Then, global CG/DG operators are constructed lazily/matrix-free by calling
+`couple_continuosly(D, mesh)` or
+`couple_discontinuosly(D, mesh, coupling::Union{Val{:plus}, Val{:central}, Val{:minus}}=Val(:central))`.
+Choosing `coupling=Val(:central)` yields a classical SBP operator; the other two
+`coupling` types result in upwind SBP operators. Currently, only uniform meshes
+
+- `UniformMesh1D(xmin::Real, xmax::Real, Nx::Integer)`
+- `UniformPeriodicMesh1D(xmin::Real, xmax::Real, Nx::Integer)`
+
+are implemented.
 
 ### Conversion to other forms
 
