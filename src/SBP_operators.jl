@@ -431,10 +431,14 @@ end
 
 
 """
-    derivative_operator(source_of_coefficients, derivative_order, accuracy_order,
+    derivative_operator(source_of_coefficients,
+                        derivative_order, accuracy_order,
+                        xmin, xmax, N, parallel=Val{:serial}())
+    derivative_operator(source_of_coefficients;
+                        derivative_order, accuracy_order,
                         xmin, xmax, N, parallel=Val{:serial}())
 
-Create a `DerivativeOperator` approximating the `derivative_order`-th derivative
+Create a [`DerivativeOperator`](@ref) approximating the `derivative_order`-th derivative
 on a grid between `xmin` and `xmax` with `N` grid points up to order of accuracy
 `accuracy_order`. with coefficients given by `source_of_coefficients`.
 The evaluation of the derivative can be parallised using threads by chosing
@@ -454,6 +458,13 @@ function derivative_operator(source_of_coefficients, derivative_order, accuracy_
         throw(ArgumentError("Derivative order $derivative_order not implemented."))
     end
     DerivativeOperator(coefficients, grid)
+end
+
+function derivative_operator(source_of_coefficients;
+                             derivative_order, accuracy_order,
+                             xmin, xmax, N, parallel=Val{:serial}())
+    derivative_operator(source_of_coefficients, derivative_order, accuracy_order,
+                        xmin, xmax, N, parallel)
 end
 
 

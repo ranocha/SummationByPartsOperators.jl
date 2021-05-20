@@ -1,4 +1,29 @@
 
+# general interface functions
+"""
+    grid(D)
+
+Return the grid associated to a derivative operator `D`.
+"""
+function grid end
+
+"""
+    accuracy_order(D)
+
+Return the order of accuracy of a derivative operator `D`. For SBP finite difference
+operators, this refers to the interior order of accuracy.
+"""
+function accuracy_order end
+
+"""
+    derivative_order(D)
+
+Return the order of the derivative associated to the derivative operator `D`.
+For example, it will return `1` for a first-derivative SBP operator.
+"""
+function derivative_order end
+
+
 derivative_order(coefficients::AbstractDerivativeCoefficients) = coefficients.derivative_order
 accuracy_order(coefficients::AbstractDerivativeCoefficients) = coefficients.accuracy_order
 Base.eltype(coefficients::AbstractDerivativeCoefficients{T}) where {T} = T

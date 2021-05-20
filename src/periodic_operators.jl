@@ -800,7 +800,7 @@ end
 function periodic_derivative_operator(source::Holoborodko2008; derivative_order, accuracy_order,
                                       xmin, xmax, N, parallel=Val{:serial}(), kwargs...)
     periodic_derivative_operator(source, derivative_order, accuracy_order, xmin, xmax, N;
-                                 parallel, kwargs...)
+                                 parallel=parallel, kwargs...)
 end
 
 """

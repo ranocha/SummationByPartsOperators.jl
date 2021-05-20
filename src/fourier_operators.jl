@@ -30,8 +30,7 @@ struct FourierDerivativeOperator{T<:Real, Grid, RFFT, BRFFT} <: AbstractPeriodic
 end
 
 """
-    FourierDerivativeOperator(xmin::Real, xmax::Real, N::Integer)
-    FourierDerivativeOperator(; xmin::Real, xmax::Real, N::Integer)
+    FourierDerivativeOperator(xmin::T, xmax::T, N::Integer) where {T<:Real}
 
 Construct the `FourierDerivativeOperator` on a uniform grid between `xmin` and
 `xmax` using `N` nodes and `N÷2+1` complex Fourier modes.
@@ -51,6 +50,13 @@ function FourierDerivativeOperator(xmin::T, xmax::T, N::Integer) where {T<:Real}
     FourierDerivativeOperator(jac, Δx, grid_compute, grid_evaluate, uhat, rfft_plan, brfft_plan)
 end
 
+"""
+    fourier_derivative_operator(xmin::Real, xmax::Real, N::Integer)
+    fourier_derivative_operator(; xmin::Real, xmax::Real, N::Integer)
+
+Construct the `FourierDerivativeOperator` on a uniform grid between `xmin` and
+`xmax` using `N` nodes and `N÷2+1` complex Fourier modes.
+"""
 function fourier_derivative_operator(xmin::Real, xmax::Real, N::Integer)
     FourierDerivativeOperator(promote(xmin, xmax)..., N)
 end

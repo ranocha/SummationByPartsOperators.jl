@@ -32,18 +32,75 @@ julia> using Pkg; Pkg.add("SummationByPartsOperators")
 ```
 
 
-## Basic example
+## Basic examples
 
+Compute the derivative on a periodic domain using a central finite difference operator.
 ```julia
+julia> using SummationByPartsOperators
 
+julia> using Plots: plot, plot!
+
+julia> D = periodic_derivative_operator(derivative_order=1, accuracy_order=2,
+                                        xmin=0.0, xmax=2.0, N=21)
+Periodic 1st derivative operator of order 2 {T=Float64, Parallel=Val{:serial}}
+on a grid in [0.0, 2.0] using 21 nodes,
+stencils with 1 nodes to the left, 1 nodes to the right, and coefficients from
+  Fornberg (1998)
+  Calculation of Weights in Finite Difference Formulas.
+  SIAM Rev. 40.3, pp. 685-691.
+
+
+julia> x = grid(D); u = sinpi.(x);
+
+julia> plot(x, D * u, label="numerical")
+
+julia> plot!(x, π .* cospi.(x), label="analytical")
 ```
+You should see a plot like the following.
+
+<p align="center">
+  <img width="300px" src="https://user-images.githubusercontent.com/12693098/118977199-2ef4b280-b976-11eb-8e02-aec722d75bfa.png">
+</p>
+
+
+Compute the derivative on a bounded domain using an SBP finite difference operator.
+```julia
+julia> using SummationByPartsOperators
+
+julia> using Plots: plot, plot!
+
+julia> D = derivative_operator(MattssonNordström2004(), derivative_order=1, accuracy_order=2,
+                               xmin=0.0, xmax=1.0, N=21)
+SBP 1st derivative operator of order 2 {T=Float64, Parallel=Val{:serial}}
+on a grid in [0.0, 1.0] using 21 nodes
+and coefficients given in
+  Mattsson, Nordström (2004)
+  Summation by parts operators for finite difference approximations of second
+    derivatives.
+  Journal of Computational Physics 199, pp. 503-540.
+
+
+julia> x = grid(D); u = exp.(x);
+
+julia> plot(x, D * u, label="numerical")
+
+julia> plot!(x, exp.(x), label="analytical")
+```
+You should see a plot like the following.
+
+<p align="center">
+  <img width="300px" src="https://user-images.githubusercontent.com/12693098/118978404-93fcd800-b977-11eb-80b3-3dbfce5ecfd6.png">
+</p>
+
 
 
 ## Brief overview
 
 The following derivative operators are implemented as "lazy"/matrix-free
 operators, i.e. no large (size of the computational grid) matrix is formed
-explicitly.
+explicitly. They are linear operators and implement the same interface as
+matrices in Julia (at least partially). In particular, `*` and `mul!` are
+supported.
 
 
 ### Periodic domains
@@ -63,6 +120,10 @@ explicitly.
 
   Fourier derivative operators are implemented using the fast Fourier transform of
   [FFTW.jl](https://github.com/JuliaMath/FFTW.jl).
+
+All of these periodic derivative operators support multiplication and addition
+such that polynomials and rational functions of them can be represented efficiently,
+e.g. to solve elliptic problems of the form `u = (D^2 + I) \ f`.
 
 
 ### Finite (nonperiodic) domains
@@ -88,6 +149,7 @@ The most basic usage is `Di = dissipation_operator(D)`,
 where `D` can be a (periodic, Fourier, Legendre, SBP FD) derivative
 operator. Use `?dissipation_operator` for more details.
 
+
 ### Continuous and discontinuous Galerkin methods
 
 SBP operators on bounded domains can be coupled continuously or discontinuously
@@ -103,6 +165,7 @@ Choosing `coupling=Val(:central)` yields a classical SBP operator; the other two
 - `UniformPeriodicMesh1D(xmin::Real, xmax::Real, Nx::Integer)`
 
 are implemented.
+
 
 ### Conversion to other forms
 
@@ -132,17 +195,12 @@ julia> Matrix(D)
 julia> using SparseArrays
 
 julia> sparse(D)
-5×5 SparseMatrixCSC{Float64,Int64} with 10 stored entries:
-  [1, 1]  =  -4.0
-  [2, 1]  =  -2.0
-  [1, 2]  =  4.0
-  [3, 2]  =  -2.0
-  [2, 3]  =  2.0
-  [4, 3]  =  -2.0
-  [3, 4]  =  2.0
-  [5, 4]  =  -4.0
-  [4, 5]  =  2.0
-  [5, 5]  =  4.0
+5×5 SparseMatrixCSC{Float64, Int64} with 10 stored entries:
+ -4.0   4.0    ⋅     ⋅    ⋅
+ -2.0    ⋅    2.0    ⋅    ⋅
+   ⋅   -2.0    ⋅    2.0   ⋅
+   ⋅     ⋅   -2.0    ⋅   2.0
+   ⋅     ⋅     ⋅   -4.0  4.0
 
 julia> using BandedMatrices
 
