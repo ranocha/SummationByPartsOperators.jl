@@ -31,13 +31,20 @@ Random.seed!(12345)
 u = randn(T, N)
 dest = similar(u)
 
-println("D_periodic_serial:");     sleep(0.1); display(@benchmark mul!($dest, $D_periodic_serial, $u))
-println("D_periodic_threads:");    sleep(0.1); display(@benchmark mul!($dest, $D_periodic_threads, $u))
+function doit(D, text, dest, u)
+  println(text)
+  sleep(0.1)
+  show(stdout, MIME"text/plain"(), @benchmark mul!($dest, $D, $u))
+  println()
+end
 
-println("D_nonperiodic_serial:");  sleep(0.1); display(@benchmark mul!($dest, $D_nonperiodic_serial, $u))
-println("D_nonperiodic_threads:"); sleep(0.1); display(@benchmark mul!($dest, $D_nonperiodic_threads, $u))
-println("D_nonperiodic_sparse:");  sleep(0.1); display(@benchmark mul!($dest, $D_nonperiodic_sparse, $u))
-println("D_nonperiodic_banded:");  sleep(0.1); display(@benchmark mul!($dest, $D_nonperiodic_banded, $u))
+doit(D_periodic_serial, "D_periodic_serial:", dest, u)
+doit(D_periodic_threads, "D_periodic_threads:", dest, u)
+
+doit(D_nonperiodic_serial, "D_nonperiodic_serial:", dest, u)
+doit(D_nonperiodic_threads, "D_nonperiodic_threads:", dest, u)
+doit(D_nonperiodic_sparse, "D_nonperiodic_sparse:", dest, u)
+doit(D_nonperiodic_banded, "D_nonperiodic_banded:", dest, u)
 ```
 
 
@@ -69,11 +76,18 @@ Random.seed!(12345)
 u = randn(T, N)
 dest = similar(u)
 
-println("D_serial:");  sleep(0.1); display(@benchmark mul!($dest, $D_serial, $u))
-println("Di_serial:"); sleep(0.1); display(@benchmark mul!($dest, $Di_serial, $u))
-println("Di_sparse:"); sleep(0.1); display(@benchmark mul!($dest, $Di_sparse, $u))
-println("Di_full:");   sleep(0.1); display(@benchmark mul!($dest, $Di_full, $u))
+function doit(D, text, dest, u)
+  println(text)
+  sleep(0.1)
+  show(stdout, MIME"text/plain"(), @benchmark mul!($dest, $D, $u))
+  println()
+end
 
-println("D_threads:");  sleep(0.1); display(@benchmark mul!($dest, $D_threads, $u))
-println("Di_threads:"); sleep(0.1); display(@benchmark mul!($dest, $Di_threads, $u))
+doit(D_serial, "D_serial:", dest, u)
+doit(Di_serial, "Di_serial:", dest, u)
+doit(Di_sparse, "Di_sparse:", dest, u)
+doit(Di_full, "Di_full:", dest, u)
+
+doit(D_threads, "D_threads:", dest, u)
+doit(Di_threads, "Di_threads:", dest, u)
 ```
