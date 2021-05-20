@@ -1,6 +1,6 @@
 
 """
-    PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,Parallel}
+    PeriodicDerivativeCoefficients
 
 The coefficients of a derivative operator on a periodic grid.
 """
@@ -14,11 +14,11 @@ struct PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,Parallel,SourceO
     derivative_order::Int
     accuracy_order  ::Int
     symmetric       ::Bool
-    source_of_coeffcients::SourceOfCoefficients
+    source_of_coefficients::SourceOfCoefficients
 
     function PeriodicDerivativeCoefficients(lower_coef::SVector{LowerOffset, T}, central_coef::T, upper_coef::SVector{UpperOffset, T},
                                             parallel::Parallel, derivative_order::Int, accuracy_order::Int,
-                                            source_of_coeffcients::SourceOfCoefficients) where {T,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients}
+                                            source_of_coefficients::SourceOfCoefficients) where {T,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients}
         symmetric = LowerOffset == UpperOffset
         if symmetric
             @inbounds for i in Base.OneTo(LowerOffset)
@@ -607,7 +607,7 @@ struct PeriodicDerivativeOperator{T,LowerOffset,UpperOffset,Parallel,SourceOfCoe
     end
 end
 
-@inline source_of_coeffcients(D::PeriodicDerivativeOperator) = source_of_coeffcients(D.coefficients)
+@inline source_of_coefficients(D::PeriodicDerivativeOperator) = source_of_coefficients(D.coefficients)
 
 
 function Base.show(io::IO, D::PeriodicDerivativeOperator{T,LowerOffset,UpperOffset}) where {T,LowerOffset,UpperOffset}
@@ -624,7 +624,7 @@ function Base.show(io::IO, D::PeriodicDerivativeOperator{T,LowerOffset,UpperOffs
     print(io, accuracy_order(D), " {T=", T, ", Parallel=", typeof(D.coefficients.parallel), "} \n")
     print(io, "on a grid in [", first(x), ", ", last(x), "] using ", length(x), " nodes, \n")
     print(io, "stencils with ", LowerOffset, " nodes to the left, ", UpperOffset,
-                " nodes to the right, and coefficients from \n", source_of_coeffcients(D))
+                " nodes to the right, and coefficients from \n", source_of_coefficients(D))
 end
 
 
@@ -680,9 +680,10 @@ end
 
 
 """
-    periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N, parallel=Val{:serial}())
+    periodic_central_derivative_operator(derivative_order, accuracy_order,
+                                         xmin, xmax, N, parallel=Val{:serial}())
 
-Create a `PeriodicDerivativeOperator` approximating the `derivative_order`-th
+Create a [`PeriodicDerivativeOperator`](@ref) approximating the `derivative_order`-th
 derivative on a uniform grid between `xmin` and `xmax` with `N` grid points up
 to order of accuracy `accuracy_order`.
 The evaluation of the derivative can be parallised using threads by chosing
@@ -695,9 +696,10 @@ function periodic_central_derivative_operator(derivative_order, accuracy_order, 
 end
 
 """
-    periodic_central_derivative_operator(derivative_order, accuracy_order, grid, parallel=Val{:serial}())
+    periodic_central_derivative_operator(derivative_order, accuracy_order,
+                                         grid, parallel=Val{:serial}())
 
-Create a `PeriodicDerivativeOperator` approximating the `derivative_order`-th
+Create a [`PeriodicDerivativeOperator`](@ref) approximating the `derivative_order`-th
 derivative on the uniform `grid` up to order of accuracy `accuracy_order`.
 The evaluation of the derivative can be parallised using threads by chosing
 `parallel=Val{:threads}())`.
@@ -708,16 +710,38 @@ function periodic_central_derivative_operator(derivative_order, accuracy_order, 
 end
 
 """
-    periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N, left_offset=-(accuracy_order+1)÷2, parallel=Val{:serial}())
+    periodic_derivative_operator(derivative_order, accuracy_order,
+                                 xmin, xmax, N,
+                                 left_offset=-(accuracy_order+1)÷2,
+                                 parallel=Val{:serial}())
+    periodic_derivative_operator(; derivative_order, accuracy_order,
+                                 xmin, xmax, N,
+                                 left_offset=-(accuracy_order+1)÷2,
+                                 parallel=Val{:serial}())
 
-Create a `PeriodicDerivativeOperator` approximating the `derivative_order`-th
+Create a [`PeriodicDerivativeOperator`](@ref) approximating the `derivative_order`-th
 derivative on a uniform grid between `xmin` and `xmax` with `N` grid points up
 to order of accuracy `accuracy_order` where the leftmost grid point used is
 determined by `left_offset`.
 The evaluation of the derivative can be parallised using threads by chosing
 `parallel=Val{:threads}())`.
+
+## Examples
+
+```jldoctest
+julia> periodic_derivative_operator(derivative_order=1, accuracy_order=2,
+                                    xmin=0.0, xmax=1.0, N=11)
+Periodic 1st derivative operator of order 2 {T=Float64, Parallel=Val{:serial}}
+on a grid in [0.0, 1.0] using 11 nodes,
+stencils with 1 nodes to the left, 1 nodes to the right, and coefficients from
+  Fornberg (1998)
+  Calculation of Weights in Finite Difference Formulas.
+  SIAM Rev. 40.3, pp. 685-691.
+
+```
 """
-function periodic_derivative_operator(derivative_order::Int, accuracy_order, xmin, xmax, N, left_offset::Int=-(accuracy_order+1)÷2,
+function periodic_derivative_operator(derivative_order::Integer, accuracy_order,
+                                      xmin, xmax, N, left_offset::Int=-(accuracy_order+1)÷2,
                                       parallel::Union{Val{:serial},Val{:threads}}=Val{:serial}())
     grid = range(xmin, stop=xmax, length=N) # N includes two identical boundary nodes
     coefficients = periodic_derivative_coefficients(derivative_order, accuracy_order, left_offset, eltype(grid), parallel)
@@ -729,9 +753,20 @@ end
     periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N, left_offset, parallel)
 end
 
+function periodic_derivative_operator(; derivative_order, accuracy_order,
+                                      xmin, xmax, N, left_offset::Int=-(accuracy_order+1)÷2,
+                                      parallel::Union{Val{:serial},Val{:threads}}=Val{:serial}())
+    periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N,
+                                 left_offset, parallel)
+end
+
 """
-    periodic_derivative_operator(source::Holoborodko2008, derivative_order, accuracy_order,
+    periodic_derivative_operator(source::Holoborodko2008,
+                                 derivative_order, accuracy_order,
                                  xmin, xmax, N; parallel=Val{:serial}(), kwargs...)
+    periodic_derivative_operator(source::Holoborodko2008;
+                                 derivative_order, accuracy_order,
+                                 xmin, xmax, N, parallel=Val{:serial}(), kwargs...)
 
 Create a `PeriodicDerivativeOperator` approximating the `derivative_order`-th
 derivative on a uniform grid between `xmin` and `xmax` with `N` grid points up
@@ -739,6 +774,20 @@ to order of accuracy `accuracy_order` where the leftmost grid point used is
 determined by `left_offset`.
 The evaluation of the derivative can be parallised using threads by chosing
 `parallel=Val{:threads}())`.
+
+## Examples
+
+```jldoctest
+julia> periodic_derivative_operator(Holoborodko2008(), derivative_order=1, accuracy_order=2,
+                                    xmin=0.0, xmax=1.0, N=11)
+Periodic 1st derivative operator of order 2 {T=Float64, Parallel=Val{:serial}}
+on a grid in [0.0, 1.0] using 11 nodes,
+stencils with 2 nodes to the left, 2 nodes to the right, and coefficients from
+  Holoborodko (2008)
+  Smooth Noise Robust Differentiators.
+  http://www.holoborodko.com/pavel/numerical-methods/numerical-derivative/smooth-low-noise-differentiators/
+
+```
 """
 function periodic_derivative_operator(source::Holoborodko2008, derivative_order, accuracy_order,
                                       xmin, xmax, N; parallel=Val{:serial}(), kwargs...)
@@ -748,8 +797,15 @@ function periodic_derivative_operator(source::Holoborodko2008, derivative_order,
     PeriodicDerivativeOperator(coefficients, grid)
 end
 
+function periodic_derivative_operator(source::Holoborodko2008; derivative_order, accuracy_order,
+                                      xmin, xmax, N, parallel=Val{:serial}(), kwargs...)
+    periodic_derivative_operator(source, derivative_order, accuracy_order, xmin, xmax, N;
+                                 parallel=parallel, kwargs...)
+end
+
 """
-    periodic_derivative_operator(derivative_order, accuracy_order, grid, left_offset=-(accuracy_order+1)÷2, parallel=Val{:serial}())
+    periodic_derivative_operator(derivative_order, accuracy_order, grid,
+                                 left_offset=-(accuracy_order+1)÷2, parallel=Val{:serial}())
 
 Create a `PeriodicDerivativeOperator` approximating the `derivative_order`-th
 derivative on thr uniform `grid` up to order of accuracy `accuracy_order` where
@@ -790,7 +846,7 @@ end
 grid(Di::PeriodicDissipationOperator) = grid(Di.Di)
 derivative_order(Di::PeriodicDissipationOperator) = derivative_order(Di.Di)
 accuracy_order(Di::PeriodicDissipationOperator) = accuracy_order(Di.Di)
-source_of_coeffcients(Di::PeriodicDissipationOperator) = MattssonSvärdNordström2004()
+source_of_coefficients(Di::PeriodicDissipationOperator) = MattssonSvärdNordström2004()
 
 function Base.show(io::IO, Di::PeriodicDissipationOperator{T}) where {T}
     if  derivative_order(Di) == 2
@@ -802,7 +858,7 @@ function Base.show(io::IO, Di::PeriodicDissipationOperator{T}) where {T}
     print(io, accuracy_order(Di), " {T=", T, ", Parallel=", typeof(Di.Di.coefficients.parallel), "} \n")
     print(io, "on a grid in [", first(x), ", ", last(x), "] using ", length(x), " nodes \n")
     print(io, "and coefficients given in \n")
-    print(io, source_of_coeffcients(Di))
+    print(io, source_of_coefficients(Di))
 end
 
 

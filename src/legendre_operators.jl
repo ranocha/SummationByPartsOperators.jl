@@ -34,8 +34,19 @@ function LegendreDerivativeOperator(xmin::T, xmax::T, N::Int) where {T<:Real}
     LegendreDerivativeOperator(xmin, xmax, basis)
 end
 
-function legendre_derivative_operator(xmin::T, xmax::T, N::Int) where {T<:Real}
-    LegendreDerivativeOperator(xmin, xmax, N)
+"""
+    legendre_derivative_operator(xmin::Real, xmax::Real, N::Integer)
+    legendre_derivative_operator(; xmin::Real, xmax::Real, N::Integer)
+
+Construct the `LegendreDerivativeOperator` on a uniform grid between `xmin` and
+`xmax` using `N` nodes and `N-1` Legendre modes.
+"""
+function legendre_derivative_operator(xmin::Real, xmax::Real, N::Integer)
+    LegendreDerivativeOperator(promote(xmin, xmax)..., N)
+end
+
+function legendre_derivative_operator(; xmin::Real, xmax::Real, N::Integer)
+    legendre_derivative_operator(xmin, xmax, N)
 end
 
 derivative_order(D::LegendreDerivativeOperator) = 1
@@ -69,8 +80,19 @@ struct LegendreSecondDerivativeOperator{T<:Real} <: AbstractNonperiodicDerivativ
     end
 end
 
-function legendre_second_derivative_operator(xmin::T, xmax::T, N::Int) where {T<:Real}
-  LegendreSecondDerivativeOperator(xmin, xmax, N)
+"""
+    legendre_second_derivative_operator(xmin::Real, xmax::Real, N::Integer)
+    legendre_second_derivative_operator(; xmin::Real, xmax::Real, N::Integer)
+
+Construct the `LegendreDerivativeOperator` on a uniform grid between `xmin` and
+`xmax` using `N` nodes and `N-1` Legendre modes.
+"""
+function legendre_second_derivative_operator(xmin::Real, xmax::Real, N::Integer)
+  LegendreSecondDerivativeOperator(promote(xmin, xmax)..., N)
+end
+
+function legendre_second_derivative_operator(; xmin::Real, xmax::Real, N::Integer)
+    legendre_second_derivative_operator(xmin, xmax, N)
 end
 
 derivative_order(D::LegendreSecondDerivativeOperator) = 2

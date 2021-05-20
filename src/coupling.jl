@@ -12,6 +12,9 @@ end
 
 
 """
+    UniformPeriodicMesh1D(xmin::Real, xmax::Real, Nx::Integer)
+    UniformPeriodicMesh1D(; xmin::Real, xmax::Real, Nx::Integer)
+
 A uniform periodic mesh in one space dimension of `Nx` cells between
 `xmin` and `xmax`.
 """
@@ -35,8 +38,15 @@ function UniformPeriodicMesh1D(_xmin::Real, _xmax::Real, Nx::Integer)
   UniformPeriodicMesh1D{typeof(xmin)}(xmin, xmax, Int(Nx))
 end
 
+function UniformPeriodicMesh1D(; _xmin::Real, _xmax::Real, Nx::Integer)
+  UniformPeriodicMesh1D(_xmin, _xmax, Nx)
+end
+
 
 """
+    UniformMesh1D(xmin::Real, xmax::Real, Nx::Integer)
+    UniformMesh1D(; xmin::Real, xmax::Real, Nx::Integer)
+
 A uniform mesh in one space dimension of `Nx` cells between `xmin` and `xmax`.
 """
 struct UniformMesh1D{T<:Real} <: AbstractMesh1D
@@ -57,6 +67,10 @@ end
 function UniformMesh1D(_xmin::Real, _xmax::Real, Nx::Integer)
   xmin, xmax = promote(_xmin, _xmax)
   UniformMesh1D{typeof(xmin)}(xmin, xmax, Int(Nx))
+end
+
+function UniformMesh1D(; _xmin::Real, _xmax::Real, Nx::Integer)
+  UniformMesh1D(_xmin, _xmax, Nx)
 end
 
 @inline numcells(mesh::Union{UniformMesh1D,UniformPeriodicMesh1D}) = mesh.Nx

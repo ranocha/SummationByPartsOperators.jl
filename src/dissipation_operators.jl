@@ -20,17 +20,17 @@ struct VarCoefDerivativeCoefficients{T,CoefficientCache<:AbstractCoefficientCach
     # corresponding orders etc.
     derivative_order::Int
     accuracy_order  ::Int
-    source_of_coeffcients::SourceOfCoefficients
+    source_of_coefficients::SourceOfCoefficients
 
     function VarCoefDerivativeCoefficients(coefficient_cache::CoefficientCache,
                                            left_weights::SVector{LeftWidth, T},
                                            right_weights::SVector{RightWidth, T},
                                            parallel::Parallel,
                                            derivative_order::Int, accuracy_order::Int,
-                                           source_of_coeffcients::SourceOfCoefficients) where {T,CoefficientCache<:AbstractCoefficientCache{T},
+                                           source_of_coefficients::SourceOfCoefficients) where {T,CoefficientCache<:AbstractCoefficientCache{T},
                                                                                                 LeftWidth,RightWidth,Parallel,SourceOfCoefficients}
         new{T,CoefficientCache,LeftWidth,RightWidth,Parallel,SourceOfCoefficients}(
-            coefficient_cache, left_weights, right_weights, parallel, derivative_order, accuracy_order, source_of_coeffcients)
+            coefficient_cache, left_weights, right_weights, parallel, derivative_order, accuracy_order, source_of_coefficients)
     end
 end
 
@@ -48,7 +48,7 @@ function Base.show(io::IO, coefficients::VarCoefDerivativeCoefficients)
     end
     print(io, "derivative operator with order of accuracy ",
             accuracy_order(coefficients), " given in \n")
-    print(io, source_of_coeffcients(coefficients))
+    print(io, source_of_coefficients(coefficients))
 end
 
 
@@ -138,7 +138,7 @@ abstract type AbstractVariableCoefficientNonperiodicDerivativeOperator{T} <: Abs
 abstract type AbstractVariableCoefficientPeriodicDerivativeOperator{T} <: AbstractPeriodicDerivativeOperator{T} end
 
 
-@inline source_of_coeffcients(D::Union{AbstractVariableCoefficientNonperiodicDerivativeOperator,AbstractVariableCoefficientNonperiodicDerivativeOperator}) = source_of_coeffcients(D.coefficients)
+@inline source_of_coefficients(D::Union{AbstractVariableCoefficientNonperiodicDerivativeOperator,AbstractVariableCoefficientNonperiodicDerivativeOperator}) = source_of_coefficients(D.coefficients)
 
 @inline function lower_bandwidth(D::AbstractVariableCoefficientNonperiodicDerivativeOperator)
     lower_bandwidth(D.coefficients.coefficient_cache)
@@ -184,7 +184,7 @@ function Base.show(io::IO, D::DissipationOperator{T}) where {T}
     print(io, "on a grid in [", first(grid(D)), ", ", last(grid(D)),
                 "] using ", length(grid(D)), " nodes \n")
     print(io, "and coefficients given in \n")
-    print(io, source_of_coeffcients(D))
+    print(io, source_of_coefficients(D))
 end
 
 

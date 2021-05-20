@@ -1,3 +1,26 @@
+
+"""
+[SummationByPartsOperators.jl](https://github.com/ranocha/SummationByPartsOperators.jl)
+is a Julia library of summation-by-parts (SBP) operators, which are discrete
+derivative operators developed to get provably stable semidiscretizations,
+paying special attention to boundary conditions. Discretizations included in this
+framework are finite difference, Fourier pseudospectral, continuous Galerkin,
+and discontinuous Galerkin methods. The main aim of
+[SummationByPartsOperators.jl](https://github.com/ranocha/SummationByPartsOperators.jl)
+is to be useful for researchers and students to learn the basic concepts by
+providing a unified framework of all of these seemingly different discretizations.
+At the same time, the implementation is optimized to achieve good performance
+without sacrificing flexibility.
+
+Check out the [documentation](https://ranocha.github.io/SummationByPartsOperators.jl/stable)
+for further information. Some noticable functions to start with are
+[`derivative_operator`](@ref),
+[`legendre_derivative_operator`](@ref),
+[`periodic_derivative_operator`](@ref),
+[`fourier_derivative_operator`](@ref),
+[`dissipation_operator`](@ref),
+and [`grid`](@ref).
+"""
 module SummationByPartsOperators
 
 using LinearAlgebra
@@ -82,7 +105,7 @@ export PeriodicDerivativeOperator, PeriodicDissipationOperator,
        FourierDerivativeOperator2D,
        LegendreDerivativeOperator, LegendreSecondDerivativeOperator
 export FilterCallback, ConstantFilter, ExponentialFilter
-export derivative_order, accuracy_order, source_of_coeffcients, grid, semidiscretise
+export derivative_order, accuracy_order, source_of_coefficients, grid, semidiscretise
 export mass_matrix
 export integrate, derivative_left, derivative_right,
        evaluate_coefficients, evaluate_coefficients!,

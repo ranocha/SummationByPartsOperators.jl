@@ -1,8 +1,8 @@
 
 """
-    FourierDerivativeOperator{T<:Real, Grid, RFFT, BRFFT}
+    FourierDerivativeOperator{T}
 
-A derivative operator on a periodic grid with scalar type `T` computing the
+A derivative operator on a periodic grid with real scalar type `T` computing the
 first derivative using a spectral Fourier expansion via real discrete Fourier
 transforms.
 """
@@ -30,12 +30,12 @@ struct FourierDerivativeOperator{T<:Real, Grid, RFFT, BRFFT} <: AbstractPeriodic
 end
 
 """
-    FourierDerivativeOperator(xmin::T, xmax::T, N::Int) where {T<:Real}
+    FourierDerivativeOperator(xmin::T, xmax::T, N::Integer) where {T<:Real}
 
 Construct the `FourierDerivativeOperator` on a uniform grid between `xmin` and
 `xmax` using `N` nodes and `N÷2+1` complex Fourier modes.
 """
-function FourierDerivativeOperator(xmin::T, xmax::T, N::Int) where {T<:Real}
+function FourierDerivativeOperator(xmin::T, xmax::T, N::Integer) where {T<:Real}
     @argcheck N >= 1
 
     jac = 2*T(π) / (xmax - xmin) / N # / N because of brfft instead of BRFFT
@@ -50,7 +50,18 @@ function FourierDerivativeOperator(xmin::T, xmax::T, N::Int) where {T<:Real}
     FourierDerivativeOperator(jac, Δx, grid_compute, grid_evaluate, uhat, rfft_plan, brfft_plan)
 end
 
-function fourier_derivative_operator(xmin::Real, xmax::Real, N::Int)
+"""
+    fourier_derivative_operator(xmin::Real, xmax::Real, N::Integer)
+    fourier_derivative_operator(; xmin::Real, xmax::Real, N::Integer)
+
+Construct the `FourierDerivativeOperator` on a uniform grid between `xmin` and
+`xmax` using `N` nodes and `N÷2+1` complex Fourier modes.
+"""
+function fourier_derivative_operator(xmin::Real, xmax::Real, N::Integer)
+    FourierDerivativeOperator(promote(xmin, xmax)..., N)
+end
+
+function fourier_derivative_operator(; xmin::Real, xmax::Real, N::Integer)
     FourierDerivativeOperator(promote(xmin, xmax)..., N)
 end
 
@@ -814,7 +825,7 @@ end
 
 
 """
-    ConstantFilter(D::FourierDerivativeOperator, filter, TmpEltype=T)
+    ConstantFilter(D::FourierDerivativeOperator, filter)
 
 Create a modal filter with constant parameters adapted to the Fourier
 derivative operator `D` with parameters given by the filter function `filter`.

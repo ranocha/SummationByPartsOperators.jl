@@ -3,7 +3,8 @@ import Pkg
 using SummationByPartsOperators
 
 # Define module-wide setups such that the respective modules are available in doctests
-DocMeta.setdocmeta!(SummationByPartsOperators, :DocTestSetup, :(using SummationByPartsOperators); recursive=true)
+DocMeta.setdocmeta!(SummationByPartsOperators,
+  :DocTestSetup, :(using SummationByPartsOperators); recursive=true)
 
 open(joinpath(@__DIR__, "src", "license.md"), "w") do io
   println(io, "# License")
@@ -15,6 +16,8 @@ open(joinpath(@__DIR__, "src", "license.md"), "w") do io
 end
 
 open(joinpath(@__DIR__, "src", "contributing.md"), "w") do io
+  println(io, "# Contributing")
+  println(io, "")
   for line in eachline(joinpath(dirname(@__DIR__), "CONTRIBUTING.md"))
     line = replace(line, "[LICENSE.md](LICENSE.md)" => "[License](@ref)")
     println(io, "> ", line)
@@ -23,29 +26,29 @@ end
 
 # Make documentation
 makedocs(
-    modules = [SummationByPartsOperators],
-    sitename="SummationByPartsOperators.jl",
-    format = Documenter.HTML(
-        prettyurls = get(ENV, "CI", nothing) == "true",
-        # assets = ["assets/favicon.ico"],
-        canonical = "https://ranocha.github.io/SummationByPartsOperators.jl/stable"
-    ),
-    # Explicitly specify documentation structure
-    pages = [
-        "Home" => "index.md",
-        # "Getting started" => [
-        #     "Overview" => "overview.md",
-        #     "Visualization" => "visualization.md",
-        # ],
-        "API reference" => "api_reference.md",
-        "Contributing" => "contributing.md",
-        "License" => "license.md"
+  modules = [SummationByPartsOperators],
+  sitename="SummationByPartsOperators.jl",
+  format = Documenter.HTML(
+    prettyurls = get(ENV, "CI", nothing) == "true",
+    canonical = "https://ranocha.github.io/SummationByPartsOperators.jl/stable"
+  ),
+  # Explicitly specify documentation structure
+  pages = [
+    "Home" => "index.md",
+    "Introduction" => "introduction.md",
+    "Tutorials" => [
+      "tutorials/linear_advection.md",
     ],
-    strict = true # to make the GitHub action fail when doctests fail
+    "Benchmarks" => "benchmarks.md",
+    "API reference" => "api_reference.md",
+    "Contributing" => "contributing.md",
+    "License" => "license.md"
+  ],
+  strict = true # to make the GitHub action fail when doctests fail
 )
 
 deploydocs(
-    repo = "github.com/ranocha/SummationByPartsOperators.jl",
-    devbranch = "main",
-    push_preview = true
+  repo = "github.com/ranocha/SummationByPartsOperators.jl",
+  devbranch = "main",
+  push_preview = true
 )
