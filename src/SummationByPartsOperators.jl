@@ -105,7 +105,7 @@ export PeriodicDerivativeOperator, PeriodicDissipationOperator,
        FourierDerivativeOperator2D,
        LegendreDerivativeOperator, LegendreSecondDerivativeOperator
 export FilterCallback, ConstantFilter, ExponentialFilter
-export derivative_order, accuracy_order, source_of_coeffcients, grid, semidiscretise
+export derivative_order, accuracy_order, source_of_coefficients, grid, semidiscretise
 export mass_matrix
 export integrate, derivative_left, derivative_right,
        evaluate_coefficients, evaluate_coefficients!,

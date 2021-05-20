@@ -21,7 +21,7 @@ struct DerivativeCoefficients{T,LeftBoundary,RightBoundary,LeftBoundaryDerivativ
     derivative_order::Int
     accuracy_order  ::Int
     symmetric       ::Bool
-    source_of_coeffcients::SourceOfCoefficients
+    source_of_coefficients::SourceOfCoefficients
 
     function DerivativeCoefficients(left_boundary::LeftBoundary, right_boundary::RightBoundary,
                                     left_boundary_derivatives::LeftBoundaryDerivatives,
@@ -29,7 +29,7 @@ struct DerivativeCoefficients{T,LeftBoundary,RightBoundary,LeftBoundaryDerivativ
                                     lower_coef::SVector{LowerOffset, T}, central_coef::T, upper_coef::SVector{UpperOffset, T},
                                     left_weights::SVector{LeftWidth, T}, right_weights::SVector{RightWidth, T},
                                     parallel::Parallel, derivative_order::Int, accuracy_order::Int,
-                                    source_of_coeffcients::SourceOfCoefficients) where {T,LeftBoundary,RightBoundary,LeftBoundaryDerivatives,RightBoundaryDerivatives,
+                                    source_of_coefficients::SourceOfCoefficients) where {T,LeftBoundary,RightBoundary,LeftBoundaryDerivatives,RightBoundaryDerivatives,
                                                                                         LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel,SourceOfCoefficients}
         @argcheck length(left_boundary) == LeftWidth
         @argcheck length(right_boundary) == RightWidth
@@ -48,12 +48,12 @@ struct DerivativeCoefficients{T,LeftBoundary,RightBoundary,LeftBoundaryDerivativ
         new{T,LeftBoundary,RightBoundary,LeftBoundaryDerivatives,RightBoundaryDerivatives,LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel,SourceOfCoefficients}(
             left_boundary, right_boundary, left_boundary_derivatives, right_boundary_derivatives,
             lower_coef, central_coef, upper_coef, left_weights, right_weights,
-            parallel, derivative_order, accuracy_order, symmetric, source_of_coeffcients)
+            parallel, derivative_order, accuracy_order, symmetric, source_of_coefficients)
     end
 end
 
 
-@inline source_of_coeffcients(coefficients::AbstractDerivativeCoefficients) = coefficients.source_of_coeffcients
+@inline source_of_coefficients(coefficients::AbstractDerivativeCoefficients) = coefficients.source_of_coefficients
 
 
 function Base.show(io::IO, coefficients::DerivativeCoefficients)
@@ -71,7 +71,7 @@ function Base.show(io::IO, coefficients::DerivativeCoefficients)
                     "th derivative operator of order ", accuracy_order(coefficients),
                     " given in \n")
     end
-    print(io, source_of_coeffcients(coefficients))
+    print(io, source_of_coefficients(coefficients))
 end
 
 
@@ -306,7 +306,7 @@ struct DerivativeOperator{T,LeftBoundary,RightBoundary,LeftBoundaryDerivatives,R
 end
 
 
-@inline source_of_coeffcients(D::DerivativeOperator) = source_of_coeffcients(D.coefficients)
+@inline source_of_coefficients(D::DerivativeOperator) = source_of_coefficients(D.coefficients)
 
 
 function Base.show(io::IO, D::DerivativeOperator{T}) where {T}
@@ -323,7 +323,7 @@ function Base.show(io::IO, D::DerivativeOperator{T}) where {T}
     print(io, "on a grid in [", first(grid(D)), ", ", last(grid(D)),
                 "] using ", length(grid(D)), " nodes \n")
     print(io, "and coefficients given in \n")
-    print(io, source_of_coeffcients(D))
+    print(io, source_of_coefficients(D))
 end
 
 

@@ -40,7 +40,7 @@ function Base.show(io::IO, D::VarCoefDerivativeOperator{T}) where {T}
     print(io, "on a grid in [", first(grid(D)), ", ", last(grid(D)),
                 "] using ", length(grid(D)), " nodes \n")
     print(io, "and coefficients given in \n")
-    print(io, source_of_coeffcients(D))
+    print(io, source_of_coefficients(D))
 end
 
 
