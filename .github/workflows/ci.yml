@@ -5,7 +5,7 @@ on:
   # but only for the main and dev branches branch
   push:
     branches:
-      - master
+      - main
       - dev
     paths-ignore:
       - 'AUTHORS.md'

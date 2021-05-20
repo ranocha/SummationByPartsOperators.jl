@@ -19,7 +19,7 @@ notifications:
 # avoid duplicate tests in PRs
 branches:
   only:
-    - master
+    - main
     - dev
 
 after_success:

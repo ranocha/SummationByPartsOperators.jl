@@ -3,8 +3,8 @@
 [![Docs-stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://ranocha.github.io/SummationByPartsOperators.jl/stable)
 [![Docs-dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://ranocha.github.io/SummationByPartsOperators.jl/dev)
 [![Build Status](https://github.com/ranocha/SummationByPartsOperators.jl/workflows/CI/badge.svg)](https://github.com/ranocha/SummationByPartsOperators.jl/actions?query=workflow%3ACI)
-[![Codecov](http://codecov.io/github/ranocha/SummationByPartsOperators.jl/coverage.svg?branch=master)](http://codecov.io/github/ranocha/SummationByPartsOperators.jl?branch=master)
-[![Coveralls](https://coveralls.io/repos/github/ranocha/SummationByPartsOperators.jl/badge.svg?branch=master)](https://coveralls.io/github/ranocha/SummationByPartsOperators.jl?branch=master)
+[![Codecov](http://codecov.io/github/ranocha/SummationByPartsOperators.jl/coverage.svg?branch=main)](http://codecov.io/github/ranocha/SummationByPartsOperators.jl?branch=main)
+[![Coveralls](https://coveralls.io/repos/github/ranocha/SummationByPartsOperators.jl/badge.svg?branch=main)](https://coveralls.io/github/ranocha/SummationByPartsOperators.jl?branch=main)
 [![License: MIT](https://img.shields.io/badge/License-MIT-success.svg)](https://opensource.org/licenses/MIT)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4773575.svg)](https://doi.org/10.5281/zenodo.4773575)
 [![GitHub commits since tagged version](https://img.shields.io/github/commits-since/ranocha/SummationByPartsOperators.jl/v0.4.5.svg?style=social&logo=github)](https://github.com/ranocha/SummationByPartsOperators.jl)
@@ -217,13 +217,13 @@ julia> BandedMatrix(D)
 ## Documentation
 
 Examples can be found in the directory
-[`notebooks`](https://github.com/ranocha/SummationByPartsOperators.jl/tree/master/notebooks).
+[`notebooks`](https://github.com/ranocha/SummationByPartsOperators.jl/tree/main/notebooks).
 In particular, examples of complete discretisations of
-[the linear advection equation](https://github.com/ranocha/SummationByPartsOperators.jl/blob/master/notebooks/Advection_equation.ipynb),
-[the heat equation](https://github.com/ranocha/SummationByPartsOperators.jl/blob/master/notebooks/Heat_equation.ipynb),
-and the [wave equation](https://github.com/ranocha/SummationByPartsOperators.jl/blob/master/notebooks/Wave_equation.ipynb) are supplied.
+[the linear advection equation](https://github.com/ranocha/SummationByPartsOperators.jl/blob/main/notebooks/Advection_equation.ipynb),
+[the heat equation](https://github.com/ranocha/SummationByPartsOperators.jl/blob/main/notebooks/Heat_equation.ipynb),
+and the [wave equation](https://github.com/ranocha/SummationByPartsOperators.jl/blob/main/notebooks/Wave_equation.ipynb) are supplied.
 Further examples are supplied as
-[tests](https://github.com/ranocha/SummationByPartsOperators.jl/tree/master/test).
+[tests](https://github.com/ranocha/SummationByPartsOperators.jl/tree/main/test).
 
 The latest documentation is available
 [online](https://ranocha.github.io/SummationByPartsOperators.jl/stable)
