@@ -118,11 +118,31 @@ julia> BandedMatrix(D)
    ⋅     ⋅     ⋅   -4.0  4.0
 ```
 
+
 ## Documentation
 
-Examples can be found in the directory [`notebooks`](https://github.com/ranocha/SummationByPartsOperators.jl/tree/master/notebooks).
+Examples can be found in the directory
+[`notebooks`](https://github.com/ranocha/SummationByPartsOperators.jl/tree/master/notebooks).
 In particular, examples of complete discretisations of
 [the linear advection equation](https://github.com/ranocha/SummationByPartsOperators.jl/blob/master/notebooks/Advection_equation.ipynb),
 [the heat equation](https://github.com/ranocha/SummationByPartsOperators.jl/blob/master/notebooks/Heat_equation.ipynb),
 and the [wave equation](https://github.com/ranocha/SummationByPartsOperators.jl/blob/master/notebooks/Wave_equation.ipynb) are supplied.
-Further examples are supplied as [tests](https://github.com/ranocha/SummationByPartsOperators.jl/tree/master/test).
+Further examples are supplied as
+[tests](https://github.com/ranocha/SummationByPartsOperators.jl/tree/master/test).
+
+
+## Referencing
+
+If you use
+[SummationByPartsOperators.jl](https://github.com/ranocha/SummationByPartsOperators.jl)
+for your research, please cite it using the bibtex entry
+```bibtex
+@misc{ranocha2021sbp,
+  title={{SummationByPartsOperators.jl}: {A} {J}ulia library of provably stable
+         semidiscretization techniques with mimetic properties},
+  author={Ranocha, Hendrik},
+  year={2021},
+  howpublished={\url{https://github.com/ranocha/SummationByPartsOperators.jl},
+  doi={10.5281/zenodo.4773575}
+}
+```
