@@ -23,14 +23,19 @@ At the same time, the implementation is optimized to achieve good performance
 without sacrificing flexibility.
 
 
-## Basic Operators
+## Basic example
+
+
+
+
+## Brief overview
 
 The following derivative operators are implemented as "lazy"/matrix-free
 operators, i.e. no large (size of the computational grid) matrix is formed
 explicitly.
 
 
-### Periodic Domains
+### Periodic domains
 
 - `periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)`
 
@@ -47,7 +52,7 @@ explicitly.
   Fourier derivative operators are implemented using the fast Fourier transform of [FFTW.jl](https://github.com/JuliaMath/FFTW.jl).
 
 
-### Finite/Nonperiodic Domains
+### Finite (nonperiodic) domains
 
 - `derivative_operator(source_of_coefficients, derivative_order, accuracy_order, xmin, xmax, N)`
 
@@ -60,7 +65,7 @@ explicitly.
   polynomials of degree `N-1`, implemented via [PolynomialBases.jl](https://github.com/ranocha/PolynomialBases.jl).
 
 
-### Dissipation Operators
+### Dissipation operators
 
 Additionally, some artificial dissipation/viscosity operators are implemented.
 The most basic usage is `Di = dissipation_operator(D)`,
@@ -68,9 +73,10 @@ where `D` can be a (periodic, Fourier, Legendre, SBP FD) derivative
 operator. Use `?dissipation_operator` for more details.
 
 
-### Conversion to Other Forms
+### Conversion to other forms
 
-Sometimes, it can be convenient to obtain an explicit (sparse, banded) matrix form of the operators. Therefore, some conversion functions are supplied, e.g.
+Sometimes, it can be convenient to obtain an explicit (sparse, banded) matrix form
+of the operators. Therefore, some conversion functions are supplied, e.g.
 ```julia
 julia> using SummationByPartsOperators
 
@@ -130,6 +136,10 @@ and the [wave equation](https://github.com/ranocha/SummationByPartsOperators.jl/
 Further examples are supplied as
 [tests](https://github.com/ranocha/SummationByPartsOperators.jl/tree/master/test).
 
+The latest documentation is available
+[online](https://ranocha.github.io/SummationByPartsOperators.jl/stable)
+and under [`docs/src`](docs/src).
+
 
 ## Referencing
 
@@ -146,3 +156,11 @@ for your research, please cite it using the bibtex entry
   doi={10.5281/zenodo.4773575}
 }
 ```
+
+
+## License and contributing
+
+This project is licensed under the MIT license (see [LICENSE.md](LICENSE.md)).
+Since it is an open-source project, we are very happy to accept contributions
+from the community. Please refer to [CONTRIBUTING.md](CONTRIBUTING.md) for more
+details.
