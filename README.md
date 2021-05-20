@@ -117,7 +117,7 @@ on a grid in [0.0, 1.0] using 5 nodes
 and coefficients given in
   Mattsson, Nordström (2004)
   Summation by parts operators for finite difference approximations of second
-    derivaties.
+    derivatives.
   Journal of Computational Physics 199, pp.503-540.
 
 
