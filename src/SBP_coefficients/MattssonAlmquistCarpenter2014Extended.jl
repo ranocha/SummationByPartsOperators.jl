@@ -1,6 +1,6 @@
 
 """
-    MattssonAlmquistCarpenter2014Extended
+    MattssonAlmquistCarpenter2014Extended()
 
 Coefficients of the extended SBP operators given in
   Mattsson, Almquist, Carpenter (2014)

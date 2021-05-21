@@ -1,6 +1,6 @@
 
 """
-    MattssonAlmquistCarpenter2014Optimal
+    MattssonAlmquistCarpenter2014Optimal()
 
 Coefficients of the optimal SBP operators with nonuniform grid given in
   Mattsson, Almquist, Carpenter (2014)

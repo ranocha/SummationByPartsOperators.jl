@@ -1,6 +1,6 @@
 
 """
-    MattssonSvärdShoeybi2008
+    MattssonSvärdShoeybi2008()
 
 Coefficients of the SBP operators given in
   Mattsson, Svärd, Shoeybi (2008)
