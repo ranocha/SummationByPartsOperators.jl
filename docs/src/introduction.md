@@ -306,7 +306,7 @@ julia> M * Matrix(Dp) + Matrix(Dm)' * M
   0//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1
   0//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1  1//1
 
-julia> isposdef(-M * (Matrix(Dp) - Matrix(Dm)))
+julia> minimum(eigvals(-M * (Matrix(Dp) - Matrix(Dm)))) > -100 * eps() # tolerance for zero eigenvalues
 true
 ```
 
@@ -407,8 +407,9 @@ are necessary.
 If you are familiar with SBP operators in general, this introduction might already
 be enough for you to apply
 [SummationByPartsOperators.jl](https://github.com/ranocha/SummationByPartsOperators.jl)
-to your problems. Otherwise, you might want to have a look at the references
-and some ready-to-use semidiscretizations of the following partial differential
+to your problems. Otherwise, you might want to have a look at the references,
+the tutorials coming next,
+or some ready-to-use semidiscretizations of the following partial differential
 equations (PDEs). These are shipped with this package and you are encouraged to
 look at their source code to learn more about it.
 
@@ -425,6 +426,9 @@ look at their source code to learn more about it.
 
 Some additional examples are included as [Jupyter](https://jupyter.org) notebooks
 in the directory [`notebooks`](https://github.com/ranocha/SummationByPartsOperators.jl/tree/main/notebooks).
+Even more examples and research articles making use of
+[SummationByPartsOperators.jl](https://github.com/ranocha/SummationByPartsOperators.jl)
+are listed in the section [Applications](@ref).
 If you want to know even more, you can have a look at the
 [test](https://github.com/ranocha/SummationByPartsOperators.jl/tree/main/test).
 
