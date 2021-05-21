@@ -337,6 +337,13 @@ the left boundary of the grid.
     convolve_left_row(D.coefficients.left_boundary_derivatives[N], u) / D.Δx^N
 end
 
+@inline function derivative_left(D::AbstractNonperiodicDerivativeOperator, u, der_order::Val{0})
+    u[begin]
+end
+@inline function derivative_left(D::DerivativeOperator, u, der_order::Val{0})
+    u[begin]
+end
+
 """
     derivative_right(D::DerivativeOperator, u, der_order::Val{N})
 
@@ -347,9 +354,16 @@ the right boundary of the grid.
     convolve_right_row(D.coefficients.right_boundary_derivatives[N], u) / D.Δx^N
 end
 
+@inline function derivative_right(D::AbstractNonperiodicDerivativeOperator, u, der_order::Val{0})
+    u[end]
+end
+@inline function derivative_right(D::DerivativeOperator, u, der_order::Val{0})
+    u[end]
+end
+
 
 """
-  add_transpose_derivative_left!(u, D::DerivativeOperator, der_order::Val{N})
+    add_transpose_derivative_left!(u, D::DerivativeOperator, der_order::Val{N})
 
 Compute the transposed `N`-th derivative to the function given by the coefficients `u` at
 the left boundary of the grid.
@@ -357,13 +371,19 @@ the left boundary of the grid.
 @inline function add_transpose_derivative_left!(u::AbstractVector, D::DerivativeOperator, der_order::Val{N}, α) where {N}
     factor = α / D.Δx^N
     coef = D.coefficients.left_boundary_derivatives[N].coef
-    for i in 1:length(coef)
+    for i in eachindex(coef)
         u[i] += factor * coef[i]
     end
 end
 
+@inline function add_transpose_derivative_left!(u::AbstractVector, D::DerivativeOperator, der_order::Val{0}, α)
+    factor = α
+    u[begin] += factor * u[begin]
+    return nothing
+end
+
 """
-  add_transpose_derivative_right!(u, D::DerivativeOperator, der_order::Val{N})
+    add_transpose_derivative_right!(u, D::DerivativeOperator, der_order::Val{N})
 
 Compute the transposed `N`-th derivative to the function given by the coefficients `u` at
 the right boundary of the grid.
@@ -371,9 +391,15 @@ the right boundary of the grid.
 @inline function add_transpose_derivative_right!(u::AbstractVector, D::DerivativeOperator, der_order::Val{N}, α) where {N}
     factor = α / D.Δx^N
     coef = D.coefficients.right_boundary_derivatives[N].coef
-    for i in 1:length(coef)
+    for i in eachindex(coef)
         u[end-i+1] += factor * coef[i]
     end
+end
+
+@inline function add_transpose_derivative_right!(u::AbstractVector, D::DerivativeOperator, der_order::Val{0}, α)
+    factor = α
+    u[end] += factor * u[end]
+    return nothing
 end
 
 
