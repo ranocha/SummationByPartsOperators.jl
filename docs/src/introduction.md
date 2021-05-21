@@ -319,7 +319,7 @@ these are CG spectral element methods (CGSEM). However, a continuous coupling
 of arbitrary SBP operators is supported.
 
 ```jldoctest
-julia> using SummationByPartsOperators
+julia> using SummationByPartsOperators, LinearAlgebra
 
 julia> D = couple_continuosly(
                legendre_derivative_operator(xmin=-1.0, xmax=1.0, N=3),
@@ -400,6 +400,33 @@ are necessary.
   efficiently using [`integrate`](@ref).
 - Dissipation operators based on the same discrete inner product as SBP derivative
   operators can be obtained via [`dissipation_operator`](@ref).
+
+
+## Next steps
+
+If you are familiar with SBP operators in general, this introduction might already
+be enough for you to apply
+[SummationByPartsOperators.jl](https://github.com/ranocha/SummationByPartsOperators.jl)
+to your problems. Otherwise, you might want to have a look at the references
+and some ready-to-use semidiscretizations of the following partial differential
+equations (PDEs). These are shipped with this package and you are encouraged to
+look at their source code to learn more about it.
+
+- Linear scalar advection with variable coefficient:
+  [`VariableLinearAdvectionNonperiodicSemidiscretisation`](@ref)
+- Burgers' equation (inviscid):
+  [`BurgersPeriodicSemidiscretisation`](@ref), [`BurgersNonperiodicSemidiscretisation`](@ref)
+- Scalar conservation law with cubic flux:
+  [`CubicPeriodicSemidiscretisation`](@ref), [`CubicNonperiodicSemidiscretisation`](@ref)
+- A scalar conservation law with quartic, non-convex flux:
+  [`QuarticNonconvexPeriodicSemidiscretisation`](@ref)
+- The second-order wave equation:
+  [`WaveEquationNonperiodicSemidiscretisation`](@ref)
+
+Some additional examples are included as [Jupyter](https://jupyter.org) notebooks
+in the directory [`notebooks`](https://github.com/ranocha/SummationByPartsOperators.jl/tree/main/notebooks).
+If you want to know even more, you can have a look at the
+[test](https://github.com/ranocha/SummationByPartsOperators.jl/tree/main/test).
 
 
 ## References

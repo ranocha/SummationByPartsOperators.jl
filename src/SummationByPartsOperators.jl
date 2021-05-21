@@ -119,7 +119,8 @@ export PeriodicDerivativeOperator, PeriodicDissipationOperator,
 export FilterCallback, ConstantFilter, ExponentialFilter
 export derivative_order, accuracy_order, source_of_coefficients, grid, semidiscretise
 export mass_matrix
-export integrate, derivative_left, derivative_right,
+export integrate, left_boundary_weight, right_boundary_weight,
+       derivative_left, derivative_right,
        add_transpose_derivative_left!, add_transpose_derivative_right!,
        evaluate_coefficients, evaluate_coefficients!,
        compute_coefficients, compute_coefficients!
