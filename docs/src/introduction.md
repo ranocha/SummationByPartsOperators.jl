@@ -72,6 +72,11 @@ julia> norm(M * Matrix(D) + Matrix(D)' * M) < 10 * eps(eltype(D))
 true
 ```
 
+As you have seen above, conversion methods to other common types such as `Matrix`,
+`sparse` from the standard library SparseArrays, and `BandedMatrix` from
+[BandedMatrices.jl](https://github.com/JuliaMatrices/BandedMatrices.jl) are
+available.
+
 
 ## Non-periodic domains
 
@@ -82,12 +87,98 @@ is the basic reason of the success of SBP operators. In particular for hyperboli
 problems, other boundary treatments that might appear senseful can result in
 catastrophic failure.
 
+### First-derivative operators
+
 First-derivative SBP operators need to mimic
 ```math
-\int_{x_\mathrm{min}}^{x_\mathrm{max}} u(x) \partial_x v(x) \mathrm{d}x
+  \int_{x_\mathrm{min}}^{x_\mathrm{max}} u(x) \bigl( \partial_x v(x) \bigr) \mathrm{d}x
++ \int_{x_\mathrm{min}}^{x_\mathrm{max}} \bigl( \partial_x u(x) \bigr) v(x) \mathrm{d}x
+= u(x_\mathrm{max}) v(x_\mathrm{max}) - u(x_\mathrm{min}) - v(x_\mathrm{min}).
+```
+Thus, a discrete evaluation at the boundary of the domain is necessary. For
+SBP operators with a grid including the boundary nodes, this can be achieved
+by simply picking the first/last nodal coefficient of a grid function `u`.
+If boundary nodes are not included, some interpolation is necessary in general.
+Nevertheless, getting a boundary value is a linear functional that is often
+represented in the literature using (transposed) vectors `tL, tR`. For example,
+
+```jldoctest
+julia> using SummationByPartsOperators, LinearAlgebra
+
+julia> D = derivative_operator(MattssonNordström2004(), derivative_order=1, accuracy_order=4,
+                               xmin=0//1, xmax=1//1, N=11)
+SBP 1st derivative operator of order 4 {T=Rational{Int64}, Parallel=Val{:serial}}
+on a grid in [0//1, 1//1] using 11 nodes
+and coefficients given in
+  Mattsson, Nordström (2004)
+  Summation by parts operators for finite difference approximations of second
+    derivatives.
+  Journal of Computational Physics 199, pp. 503-540.
+
+
+julia> tL = zeros(eltype(D), size(D, 1)); tL[1] = 1; tL'
+1×11 adjoint(::Vector{Rational{Int64}}) with eltype Rational{Int64}:
+ 1//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1
+
+julia> tR = zeros(eltype(D), size(D, 1)); tR[end] = 1; tR'
+1×11 adjoint(::Vector{Rational{Int64}}) with eltype Rational{Int64}:
+ 0//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1  1//1
+
+julia> M = mass_matrix(D)
+11×11 Diagonal{Rational{Int64}, Vector{Rational{Int64}}}:
+ 17//480    ⋅        ⋅        ⋅       ⋅      ⋅      ⋅       ⋅        ⋅        ⋅        ⋅
+   ⋅      59//480    ⋅        ⋅       ⋅      ⋅      ⋅       ⋅        ⋅        ⋅        ⋅
+   ⋅        ⋅      43//480    ⋅       ⋅      ⋅      ⋅       ⋅        ⋅        ⋅        ⋅
+   ⋅        ⋅        ⋅      49//480   ⋅      ⋅      ⋅       ⋅        ⋅        ⋅        ⋅
+   ⋅        ⋅        ⋅        ⋅      1//10   ⋅      ⋅       ⋅        ⋅        ⋅        ⋅
+   ⋅        ⋅        ⋅        ⋅       ⋅     1//10   ⋅       ⋅        ⋅        ⋅        ⋅
+   ⋅        ⋅        ⋅        ⋅       ⋅      ⋅     1//10    ⋅        ⋅        ⋅        ⋅
+   ⋅        ⋅        ⋅        ⋅       ⋅      ⋅      ⋅     49//480    ⋅        ⋅        ⋅
+   ⋅        ⋅        ⋅        ⋅       ⋅      ⋅      ⋅       ⋅      43//480    ⋅        ⋅
+   ⋅        ⋅        ⋅        ⋅       ⋅      ⋅      ⋅       ⋅        ⋅      59//480    ⋅
+   ⋅        ⋅        ⋅        ⋅       ⋅      ⋅      ⋅       ⋅        ⋅        ⋅      17//480
+
+julia> M * Matrix(D) + Matrix(D)' * M - (tR * tR' - tL * tL') |> iszero
+true
 ```
 
-TODO
+Here, we have introduced two additional features. Firstly, exact rational
+coefficients are provided, based on the type of `xmin` and `xmax` (if available).
+Secondly, a [`source_of_coefficients`](@ref) has to be provided when constructing
+the SBP operator. You can list them using
+```@example
+subtypes(SourceOfCoefficients)
+```
+
+### Second-derivative operators
+
+To mimic integration-by-parts of second derivatives, the evaluation of the first
+derivative at the boundaries is necessary. These linear functionals are available
+as [`derivative_left`](@ref) and [`derivative_right`](@ref). For example,
+```jldoctest
+julia> using SummationByPartsOperators, LinearAlgebra
+
+julia> D = derivative_operator(MattssonNordström2004(), derivative_order=2, accuracy_order=4,
+                               xmin=0//1, xmax=1//1, N=9)
+SBP 2nd derivative operator of order 4 {T=Rational{Int64}, Parallel=Val{:serial}}
+on a grid in [0//1, 1//1] using 9 nodes
+and coefficients given in
+  Mattsson, Nordström (2004)
+  Summation by parts operators for finite difference approximations of second
+    derivatives.
+  Journal of Computational Physics 199, pp. 503-540.
+
+
+julia> derivative_left(D, grid(D), Val(1))
+1//1
+```
+This is correct since `grid(D)` represents the identity function on the domain,
+whose derivative is unity everywhere. Some procedures imposing boundary conditions
+weakly require adding the transposed boundary derivatives to a grid function,
+which can be achieved by [`add_transpose_derivative_left!`](@ref) and
+[`add_transpose_derivative_right!`](@ref).
+You can find applications of these operators in the source code of
+[`WaveEquationNonperiodicSemidiscretisation`](@ref).
 
 
 ## Upwind operators
