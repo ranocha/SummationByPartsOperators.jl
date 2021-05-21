@@ -23,6 +23,15 @@ For example, it will return `1` for a first-derivative SBP operator.
 """
 function derivative_order end
 
+"""
+    source_of_coefficients(D)
+
+Return the source of coefficients of the derivative operator `D`. If you use the
+operator `D` for your research, please cite this source in addition to
+[`SummationByPartsOperators`](@ref).
+"""
+source_of_coefficients(D) = SummationByPartsOperators
+
 
 derivative_order(coefficients::AbstractDerivativeCoefficients) = coefficients.derivative_order
 accuracy_order(coefficients::AbstractDerivativeCoefficients) = coefficients.accuracy_order

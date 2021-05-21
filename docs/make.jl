@@ -4,7 +4,7 @@ using SummationByPartsOperators
 
 # Define module-wide setups such that the respective modules are available in doctests
 DocMeta.setdocmeta!(SummationByPartsOperators,
-  :DocTestSetup, :(using SummationByPartsOperators, InteractiveUtils); recursive=true)
+  :DocTestSetup, :(using SummationByPartsOperators); recursive=true)
 
 open(joinpath(@__DIR__, "src", "license.md"), "w") do io
   println(io, "# License")

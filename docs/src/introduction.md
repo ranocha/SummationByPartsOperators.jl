@@ -93,7 +93,7 @@ First-derivative SBP operators need to mimic
 ```math
   \int_{x_\mathrm{min}}^{x_\mathrm{max}} u(x) \bigl( \partial_x v(x) \bigr) \mathrm{d}x
 + \int_{x_\mathrm{min}}^{x_\mathrm{max}} \bigl( \partial_x u(x) \bigr) v(x) \mathrm{d}x
-= u(x_\mathrm{max}) v(x_\mathrm{max}) - u(x_\mathrm{min}) - v(x_\mathrm{min}).
+= u(x_\mathrm{max}) v(x_\mathrm{max}) - u(x_\mathrm{min}) v(x_\mathrm{min}).
 ```
 Thus, a discrete evaluation at the boundary of the domain is necessary. For
 SBP operators with a grid including the boundary nodes, this can be achieved
@@ -150,25 +150,43 @@ julia> u = randn(size(grid(D))); derivative_right(D, u, Val(0)) == u[end]
 true
 ```
 
-Here, we have introduced two additional features. Firstly, exact rational
+Here, we have introduced some additional features. Firstly, exact rational
 coefficients are provided, based on the type of `xmin` and `xmax` (if available).
 Secondly, a [`source_of_coefficients`](@ref) has to be provided when constructing
 the SBP operator. You can list them using
 ```@example
+using InteractiveUtils, SummationByPartsOperators
 subtypes(SourceOfCoefficients)
 ```
+Here and in the following, the order of accuracy of (finite difference) SBP
+operators refers to the local order of accuracy in the interior, cf.
+[`accuracy_order`](@ref).
+
+A special case of first-derivative SBP operators are polynomial derivative operators
+on Lobatto-Legendre nodes, implemented in [`legendre_derivative_operator`](@ref).
 
 ### Second-derivative operators
 
-To mimic integration-by-parts of second derivatives, the evaluation of the first
-derivative at the boundaries is necessary. These linear functionals are available
-as [`derivative_left`](@ref) and [`derivative_right`](@ref). For example,
+To mimic integration-by-parts of second derivatives,
+```math
+  \int_{x_\mathrm{min}}^{x_\mathrm{max}} u(x) \bigl( \partial_x^2 v(x) \bigr) \mathrm{d}x
+= - \int_{x_\mathrm{min}}^{x_\mathrm{max}} \bigl( \partial_x u(x) \bigr) \bigl( \partial_x v(x) \bigr) \mathrm{d}x
+  + u(x_\mathrm{max}) \bigl( \partial_x v(x_\mathrm{max}) \bigr)
+  - \bigl( \partial_x u(x_\mathrm{min})) v(x_\mathrm{min}),
+```
+the evaluation of the first derivative at the boundaries is necessary. These
+linear functionals are available as [`derivative_left`](@ref) and
+[`derivative_right`](@ref). In the literature, they are often called `dL` and
+`dR`. Then, a second-derivative SBP operator has to be of the form
+`M * D == -A + tR * dR' - tL * dL'`, where `A` is symmetric and positive
+semidefinite.
+
 ```jldoctest
 julia> using SummationByPartsOperators, LinearAlgebra
 
-julia> D = derivative_operator(MattssonNordström2004(), derivative_order=2, accuracy_order=4,
+julia> D = derivative_operator(MattssonNordström2004(), derivative_order=2, accuracy_order=2,
                                xmin=0//1, xmax=1//1, N=9)
-SBP 2nd derivative operator of order 4 {T=Rational{Int64}, Parallel=Val{:serial}}
+SBP 2nd derivative operator of order 2 {T=Rational{Int64}, Parallel=Val{:serial}}
 on a grid in [0//1, 1//1] using 9 nodes
 and coefficients given in
   Mattsson, Nordström (2004)
@@ -177,24 +195,191 @@ and coefficients given in
   Journal of Computational Physics 199, pp. 503-540.
 
 
-julia> derivative_left(D, grid(D), Val(1))
-1//1
+julia> M = mass_matrix(D)
+9×9 Diagonal{Rational{Int64}, Vector{Rational{Int64}}}:
+ 1//16   ⋅     ⋅     ⋅     ⋅     ⋅     ⋅     ⋅     ⋅
+  ⋅     1//8   ⋅     ⋅     ⋅     ⋅     ⋅     ⋅     ⋅
+  ⋅      ⋅    1//8   ⋅     ⋅     ⋅     ⋅     ⋅     ⋅
+  ⋅      ⋅     ⋅    1//8   ⋅     ⋅     ⋅     ⋅     ⋅
+  ⋅      ⋅     ⋅     ⋅    1//8   ⋅     ⋅     ⋅     ⋅
+  ⋅      ⋅     ⋅     ⋅     ⋅    1//8   ⋅     ⋅     ⋅
+  ⋅      ⋅     ⋅     ⋅     ⋅     ⋅    1//8   ⋅     ⋅
+  ⋅      ⋅     ⋅     ⋅     ⋅     ⋅     ⋅    1//8   ⋅
+  ⋅      ⋅     ⋅     ⋅     ⋅     ⋅     ⋅     ⋅    1//16
+
+julia> tL = derivative_left(D, Val(0)); tL'
+1×9 adjoint(::Vector{Bool}) with eltype Bool:
+ 1  0  0  0  0  0  0  0  0
+
+julia> tR = derivative_right(D, Val(0)); tR'
+1×9 adjoint(::Vector{Bool}) with eltype Bool:
+ 0  0  0  0  0  0  0  0  1
+
+julia> dL = derivative_left(D, Val(1)); dL'
+1×9 adjoint(::Vector{Rational{Int64}}) with eltype Rational{Int64}:
+ -12//1  16//1  -4//1  0//1  0//1  0//1  0//1  0//1  0//1
+
+julia> dR = derivative_right(D, Val(1)); dR'
+1×9 adjoint(::Vector{Rational{Int64}}) with eltype Rational{Int64}:
+ 0//1  0//1  0//1  0//1  0//1  0//1  4//1  -16//1  12//1
+
+julia> A = -M * Matrix(D) + tR * dR' - tL * dL'
+9×9 Matrix{Rational{Int64}}:
+  8//1  -8//1   0//1   0//1   0//1   0//1   0//1   0//1   0//1
+ -8//1  16//1  -8//1   0//1   0//1   0//1   0//1   0//1   0//1
+  0//1  -8//1  16//1  -8//1   0//1   0//1   0//1   0//1   0//1
+  0//1   0//1  -8//1  16//1  -8//1   0//1   0//1   0//1   0//1
+  0//1   0//1   0//1  -8//1  16//1  -8//1   0//1   0//1   0//1
+  0//1   0//1   0//1   0//1  -8//1  16//1  -8//1   0//1   0//1
+  0//1   0//1   0//1   0//1   0//1  -8//1  16//1  -8//1   0//1
+  0//1   0//1   0//1   0//1   0//1   0//1  -8//1  16//1  -8//1
+  0//1   0//1   0//1   0//1   0//1   0//1   0//1  -8//1   8//1
+
+julia> isposdef(A)
+true
 ```
-This is correct since `grid(D)` represents the identity function on the domain,
-whose derivative is unity everywhere. Some procedures imposing boundary conditions
-weakly require adding the transposed boundary derivatives to a grid function,
-which can be achieved by [`add_transpose_derivative_left!`](@ref) and
-[`add_transpose_derivative_right!`](@ref).
+Usually, there is no need to form `dL, dR` explicitly. Instead, you can use the
+matrix-free variants [`derivative_left`](@ref) and [`derivative_right`](@ref).
+Some procedures imposing boundary conditions weakly require adding the transposed
+boundary derivatives to a grid function, which can be achieved by
+[`add_transpose_derivative_left!`](@ref) and [`add_transpose_derivative_right!`](@ref).
 You can find applications of these operators in the source code of
 [`WaveEquationNonperiodicSemidiscretisation`](@ref).
+
+A special case of second-derivative SBP operators are polynomial derivative operators
+on Lobatto-Legendre nodes, implemented in [`legendre_second_derivative_operator`](@ref).
 
 
 ## Upwind operators
 
-TODO
+Upwind SBP operators were introduced by [`Mattsson2017`](@ref). They combine
+two derivative operators `Dp` (`:plus`) and `Dm` (`:minus`) such that
+`M * Dp + Dm' * M == tR * tR' - tL * tL'` and `M * (Dp - Dm)` is negative
+semidefinite.
+
+```jldoctest
+julia> using SummationByPartsOperators, LinearAlgebra
+
+julia> Dp = derivative_operator(Mattsson2017(:plus), derivative_order=1, accuracy_order=2,
+                                xmin=0//1, xmax=1//1, N=9)
+SBP 1st derivative operator of order 2 {T=Rational{Int64}, Parallel=Val{:serial}}
+on a grid in [0//1, 1//1] using 9 nodes
+and coefficients given in
+  Upwind coefficients (plus) of
+  Mattsson (2017)
+  Diagonal-norm upwind SBP operators.
+  Journal of Computational Physics 335, pp. 283-310.
 
 
-## Basic interfaces
+julia> Dm = derivative_operator(Mattsson2017(:minus), derivative_order=1, accuracy_order=2,
+                                xmin=0//1, xmax=1//1, N=9)
+SBP 1st derivative operator of order 2 {T=Rational{Int64}, Parallel=Val{:serial}}
+on a grid in [0//1, 1//1] using 9 nodes
+and coefficients given in
+  Upwind coefficients (minus) of
+  Mattsson (2017)
+  Diagonal-norm upwind SBP operators.
+  Journal of Computational Physics 335, pp. 283-310.
+
+
+julia> M = mass_matrix(Dp)
+9×9 Diagonal{Rational{Int64}, Vector{Rational{Int64}}}:
+ 1//32   ⋅      ⋅     ⋅     ⋅     ⋅     ⋅     ⋅      ⋅
+  ⋅     5//32   ⋅     ⋅     ⋅     ⋅     ⋅     ⋅      ⋅
+  ⋅      ⋅     1//8   ⋅     ⋅     ⋅     ⋅     ⋅      ⋅
+  ⋅      ⋅      ⋅    1//8   ⋅     ⋅     ⋅     ⋅      ⋅
+  ⋅      ⋅      ⋅     ⋅    1//8   ⋅     ⋅     ⋅      ⋅
+  ⋅      ⋅      ⋅     ⋅     ⋅    1//8   ⋅     ⋅      ⋅
+  ⋅      ⋅      ⋅     ⋅     ⋅     ⋅    1//8   ⋅      ⋅
+  ⋅      ⋅      ⋅     ⋅     ⋅     ⋅     ⋅    5//32   ⋅
+  ⋅      ⋅      ⋅     ⋅     ⋅     ⋅     ⋅     ⋅     1//32
+
+julia> M * Matrix(Dp) + Matrix(Dm)' * M
+9×9 Matrix{Rational{Int64}}:
+ -1//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1
+  0//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1
+  0//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1
+  0//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1
+  0//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1
+  0//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1
+  0//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1
+  0//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1
+  0//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1  1//1
+
+julia> isposdef(-M * (Matrix(Dp) - Matrix(Dm)))
+true
+```
+
+
+## Continuous and discontinuous Galerkin methods
+
+SBP operators can be coupled to obtain (nodal) continuous Galerkin (CG) methods.
+If the underlying SBP operators are [`LegendreDerivativeOperator`](@ref)s,
+these are CG spectral element methods (CGSEM). However, a continuous coupling
+of arbitrary SBP operators is supported.
+
+```jldoctest
+julia> using SummationByPartsOperators
+
+julia> D = couple_continuosly(
+               legendre_derivative_operator(xmin=-1.0, xmax=1.0, N=3),
+               UniformMesh1D(xmin=0.0, xmax=1.0, Nx=3))
+First derivative operator {T=Float64}
+on the Lobatto Legendre nodes in [-1.0, 1.0] using 3 nodes
+coupled continuously on the mesh
+UniformMesh1D{Float64} with 3 cells in (0.0, 1.0)
+
+
+julia> Matrix(D)
+7×7 Matrix{Float64}:
+ -9.0  12.0  -3.0   0.0   0.0    0.0   0.0
+ -3.0   0.0   3.0   0.0   0.0    0.0   0.0
+  1.5  -6.0   0.0   6.0  -1.5    0.0   0.0
+  0.0   0.0  -3.0   0.0   3.0    0.0   0.0
+  0.0   0.0   1.5  -6.0   0.0    6.0  -1.5
+  0.0   0.0   0.0   0.0  -3.0    0.0   3.0
+  0.0   0.0   0.0   0.0   3.0  -12.0   9.0
+
+julia> mass_matrix(D)
+7×7 Diagonal{Float64, Vector{Float64}}:
+ 0.0555556   ⋅         ⋅         ⋅         ⋅         ⋅         ⋅
+  ⋅         0.222222   ⋅         ⋅         ⋅         ⋅         ⋅
+  ⋅          ⋅        0.111111   ⋅         ⋅         ⋅         ⋅
+  ⋅          ⋅         ⋅        0.222222   ⋅         ⋅         ⋅
+  ⋅          ⋅         ⋅         ⋅        0.111111   ⋅         ⋅
+  ⋅          ⋅         ⋅         ⋅         ⋅        0.222222   ⋅
+  ⋅          ⋅         ⋅         ⋅         ⋅         ⋅        0.0555556
+```
+
+SBP operators can also be coupled as in discontinuous Galerkin (DG) methods.
+Using a central numerical flux results in central SBP operators; upwind fluxes
+yield upwind SBP operators. If [`LegendreDerivativeOperator`](@ref)s are used,
+the discontinuous coupling yields DG spectral element methods (DGSEM).
+
+```jldoctest
+julia> using SummationByPartsOperators, LinearAlgebra
+
+julia> D = couple_discontinuously(
+               legendre_derivative_operator(xmin=-1.0, xmax=1.0, N=3),
+               UniformPeriodicMesh1D(xmin=0.0, xmax=1.0, Nx=3),
+               Val(:central))
+First derivative operator {T=Float64}
+on the Lobatto Legendre nodes in [-1.0, 1.0] using 3 nodes
+coupled discontinuously (upwind: Val{:central}()) on the mesh
+UniformPeriodicMesh1D{Float64} with 3 cells in (0.0, 1.0)
+
+
+julia> M = mass_matrix(D);
+
+julia> M * Matrix(D) + Matrix(D)' * M |> iszero
+true
+```
+
+Right now, only uniform meshes [`UniformMesh1D`](@ref) and [`UniformPeriodicMesh1D`](@ref)
+are implemented.
+
+
+## Basic interfaces and additional features
 
 To actually compute and plot the discrete grid functions, a few additional ingredients
 are necessary.
@@ -206,9 +391,15 @@ are necessary.
 - To get a grid and discrete values suitable for plotting, you can use
   [`evaluate_coefficients`](@ref) (or the in-place version
   [`evaluate_coefficients!`](@ref)).
-
-The plot nodes returned from [`evaluate_coefficients`](@ref) can be different
-from the nodes of the [`grid`](@ref) associated to an SBP operator.
+  The plot nodes returned from [`evaluate_coefficients`](@ref) can be different
+  from the nodes of the [`grid`](@ref) associated to an SBP operator.
+- To implement boundary procedures, the weights of the mass matrix at the boundary
+  are often needed. These can be obtained without forming `M = mass_matrix(D)`
+  explicitly via [`left_boundary_weight`](@ref) and [`right_boundary_weight`](@ref).
+- Instead of forming a mass matrix explicitly, discrete integrals can be evaluated
+  efficiently using [`integrate`](@ref).
+- Dissipation operators based on the same discrete inner product as SBP derivative
+  operators can be obtained via [`dissipation_operator`](@ref).
 
 
 ## References

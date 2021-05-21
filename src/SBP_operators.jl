@@ -403,6 +403,35 @@ end
 end
 
 
+struct OneHot <: AbstractVector{Bool}
+    i::Int
+    length::Int
+end
+
+Base.getindex(v::OneHot, i::Integer) = i == v.i
+Base.size(v::OneHot) = (v.length,)
+
+"""
+    derivative_left(D::AbstractNonperiodicDerivativeOperator, der_order)
+
+Get a representation of the linear functional evaluation the `N`th derivative at
+the left boundary node as (dense) vector.
+"""
+function derivative_left(D::AbstractNonperiodicDerivativeOperator, der_order)
+    [derivative_left(D, OneHot(i, size(D, 2)), der_order) for i in 1:size(D, 2)]
+end
+
+"""
+    derivative_right(D::AbstractNonperiodicDerivativeOperator, der_order)
+
+Get a representation of the linear functional evaluation the `N`th derivative at
+the right boundary node as (dense) vector.
+"""
+function derivative_right(D::AbstractNonperiodicDerivativeOperator, der_order)
+    [derivative_right(D, OneHot(i, size(D, 2)), der_order) for i in 1:size(D, 2)]
+end
+
+
 
 """
     mul!(dest::AbstractVector, D::DerivativeOperator, u::AbstractVector, α, β)
