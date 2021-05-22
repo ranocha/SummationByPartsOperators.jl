@@ -157,7 +157,7 @@ to obtain CG//DG-type methods. You need to create an appropriate `mesh` and
 a basic operator `D` that should be used on each element.
 Then, global CG/DG operators are constructed lazily/matrix-free by calling
 `couple_continuosly(D, mesh)` or
-`couple_discontinuosly(D, mesh, coupling::Union{Val{:plus}, Val{:central}, Val{:minus}}=Val(:central))`.
+`couple_discontinuously(D, mesh, coupling::Union{Val{:plus}, Val{:central}, Val{:minus}}=Val(:central))`.
 Choosing `coupling=Val(:central)` yields a classical SBP operator; the other two
 `coupling` types result in upwind SBP operators. Currently, only uniform meshes
 
