@@ -15,7 +15,7 @@ struct WaveEquationNonperiodicSemidiscretisation{Derivative<:AbstractDerivativeO
     right_bc::RightBC
 end
 
-function semidiscretise(du0func, u0func, semidisc::WaveEquationNonperiodicSemidiscretisation, tspan)
+function semidiscretize(du0func, u0func, semidisc::WaveEquationNonperiodicSemidiscretisation, tspan)
   du0 = compute_coefficients(du0func, semidisc.derivative)
   u0 = compute_coefficients(u0func, semidisc.derivative)
   ode = SecondOrderODEProblem(semidisc, du0, u0, tspan)

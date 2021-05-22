@@ -24,7 +24,7 @@ demonstrating how to use this semidiscretization.
 
 ```@example variable_linear_advection
 using SummationByPartsOperators, OrdinaryDiffEq
-using Plots, LaTeXStrings, Printf
+using LaTeXStrings; using Plots: Plots, plot, plot!, savefig
 
 # general parameters
 xmin = -1.
@@ -47,9 +47,9 @@ D = derivative_operator(MattssonSvärdShoeybi2008(), 1, interior_order, xmin, xm
 # whether or not artificial dissipation should be applied: nothing, dissipation_operator(D)
 Di = nothing
 semidisc = VariableLinearAdvectionNonperiodicSemidiscretisation(D, Di, afunc, split_form, left_bc, right_bc)
-ode = semidiscretise(u0func, semidisc, tspan)
+ode = semidiscretize(u0func, semidisc, tspan)
 
-# solve ode
+# solve ODE
 sol = solve(ode, SSPRK104(), dt=D.Δx, adaptive=false,
             save_everystep=false)
 
