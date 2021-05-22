@@ -13,7 +13,7 @@ for T in (Float32, Float64), split_form in (Val{true}(), Val{false}())
         Di = nothing
         semidisc = VariableLinearAdvectionNonperiodicSemidiscretisation(D, Di, afunc, split_form, zero, zero)
         println(devnull, semidisc)
-        ode = semidiscretise(u0func, semidisc, tspan)
+        ode = semidiscretize(u0func, semidisc, tspan)
         du = similar(ode.u0)
         semidisc(du, ode.u0, nothing, first(tspan))
     end
@@ -24,7 +24,7 @@ for T in (Float32, Float64), split_form in (Val{true}(), Val{false}())
         Di = dissipation_operator(D)
         semidisc = VariableLinearAdvectionNonperiodicSemidiscretisation(D, Di, afunc, split_form, zero, zero)
         println(devnull, semidisc)
-        ode = semidiscretise(u0func, semidisc, tspan)
+        ode = semidiscretize(u0func, semidisc, tspan)
         du = similar(ode.u0)
         semidisc(du, ode.u0, nothing, first(tspan))
     end

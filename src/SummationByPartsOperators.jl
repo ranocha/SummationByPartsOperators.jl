@@ -61,7 +61,7 @@ abstract type AbstractNonperiodicDerivativeOperator{T} <: AbstractDerivativeOper
 abstract type AbstractPeriodicDerivativeOperator{T} <: AbstractDerivativeOperator{T} end
 abstract type AbstractDerivativeCoefficients{T} end
 abstract type AbstractMassMatrix{T} end
-abstract type AbstractSemidiscretisation end #TODO: HyperbolicDiffEq.jl; also semidiscretise
+abstract type AbstractSemidiscretisation end
 abstract type AbstractFilter{T<:Real} end
 abstract type AbstractFilterFunction end
 """
@@ -106,6 +106,8 @@ include("conservation_laws/variable_linear_advection.jl")
 include("conservation_laws/quartic_nonconvex.jl")
 include("second_order_eqs/wave_eq.jl")
 
+# TODO: BE vs. AE
+const semidiscretise = semidiscretize
 
 # exports
 export PeriodicDerivativeOperator, PeriodicDissipationOperator,
@@ -117,7 +119,8 @@ export PeriodicDerivativeOperator, PeriodicDissipationOperator,
        FourierDerivativeOperator2D,
        LegendreDerivativeOperator, LegendreSecondDerivativeOperator
 export FilterCallback, ConstantFilter, ExponentialFilter
-export derivative_order, accuracy_order, source_of_coefficients, grid, semidiscretise
+export derivative_order, accuracy_order, source_of_coefficients, grid,
+       semidiscretize, semidiscretise # TODO: BE vs. AE
 export mass_matrix
 export integrate, left_boundary_weight, right_boundary_weight,
        derivative_left, derivative_right,

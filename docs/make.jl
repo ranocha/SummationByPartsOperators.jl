@@ -40,7 +40,7 @@ makedocs(
       "tutorials/constant_linear_advection.md",
       "tutorials/advection_diffusion.md",
       "tutorials/variable_linear_advection.md",
-      # "tutorials/wave_equation.md", TODO
+      "tutorials/wave_equation.md",
     ],
     "Applications" => "applications.md",
     "Benchmarks" => "benchmarks.md",
