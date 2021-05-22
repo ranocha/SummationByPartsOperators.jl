@@ -14,6 +14,8 @@ Note that the advection velocity is positive (unity). Thus, a boundary condition
 needs to be specified exactly at the left boundary. Otherwise, the problem will
 not be well-posed (under-specified or over-specified).
 
+## Basic example using finite difference SBP operators
+
 Let's create an appropriate discretization of this equation step by step. At first,
 we load all packages that we will use for this example.
 
@@ -87,6 +89,8 @@ savefig("example_linear_advection.png")
 
 ![](example_linear_advection.png)
 
+## Advanced visualization
+
 Let's create an animation of the numerical solution.
 
 ```@example linear_advection
@@ -107,3 +111,35 @@ end
 ```
 
 ![](example_linear_advection.gif)
+
+## Continuous and discontinuous Galerkin methods
+
+You can use a CG or DG method by swapping out the derivative operator `D`.
+
+```@example linear_advection
+plot(xguide=L"x", yguide=L"u")
+plot!(evaluate_coefficients(sol[1], D), label=L"u_0")
+plot!(evaluate_coefficients(sol[end], D), label=L"u_\mathrm{FD}")
+
+# CGSEM using polynomials of degree 3, i.e. 4 nodes per element, and 30 elements
+D_CGSEM = couple_continuously(
+            legendre_derivative_operator(xmin=-1.0, xmax=1.0, N=4),
+            UniformMesh1D(xmin=xmin, xmax=xmax, Nx=30))
+ode_CGSEM = ODEProblem(rhs!, compute_coefficients(u0_func, D_CGSEM), tspan, D_CGSEM)
+sol_CGSEM = solve(ode_CGSEM, Tsit5(), save_everystep=false)
+plot!(evaluate_coefficients(sol_CGSEM[end], D_CGSEM), label=L"u_\mathrm{CG}")
+
+# DGSEM using polynomials of degree 3, i.e. 4 nodes per element, and 30 elements
+# which are coupled using upwind fluxes
+D_DGSEM = couple_discontinuously(
+            legendre_derivative_operator(xmin=-1.0, xmax=1.0, N=4),
+            UniformMesh1D(xmin=xmin, xmax=xmax, Nx=30),
+            Val(:minus))
+ode_DGSEM = ODEProblem(rhs!, compute_coefficients(u0_func, D_DGSEM), tspan, D_DGSEM)
+sol_DGSEM = solve(ode_DGSEM, Tsit5(), save_everystep=false)
+plot!(evaluate_coefficients(sol_DGSEM[end], D_DGSEM), label=L"u_\mathrm{DG}")
+
+savefig("example_linear_advection_Galerkin.png")
+```
+
+![](example_linear_advection_Galerkin.png)
