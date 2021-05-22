@@ -92,16 +92,16 @@ end
 create_gif(Val(:HomogeneousNeumann), Val(:HomogeneousNeumann))
 ```
 
-![wave_equation_HomogeneousNeumann_HomogeneousNeumann]()
+![wave_equation_HomogeneousNeumann_HomogeneousNeumann](https://user-images.githubusercontent.com/12693098/119228021-3603f800-bb11-11eb-9703-157503308ec3.gif)
 
 ```julia
 create_gif(Val(:HomogeneousNeumann), Val(:HomogeneousDirichlet))
 ```
 
-![wave_equation_HomogeneousNeumann_HomogeneousDirichlet]()
+![wave_equation_HomogeneousNeumann_HomogeneousDirichlet](https://user-images.githubusercontent.com/12693098/119228026-3a301580-bb11-11eb-8354-de23104fe285.gif)
 
 ```julia
 create_gif(Val(:HomogeneousNeumann), Val(:NonReflecting))
 ```
 
-![wave_equation_HomogeneousNeumann_NonReflecting]()
+![wave_equation_HomogeneousNeumann_NonReflecting](https://user-images.githubusercontent.com/12693098/119228041-5633b700-bb11-11eb-9c17-bc56c906dae3.gif)
