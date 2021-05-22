@@ -363,10 +363,10 @@ end
 
 
 """
-    add_transpose_derivative_left!(u, D::DerivativeOperator, der_order::Val{N})
+    add_transpose_derivative_left!(u, D::DerivativeOperator, der_order::Val{N}, α)
 
-Compute the transposed `N`-th derivative to the function given by the coefficients `u` at
-the left boundary of the grid.
+Add `α` times the transposed `N`-th derivative functional to the grid function `u`
+at the left boundary of the grid.
 """
 @inline function add_transpose_derivative_left!(u::AbstractVector, D::DerivativeOperator, der_order::Val{N}, α) where {N}
     factor = α / D.Δx^N
@@ -383,10 +383,10 @@ end
 end
 
 """
-    add_transpose_derivative_right!(u, D::DerivativeOperator, der_order::Val{N})
+    add_transpose_derivative_right!(u, D::DerivativeOperator, der_order::Val{N}, α)
 
-Compute the transposed `N`-th derivative to the function given by the coefficients `u` at
-the right boundary of the grid.
+Add `α` times the transposed `N`-th derivative functional to the grid function `u`
+at the right boundary of the grid.
 """
 @inline function add_transpose_derivative_right!(u::AbstractVector, D::DerivativeOperator, der_order::Val{N}, α) where {N}
     factor = α / D.Δx^N
