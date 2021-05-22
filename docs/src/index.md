@@ -48,9 +48,7 @@ julia> plot!(x, π .* cospi.(x), label="analytical")
 ```
 You should see a plot like the following.
 
-<p align="center">
-  <img width="300px" src="https://user-images.githubusercontent.com/12693098/118977199-2ef4b280-b976-11eb-8e02-aec722d75bfa.png">
-</p>
+![](https://user-images.githubusercontent.com/12693098/118977199-2ef4b280-b976-11eb-8e02-aec722d75bfa.png)
 
 
 Compute the derivative on a bounded domain using an SBP finite difference operator.
@@ -78,9 +76,7 @@ julia> plot!(x, exp.(x), label="analytical")
 ```
 You should see a plot like the following.
 
-<p align="center">
-  <img width="300px" src="https://user-images.githubusercontent.com/12693098/118978404-93fcd800-b977-11eb-80b3-3dbfce5ecfd6.png">
-</p>
+![](https://user-images.githubusercontent.com/12693098/118978404-93fcd800-b977-11eb-80b3-3dbfce5ecfd6.png)
 
 
 ## Referencing

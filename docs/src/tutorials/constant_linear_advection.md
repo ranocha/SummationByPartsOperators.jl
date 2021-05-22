@@ -84,7 +84,7 @@ sol = solve(ode, Tsit5(), saveat=range(first(tspan), stop=last(tspan), length=20
 plot(xguide=L"x", yguide=L"u")
 plot!(evaluate_coefficients(sol[1], D), label=L"u_0")
 plot!(evaluate_coefficients(sol[end], D), label=L"u_\mathrm{numerical}")
-savefig("example_linear_advection.png")
+savefig("example_linear_advection.png");
 ```
 
 ![](example_linear_advection.png)
@@ -93,7 +93,7 @@ savefig("example_linear_advection.png")
 
 Let's create an animation of the numerical solution.
 
-```@example linear_advection
+```julia
 using Printf; using Plots: Animation, frame, gif
 
 let anim = Animation()
@@ -110,7 +110,7 @@ let anim = Animation()
 end
 ```
 
-![](example_linear_advection.gif)
+![example_linear_advection_animation](https://user-images.githubusercontent.com/12693098/119224994-7bb8c480-bb01-11eb-9c3e-c4fea709da71.gif)
 
 ## Continuous and discontinuous Galerkin methods
 
@@ -139,7 +139,7 @@ ode_DGSEM = ODEProblem(rhs!, compute_coefficients(u0_func, D_DGSEM), tspan, D_DG
 sol_DGSEM = solve(ode_DGSEM, Tsit5(), save_everystep=false)
 plot!(evaluate_coefficients(sol_DGSEM[end], D_DGSEM), label=L"u_\mathrm{DG}")
 
-savefig("example_linear_advection_Galerkin.png")
+savefig("example_linear_advection_Galerkin.png");
 ```
 
 ![](example_linear_advection_Galerkin.png)
