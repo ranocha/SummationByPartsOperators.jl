@@ -321,7 +321,7 @@ of arbitrary SBP operators is supported.
 ```jldoctest
 julia> using SummationByPartsOperators, LinearAlgebra
 
-julia> D = couple_continuosly(
+julia> D = couple_continuously(
                legendre_derivative_operator(xmin=-1.0, xmax=1.0, N=3),
                UniformMesh1D(xmin=0.0, xmax=1.0, Nx=3))
 First derivative operator {T=Float64}

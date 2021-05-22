@@ -248,14 +248,15 @@ function right_boundary_weight(cD::UniformCoupledOperator)
   factor * right_boundary_weight(D)
 end
 
-function couple_continuosly(D::AbstractNonperiodicDerivativeOperator, mesh::UniformMesh1D)
+function couple_continuously(D::AbstractNonperiodicDerivativeOperator, mesh::UniformMesh1D)
   UniformNonperiodicCoupledOperator(D, mesh, Val(:continuous))
 end
 
-function couple_continuosly(D::AbstractNonperiodicDerivativeOperator, mesh::UniformPeriodicMesh1D)
+function couple_continuously(D::AbstractNonperiodicDerivativeOperator, mesh::UniformPeriodicMesh1D)
   UniformPeriodicCoupledOperator(D, mesh, Val(:continuous))
 end
 
+@deprecate couple_continuosly couple_continuously
 @deprecate couple_discontinuosly couple_discontinuously
 
 function couple_discontinuously(D::AbstractNonperiodicDerivativeOperator, mesh::UniformMesh1D, coupling::Union{Val{:plus}, Val{:central}, Val{:minus}}=Val(:central))

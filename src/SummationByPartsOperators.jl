@@ -129,7 +129,7 @@ export periodic_central_derivative_operator, periodic_derivative_operator, deriv
        fourier_derivative_operator, spectral_viscosity_operator, super_spectral_viscosity_operator,
        legendre_derivative_operator, legendre_second_derivative_operator
 export UniformMesh1D, UniformPeriodicMesh1D
-export couple_continuosly, couple_discontinuosly, couple_discontinuously # TODO: deprecated typo
+export couple_continuously, couple_continuosly, couple_discontinuosly, couple_discontinuously # TODO: deprecated typo
 export mul!
 
 export Fornberg1998, Holoborodko2008, BeljaddLeFlochMishraParés2017
