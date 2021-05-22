@@ -1,6 +1,6 @@
 
 """
-    MattssonAlmquistVanDerWeide2018Accurate
+    MattssonAlmquistVanDerWeide2018Accurate()
 
 Coefficients of the optimized SBP operators with nonuniform grid given in
   Mattsson, Almquist, van der Weide (2018)

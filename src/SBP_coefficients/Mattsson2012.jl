@@ -1,6 +1,6 @@
 
 """
-    Mattsson2012
+    Mattsson2012()
 
 Coefficients of the SBP operators given in
   Mattsson (2012)

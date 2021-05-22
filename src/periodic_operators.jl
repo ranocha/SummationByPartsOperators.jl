@@ -236,7 +236,7 @@ end
 
 
 """
-    BeljaddLeFlochMishraParés2017
+    BeljaddLeFlochMishraParés2017()
 
 Coefficients of the periodic operators given in
   Beljadid, LeFloch, Mishra, Parés (2017)
@@ -347,7 +347,7 @@ function periodic_central_derivative_coefficients(derivative_order, accuracy_ord
 end
 
 """
-    Fornberg1998
+    Fornberg1998()
 
 Coefficients of the periodic operators given in
   Fornberg (1998)
@@ -446,7 +446,7 @@ end
 
 
 """
-    Holoborodko2008
+    Holoborodko2008()
 
 Coefficients of the periodic operators given in
   Holoborodko (2008)

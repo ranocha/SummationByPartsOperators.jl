@@ -23,6 +23,31 @@ For example, it will return `1` for a first-derivative SBP operator.
 """
 function derivative_order end
 
+"""
+    source_of_coefficients(D)
+
+Return the source of coefficients of the derivative operator `D`. If you use the
+operator `D` for your research, please cite this source in addition to
+[`SummationByPartsOperators`](@ref).
+"""
+source_of_coefficients(D) = SummationByPartsOperators
+
+"""
+    left_boundary_weight(D)
+
+Return the left-boundary weight of the (diagonal) mass matrix `M` associated to
+the derivative operator `D`.
+"""
+function left_boundary_weight end
+
+"""
+    right_boundary_weight(D)
+
+Return the left-boundary weight of the (diagonal) mass matrix `M` associated to
+the derivative operator `D`.
+"""
+function right_boundary_weight end
+
 
 derivative_order(coefficients::AbstractDerivativeCoefficients) = coefficients.derivative_order
 accuracy_order(coefficients::AbstractDerivativeCoefficients) = coefficients.accuracy_order

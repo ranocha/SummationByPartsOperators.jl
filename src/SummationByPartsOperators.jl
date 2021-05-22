@@ -20,6 +20,18 @@ for further information. Some noticable functions to start with are
 [`fourier_derivative_operator`](@ref),
 [`dissipation_operator`](@ref),
 and [`grid`](@ref).
+
+If you use this package for your research, please cite it using
+```bibtex
+@misc{ranocha2021sbp,
+  title={{SummationByPartsOperators.jl}: {A} {J}ulia library of provably stable
+         semidiscretization techniques with mimetic properties},
+  author={Ranocha, Hendrik},
+  year={2021},
+  howpublished={\\url{https://github.com/ranocha/SummationByPartsOperators.jl},
+  doi={10.5281/zenodo.4773575}
+}
+```
 """
 module SummationByPartsOperators
 
@@ -107,7 +119,9 @@ export PeriodicDerivativeOperator, PeriodicDissipationOperator,
 export FilterCallback, ConstantFilter, ExponentialFilter
 export derivative_order, accuracy_order, source_of_coefficients, grid, semidiscretise
 export mass_matrix
-export integrate, derivative_left, derivative_right,
+export integrate, left_boundary_weight, right_boundary_weight,
+       derivative_left, derivative_right,
+       add_transpose_derivative_left!, add_transpose_derivative_right!,
        evaluate_coefficients, evaluate_coefficients!,
        compute_coefficients, compute_coefficients!
 export periodic_central_derivative_operator, periodic_derivative_operator, derivative_operator,
@@ -115,7 +129,7 @@ export periodic_central_derivative_operator, periodic_derivative_operator, deriv
        fourier_derivative_operator, spectral_viscosity_operator, super_spectral_viscosity_operator,
        legendre_derivative_operator, legendre_second_derivative_operator
 export UniformMesh1D, UniformPeriodicMesh1D
-export couple_continuosly, couple_discontinuosly
+export couple_continuosly, couple_discontinuosly, couple_discontinuously # TODO: deprecated typo
 export mul!
 
 export Fornberg1998, Holoborodko2008, BeljaddLeFlochMishraParés2017

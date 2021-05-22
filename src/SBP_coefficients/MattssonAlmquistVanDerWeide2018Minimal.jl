@@ -1,6 +1,6 @@
 
 """
-    MattssonAlmquistVanDerWeide2018Minimal
+    MattssonAlmquistVanDerWeide2018Minimal()
 
 Coefficients of the optimized SBP operators with nonuniform grid given in
   Mattsson, Almquist, van der Weide (2018)
