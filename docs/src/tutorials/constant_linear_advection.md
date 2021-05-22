@@ -17,7 +17,7 @@ not be well-posed (under-specified or over-specified).
 ## Basic example using finite difference SBP operators
 
 Let's create an appropriate discretization of this equation step by step. At first,
-we load all packages that we will use for this example.
+we load packages that we will use in this example.
 
 ```@example linear_advection
 using SummationByPartsOperators, OrdinaryDiffEq
