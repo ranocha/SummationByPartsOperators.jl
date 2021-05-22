@@ -38,7 +38,7 @@ makedocs(
     "Introduction" => "introduction.md",
     "Tutorials" => [
       "tutorials/constant_linear_advection.md",
-      # "tutorials/advection_diffusion.md", TODO
+      "tutorials/advection_diffusion.md",
       "tutorials/variable_linear_advection.md",
       "tutorials/wave_equation.md",
     ],
