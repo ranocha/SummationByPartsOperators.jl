@@ -216,18 +216,17 @@ julia> BandedMatrix(D)
 
 ## Documentation
 
-Examples can be found in the directory
-[`notebooks`](https://github.com/ranocha/SummationByPartsOperators.jl/tree/main/notebooks).
-In particular, examples of complete discretisations of
-[the linear advection equation](https://github.com/ranocha/SummationByPartsOperators.jl/blob/main/notebooks/Advection_equation.ipynb),
-[the heat equation](https://github.com/ranocha/SummationByPartsOperators.jl/blob/main/notebooks/Heat_equation.ipynb),
-and the [wave equation](https://github.com/ranocha/SummationByPartsOperators.jl/blob/main/notebooks/Wave_equation.ipynb) are supplied.
-Further examples are supplied as
-[tests](https://github.com/ranocha/SummationByPartsOperators.jl/tree/main/test).
-
 The latest documentation is available
 [online](https://ranocha.github.io/SummationByPartsOperators.jl/stable)
 and under [`docs/src`](docs/src).
+Some additional examples can be found in the directory
+[`notebooks`](https://github.com/ranocha/SummationByPartsOperators.jl/tree/main/notebooks).
+In particular, examples of complete discretizations of
+[the linear advection equation](https://github.com/ranocha/SummationByPartsOperators.jl/blob/main/notebooks/Advection_equation.ipynb),
+[the heat equation](https://github.com/ranocha/SummationByPartsOperators.jl/blob/main/notebooks/Heat_equation.ipynb),
+and the [wave equation](https://github.com/ranocha/SummationByPartsOperators.jl/blob/main/notebooks/Wave_equation.ipynb) are available.
+Further examples are supplied as
+[tests](https://github.com/ranocha/SummationByPartsOperators.jl/tree/main/test).
 
 
 ## Referencing
