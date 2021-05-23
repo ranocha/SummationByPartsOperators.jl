@@ -42,7 +42,7 @@ makedocs(
       "tutorials/variable_linear_advection.md",
       "tutorials/wave_equation.md",
     ],
-    "Applications" => "applications.md",
+    "Applications & references" => "applications.md",
     "Benchmarks" => "benchmarks.md",
     "API reference" => "api_reference.md",
     "Contributing" => "contributing.md",
