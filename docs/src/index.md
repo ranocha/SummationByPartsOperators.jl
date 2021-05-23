@@ -94,6 +94,8 @@ for your research, please cite it using the bibtex entry
   doi={10.5281/zenodo.4773575}
 }
 ```
+Please also cite the appropriate references for specific SBP operators
+you use, which can be obtained via [`source_of_coefficients`](@ref).
 
 
 ## License and contributing

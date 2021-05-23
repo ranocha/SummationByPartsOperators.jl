@@ -94,5 +94,5 @@ let anim = Animation()
 end
 ```
 
-![example_advection_diffusion_animation](https://user-images.githubusercontent.com/12693098/119224994-7bb8c480-bb01-11eb-9c3e-c4fea709da71.gif)
+![example_advection_diffusion_animation](https://user-images.githubusercontent.com/12693098/119226459-7b242c00-bb09-11eb-848b-d09590aa1c31.gif)
 
