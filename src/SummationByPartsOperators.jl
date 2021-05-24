@@ -61,7 +61,7 @@ abstract type AbstractNonperiodicDerivativeOperator{T} <: AbstractDerivativeOper
 abstract type AbstractPeriodicDerivativeOperator{T} <: AbstractDerivativeOperator{T} end
 abstract type AbstractDerivativeCoefficients{T} end
 abstract type AbstractMassMatrix{T} end
-abstract type AbstractSemidiscretisation end
+abstract type AbstractSemidiscretization end
 abstract type AbstractFilter{T<:Real} end
 abstract type AbstractFilterFunction end
 """
@@ -106,9 +106,6 @@ include("conservation_laws/variable_linear_advection.jl")
 include("conservation_laws/quartic_nonconvex.jl")
 include("second_order_eqs/wave_eq.jl")
 
-# TODO: BE vs. AE
-const semidiscretise = semidiscretize
-
 # exports
 export PeriodicDerivativeOperator, PeriodicDissipationOperator,
        PeriodicRationalDerivativeOperator, PeriodicDerivativeOperatorQuotient,
@@ -119,12 +116,11 @@ export PeriodicDerivativeOperator, PeriodicDissipationOperator,
        FourierDerivativeOperator2D,
        LegendreDerivativeOperator, LegendreSecondDerivativeOperator
 export FilterCallback, ConstantFilter, ExponentialFilter
-export derivative_order, accuracy_order, source_of_coefficients, grid,
-       semidiscretize, semidiscretise # TODO: BE vs. AE
+export derivative_order, accuracy_order, source_of_coefficients, grid, semidiscretize
 export mass_matrix
 export integrate, left_boundary_weight, right_boundary_weight,
        derivative_left, derivative_right,
-       add_transpose_derivative_left!, add_transpose_derivative_right!,
+       mul_transpose_derivative_left!, mul_transpose_derivative_right!,
        evaluate_coefficients, evaluate_coefficients!,
        compute_coefficients, compute_coefficients!
 export periodic_central_derivative_operator, periodic_derivative_operator, derivative_operator,
@@ -144,10 +140,10 @@ export MattssonNordström2004, MattssonSvärdNordström2004, MattssonSvärdShoey
 export Tadmor1989, MadayTadmor1989, Tadmor1993,
        TadmorWaagan2012Standard, TadmorWaagan2012Convergent
 
-export BurgersPeriodicSemidiscretisation, BurgersNonperiodicSemidiscretisation,
-       CubicPeriodicSemidiscretisation, CubicNonperiodicSemidiscretisation,
-       VariableLinearAdvectionNonperiodicSemidiscretisation,
-       WaveEquationNonperiodicSemidiscretisation,
-       QuarticNonconvexPeriodicSemidiscretisation
+export BurgersPeriodicSemidiscretization, BurgersNonperiodicSemidiscretization,
+       CubicPeriodicSemidiscretization, CubicNonperiodicSemidiscretization,
+       VariableLinearAdvectionNonperiodicSemidiscretization,
+       WaveEquationNonperiodicSemidiscretization,
+       QuarticNonconvexPeriodicSemidiscretization
 
 end # module

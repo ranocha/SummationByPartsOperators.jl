@@ -18,8 +18,8 @@ using SummationByPartsOperators
     M = mass_matrix(Dp_bounded)
     @test M == mass_matrix(Dm_bounded)
     @test M == mass_matrix(Dc_bounded)
-    Dp_periodic = periodic_derivative_operator(1, acc_order, xmin, xmax, N, -(acc_order - 1) ÷ 2)
-    Dm_periodic = periodic_derivative_operator(1, acc_order, xmin, xmax, N, -acc_order + (acc_order - 1) ÷ 2)
+    Dp_periodic = periodic_derivative_operator(1, acc_order, xmin, xmax, N-1, -(acc_order - 1) ÷ 2)
+    Dm_periodic = periodic_derivative_operator(1, acc_order, xmin, xmax, N-1, -acc_order + (acc_order - 1) ÷ 2)
     Dp = Matrix(Dp_bounded)
     Dm = Matrix(Dm_bounded)
     @test Dp[interior,interior] ≈ Matrix(Dp_periodic)[interior,interior]

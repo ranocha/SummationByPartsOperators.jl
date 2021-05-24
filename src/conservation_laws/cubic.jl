@@ -1,8 +1,8 @@
 
 """
-    CubicPeriodicSemidiscretisation(D, Di, split_form)
+    CubicPeriodicSemidiscretization(D, Di, split_form)
 
-A semidiscretisation of the cubic conservation law
+A semidiscretization of the cubic conservation law
     \$\\partial_t u(t,x) + \\partial_x u(t,x)^3 = 0\$
 with periodic boundary conditions.
 
@@ -10,16 +10,16 @@ with periodic boundary conditions.
 or `nothing`, and `split_form::Union{Val(true), Val(false)}` determines whether
 the canonical split form or the conservative form is used.
 """
-struct CubicPeriodicSemidiscretisation{T,Derivative<:AbstractDerivativeOperator{T},
+struct CubicPeriodicSemidiscretization{T,Derivative<:AbstractDerivativeOperator{T},
                                         Dissipation,
-                                        SplitForm<:Union{Val{false}, Val{true}}} <: AbstractSemidiscretisation
+                                        SplitForm<:Union{Val{false}, Val{true}}} <: AbstractSemidiscretization
     derivative::Derivative
     dissipation::Dissipation
     tmp1::Vector{T}
     tmp2::Vector{T}
     split_form::SplitForm
 
-    function CubicPeriodicSemidiscretisation(derivative::Derivative, dissipation::Dissipation, split_form::SplitForm=Val{false}()) where {T, Derivative<:AbstractDerivativeOperator{T}, Dissipation, SplitForm<:Union{Val{false}, Val{true}}}
+    function CubicPeriodicSemidiscretization(derivative::Derivative, dissipation::Dissipation, split_form::SplitForm=Val{false}()) where {T, Derivative<:AbstractDerivativeOperator{T}, Dissipation, SplitForm<:Union{Val{false}, Val{true}}}
         if dissipation != nothing
             @argcheck size(derivative) == size(dissipation) DimensionMismatch
             @argcheck grid(derivative) == grid(dissipation) ArgumentError
@@ -32,21 +32,21 @@ struct CubicPeriodicSemidiscretisation{T,Derivative<:AbstractDerivativeOperator{
 end
 
 
-function Base.show(io::IO, semidisc::CubicPeriodicSemidiscretisation)
-    print(io, "Semidiscretisation of the cubic conservation law\n")
+function Base.show(io::IO, semi::CubicPeriodicSemidiscretization)
+    print(io, "Semidiscretization of the cubic conservation law\n")
     print(io, "  \$ \\partial_t u(t,x) + \\partial_x u(t,x)^3 = 0 \$ \n")
     print(io, "with periodic boundaries using")
-    if semidisc.split_form == Val{true}()
+    if semi.split_form == Val{true}()
         print(io, " a split form and: \n")
     else
         print(io, " no split form and: \n")
     end
-    print(io, semidisc.derivative)
-    print(io, semidisc.dissipation)
+    print(io, semi.derivative)
+    print(io, semi.dissipation)
 end
 
 
-function (disc::CubicPeriodicSemidiscretisation)(du, u, p, t)
+function (disc::CubicPeriodicSemidiscretization)(du, u, p, t)
     @unpack tmp1, tmp2, derivative, dissipation, split_form = disc
     @boundscheck begin
         @argcheck length(u) == length(tmp1)
@@ -86,9 +86,9 @@ end
 
 
 """
-    CubicNonperiodicSemidiscretisation(D, Di, split_form, left_bc, right_bc)
+    CubicNonperiodicSemidiscretization(D, Di, split_form, left_bc, right_bc)
 
-A semidiscretisation of the cubic conservation law
+A semidiscretization of the cubic conservation law
     \$\\partial_t u(t,x) + \\partial_x u(t,x)^3 = 0\$
 with nonperiodic boundary conditions `left_bc(t)`, `right_bc(t)`.
 
@@ -96,10 +96,10 @@ with nonperiodic boundary conditions `left_bc(t)`, `right_bc(t)`.
 or `nothing`, and `split_form::Union{Val(true), Val(false)}` determines whether
 the canonical split form or the conservative form is used.
 """
-struct CubicNonperiodicSemidiscretisation{T,Derivative<:AbstractDerivativeOperator{T},
+struct CubicNonperiodicSemidiscretization{T,Derivative<:AbstractDerivativeOperator{T},
                                             Dissipation,
                                             SplitForm<:Union{Val{false}, Val{true}},
-                                            LeftBC, RightBC} <: AbstractSemidiscretisation
+                                            LeftBC, RightBC} <: AbstractSemidiscretization
     derivative::Derivative
     dissipation::Dissipation
     tmp1::Vector{T}
@@ -108,7 +108,7 @@ struct CubicNonperiodicSemidiscretisation{T,Derivative<:AbstractDerivativeOperat
     left_bc::LeftBC
     right_bc::RightBC
 
-    function CubicNonperiodicSemidiscretisation(derivative::Derivative, dissipation::Dissipation, split_form::SplitForm, left_bc::LeftBC, right_bc::RightBC) where {T, Derivative<:AbstractDerivativeOperator{T}, Dissipation, SplitForm<:Union{Val{false}, Val{true}}, LeftBC, RightBC}
+    function CubicNonperiodicSemidiscretization(derivative::Derivative, dissipation::Dissipation, split_form::SplitForm, left_bc::LeftBC, right_bc::RightBC) where {T, Derivative<:AbstractDerivativeOperator{T}, Dissipation, SplitForm<:Union{Val{false}, Val{true}}, LeftBC, RightBC}
         if dissipation != nothing
             @argcheck size(derivative) == size(dissipation) DimensionMismatch
             @argcheck grid(derivative) == grid(dissipation) ArgumentError
@@ -121,17 +121,17 @@ struct CubicNonperiodicSemidiscretisation{T,Derivative<:AbstractDerivativeOperat
 end
 
 
-function Base.show(io::IO, semidisc::CubicNonperiodicSemidiscretisation)
-    print(io, "Semidiscretisation of the cubic conservation law\n")
+function Base.show(io::IO, semi::CubicNonperiodicSemidiscretization)
+    print(io, "Semidiscretization of the cubic conservation law\n")
     print(io, "  \$ \\partial_t u(t,x) + \\partial_x u(t,x)^3 = 0 \$ \n")
     print(io, "with nonperiodic boundaries using")
-    if semidisc.split_form == Val{true}()
+    if semi.split_form == Val{true}()
         print(io, " a split form and: \n")
     else
         print(io, " no split form and: \n")
     end
-    print(io, semidisc.derivative)
-    print(io, semidisc.dissipation)
+    print(io, semi.derivative)
+    print(io, semi.dissipation)
 end
 
 
@@ -139,7 +139,7 @@ function godunov_flux_cubic(uₗ::T, uᵣ::T) where {T<:Real}
     uₗ^3
 end
 
-function (disc::CubicNonperiodicSemidiscretisation)(du, u, p, t)
+function (disc::CubicNonperiodicSemidiscretization)(du, u, p, t)
     @unpack tmp1, tmp2, derivative, dissipation, split_form, left_bc, right_bc = disc
     @boundscheck begin
         @argcheck length(u) == length(tmp1)

@@ -43,9 +43,9 @@ which can be constructed via [`fourier_derivative_operator`](@ref).
 julia> using SummationByPartsOperators, LinearAlgebra
 
 julia> D = periodic_derivative_operator(derivative_order=1, accuracy_order=2,
-                                        xmin=0.0, xmax=2.0, N=21)
+                                        xmin=0.0, xmax=2.0, N=20)
 Periodic 1st derivative operator of order 2 {T=Float64, Parallel=Val{:serial}}
-on a grid in [0.0, 2.0] using 21 nodes,
+on a grid in [0.0, 2.0] using 20 nodes,
 stencils with 1 nodes to the left, 1 nodes to the right, and coefficients from
   Fornberg (1998)
   Calculation of Weights in Finite Difference Formulas.
@@ -242,9 +242,9 @@ Usually, there is no need to form `dL, dR` explicitly. Instead, you can use the
 matrix-free variants [`derivative_left`](@ref) and [`derivative_right`](@ref).
 Some procedures imposing boundary conditions weakly require adding the transposed
 boundary derivatives to a grid function, which can be achieved by
-[`add_transpose_derivative_left!`](@ref) and [`add_transpose_derivative_right!`](@ref).
+[`mul_transpose_derivative_left!`](@ref) and [`mul_transpose_derivative_right!`](@ref).
 You can find applications of these operators in the source code of
-[`WaveEquationNonperiodicSemidiscretisation`](@ref).
+[`WaveEquationNonperiodicSemidiscretization`](@ref).
 
 A special case of second-derivative SBP operators are polynomial derivative operators
 on Lobatto-Legendre nodes, implemented in [`legendre_second_derivative_operator`](@ref).
@@ -414,15 +414,15 @@ equations (PDEs). These are shipped with this package and you are encouraged to
 look at their source code to learn more about it.
 
 - Linear scalar advection with variable coefficient:
-  [`VariableLinearAdvectionNonperiodicSemidiscretisation`](@ref)
+  [`VariableLinearAdvectionNonperiodicSemidiscretization`](@ref)
 - Burgers' equation (inviscid):
-  [`BurgersPeriodicSemidiscretisation`](@ref), [`BurgersNonperiodicSemidiscretisation`](@ref)
+  [`BurgersPeriodicSemidiscretization`](@ref), [`BurgersNonperiodicSemidiscretization`](@ref)
 - Scalar conservation law with cubic flux:
-  [`CubicPeriodicSemidiscretisation`](@ref), [`CubicNonperiodicSemidiscretisation`](@ref)
+  [`CubicPeriodicSemidiscretization`](@ref), [`CubicNonperiodicSemidiscretization`](@ref)
 - A scalar conservation law with quartic, non-convex flux:
-  [`QuarticNonconvexPeriodicSemidiscretisation`](@ref)
+  [`QuarticNonconvexPeriodicSemidiscretization`](@ref)
 - The second-order wave equation:
-  [`WaveEquationNonperiodicSemidiscretisation`](@ref)
+  [`WaveEquationNonperiodicSemidiscretization`](@ref)
 
 Some additional examples are included as [Jupyter](https://jupyter.org) notebooks
 in the directory [`notebooks`](https://github.com/ranocha/SummationByPartsOperators.jl/tree/main/notebooks).
