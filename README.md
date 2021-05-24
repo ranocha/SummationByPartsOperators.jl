@@ -32,6 +32,12 @@ is a registered Julia package. Thus, you can install it from the Julia REPL via
 julia> using Pkg; Pkg.add("SummationByPartsOperators")
 ```
 
+If you want to update SummationByPartsOperators.jl, you can use
+```julia
+julia> using Pkg; Pkg.update()
+```
+A brief list of notable changes is available in [`NEWS.md`](NEWS.md).
+
 
 ## Basic examples
 
