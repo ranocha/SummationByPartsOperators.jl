@@ -75,11 +75,7 @@ function Base.show(io::IO, coefficients::DerivativeCoefficients)
 end
 
 
-"""
-    mul!(dest::AbstractVector, coefficients::DerivativeCoefficients, u::AbstractVector, α, β)
-
-Compute `α*D*u + β*dest` and store the result in `dest`.
-"""
+# Compute `α*D*u + β*dest` and store the result in `dest`.
 function mul!(dest::AbstractVector, coefficients::DerivativeCoefficients, u::AbstractVector, α, β)
     @unpack left_boundary, right_boundary, lower_coef, central_coef, upper_coef, parallel = coefficients
 
@@ -93,11 +89,7 @@ function mul!(dest::AbstractVector, coefficients::DerivativeCoefficients, u::Abs
     convolve_interior_coefficients!(dest, lower_coef, central_coef, upper_coef, u, α, β, length(left_boundary), length(right_boundary), parallel)
 end
 
-"""
-    mul!(dest::AbstractVector, coefficients::DerivativeCoefficients, u::AbstractVector, α)
-
-Compute `α*D*u` and store the result in `dest`.
-"""
+# Compute `α*D*u` and store the result in `dest`.
 function mul!(dest::AbstractVector, coefficients::DerivativeCoefficients, u::AbstractVector, α)
     @unpack left_boundary, right_boundary, lower_coef, central_coef, upper_coef, parallel = coefficients
 
@@ -433,11 +425,7 @@ end
 
 
 
-"""
-    mul!(dest::AbstractVector, D::DerivativeOperator, u::AbstractVector, α, β)
-
-Compute `α*D*u + β*dest` and store the result in `dest`.
-"""
+# Compute `α*D*u + β*dest` and store the result in `dest`.
 Base.@propagate_inbounds function mul!(dest::AbstractVector, D::DerivativeOperator, u::AbstractVector, α, β)
     @boundscheck begin
         @argcheck size(D, 2) == length(u) DimensionMismatch
@@ -446,11 +434,7 @@ Base.@propagate_inbounds function mul!(dest::AbstractVector, D::DerivativeOperat
     @inbounds mul!(dest, D.coefficients, u, α*D.factor, β)
 end
 
-"""
-    mul!(dest::AbstractVector, D::DerivativeOperator, u::AbstractVector, α)
-
-Compute `α*D*u` and store the result in `dest`.
-"""
+# Compute `α*D*u` and store the result in `dest`.
 Base.@propagate_inbounds function mul!(dest::AbstractVector, D::DerivativeOperator, u::AbstractVector, α)
     @boundscheck begin
         @argcheck size(D, 2) == length(u) DimensionMismatch
