@@ -76,7 +76,7 @@ end
 for acc_order in 2:2:8, T in (Float32,Float64)
     xmin = -one(T)
     xmax = 2*one(T)
-    N = 101
+    N = 100
     der_order = 1
 
     D = periodic_derivative_operator(der_order, acc_order, xmin, xmax, N)
@@ -94,7 +94,7 @@ end
 for T in (Float32, Float64), order in (2,4,6,8)
     xmin = zero(T)
     xmax = 5*one(T)
-    N = 51
+    N = 50
     D = periodic_derivative_operator(1, order, xmin, xmax, N)
     x = grid(D)
     u = x.^5
@@ -122,8 +122,8 @@ end
 for T in (Float32, Float64), order in (2,4,6,8)
     xmin = zero(T)
     xmax = 5*one(T)
-    N = 51
-    D = derivative_operator(MattssonSvärdNordström2004(), 1, order, xmin, xmax, N)
+    N = 50
+    D = derivative_operator(MattssonSvärdNordström2004(), 1, order, xmin, xmax, N+1)
     Dp = periodic_derivative_operator(1, order, xmin, xmax, N)
 
     Di = dissipation_operator(D)
