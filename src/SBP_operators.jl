@@ -212,25 +212,19 @@ end
         ex = :( $ex + upper_coef[$j]*u[i+$j] )
     end
 
-    quote
-        @inbounds for i in (left_boundary_width+1):(length(dest)-right_boundary_width)
-            dest[i] = β*dest[i] + α*$ex
+    if parallel <: Val{:threads}
+        quote
+            @tturbo for i in (left_boundary_width+1):(length(dest)-right_boundary_width)
+                dest[i] = β*dest[i] + α*$ex
+            end
+        end
+    else
+        quote
+            @turbo for i in (left_boundary_width+1):(length(dest)-right_boundary_width)
+                dest[i] = β*dest[i] + α*$ex
+            end
         end
     end
-end
-
-function convolve_interior_coefficients!(dest::AbstractVector{T}, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset}, u::AbstractVector, α, β, left_boundary_width, right_boundary_width, parallel::Val{:threads}) where {T, LowerOffset, UpperOffset}
-    Threads.@threads for i in (left_boundary_width+1):(length(dest)-right_boundary_width) @inbounds begin
-        tmp = zero(T)
-        for j in Base.OneTo(LowerOffset)
-            tmp += lower_coef[j]*u[i-j]
-        end
-        tmp += central_coef*u[i]
-        for j in Base.OneTo(UpperOffset)
-            tmp += upper_coef[j]*u[i+j]
-        end
-        dest[i] = β*dest[i] + α*tmp
-    end end
 end
 
 @generated function convolve_interior_coefficients!(dest::AbstractVector, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset}, u::AbstractVector, α, left_boundary_width, right_boundary_width, parallel) where {LowerOffset, UpperOffset}
@@ -247,25 +241,19 @@ end
         ex = :( $ex + upper_coef[$j]*u[i+$j] )
     end
 
-    quote
-        @inbounds for i in (left_boundary_width+1):(length(dest)-right_boundary_width)
-            dest[i] = α*$ex
+    if parallel <: Val{:threads}
+        quote
+            @tturbo for i in (left_boundary_width+1):(length(dest)-right_boundary_width)
+                dest[i] = α*$ex
+            end
+        end
+    else
+        quote
+            @turbo for i in (left_boundary_width+1):(length(dest)-right_boundary_width)
+                dest[i] = α*$ex
+            end
         end
     end
-end
-
-function convolve_interior_coefficients!(dest::AbstractVector{T}, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset}, u::AbstractVector, α, left_boundary_width, right_boundary_width, parallel::Val{:threads}) where {T, LowerOffset, UpperOffset}
-    Threads.@threads for i in (left_boundary_width+1):(length(dest)-right_boundary_width) @inbounds begin
-        tmp = zero(T)
-        for j in Base.OneTo(LowerOffset)
-            tmp += lower_coef[j]*u[i-j]
-        end
-        tmp += central_coef*u[i]
-        for j in Base.OneTo(UpperOffset)
-            tmp += upper_coef[j]*u[i+j]
-        end
-        dest[i] = α*tmp
-    end end
 end
 
 
@@ -370,7 +358,7 @@ end
 
 @inline function add_transpose_derivative_left!(u::AbstractVector, D::DerivativeOperator, der_order::Val{0}, α)
     factor = α
-    u[begin] += factor * u[begin]
+    @inbounds u[begin] += factor * u[begin]
     return nothing
 end
 
@@ -390,7 +378,7 @@ end
 
 @inline function add_transpose_derivative_right!(u::AbstractVector, D::DerivativeOperator, der_order::Val{0}, α)
     factor = α
-    u[end] += factor * u[end]
+    @inbounds u[end] += factor * u[end]
     return nothing
 end
 
