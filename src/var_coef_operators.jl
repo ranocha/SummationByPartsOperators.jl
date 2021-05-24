@@ -44,11 +44,8 @@ function Base.show(io::IO, D::VarCoefDerivativeOperator{T}) where {T}
 end
 
 
-"""
-    mul!(dest::AbstractVector, D::VarCoefDerivativeOperator, u::AbstractVector, α, β)
 
-Compute `α*D*u + β*dest` and store the result in `dest`.
-"""
+# Compute `α*D*u + β*dest` and store the result in `dest`.
 Base.@propagate_inbounds function mul!(dest::AbstractVector, D::VarCoefDerivativeOperator,
                                         u::AbstractVector, α, β)
     @boundscheck begin
@@ -58,11 +55,7 @@ Base.@propagate_inbounds function mul!(dest::AbstractVector, D::VarCoefDerivativ
     @inbounds mul!(dest, D.coefficients, u, D.b, D.factor*α, β)
 end
 
-"""
-    mul!(dest::AbstractVector, D::VarCoefDerivativeOperator, u::AbstractVector, α)
-
-Compute `α*D*u` and store the result in `dest`.
-"""
+# Compute `α*D*u` and store the result in `dest`.
 Base.@propagate_inbounds function mul!(dest::AbstractVector, D::VarCoefDerivativeOperator,
                                         u::AbstractVector, α)
     @boundscheck begin
