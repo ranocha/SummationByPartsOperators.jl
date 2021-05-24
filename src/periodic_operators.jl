@@ -30,11 +30,7 @@ struct PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,Parallel,SourceO
 end
 
 
-"""
-    mul!(dest::AbstractVector, coefficients::PeriodicDerivativeCoefficients, u::AbstractVector, α, β)
-
-Compute `α*D*u + β*dest` and store the result in `dest`.
-"""
+# Compute `α*D*u + β*dest` and store the result in `dest`.
 function mul!(dest::AbstractVector, coefficients::PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset}, u::AbstractVector, α, β) where {T,LowerOffset,UpperOffset}
     @boundscheck begin
         @argcheck length(dest) == length(u) DimensionMismatch
@@ -46,11 +42,7 @@ function mul!(dest::AbstractVector, coefficients::PeriodicDerivativeCoefficients
     convolve_interior_coefficients!(dest, lower_coef, central_coef, upper_coef, u, α, β, parallel)
 end
 
-"""
-    mul!(dest::AbstractVector, coefficients::PeriodicDerivativeCoefficients, u::AbstractVector, α)
-
-Compute `α*D*u` and store the result in `dest`.
-"""
+# Compute `α*D*u` and store the result in `dest`.
 function mul!(dest::AbstractVector, coefficients::PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset}, u::AbstractVector, α) where {T,LowerOffset,UpperOffset}
     @boundscheck begin
         @argcheck length(dest) == length(u) DimensionMismatch
@@ -628,11 +620,7 @@ function Base.show(io::IO, D::PeriodicDerivativeOperator{T,LowerOffset,UpperOffs
 end
 
 
-"""
-    mul!(dest::AbstractVector, D::PeriodicDerivativeOperator, u::AbstractVector, α, β)
-
-Compute `α*D*u + β*dest` and store the result in `dest`.
-"""
+# Compute `α*D*u + β*dest` and store the result in `dest`.
 Base.@propagate_inbounds function mul!(dest::AbstractVector, D::PeriodicDerivativeOperator, u::AbstractVector, α, β)
     @boundscheck begin
         @argcheck size(D, 2) == length(u) DimensionMismatch
@@ -641,11 +629,7 @@ Base.@propagate_inbounds function mul!(dest::AbstractVector, D::PeriodicDerivati
     @inbounds mul!(dest, D.coefficients, u, α*D.factor, β)
 end
 
-"""
-    mul!(dest::AbstractVector, D::PeriodicDerivativeOperator, u::AbstractVector, α)
-
-Compute `α*D*u` and store the result in `dest`.
-"""
+# Compute `α*D*u` and store the result in `dest`.
 Base.@propagate_inbounds function mul!(dest::AbstractVector, D::PeriodicDerivativeOperator, u::AbstractVector, α)
     @boundscheck begin
         @argcheck size(D, 2) == length(u) DimensionMismatch
@@ -862,21 +846,13 @@ function Base.show(io::IO, Di::PeriodicDissipationOperator{T}) where {T}
 end
 
 
-"""
-    mul!(dest::AbstractVector, D::PeriodicDissipationOperator, u::AbstractVector, α, β)
-
-Compute `α*D*u + β*dest` and store the result in `dest`.
-"""
+# Compute `α*D*u + β*dest` and store the result in `dest`.
 Base.@propagate_inbounds function mul!(dest::AbstractVector, Di::PeriodicDissipationOperator,
                                        u::AbstractVector, α, β)
     mul!(dest, Di.Di, u, Di.factor*α, β)
 end
 
-"""
-    mul!(dest::AbstractVector, D::PeriodicDissipationOperator, u::AbstractVector, α)
-
-Compute `α*D*u` and store the result in `dest`.
-"""
+# Compute `α*D*u` and store the result in `dest`.
 Base.@propagate_inbounds function mul!(dest::AbstractVector, Di::PeriodicDissipationOperator,
                                        u::AbstractVector, α)
     mul!(dest, Di.Di, u, Di.factor*α)

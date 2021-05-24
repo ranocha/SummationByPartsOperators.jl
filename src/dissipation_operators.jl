@@ -52,11 +52,7 @@ function Base.show(io::IO, coefficients::VarCoefDerivativeCoefficients)
 end
 
 
-"""
-    mul!(dest::AbstractVector, coefficients::VarCoefDerivativeCoefficients, u::AbstractVector, b::AbstractVector, α, β)
-
-Compute `α*D*u + β*dest` using the coefficients `b` and store the result in `dest`.
-"""
+# Compute `α*D*u + β*dest` using the coefficients `b` and store the result in `dest`.
 function mul!(dest::AbstractVector, coefficients::VarCoefDerivativeCoefficients,
                 u::AbstractVector, b::AbstractVector, α, β)
     @unpack coefficient_cache, parallel = coefficients
@@ -71,11 +67,7 @@ function mul!(dest::AbstractVector, coefficients::VarCoefDerivativeCoefficients,
     convolve_interior_coefficients!(dest, coefficient_cache, u, b, α, β, parallel)
 end
 
-"""
-    mul!(dest::AbstractVector, coefficients::VarCoefDerivativeCoefficients, u::AbstractVector, b::AbstractVector, α)
-
-Compute `α*D*u` using the coefficients `b` and store the result in `dest`.
-"""
+# Compute `α*D*u` using the coefficients `b` and store the result in `dest`.
 function mul!(dest::AbstractVector, coefficients::VarCoefDerivativeCoefficients,
                 u::AbstractVector, b::AbstractVector, α)
     @unpack coefficient_cache, parallel = coefficients
@@ -155,21 +147,20 @@ end
 
 A dissipation operator on a nonperiodic finite difference grid.
 """
-struct DissipationOperator{T,CoefficientCache,Parallel,SourceOfCoefficients,Grid} <: AbstractVariableCoefficientNonperiodicDerivativeOperator{T}
+struct DissipationOperator{T,Coefficients<:VarCoefDerivativeCoefficients{T},Grid} <: AbstractVariableCoefficientNonperiodicDerivativeOperator{T}
     factor::T
-    coefficients::VarCoefDerivativeCoefficients{T,CoefficientCache,Parallel,SourceOfCoefficients}
+    coefficients::Coefficients
     grid::Grid
     b::Vector{T}
 
     function DissipationOperator(factor::T,
-                                 coefficients::VarCoefDerivativeCoefficients{T,CoefficientCache,Parallel,SourceOfCoefficients},
-                                 grid::Grid, b::Vector{T}) where {T,CoefficientCache,Parallel,SourceOfCoefficients,Grid}
+                                 coefficients::Coefficients,
+                                 grid::Grid, b::Vector{T}) where {T,Coefficients<:VarCoefDerivativeCoefficients{T},Grid}
         @argcheck checkbounds(Bool, grid, coefficients.coefficient_cache) DimensionMismatch
         @argcheck length(grid) == length(b)
         factor < 0 && @warn("Negative dissipation strength shouldn't be used.")
 
-        new{T,CoefficientCache,Parallel,SourceOfCoefficients,Grid}(
-            factor,coefficients, grid, b)
+        new{T,Coefficients,Grid}(factor,coefficients, grid, b)
     end
 end
 
@@ -188,11 +179,8 @@ function Base.show(io::IO, D::DissipationOperator{T}) where {T}
 end
 
 
-"""
-    mul!(dest::AbstractVector, D::DissipationOperator, u::AbstractVector, α, β)
 
-Compute `α*D*u + β*dest` and store the result in `dest`.
-"""
+# Compute `α*D*u + β*dest` and store the result in `dest`.
 Base.@propagate_inbounds function mul!(dest::AbstractVector, D::DissipationOperator,
                                        u::AbstractVector, α, β)
     @boundscheck begin
@@ -202,11 +190,7 @@ Base.@propagate_inbounds function mul!(dest::AbstractVector, D::DissipationOpera
     @inbounds mul!(dest, D.coefficients, u, D.b, D.factor*α, β)
 end
 
-"""
-    mul!(dest::AbstractVector, D::DissipationOperator, u::AbstractVector, α)
-
-Compute `α*D*u` and store the result in `dest`.
-"""
+# Compute `α*D*u` and store the result in `dest`.
 Base.@propagate_inbounds function mul!(dest::AbstractVector, D::DissipationOperator,
                                        u::AbstractVector, α)
     @boundscheck begin

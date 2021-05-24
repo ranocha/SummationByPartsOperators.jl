@@ -6,40 +6,70 @@ on virtual machines in the cloud to generate the documentation automatically.
 
 ## First-derivative operators
 
+Periodic domains:
 ```@example
 using BenchmarkTools
-using SummationByPartsOperators
-using BandedMatrices, LinearAlgebra, Random, SparseArrays
+using LinearAlgebra, SparseArrays
+using SummationByPartsOperators, DiffEqOperators
 
 BLAS.set_num_threads(1) # make sure that BLAS is serial to be fair
 
 T = Float64
 xmin, xmax = T(0), T(1)
-N = 10^3
-der_order = 1 # first-derivative operators
-acc_order = 6 # the (interior) order of accuracy is six
-source = MattssonSvärdShoeybi2008()
 
-D_periodic_serial  = periodic_derivative_operator(der_order, acc_order, xmin, xmax, N+1, Val{:serial}())
-D_nonperiodic_serial  = derivative_operator(source, der_order, acc_order, xmin, xmax, N, Val{:serial}())
-D_nonperiodic_sparse  = sparse(D_nonperiodic_serial)
-D_nonperiodic_banded  = BandedMatrix(D_nonperiodic_serial)
+D_SBP = periodic_derivative_operator(derivative_order=1, accuracy_order=2,
+                                     xmin=xmin, xmax=xmax, N=101)
+x = grid(D_SBP)
+D_DEO = CenteredDifference(derivative_order(D_SBP), accuracy_order(D_SBP),
+                           step(x), length(x)) * PeriodicBC(eltype(D_SBP))
 
-Random.seed!(12345)
-u = randn(T, N)
-dest = similar(u)
+D_sparse = sparse(D_SBP)
 
-function doit(D, text, dest, u)
+u = randn(eltype(D_SBP), length(x)); du = similar(u);
+@show D_SBP * u ≈ D_DEO * u ≈ D_sparse * u
+
+function doit(D, text, du, u)
   println(text)
   sleep(0.1)
-  show(stdout, MIME"text/plain"(), @benchmark mul!($dest, $D, $u))
+  show(stdout, MIME"text/plain"(), @benchmark mul!($du, $D, $u))
   println()
 end
 
-doit(D_periodic_serial, "D_periodic_serial:", dest, u)
-doit(D_nonperiodic_serial, "D_nonperiodic_serial:", dest, u)
-doit(D_nonperiodic_sparse, "D_nonperiodic_sparse:", dest, u)
-doit(D_nonperiodic_banded, "D_nonperiodic_banded:", dest, u)
+doit(D_SBP, "D_SBP:", du, u)
+doit(D_DEO, "D_DEO:", du, u)
+doit(D_sparse, "D_sparse:", du, u)
+```
+
+
+General domains:
+```@example
+using BenchmarkTools
+using LinearAlgebra, SparseArrays
+using SummationByPartsOperators, BandedMatrices
+
+BLAS.set_num_threads(1) # make sure that BLAS is serial to be fair
+
+T = Float64
+xmin, xmax = T(0), T(1)
+
+D_SBP = derivative_operator(MattssonNordström2004(), derivative_order=1,
+                            accuracy_order=6, xmin=xmin, xmax=xmax, N=10^3)
+D_sparse = sparse(D_SBP)
+D_banded = BandedMatrix(D_SBP)
+
+u = randn(eltype(D_SBP), size(D_SBP, 1)); du = similar(u);
+@show D_SBP * u ≈ D_sparse * u ≈ D_banded * u
+
+function doit(D, text, du, u)
+  println(text)
+  sleep(0.1)
+  show(stdout, MIME"text/plain"(), @benchmark mul!($du, $D, $u))
+  println()
+end
+
+doit(D_SBP, "D_SBP:", du, u)
+doit(D_sparse, "D_sparse:", du, u)
+doit(D_banded, "D_banded:", du, u)
 ```
 
 
@@ -47,37 +77,34 @@ doit(D_nonperiodic_banded, "D_nonperiodic_banded:", dest, u)
 
 ```@example
 using BenchmarkTools
-using SummationByPartsOperators
-using BandedMatrices, LinearAlgebra, Random, SparseArrays
+using LinearAlgebra, SparseArrays
+using SummationByPartsOperators, BandedMatrices
 
 BLAS.set_num_threads(1) # make sure that BLAS is serial to be fair
 
 T = Float64
 xmin, xmax = T(0), T(1)
-N = 10^3
-acc_order = 8
-source_D = MattssonSvärdShoeybi2008()
-source_Di = MattssonSvärdNordström2004()
 
-D_serial  = derivative_operator(source_D, 1, acc_order, xmin, xmax, N, Val{:serial}())
+D_SBP = derivative_operator(MattssonNordström2004(), derivative_order=1,
+                            accuracy_order=6, xmin=xmin, xmax=xmax, N=10^3)
+Di_SBP  = dissipation_operator(MattssonSvärdNordström2004(), D_SBP)
+Di_sparse = sparse(Di_SBP)
+Di_banded = BandedMatrix(Di_SBP)
+Di_full   = Matrix(Di_SBP)
 
-Di_serial  = dissipation_operator(source_Di, D_serial)
-Di_sparse  = sparse(Di_serial)
-Di_full    = Matrix(Di_serial)
+u = randn(eltype(D_SBP), size(D_SBP, 1)); du = similar(u);
+@show Di_SBP * u ≈ Di_sparse * u ≈ Di_banded * u ≈ Di_full * u
 
-Random.seed!(12345)
-u = randn(T, N)
-dest = similar(u)
-
-function doit(D, text, dest, u)
+function doit(D, text, du, u)
   println(text)
   sleep(0.1)
-  show(stdout, MIME"text/plain"(), @benchmark mul!($dest, $D, $u))
+  show(stdout, MIME"text/plain"(), @benchmark mul!($du, $D, $u))
   println()
 end
 
-doit(D_serial, "D_serial:", dest, u)
-doit(Di_serial, "Di_serial:", dest, u)
-doit(Di_sparse, "Di_sparse:", dest, u)
-doit(Di_full, "Di_full:", dest, u)
+doit(D_SBP, "D_SBP:", du, u)
+doit(Di_SBP, "Di_SBP:", du, u)
+doit(Di_sparse, "Di_sparse:", du, u)
+doit(Di_banded, "Di_banded:", du, u)
+doit(Di_full, "Di_full:", du, u)
 ```
