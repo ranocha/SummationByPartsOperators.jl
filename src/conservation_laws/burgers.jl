@@ -1,8 +1,8 @@
 
 """
-    BurgersPeriodicSemidiscretisation(D, Di, split_form)
+    BurgersPeriodicSemidiscretization(D, Di, split_form)
 
-A semidiscretisation of Burgers' equation
+A semidiscretization of Burgers' equation
     \$\\partial_t u(t,x) + \\partial_x \\frac{u(t,x)^2}{2} = 0\$
 with periodic boundary conditions.
 
@@ -10,16 +10,16 @@ with periodic boundary conditions.
 or `nothing`, and `split_form::Union{Val(true), Val(false)}` determines whether
 the canonical split form or the conservative form is used.
 """
-struct BurgersPeriodicSemidiscretisation{T,Derivative<:AbstractDerivativeOperator{T},
+struct BurgersPeriodicSemidiscretization{T,Derivative<:AbstractDerivativeOperator{T},
                                             Dissipation,
-                                            SplitForm<:Union{Val{false}, Val{true}}} <: AbstractSemidiscretisation
+                                            SplitForm<:Union{Val{false}, Val{true}}} <: AbstractSemidiscretization
     derivative::Derivative
     dissipation::Dissipation
     tmp1::Vector{T}
     tmp2::Vector{T}
     split_form::SplitForm
 
-    function BurgersPeriodicSemidiscretisation(derivative::Derivative, dissipation::Dissipation, split_form::SplitForm=Val{false}()) where {T, Derivative<:AbstractDerivativeOperator{T}, Dissipation, SplitForm<:Union{Val{false}, Val{true}}}
+    function BurgersPeriodicSemidiscretization(derivative::Derivative, dissipation::Dissipation, split_form::SplitForm=Val{false}()) where {T, Derivative<:AbstractDerivativeOperator{T}, Dissipation, SplitForm<:Union{Val{false}, Val{true}}}
         if dissipation != nothing
             @argcheck size(derivative) == size(dissipation) DimensionMismatch
             @argcheck grid(derivative) == grid(dissipation) ArgumentError
@@ -32,21 +32,21 @@ struct BurgersPeriodicSemidiscretisation{T,Derivative<:AbstractDerivativeOperato
 end
 
 
-function Base.show(io::IO, semidisc::BurgersPeriodicSemidiscretisation)
-    print(io, "Semidiscretisation of Burgers' equation\n")
+function Base.show(io::IO, semi::BurgersPeriodicSemidiscretization)
+    print(io, "Semidiscretization of Burgers' equation\n")
     print(io, "  \$ \\partial_t u(t,x) + \\partial_x \\frac{u(t,x)^2}{2} = 0 \$ \n")
     print(io, "with periodic boundaries using")
-    if semidisc.split_form == Val{true}()
+    if semi.split_form == Val{true}()
         print(io, " a split form and: \n")
     else
         print(io, " no split form and: \n")
     end
-    print(io, semidisc.derivative)
-    print(io, semidisc.dissipation)
+    print(io, semi.derivative)
+    print(io, semi.dissipation)
 end
 
 
-function (disc::BurgersPeriodicSemidiscretisation)(du, u, p, t)
+function (disc::BurgersPeriodicSemidiscretization)(du, u, p, t)
     @unpack tmp1, tmp2, derivative, dissipation, split_form = disc
     @boundscheck begin
         @argcheck length(u) == length(tmp1)
@@ -85,9 +85,9 @@ end
 
 
 """
-    BurgersNonperiodicSemidiscretisation(D, Di, split_form, left_bc, right_bc)
+    BurgersNonperiodicSemidiscretization(D, Di, split_form, left_bc, right_bc)
 
-A semidiscretisation of Burgers' equation
+A semidiscretization of Burgers' equation
     \$\\partial_t u(t,x) + \\partial_x \\frac{u(t,x)^2}{2} = 0\$
 with boundary conditions `left_bc(t)`, `right_bc(t)`.
 
@@ -95,10 +95,10 @@ with boundary conditions `left_bc(t)`, `right_bc(t)`.
 or `nothing`, and `split_form::Union{Val(true), Val(false)}` determines whether
 the canonical split form or the conservative form is used.
 """
-struct BurgersNonperiodicSemidiscretisation{T,Derivative<:AbstractDerivativeOperator{T},
+struct BurgersNonperiodicSemidiscretization{T,Derivative<:AbstractDerivativeOperator{T},
                                             Dissipation,
                                             SplitForm<:Union{Val{false}, Val{true}},
-                                            LeftBC, RightBC} <: AbstractSemidiscretisation
+                                            LeftBC, RightBC} <: AbstractSemidiscretization
     derivative::Derivative
     dissipation::Dissipation
     tmp1::Vector{T}
@@ -107,7 +107,7 @@ struct BurgersNonperiodicSemidiscretisation{T,Derivative<:AbstractDerivativeOper
     left_bc::LeftBC
     right_bc::RightBC
 
-    function BurgersNonperiodicSemidiscretisation(derivative::Derivative, dissipation::Dissipation, split_form::SplitForm, left_bc::LeftBC, right_bc::RightBC) where {T, Derivative<:AbstractDerivativeOperator{T}, Dissipation, SplitForm<:Union{Val{false}, Val{true}}, LeftBC, RightBC}
+    function BurgersNonperiodicSemidiscretization(derivative::Derivative, dissipation::Dissipation, split_form::SplitForm, left_bc::LeftBC, right_bc::RightBC) where {T, Derivative<:AbstractDerivativeOperator{T}, Dissipation, SplitForm<:Union{Val{false}, Val{true}}, LeftBC, RightBC}
         if dissipation != nothing
             @argcheck size(derivative) == size(dissipation) DimensionMismatch
             @argcheck grid(derivative) == grid(dissipation) ArgumentError
@@ -120,17 +120,17 @@ struct BurgersNonperiodicSemidiscretisation{T,Derivative<:AbstractDerivativeOper
 end
 
 
-function Base.show(io::IO, semidisc::BurgersNonperiodicSemidiscretisation)
-    print(io, "Semidiscretisation of Burgers' equation\n")
+function Base.show(io::IO, semi::BurgersNonperiodicSemidiscretization)
+    print(io, "Semidiscretization of Burgers' equation\n")
     print(io, "  \$ \\partial_t u(t,x) + \\partial_x \\frac{u(t,x)^2}{2} = 0 \$ \n")
     print(io, "with nonperiodic boundaries using")
-    if semidisc.split_form == Val{true}()
+    if semi.split_form == Val{true}()
         print(io, " a split form and: \n")
     else
         print(io, " no split form and: \n")
     end
-    print(io, semidisc.derivative)
-    print(io, semidisc.dissipation)
+    print(io, semi.derivative)
+    print(io, semi.dissipation)
 end
 
 
@@ -146,7 +146,7 @@ function godunov_flux_burgers(uₗ::T, uᵣ::T) where {T<:Real}
     end
 end
 
-function (disc::BurgersNonperiodicSemidiscretisation)(du, u, p, t)
+function (disc::BurgersNonperiodicSemidiscretization)(du, u, p, t)
     @unpack tmp1, tmp2, derivative, dissipation, split_form, left_bc, right_bc = disc
     @boundscheck begin
         @argcheck length(u) == length(tmp1)

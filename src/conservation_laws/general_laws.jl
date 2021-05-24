@@ -1,23 +1,23 @@
 
 """
-    semidiscretize(u0func, semidisc::AbstractSemidiscretisation, tspan)
+    semidiscretize(u0func, semi::AbstractSemidiscretization, tspan)
 
-Apply the semidiscretisation `semidisc` to the initial data given by `u0func`
+Apply the semidiscretization `semi` to the initial data given by `u0func`
 and return an `ODEProblem` with time span `tspan`.
 """
-function semidiscretize(u0func, semidisc::AbstractSemidiscretisation, tspan)
-    u0 = compute_coefficients(u0func, semidisc.derivative)
-    ode = ODEProblem(semidisc, u0, tspan)
+function semidiscretize(u0func, semi::AbstractSemidiscretization, tspan)
+    u0 = compute_coefficients(u0func, semi.derivative)
+    ode = ODEProblem(semi, u0, tspan)
 end
 
 
-function evaluate_coefficients(u, semidisc::AbstractSemidiscretisation)
-    evaluate_coefficients(u, semidisc.derivative)
+function evaluate_coefficients(u, semi::AbstractSemidiscretization)
+    evaluate_coefficients(u, semi.derivative)
 end
 
 
-function integrate(func, u, semidisc::AbstractSemidiscretisation)
-    integrate(func, u, semidisc.derivative)
+function integrate(func, u, semi::AbstractSemidiscretization)
+    integrate(func, u, semi.derivative)
 end
 
 
@@ -27,8 +27,8 @@ struct ScalarIntegralQuantities{T} <: FieldVector{2,T}
     energy::T
 end
 
-function DiffEqCallbacks.SavingCallback(semidisc::AbstractSemidiscretisation; kwargs...)
-    T = eltype(semidisc.derivative)
+function DiffEqCallbacks.SavingCallback(semi::AbstractSemidiscretization; kwargs...)
+    T = eltype(semi.derivative)
 
     save_func = (u,t,integrator) -> integrate(u->ScalarIntegralQuantities(u,u^2),
                                                 u, integrator.f.f)

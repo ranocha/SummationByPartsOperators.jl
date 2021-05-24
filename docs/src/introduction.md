@@ -244,7 +244,7 @@ Some procedures imposing boundary conditions weakly require adding the transpose
 boundary derivatives to a grid function, which can be achieved by
 [`add_transpose_derivative_left!`](@ref) and [`add_transpose_derivative_right!`](@ref).
 You can find applications of these operators in the source code of
-[`WaveEquationNonperiodicSemidiscretisation`](@ref).
+[`WaveEquationNonperiodicSemidiscretization`](@ref).
 
 A special case of second-derivative SBP operators are polynomial derivative operators
 on Lobatto-Legendre nodes, implemented in [`legendre_second_derivative_operator`](@ref).
@@ -414,15 +414,15 @@ equations (PDEs). These are shipped with this package and you are encouraged to
 look at their source code to learn more about it.
 
 - Linear scalar advection with variable coefficient:
-  [`VariableLinearAdvectionNonperiodicSemidiscretisation`](@ref)
+  [`VariableLinearAdvectionNonperiodicSemidiscretization`](@ref)
 - Burgers' equation (inviscid):
-  [`BurgersPeriodicSemidiscretisation`](@ref), [`BurgersNonperiodicSemidiscretisation`](@ref)
+  [`BurgersPeriodicSemidiscretization`](@ref), [`BurgersNonperiodicSemidiscretization`](@ref)
 - Scalar conservation law with cubic flux:
-  [`CubicPeriodicSemidiscretisation`](@ref), [`CubicNonperiodicSemidiscretisation`](@ref)
+  [`CubicPeriodicSemidiscretization`](@ref), [`CubicNonperiodicSemidiscretization`](@ref)
 - A scalar conservation law with quartic, non-convex flux:
-  [`QuarticNonconvexPeriodicSemidiscretisation`](@ref)
+  [`QuarticNonconvexPeriodicSemidiscretization`](@ref)
 - The second-order wave equation:
-  [`WaveEquationNonperiodicSemidiscretisation`](@ref)
+  [`WaveEquationNonperiodicSemidiscretization`](@ref)
 
 Some additional examples are included as [Jupyter](https://jupyter.org) notebooks
 in the directory [`notebooks`](https://github.com/ranocha/SummationByPartsOperators.jl/tree/main/notebooks).

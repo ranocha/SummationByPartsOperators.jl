@@ -8,4 +8,5 @@ for human readability.
 
 ## Breaking changes from v0.4.x to v0.5
 
--
+- Switch from British English to American English consistently, e.g., `semidiscretise` → `semidiscretize`
+

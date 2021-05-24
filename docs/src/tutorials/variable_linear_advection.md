@@ -18,7 +18,7 @@ is only allowed for inflow boundaries, e.g. ``a(x_{min}) > 0`` at ``x = x_{min}`
 
 [SummationByPartsOperators.jl](https://github.com/ranocha/SummationByPartsOperators.jl)
 includes a pre-built semidiscretization of this equation:
-[`VariableLinearAdvectionNonperiodicSemidiscretisation`](@ref).
+[`VariableLinearAdvectionNonperiodicSemidiscretization`](@ref).
 Have a look at the source code if you want to dig deeper. Below is an example
 demonstrating how to use this semidiscretization.
 
@@ -46,8 +46,8 @@ split_form = Val(false)
 D = derivative_operator(MattssonSvärdShoeybi2008(), 1, interior_order, xmin, xmax, N)
 # whether or not artificial dissipation should be applied: nothing, dissipation_operator(D)
 Di = nothing
-semidisc = VariableLinearAdvectionNonperiodicSemidiscretisation(D, Di, afunc, split_form, left_bc, right_bc)
-ode = semidiscretize(u0func, semidisc, tspan)
+semi = VariableLinearAdvectionNonperiodicSemidiscretization(D, Di, afunc, split_form, left_bc, right_bc)
+ode = semidiscretize(u0func, semi, tspan)
 
 # solve ODE
 sol = solve(ode, SSPRK104(), dt=D.Δx, adaptive=false,
@@ -55,8 +55,8 @@ sol = solve(ode, SSPRK104(), dt=D.Δx, adaptive=false,
 
 # visualise the result
 plot(xguide=L"x", yguide=L"u")
-plot!(evaluate_coefficients(sol[1], semidisc), label=L"u_0")
-plot!(evaluate_coefficients(sol[end], semidisc), label=L"u_\mathrm{numerical}")
+plot!(evaluate_coefficients(sol[1], semi), label=L"u_0")
+plot!(evaluate_coefficients(sol[end], semi), label=L"u_\mathrm{numerical}")
 savefig("example_linear_advection.png");
 ```
 
