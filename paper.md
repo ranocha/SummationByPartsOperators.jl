@@ -1,5 +1,5 @@
 ---
-title: 'SummationByPartsOperators.jl: A Julia library of provably stable semidiscretization techniques with mimetic properties'
+title: 'SummationByPartsOperators.jl: A Julia library of provably stable discretization techniques with mimetic properties'
 tags:
   - Julia
   - numerical analysis
@@ -30,7 +30,7 @@ paying special attention to boundary conditions. Discretizations included in thi
 framework are finite difference, Fourier pseudospectral, continuous Galerkin,
 and discontinuous Galerkin methods.
 The main aim of SummationByPartsOperators.jl is to be useful for both students
-learning the basic concepts and researchers developing new methodologies based
+learning the basic concepts and researchers developing new numerical algorithms based
 on SBP operators. Therefore, SummationByPartsOperators.jl provides a unified
 framework of all of these seemingly different discretizations. At the same time,
 the implementation is reasonably optimized to achieve good performance without
@@ -82,7 +82,7 @@ allow the construction of rational functions of operators and their efficient
 implementation using the fast Fourier transform [@frigo2005design].
 
 In addition to basic SBP derivative operators, SummationByPartsOperators.jl
-contains a number of artificial dissipation and filtering operators, for example
+contains a number of artificial dissipation and filtering operators, such as
 
 - SBP artificial dissipation operators
 - spectral viscosity operators for Fourier methods
@@ -101,7 +101,7 @@ of differential equations. However, many of them focus on a single class of
 numerical methods, e.g.,
 
 - finite difference methods ([DiffEqOperators.jl](https://github.com/SciML/DiffEqOperators.jl), a part of DifferentialEquations.jl [@rackauckas2017differentialequations])
-- finite volume methods[@ramadhan2020oceananigans;@xiao2021kinetic]
+- finite volume methods [@ramadhan2020oceananigans;@xiao2021kinetic]
 - spectral methods [@olver2014practical;@constantinou2021fourierflows]
 - finite element methods [@badia2020gridap]
 - discontinuous spectral element methods [@schlottkelakemper2021purely;@schlottkelakemper2020trixi]
@@ -121,7 +121,7 @@ of and algorithms for
 - nonlinear dispersive wave equations
   [@ranocha2021broad;@ranocha2020broadRepro;@ranocha2021rate;@ranocha2021rateRepro]
 - hyperbolic conservation laws
-  [@@offner2019error;lefloch2021kinetic;@ranocha2020preventing;@ranocha2020preventing]
+  [@offner2019error;@lefloch2021kinetic;@ranocha2020preventing;@ranocha2020preventing]
 - ordinary differential equations
   [@ranocha2021class;@ranocha2020classRepro;@ranocha2020energy;@ranocha2019energyRepro;@ranocha2021strong]
 - analysis of plasma waves and Helmholtz Hodge decomposition
