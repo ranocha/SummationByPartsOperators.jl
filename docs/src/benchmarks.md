@@ -20,7 +20,7 @@ der_order = 1 # first-derivative operators
 acc_order = 6 # the (interior) order of accuracy is six
 source = MattssonSvärdShoeybi2008()
 
-D_periodic_serial  = periodic_derivative_operator(der_order, acc_order, xmin, xmax, N+1, Val{:serial}())
+D_periodic_serial  = periodic_derivative_operator(der_order, acc_order, xmin, xmax, N, Val{:serial}())
 D_nonperiodic_serial  = derivative_operator(source, der_order, acc_order, xmin, xmax, N, Val{:serial}())
 D_nonperiodic_sparse  = sparse(D_nonperiodic_serial)
 D_nonperiodic_banded  = BandedMatrix(D_nonperiodic_serial)

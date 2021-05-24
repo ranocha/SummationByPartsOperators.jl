@@ -14,3 +14,7 @@ for human readability.
   were replaced by the more general functions
   `mul_transpose_derivative_left!` and `mul_transpose_derivative_right!`,
   which use the same interface as `mul!`
+- The number of nodes passed to `periodic_central_derivative_operator`, and
+  `periodic_derivative_operator` changed from the number of visualization nodes
+  to the number of compute nodes (= number of visualization nodes minus one),
+  in accordance with `fourier_derivative_operator`

@@ -48,9 +48,9 @@ julia> using SummationByPartsOperators
 julia> using Plots: plot, plot!
 
 julia> D = periodic_derivative_operator(derivative_order=1, accuracy_order=2,
-                                        xmin=0.0, xmax=2.0, N=21)
+                                        xmin=0.0, xmax=2.0, N=20)
 Periodic 1st derivative operator of order 2 {T=Float64, Parallel=Val{:serial}}
-on a grid in [0.0, 2.0] using 21 nodes,
+on a grid in [0.0, 2.0] using 20 nodes,
 stencils with 1 nodes to the left, 1 nodes to the right, and coefficients from
   Fornberg (1998)
   Calculation of Weights in Finite Difference Formulas.

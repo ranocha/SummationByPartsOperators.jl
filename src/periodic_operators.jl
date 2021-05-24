@@ -259,7 +259,7 @@ end
 
 Create the `PeriodicDerivativeCoefficients` approximating the `derivative_order`-th
 derivative with an order of accuracy `accuracy_order` and scalar type `T`.
-The evaluation of the derivative can be parallised using threads by chosing
+The evaluation of the derivative can be parallized using threads by chosing
 `parallel=Val{:threads}())`.
 """
 function periodic_central_derivative_coefficients(derivative_order, accuracy_order, T=Float64, parallel=Val{:serial}())
@@ -417,7 +417,7 @@ end
 Create the `PeriodicDerivativeCoefficients` approximating the `derivative_order`-th
 derivative with an order of accuracy `accuracy_order` and scalar type `T` where
 the leftmost grid point used is determined by `left_offset`.
-The evaluation of the derivative can be parallised using threads by chosing
+The evaluation of the derivative can be parallized using threads by chosing
 parallel=Val{:threads}())`.
 """
 function periodic_derivative_coefficients(derivative_order, accuracy_order, left_offset::Int=-(accuracy_order+1)÷2, T=Float64, parallel=Val{:serial}())
@@ -470,7 +470,7 @@ end
 Create the `PeriodicDerivativeCoefficients` approximating the `derivative_order`-th
 derivative with an order of accuracy `accuracy_order` and scalar type `T` given
 by Holoborodko2008.
-The evaluation of the derivative can be parallised using threads by chosing
+The evaluation of the derivative can be parallized using threads by chosing
 parallel=Val{:threads}())`.
 """
 function periodic_derivative_coefficients(source::Holoborodko2008, derivative_order, accuracy_order;
@@ -591,8 +591,8 @@ A derivative operator on a uniform periodic grid.
 """
 struct PeriodicDerivativeOperator{T,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients,Grid} <: AbstractPeriodicDerivativeOperator{T}
     coefficients::PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients}
-    grid_compute::Grid   # N-1 nodes, including the left and excluding the right boundary
-    grid_evaluate::Grid #  N  nodes, including both boundaries
+    grid_compute::Grid   # N   nodes, including the left and excluding the right boundary
+    grid_evaluate::Grid #  N+1 nodes, including both boundaries
     Δx::T
     factor::T
 
@@ -622,7 +622,7 @@ function Base.show(io::IO, D::PeriodicDerivativeOperator{T,LowerOffset,UpperOffs
         print(io, "Periodic ", derivative_order(D), "th derivative operator of order ")
     end
     print(io, accuracy_order(D), " {T=", T, ", Parallel=", typeof(D.coefficients.parallel), "} \n")
-    print(io, "on a grid in [", first(x), ", ", last(x), "] using ", length(x), " nodes, \n")
+    print(io, "on a grid in [", first(x), ", ", last(x), "] using ", size(D, 1), " nodes, \n")
     print(io, "stencils with ", LowerOffset, " nodes to the left, ", UpperOffset,
                 " nodes to the right, and coefficients from \n", source_of_coefficients(D))
 end
@@ -686,27 +686,13 @@ end
 Create a [`PeriodicDerivativeOperator`](@ref) approximating the `derivative_order`-th
 derivative on a uniform grid between `xmin` and `xmax` with `N` grid points up
 to order of accuracy `accuracy_order`.
-The evaluation of the derivative can be parallised using threads by chosing
+The evaluation of the derivative can be parallized using threads by chosing
 `parallel=Val{:threads}())`.
 """
 function periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N, parallel=Val{:serial}())
-    grid = range(xmin, stop=xmax, length=N) # N includes two identical boundary nodes
-    coefficients = periodic_central_derivative_coefficients(derivative_order, accuracy_order, eltype(grid), parallel)
-    PeriodicDerivativeOperator(coefficients, grid)
-end
-
-"""
-    periodic_central_derivative_operator(derivative_order, accuracy_order,
-                                         grid, parallel=Val{:serial}())
-
-Create a [`PeriodicDerivativeOperator`](@ref) approximating the `derivative_order`-th
-derivative on the uniform `grid` up to order of accuracy `accuracy_order`.
-The evaluation of the derivative can be parallised using threads by chosing
-`parallel=Val{:threads}())`.
-"""
-function periodic_central_derivative_operator(derivative_order, accuracy_order, grid::Union{LinRange,StepRangeLen}, parallel=Val{:serial}())
-    coefficients = periodic_central_derivative_coefficients(derivative_order, accuracy_order, eltype(grid), parallel)
-    PeriodicDerivativeOperator(coefficients, grid)
+    grid_evaluate = range(xmin, stop=xmax, length=N+1) # N includes two identical boundary nodes
+    coefficients = periodic_central_derivative_coefficients(derivative_order, accuracy_order, eltype(grid_evaluate), parallel)
+    PeriodicDerivativeOperator(coefficients, grid_evaluate)
 end
 
 """
@@ -723,7 +709,7 @@ Create a [`PeriodicDerivativeOperator`](@ref) approximating the `derivative_orde
 derivative on a uniform grid between `xmin` and `xmax` with `N` grid points up
 to order of accuracy `accuracy_order` where the leftmost grid point used is
 determined by `left_offset`.
-The evaluation of the derivative can be parallised using threads by chosing
+The evaluation of the derivative can be parallized using threads by chosing
 `parallel=Val{:threads}())`.
 
 ## Examples
@@ -743,7 +729,7 @@ stencils with 1 nodes to the left, 1 nodes to the right, and coefficients from
 function periodic_derivative_operator(derivative_order::Integer, accuracy_order,
                                       xmin, xmax, N, left_offset::Int=-(accuracy_order+1)÷2,
                                       parallel::Union{Val{:serial},Val{:threads}}=Val{:serial}())
-    grid = range(xmin, stop=xmax, length=N) # N includes two identical boundary nodes
+    grid = range(xmin, stop=xmax, length=N+1) # N includes two identical boundary nodes
     coefficients = periodic_derivative_coefficients(derivative_order, accuracy_order, left_offset, eltype(grid), parallel)
     PeriodicDerivativeOperator(coefficients, grid)
 end
@@ -772,7 +758,7 @@ Create a `PeriodicDerivativeOperator` approximating the `derivative_order`-th
 derivative on a uniform grid between `xmin` and `xmax` with `N` grid points up
 to order of accuracy `accuracy_order` where the leftmost grid point used is
 determined by `left_offset`.
-The evaluation of the derivative can be parallised using threads by chosing
+The evaluation of the derivative can be parallized using threads by chosing
 `parallel=Val{:threads}())`.
 
 ## Examples
@@ -791,7 +777,7 @@ stencils with 2 nodes to the left, 2 nodes to the right, and coefficients from
 """
 function periodic_derivative_operator(source::Holoborodko2008, derivative_order, accuracy_order,
                                       xmin, xmax, N; parallel=Val{:serial}(), kwargs...)
-    grid = range(xmin, stop=xmax, length=N) # N includes two identical boundary nodes
+    grid = range(xmin, stop=xmax, length=N+1) # N includes two identical boundary nodes
     coefficients = periodic_derivative_coefficients(source, derivative_order, accuracy_order;
                                                     kwargs..., T=eltype(grid), parallel=parallel)
     PeriodicDerivativeOperator(coefficients, grid)
@@ -810,7 +796,7 @@ end
 Create a `PeriodicDerivativeOperator` approximating the `derivative_order`-th
 derivative on thr uniform `grid` up to order of accuracy `accuracy_order` where
 the leftmost grid point used is determined by `left_offset`.
-The evaluation of the derivative can be parallised using threads by chosing
+The evaluation of the derivative can be parallized using threads by chosing
 `parallel=Val{:threads}())`.
 """
 function periodic_derivative_operator(derivative_order, accuracy_order, grid::Union{LinRange,StepRangeLen},
@@ -856,7 +842,7 @@ function Base.show(io::IO, Di::PeriodicDissipationOperator{T}) where {T}
     end
     x = Di.Di.grid_evaluate
     print(io, accuracy_order(Di), " {T=", T, ", Parallel=", typeof(Di.Di.coefficients.parallel), "} \n")
-    print(io, "on a grid in [", first(x), ", ", last(x), "] using ", length(x), " nodes \n")
+    print(io, "on a grid in [", first(x), ", ", last(x), "] using ", size(Di, 1), " nodes \n")
     print(io, "and coefficients given in \n")
     print(io, source_of_coefficients(Di))
 end
@@ -892,7 +878,7 @@ end
 Create a negative semidefinite `DissipationOperator` using undivided differences
 approximating a `order`-th derivative with strength `strength` adapted to the
 derivative operator `D`.
-The evaluation of the derivative can be parallised using threads by chosing
+The evaluation of the derivative can be parallized using threads by chosing
 `parallel=Val{:threads}())`.
 """
 function dissipation_operator(D::PeriodicDerivativeOperator;
@@ -903,7 +889,7 @@ function dissipation_operator(D::PeriodicDerivativeOperator;
     # account for the grid spacing
     factor = strength * (-1)^(1 + order÷2) * D.Δx^order
     x = D.grid_evaluate
-    Di = periodic_derivative_operator(order, order, first(x), last(x), length(x), parallel)
+    Di = periodic_derivative_operator(order, order, first(x), last(x), size(D, 1), parallel)
     PeriodicDissipationOperator(factor, Di)
 end
 
