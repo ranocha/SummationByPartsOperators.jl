@@ -235,10 +235,13 @@ let T = Float64
     @test all(i->res[i] ≈ x0[i], accuracy_order:length(res)-accuracy_order)
     mul!(res, D, x2)
     @test all(i->res[i] ≈ 2*x1[i], accuracy_order:length(res)-accuracy_order)
+    @show map(i->res[i] ≈ 2*x1[i], accuracy_order:length(res)-accuracy_order) # TODO: DEBUGGING
     mul!(res, D, x3)
     @test all(i->res[i] ≈ 3*x2[i], accuracy_order:length(res)-accuracy_order)
+    @show map(i->res[i] ≈ 3*x2[i], accuracy_order:length(res)-accuracy_order) # TODO: DEBUGGING
     mul!(res, D, x4)
     @test all(i->res[i] ≈ 4*x3[i], accuracy_order:length(res)-accuracy_order)
+    @show map(i->res[i] ≈ 4*x3[i], accuracy_order:length(res)-accuracy_order) # TODO: DEBUGGING
     mul!(res, D, x5)
     @test any(i->!(res[i] ≈ 5*x4[i]), accuracy_order:length(res)-accuracy_order)
 
@@ -254,14 +257,17 @@ let T = Float64
     @test all(i->res[i] ≈ x0[i], accuracy_order:length(res)-accuracy_order)
     mul!(res, D, x2)
     @test all(i->res[i] ≈ 2*x1[i], accuracy_order:length(res)-accuracy_order)
+    @show map(i->res[i] ≈ 2*x1[i], accuracy_order:length(res)-accuracy_order) # TODO: DEBUGGING
     mul!(res, D, x3)
     @test all(i->isapprox(res[i], 3*x2[i], atol=100N*eps(T)), accuracy_order:length(res)-accuracy_order)
     mul!(res, D, x4)
     @test all(i->res[i] ≈ 4*x3[i], accuracy_order:length(res)-accuracy_order)
+    @show map(i->res[i] ≈ 4*x3[i], accuracy_order:length(res)-accuracy_order) # TODO: DEBUGGING
     mul!(res, D, x5)
     @test all(i->isapprox(res[i], 5*x4[i], atol=100N*eps(T)), accuracy_order:length(res)-accuracy_order)
     mul!(res, D, x6)
     @test all(i->res[i] ≈ 6*x5[i], accuracy_order:length(res)-accuracy_order)
+    @show map(i->res[i] ≈ 6*x5[i], accuracy_order:length(res)-accuracy_order) # TODO: DEBUGGING
     mul!(res, D, x7)
     @test any(i->!(res[i] ≈ 7*x6[i]), accuracy_order:length(res)-accuracy_order)
 
