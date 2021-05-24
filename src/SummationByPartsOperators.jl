@@ -120,7 +120,7 @@ export derivative_order, accuracy_order, source_of_coefficients, grid, semidiscr
 export mass_matrix
 export integrate, left_boundary_weight, right_boundary_weight,
        derivative_left, derivative_right,
-       add_transpose_derivative_left!, add_transpose_derivative_right!,
+       mul_transpose_derivative_left!, mul_transpose_derivative_right!,
        evaluate_coefficients, evaluate_coefficients!,
        compute_coefficients, compute_coefficients!
 export periodic_central_derivative_operator, periodic_derivative_operator, derivative_operator,

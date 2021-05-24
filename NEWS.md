@@ -8,5 +8,9 @@ for human readability.
 
 ## Breaking changes from v0.4.x to v0.5
 
-- Switch from British English to American English consistently, e.g., `semidiscretise` → `semidiscretize`
-
+- Switch from British English to American English consistently, e.g.,
+  `semidiscretise` → `semidiscretize`
+- `add_transpose_derivative_left!` and `add_transpose_derivative_right!`
+  were replaced by the more general functions
+  `mul_transpose_derivative_left!` and `mul_transpose_derivative_right!`,
+  which use the same interface as `mul!`

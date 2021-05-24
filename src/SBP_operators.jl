@@ -363,32 +363,44 @@ end
 
 
 """
-    add_transpose_derivative_left!(u, D::DerivativeOperator, der_order::Val{N}, α)
+    mul!(du, D::DerivativeOperator, u, α=true, β=false)
 
-Add `α` times the transposed `N`-th derivative functional to the grid function `u`
-at the left boundary of the grid.
+Efficient in-place version of `du = α * D * u + β * du`. Note that `du` must not
+be aliased with `u`.
 """
-@inline function add_transpose_derivative_left!(u::AbstractVector, D::DerivativeOperator, der_order::Val{N}, α) where {N}
+function mul! end
+
+
+"""
+    mul_transpose_derivative_left!(u, D::DerivativeOperator, der_order::Val{N}, α=true, β=false)
+
+Set the grid function `u` to `α` times the transposed `N`-th derivative functional
+applied to `u` plus `β` times `u` in the domain of the `N`-th derivative functional
+at the left boundary of the grid.
+Thus, the coefficients `α, β` have the same meaning as in [`mul!`](@ref).
+"""
+@inline function mul_transpose_derivative_left!(u::AbstractVector, D::DerivativeOperator, der_order::Val{N}, α=true, β=false) where {N}
     factor = α / D.Δx^N
     coef = D.coefficients.left_boundary_derivatives[N].coef
     for i in eachindex(coef)
-        u[i] += factor * coef[i]
+        u[i] = factor * coef[i] + β * u[i]
     end
 end
 
-@inline function add_transpose_derivative_left!(u::AbstractVector, D::DerivativeOperator, der_order::Val{0}, α)
-    factor = α
-    u[begin] += factor * u[begin]
+@inline function mul_transpose_derivative_left!(u::AbstractVector, D::DerivativeOperator, der_order::Val{0}, α=true, β=false)
+    u[begin] = α * u[begin] + β * u[begin]
     return nothing
 end
 
 """
-    add_transpose_derivative_right!(u, D::DerivativeOperator, der_order::Val{N}, α)
+    mul_transpose_derivative_right!(u, D::DerivativeOperator, der_order::Val{N}, α=true, β=false)
 
-Add `α` times the transposed `N`-th derivative functional to the grid function `u`
+Set the grid function `u` to `α` times the transposed `N`-th derivative functional
+applied to `u` plus `β` times `u` in the domain of the `N`-th derivative functional
 at the right boundary of the grid.
+Thus, the coefficients `α, β` have the same meaning as in [`mul!`](@ref).
 """
-@inline function add_transpose_derivative_right!(u::AbstractVector, D::DerivativeOperator, der_order::Val{N}, α) where {N}
+@inline function mul_transpose_derivative_right!(u::AbstractVector, D::DerivativeOperator, der_order::Val{N}, α=true, β=false) where {N}
     factor = α / D.Δx^N
     coef = D.coefficients.right_boundary_derivatives[N].coef
     for i in eachindex(coef)
@@ -396,7 +408,7 @@ at the right boundary of the grid.
     end
 end
 
-@inline function add_transpose_derivative_right!(u::AbstractVector, D::DerivativeOperator, der_order::Val{0}, α)
+@inline function mul_transpose_derivative_right!(u::AbstractVector, D::DerivativeOperator, der_order::Val{0}, α=true, β=false)
     factor = α
     u[end] += factor * u[end]
     return nothing

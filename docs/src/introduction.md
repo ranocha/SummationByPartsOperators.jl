@@ -242,7 +242,7 @@ Usually, there is no need to form `dL, dR` explicitly. Instead, you can use the
 matrix-free variants [`derivative_left`](@ref) and [`derivative_right`](@ref).
 Some procedures imposing boundary conditions weakly require adding the transposed
 boundary derivatives to a grid function, which can be achieved by
-[`add_transpose_derivative_left!`](@ref) and [`add_transpose_derivative_right!`](@ref).
+[`mul_transpose_derivative_left!`](@ref) and [`mul_transpose_derivative_right!`](@ref).
 You can find applications of these operators in the source code of
 [`WaveEquationNonperiodicSemidiscretization`](@ref).
 

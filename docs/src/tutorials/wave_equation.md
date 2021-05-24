@@ -17,7 +17,7 @@ includes a pre-built semidiscretization of this equation:
 Have a look at the source code if you want to dig deeper.
 In particular, you can find applications of
 [`derivative_left`](@ref), [`derivative_right`](@ref)
-[`add_transpose_derivative_left!`](@ref), and [`add_transpose_derivative_right!`](@ref).
+[`mul_transpose_derivative_left!`](@ref), and [`mul_transpose_derivative_right!`](@ref).
 Below is an example demonstrating how to use this semidiscretization.
 
 
