@@ -214,12 +214,14 @@ end
 
     if parallel <: Val{:threads}
         quote
+            Base.@_inline_meta
             @tturbo for i in (left_boundary_width+1):(length(dest)-right_boundary_width)
                 dest[i] = β*dest[i] + α*$ex
             end
         end
     else
         quote
+            Base.@_inline_meta
             @turbo for i in (left_boundary_width+1):(length(dest)-right_boundary_width)
                 dest[i] = β*dest[i] + α*$ex
             end
@@ -243,12 +245,14 @@ end
 
     if parallel <: Val{:threads}
         quote
+            Base.@_inline_meta
             @tturbo for i in (left_boundary_width+1):(length(dest)-right_boundary_width)
                 dest[i] = α*$ex
             end
         end
     else
         quote
+            Base.@_inline_meta
             @turbo for i in (left_boundary_width+1):(length(dest)-right_boundary_width)
                 dest[i] = α*$ex
             end

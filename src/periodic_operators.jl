@@ -169,13 +169,14 @@ end
 
     if parallel <: Val{:threads}
         quote
+            Base.@_inline_meta
             @tturbo for i in $(LowerOffset+1):(length(dest)-$UpperOffset)
                 dest[i] = β*dest[i] + α*$ex
             end
         end
     else
-
         quote
+            Base.@_inline_meta
             @turbo for i in $(LowerOffset+1):(length(dest)-$UpperOffset)
                 dest[i] = β*dest[i] + α*$ex
             end
@@ -200,12 +201,14 @@ end
 
     if parallel <: Val{:threads}
         quote
+            Base.@_inline_meta
             @tturbo for i in $(LowerOffset+1):(length(dest)-$UpperOffset)
                 dest[i] = α*$ex
             end
         end
     else
         quote
+            Base.@_inline_meta
             @turbo for i in $(LowerOffset+1):(length(dest)-$UpperOffset)
                 dest[i] = α*$ex
             end
