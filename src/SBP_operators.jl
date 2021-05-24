@@ -347,32 +347,44 @@ end
 
 
 """
-    add_transpose_derivative_left!(u, D::DerivativeOperator, der_order::Val{N}, α)
+    mul!(du, D::DerivativeOperator, u, α=true, β=false)
 
-Add `α` times the transposed `N`-th derivative functional to the grid function `u`
-at the left boundary of the grid.
+Efficient in-place version of `du = α * D * u + β * du`. Note that `du` must not
+be aliased with `u`.
 """
-@inline function add_transpose_derivative_left!(u::AbstractVector, D::DerivativeOperator, der_order::Val{N}, α) where {N}
+function mul! end
+
+
+"""
+    mul_transpose_derivative_left!(u, D::DerivativeOperator, der_order::Val{N}, α=true, β=false)
+
+Set the grid function `u` to `α` times the transposed `N`-th derivative functional
+applied to `u` plus `β` times `u` in the domain of the `N`-th derivative functional
+at the left boundary of the grid.
+Thus, the coefficients `α, β` have the same meaning as in [`mul!`](@ref).
+"""
+@inline function mul_transpose_derivative_left!(u::AbstractVector, D::DerivativeOperator, der_order::Val{N}, α=true, β=false) where {N}
     factor = α / D.Δx^N
     coef = D.coefficients.left_boundary_derivatives[N].coef
     for i in eachindex(coef)
-        u[i] += factor * coef[i]
+        u[i] = factor * coef[i] + β * u[i]
     end
 end
 
-@inline function add_transpose_derivative_left!(u::AbstractVector, D::DerivativeOperator, der_order::Val{0}, α)
-    factor = α
-    @inbounds u[begin] += factor * u[begin]
+@inline function mul_transpose_derivative_left!(u::AbstractVector, D::DerivativeOperator, der_order::Val{0}, α=true, β=false)
+    @inbounds u[begin] = α * u[begin] + β * u[begin]
     return nothing
 end
 
 """
-    add_transpose_derivative_right!(u, D::DerivativeOperator, der_order::Val{N}, α)
+    mul_transpose_derivative_right!(u, D::DerivativeOperator, der_order::Val{N}, α=true, β=false)
 
-Add `α` times the transposed `N`-th derivative functional to the grid function `u`
+Set the grid function `u` to `α` times the transposed `N`-th derivative functional
+applied to `u` plus `β` times `u` in the domain of the `N`-th derivative functional
 at the right boundary of the grid.
+Thus, the coefficients `α, β` have the same meaning as in [`mul!`](@ref).
 """
-@inline function add_transpose_derivative_right!(u::AbstractVector, D::DerivativeOperator, der_order::Val{N}, α) where {N}
+@inline function mul_transpose_derivative_right!(u::AbstractVector, D::DerivativeOperator, der_order::Val{N}, α=true, β=false) where {N}
     factor = α / D.Δx^N
     coef = D.coefficients.right_boundary_derivatives[N].coef
     for i in eachindex(coef)
@@ -380,9 +392,8 @@ at the right boundary of the grid.
     end
 end
 
-@inline function add_transpose_derivative_right!(u::AbstractVector, D::DerivativeOperator, der_order::Val{0}, α)
-    factor = α
-    @inbounds u[end] += factor * u[end]
+@inline function mul_transpose_derivative_right!(u::AbstractVector, D::DerivativeOperator, der_order::Val{0}, α=true, β=false)
+    @inbounds u[end] = α * u[end] + β * u[end]
     return nothing
 end
 
@@ -472,7 +483,7 @@ end
 Create a [`DerivativeOperator`](@ref) approximating the `derivative_order`-th derivative
 on a grid between `xmin` and `xmax` with `N` grid points up to order of accuracy
 `accuracy_order`. with coefficients given by `source_of_coefficients`.
-The evaluation of the derivative can be parallised using threads by chosing
+The evaluation of the derivative can be parallized using threads by chosing
 `parallel=Val{:threads}())`.
 """
 function derivative_operator(source_of_coefficients, derivative_order, accuracy_order, xmin, xmax, N, parallel=Val{:serial}())

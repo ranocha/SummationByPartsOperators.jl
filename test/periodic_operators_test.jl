@@ -6,7 +6,7 @@ using SummationByPartsOperators
 let T=Float32
     xmin = one(T)
     xmax = 2*one(T)
-    N = 100
+    N = 99
     x1 = compute_coefficients(identity, periodic_derivative_operator(1, 2, xmin, xmax, N))
 
     x0 = fill(one(eltype(x1)), length(x1))
@@ -85,7 +85,7 @@ let T=Float32
     mul!(res, D, x1)
     @test all(i->abs(res[i]) < 100N*eps(T), accuracy_order:length(res)-accuracy_order)
     mul!(res, D, x2)
-    @test all(i->isapprox(res[i], 2*x0[i], atol=610N*eps(T)), accuracy_order:length(res)-accuracy_order)
+    @test all(i->isapprox(res[i], 2*x0[i], atol=620N*eps(T)), accuracy_order:length(res)-accuracy_order)
     mul!(res, D, x3)
     @test all(i->isapprox(res[i], 6*x1[i], atol=2000N*eps(T)), accuracy_order:length(res)-accuracy_order)
     mul!(res, D, x4)
@@ -843,11 +843,11 @@ for T in (Float32, Float64)
     end
 
     for N in (8, 9), acc_order in (2, 3, 4)
-        D1a = periodic_derivative_operator(1, acc_order, xmin, xmax, N+1)
+        D1a = periodic_derivative_operator(1, acc_order, xmin, xmax, N)
         D2a = D1a^2
         D1b = fourier_derivative_operator(xmin, xmax, N)
         D2b = D1b^2
-        D2c = periodic_derivative_operator(2, acc_order, xmin, xmax, N+1)
+        D2c = periodic_derivative_operator(2, acc_order, xmin, xmax, N)
 
         @test Matrix(D1a // (I - D2a)) ≈ Matrix(D1a) / (I - Matrix(D2a))
         @test Matrix(D1b // (I - D2a)) ≈ Matrix(D1b) / (I - Matrix(D2a))
@@ -869,15 +869,15 @@ end
 
 
 # check construction of upwind operators
-let N = 5
+let N = 4
     @test_throws ArgumentError periodic_derivative_operator(1, 2, 0//1, (N-1)//1, N, 1)
-    D = periodic_derivative_operator(1, 2, 0//1, (N-1)//1, N, 0)
+    D = periodic_derivative_operator(1, 2, 0//1, N, N, 0)
     @test Matrix(D) ≈ [
         -3//2   2//1  -1//2   0//1
         0//1  -3//2   2//1  -1//2
         -1//2   0//1  -3//2   2//1
         2//1  -1//2   0//1  -3//2]
-    D = periodic_derivative_operator(1, 2, 0//1, (N-1)//1, N, -2)
+    D = periodic_derivative_operator(1, 2, 0//1, N, N, -2)
     @test Matrix(D) ≈ [
         3//2   0//1   1//2  -2//1
         -2//1   3//2   0//1   1//2

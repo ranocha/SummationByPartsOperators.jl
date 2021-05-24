@@ -18,7 +18,7 @@ T = Float64
 xmin, xmax = T(0), T(1)
 
 D_SBP = periodic_derivative_operator(derivative_order=1, accuracy_order=2,
-                                     xmin=xmin, xmax=xmax, N=101)
+                                     xmin=xmin, xmax=xmax, N=100)
 x = grid(D_SBP)
 D_DEO = CenteredDifference(derivative_order(D_SBP), accuracy_order(D_SBP),
                            step(x), length(x)) * PeriodicBC(eltype(D_SBP))
@@ -41,7 +41,7 @@ doit(D_sparse, "D_sparse:", du, u)
 ```
 
 
-General domains:
+Bounded domains:
 ```@example
 using BenchmarkTools
 using LinearAlgebra, SparseArrays

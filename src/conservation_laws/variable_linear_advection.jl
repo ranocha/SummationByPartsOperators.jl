@@ -1,8 +1,8 @@
 """
-    VariableLinearAdvectionNonperiodicSemidiscretisation(D, Di, a, split_form,
+    VariableLinearAdvectionNonperiodicSemidiscretization(D, Di, a, split_form,
                                                          left_bc, right_bc)
 
-A semidiscretisation of the linear advection equation
+A semidiscretization of the linear advection equation
     \$\\partial_t u(t,x) + \\partial_x ( a(x) u(t,x) ) = 0\$
 with boundary conditions `left_bc(t)`, `right_bc(t)`.
 
@@ -11,10 +11,10 @@ or `nothing`, `a(x)` the variable coefficient, and `split_form::Union{Val(false)
 determines whether the canonical split form or the conservative form should be
 used.
 """
-struct VariableLinearAdvectionNonperiodicSemidiscretisation{T,Derivative<:AbstractDerivativeOperator{T},
+struct VariableLinearAdvectionNonperiodicSemidiscretization{T,Derivative<:AbstractDerivativeOperator{T},
                                                             Dissipation,
                                                             SplitForm<:Union{Val{false}, Val{true}},
-                                                            LeftBC, RightBC} <: AbstractSemidiscretisation
+                                                            LeftBC, RightBC} <: AbstractSemidiscretization
     derivative::Derivative
     dissipation::Dissipation
     a::Vector{T}
@@ -24,7 +24,7 @@ struct VariableLinearAdvectionNonperiodicSemidiscretisation{T,Derivative<:Abstra
     left_bc::LeftBC
     right_bc::RightBC
 
-    function VariableLinearAdvectionNonperiodicSemidiscretisation(derivative::Derivative, dissipation::Dissipation, afunc, split_form::SplitForm, left_bc::LeftBC, right_bc::RightBC) where {T, Derivative<:AbstractDerivativeOperator{T}, Dissipation, SplitForm<:Union{Val{false}, Val{true}}, LeftBC, RightBC}
+    function VariableLinearAdvectionNonperiodicSemidiscretization(derivative::Derivative, dissipation::Dissipation, afunc, split_form::SplitForm, left_bc::LeftBC, right_bc::RightBC) where {T, Derivative<:AbstractDerivativeOperator{T}, Dissipation, SplitForm<:Union{Val{false}, Val{true}}, LeftBC, RightBC}
         if dissipation != nothing
             @argcheck size(derivative) == size(dissipation) DimensionMismatch
             @argcheck grid(derivative) == grid(dissipation) ArgumentError
@@ -38,17 +38,17 @@ struct VariableLinearAdvectionNonperiodicSemidiscretisation{T,Derivative<:Abstra
 end
 
 
-function Base.show(io::IO, semidisc::VariableLinearAdvectionNonperiodicSemidiscretisation)
-    print(io, "Semidiscretisation of the linear advection equation\n")
+function Base.show(io::IO, semi::VariableLinearAdvectionNonperiodicSemidiscretization)
+    print(io, "Semidiscretization of the linear advection equation\n")
     print(io, "  \$ \\partial_t u(t,x) + \\partial_x ( a(x) u(t,x) ) = 0 \$ \n")
     print(io, "with nonperiodic boundaries using")
-    if semidisc.split_form == Val{true}()
+    if semi.split_form == Val{true}()
         print(io, " a split form and: \n")
     else
         print(io, " no split form and: \n")
     end
-    print(io, semidisc.derivative)
-    print(io, semidisc.dissipation)
+    print(io, semi.derivative)
+    print(io, semi.dissipation)
 end
 
 
@@ -56,7 +56,7 @@ function godunov_flux_variablelinearadvection(uₗ::T, uᵣ::T, a::T) where {T<:
     ifelse(a > 0, a*uₗ, a*uᵣ)
 end
 
-function (disc::VariableLinearAdvectionNonperiodicSemidiscretisation)(du, u, p, t)
+function (disc::VariableLinearAdvectionNonperiodicSemidiscretization)(du, u, p, t)
     @unpack a, tmp1, tmp2, derivative, dissipation, split_form, left_bc, right_bc = disc
     @boundscheck begin
         @argcheck length(u) == length(a)

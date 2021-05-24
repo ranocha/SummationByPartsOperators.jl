@@ -7,7 +7,7 @@
 [![Coveralls](https://coveralls.io/repos/github/ranocha/SummationByPartsOperators.jl/badge.svg?branch=main)](https://coveralls.io/github/ranocha/SummationByPartsOperators.jl?branch=main)
 [![License: MIT](https://img.shields.io/badge/License-MIT-success.svg)](https://opensource.org/licenses/MIT)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4773575.svg)](https://doi.org/10.5281/zenodo.4773575)
-[![GitHub commits since tagged version](https://img.shields.io/github/commits-since/ranocha/SummationByPartsOperators.jl/v0.4.8.svg?style=social&logo=github)](https://github.com/ranocha/SummationByPartsOperators.jl)
+[![GitHub commits since tagged version](https://img.shields.io/github/commits-since/ranocha/SummationByPartsOperators.jl/v0.5.0.svg?style=social&logo=github)](https://github.com/ranocha/SummationByPartsOperators.jl)
 <!-- [![PkgEval](https://juliaci.github.io/NanosoldierReports/pkgeval_badges/S/SummationByPartsOperators.svg)](https://juliaci.github.io/NanosoldierReports/pkgeval_badges/report.html) -->
 
 [SummationByPartsOperators.jl](https://github.com/ranocha/SummationByPartsOperators.jl)
@@ -32,6 +32,12 @@ is a registered Julia package. Thus, you can install it from the Julia REPL via
 julia> using Pkg; Pkg.add("SummationByPartsOperators")
 ```
 
+If you want to update SummationByPartsOperators.jl, you can use
+```julia
+julia> using Pkg; Pkg.update()
+```
+A brief list of notable changes is available in [`NEWS.md`](NEWS.md).
+
 
 ## Basic examples
 
@@ -42,9 +48,9 @@ julia> using SummationByPartsOperators
 julia> using Plots: plot, plot!
 
 julia> D = periodic_derivative_operator(derivative_order=1, accuracy_order=2,
-                                        xmin=0.0, xmax=2.0, N=21)
+                                        xmin=0.0, xmax=2.0, N=20)
 Periodic 1st derivative operator of order 2 {T=Float64, Parallel=Val{:serial}}
-on a grid in [0.0, 2.0] using 21 nodes,
+on a grid in [0.0, 2.0] using 20 nodes,
 stencils with 1 nodes to the left, 1 nodes to the right, and coefficients from
   Fornberg (1998)
   Calculation of Weights in Finite Difference Formulas.

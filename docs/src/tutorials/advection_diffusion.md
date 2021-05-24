@@ -48,7 +48,7 @@ Next, we choose first- and second-derivative SBP operators `D1, D2`, evaluate
 the initial data on the grid, and set up the semidiscretization as an ODE problem.
 
 ```@example advection_diffusion
-N = 101 # number of grid points
+N = 100 # number of grid points
 D1 = periodic_derivative_operator(derivative_order=1, accuracy_order=4,
                                   xmin=xmin, xmax=xmax, N=N)
 D2 = periodic_derivative_operator(derivative_order=2, accuracy_order=4,

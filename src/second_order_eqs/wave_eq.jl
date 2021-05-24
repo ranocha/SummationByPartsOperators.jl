@@ -1,36 +1,36 @@
 """
-    WaveEquationNonperiodicSemidiscretisation(D, left_bc, right_bc)
+    WaveEquationNonperiodicSemidiscretization(D, left_bc, right_bc)
 
-A semidiscretisation of the linear wave equation
+A semidiscretization of the linear wave equation
     \$\\partial_t^2 u(t,x) = \\partial_x^2 u(t,x)\$.
 
 `D` is assumed to be a second-derivative SBP operator and the boundary conditions
 can be `Val(:HomogeneousNeumann)`, `Val(:HomogeneousDirichlet)`, or
 `Val(:NonReflecting)`.
 """
-struct WaveEquationNonperiodicSemidiscretisation{Derivative<:AbstractDerivativeOperator,
-                                                 LeftBC, RightBC} <: AbstractSemidiscretisation
+struct WaveEquationNonperiodicSemidiscretization{Derivative<:AbstractDerivativeOperator,
+                                                 LeftBC, RightBC} <: AbstractSemidiscretization
     derivative::Derivative
     left_bc::LeftBC
     right_bc::RightBC
 end
 
-function semidiscretize(du0func, u0func, semidisc::WaveEquationNonperiodicSemidiscretisation, tspan)
-  du0 = compute_coefficients(du0func, semidisc.derivative)
-  u0 = compute_coefficients(u0func, semidisc.derivative)
-  ode = SecondOrderODEProblem(semidisc, du0, u0, tspan)
+function semidiscretize(du0func, u0func, semi::WaveEquationNonperiodicSemidiscretization, tspan)
+  du0 = compute_coefficients(du0func, semi.derivative)
+  u0 = compute_coefficients(u0func, semi.derivative)
+  ode = SecondOrderODEProblem(semi, du0, u0, tspan)
 end
 
 
-function Base.show(io::IO, semidisc::WaveEquationNonperiodicSemidiscretisation)
-    print(io, "Semidiscretisation of the linear wave equation\n")
+function Base.show(io::IO, semi::WaveEquationNonperiodicSemidiscretization)
+    print(io, "Semidiscretization of the linear wave equation\n")
     print(io, "  \$ \\partial_t^2 u(t,x) = \\partial_x^2 u(t,x) \$ \n")
     print(io, "with nonperiodic boundaries using")
-    print(io, semidisc.derivative)
+    print(io, semi.derivative)
 end
 
 
-function (disc::WaveEquationNonperiodicSemidiscretisation)(ddu, du, u, p, t)
+function (disc::WaveEquationNonperiodicSemidiscretization)(ddu, du, u, p, t)
     @unpack derivative, left_bc, right_bc = disc
     @boundscheck begin
         @argcheck length(u) == length(du)
@@ -44,7 +44,7 @@ function (disc::WaveEquationNonperiodicSemidiscretisation)(ddu, du, u, p, t)
     if left_bc == Val(:HomogeneousNeumann)
         @inbounds ddu[1] += derivative_left(derivative, u, Val(1)) / left_boundary_weight(derivative)
     elseif left_bc == Val(:HomogeneousDirichlet)
-        add_transpose_derivative_left!(ddu, derivative, Val(1), -u[1] / left_boundary_weight(derivative))
+        mul_transpose_derivative_left!(ddu, derivative, Val(1), -u[1] / left_boundary_weight(derivative), true)
         # only a rough estimate, should probably be improved
         # see Mattsson, Ham, Iaccarino (2009) Stable boundary ...
         # parameter α in Table 1 instead of accuracy_order(derivative)
@@ -58,7 +58,7 @@ function (disc::WaveEquationNonperiodicSemidiscretisation)(ddu, du, u, p, t)
     if right_bc == Val(:HomogeneousNeumann)
        @inbounds ddu[end] -= derivative_right(derivative, u, Val(1)) / right_boundary_weight(derivative)
     elseif right_bc == Val(:HomogeneousDirichlet)
-        add_transpose_derivative_right!(ddu, derivative, Val(1), u[end] / right_boundary_weight(derivative))
+        mul_transpose_derivative_right!(ddu, derivative, Val(1), u[end] / right_boundary_weight(derivative), true)
         # only a rough estimate, should probably be improved, see above
         @inbounds ddu[end] -= accuracy_order(derivative) * u[end] / right_boundary_weight(derivative)^2
     elseif right_bc == Val(:NonReflecting)

@@ -13,11 +13,11 @@ Consider the linear wave equation
 
 [SummationByPartsOperators.jl](https://github.com/ranocha/SummationByPartsOperators.jl)
 includes a pre-built semidiscretization of this equation:
-[`WaveEquationNonperiodicSemidiscretisation`](@ref).
+[`WaveEquationNonperiodicSemidiscretization`](@ref).
 Have a look at the source code if you want to dig deeper.
 In particular, you can find applications of
 [`derivative_left`](@ref), [`derivative_right`](@ref)
-[`add_transpose_derivative_left!`](@ref), and [`add_transpose_derivative_right!`](@ref).
+[`mul_transpose_derivative_left!`](@ref), and [`mul_transpose_derivative_right!`](@ref).
 Below is an example demonstrating how to use this semidiscretization.
 
 
@@ -38,7 +38,7 @@ right_bc = Val(:HomogeneousDirichlet)
 # setup spatial semidiscretization
 D2 = derivative_operator(MattssonSvärdShoeybi2008(), derivative_order=2,
                          accuracy_order=4, xmin=xmin, xmax=xmax, N=101)
-semi = WaveEquationNonperiodicSemidiscretisation(D2, left_bc, right_bc)
+semi = WaveEquationNonperiodicSemidiscretization(D2, left_bc, right_bc)
 ode = semidiscretize(v0_func, u0_func, semi, tspan)
 
 # solve second-order ODE using a Runge-Kutta-Nyström method
@@ -71,7 +71,7 @@ function create_gif(left_bc::Val{LEFT_BC}, right_bc::Val{RIGHT_BC}) where {LEFT_
 
     D2 = derivative_operator(MattssonSvärdShoeybi2008(), derivative_order=2,
                             accuracy_order=4, xmin=xmin, xmax=xmax, N=101)
-    semi = WaveEquationNonperiodicSemidiscretisation(D2, left_bc, right_bc)
+    semi = WaveEquationNonperiodicSemidiscretization(D2, left_bc, right_bc)
     ode = semidiscretize(v0_func, u0_func, semi, tspan)
 
     sol = solve(ode, DPRKN6(), saveat=range(first(tspan), stop=last(tspan), length=200))
