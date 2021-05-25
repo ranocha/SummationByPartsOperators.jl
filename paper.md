@@ -44,7 +44,7 @@ to create mathematical models of real-world processes. Since PDEs often need to
 be solved numerically, a vast amount of numerical methods has been developed,
 resulting sometimes in completely disjoint communities. To transfer developments
 and knowledge from one community to another, common abstractions can be helpful.
-The concept of summation-by-parts (SBP) operators is such an abstraction.
+The concept of SBP operators is such an abstraction.
 In recent years, SBP operators have attracted a lot of attention, in particular
 for PDEs modeling advection-dominated problems, where they enabled the construction
 of energy- or entropy-stable numerical methods, including finite difference,
@@ -107,8 +107,8 @@ numerical methods, e.g.,
 - discontinuous spectral element methods [@schlottkelakemper2021purely;@schlottkelakemper2020trixi]
 
 We are not aware of any open-source software library implementing all of the
-SBP classes using a unified interface or even several finite difference (FD)
-SBP operators on finite domains. Such FD SBP operators are usually heavily
+SBP classes using a unified interface or even several finite difference
+SBP operators on finite domains, which are usually heavily
 optimized [@mattsson2014optimal;@mattsson2018boundary] and not available in
 other open source packages. Sometimes, restricted sets of coefficients are
 available online [@almquist2017optimized;@oreilly2019sbp], but there is no other
