@@ -16,7 +16,7 @@ authors:
 affiliations:
  - name: Applied Mathematics Münster, University of Münster, Germany
    index: 1
-date: 24 May 2021 # TODO: date
+date: 25 May 2021 # TODO: date
 bibliography: paper.bib
 ---
 
@@ -119,13 +119,13 @@ Some of the research projects that have made use of SummationByPartsOperators.jl
 of and algorithms for
 
 - nonlinear dispersive wave equations
-  [@ranocha2021broad;@ranocha2020broadRepro;@ranocha2021rate;@ranocha2021rateRepro]
+  [@ranocha2021broad;@ranocha2021rate]
 - hyperbolic conservation laws
-  [@offner2019error;@lefloch2021kinetic;@ranocha2020preventing;@ranocha2020preventing]
+  [@offner2019error;@lefloch2021kinetic;@ranocha2020preventing]
 - ordinary differential equations
-  [@ranocha2021class;@ranocha2020classRepro;@ranocha2020energy;@ranocha2019energyRepro;@ranocha2021strong]
-- analysis of plasma waves and Helmholtz Hodge decomposition
-  [@ranocha2020discrete;@ranocha2019discreteRepro]
+  [@ranocha2021class;@ranocha2020energy;@ranocha2021strong]
+- Helmholtz Hodge decomposition and analysis of plasma waves
+  [@ranocha2020discrete]
 
 
 # Acknowledgements
