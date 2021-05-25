@@ -167,26 +167,21 @@ end
         ex = :( $ex + upper_coef[$j]*u[i+$j] )
     end
 
-    quote
-        @inbounds for i in $(LowerOffset+1):(length(dest)-$UpperOffset)
-            dest[i] = β*dest[i] + α*$ex
+    if parallel <: Val{:threads}
+        quote
+            Base.@_inline_meta
+            @tturbo for i in $(LowerOffset+1):(length(dest)-$UpperOffset)
+                dest[i] = β*dest[i] + α*$ex
+            end
+        end
+    else
+        quote
+            Base.@_inline_meta
+            @turbo for i in $(LowerOffset+1):(length(dest)-$UpperOffset)
+                dest[i] = β*dest[i] + α*$ex
+            end
         end
     end
-end
-
-function convolve_interior_coefficients!(dest::AbstractVector{T}, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset},
-                                         u::AbstractVector, α, β, parallel::Val{:threads}) where {T, LowerOffset, UpperOffset}
-    Threads.@threads for i in (LowerOffset+1):(length(dest)-UpperOffset) @inbounds begin
-        tmp = zero(T)
-        for j in Base.OneTo(LowerOffset)
-            tmp += lower_coef[j]*u[i-j]
-        end
-        tmp += central_coef*u[i]
-        for j in Base.OneTo(UpperOffset)
-            tmp += upper_coef[j]*u[i+j]
-        end
-        dest[i] = β*dest[i] + α*tmp
-    end end
 end
 
 @generated function convolve_interior_coefficients!(dest::AbstractVector, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset},
@@ -204,26 +199,21 @@ end
         ex = :( $ex + upper_coef[$j]*u[i+$j] )
     end
 
-    quote
-        @inbounds for i in $(LowerOffset+1):(length(dest)-$UpperOffset)
-            dest[i] = α*$ex
+    if parallel <: Val{:threads}
+        quote
+            Base.@_inline_meta
+            @tturbo for i in $(LowerOffset+1):(length(dest)-$UpperOffset)
+                dest[i] = α*$ex
+            end
+        end
+    else
+        quote
+            Base.@_inline_meta
+            @turbo for i in $(LowerOffset+1):(length(dest)-$UpperOffset)
+                dest[i] = α*$ex
+            end
         end
     end
-end
-
-function convolve_interior_coefficients!(dest::AbstractVector{T}, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset},
-                                         u::AbstractVector, α, parallel::Val{:threads}) where {T, LowerOffset, UpperOffset}
-    Threads.@threads for i in (LowerOffset+1):(length(dest)-UpperOffset) @inbounds begin
-        tmp = zero(T)
-        for j in Base.OneTo(LowerOffset)
-            tmp += lower_coef[j]*u[i-j]
-        end
-        tmp += central_coef*u[i]
-        for j in Base.OneTo(UpperOffset)
-            tmp += upper_coef[j]*u[i+j]
-        end
-        dest[i] = α*tmp
-    end end
 end
 
 

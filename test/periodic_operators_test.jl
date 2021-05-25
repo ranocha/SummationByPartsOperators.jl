@@ -305,7 +305,7 @@ let T = Float64
     mul!(res, D, x1); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 5000*eps(T)
     mul!(res, D, x2); @test norm((res - 2 .* x0)[accuracy_order:end-accuracy_order], Inf) < 10020*eps(T)
     mul!(res, D, x3); @test norm((res - 6 .* x1)[accuracy_order:end-accuracy_order], Inf) < 30000*eps(T)
-    mul!(res, D, x4); @test norm((res - 12 .* x2)[accuracy_order:end-accuracy_order], Inf) < 28000*eps(T)
+    mul!(res, D, x4); @test norm((res - 12 .* x2)[accuracy_order:end-accuracy_order], Inf) < 40000*eps(T)
     mul!(res, D, x5); @test norm((res - 20 .* x3)[accuracy_order:end-accuracy_order], Inf) < 100000*eps(T)
     mul!(res, D, x6); @test norm((res - 30 .* x4)[accuracy_order:end-accuracy_order], Inf) < 220000*eps(T)
     mul!(res, D, x7); @test norm((res - 42 .* x5)[accuracy_order:end-accuracy_order], Inf) > 220000*eps(T)

@@ -40,6 +40,7 @@ using SparseArrays
 
 using ArgCheck: @argcheck
 using FFTW
+using LoopVectorization: @turbo, @tturbo
 using Reexport: @reexport
 using Requires
 using StaticArrays
