@@ -16,7 +16,7 @@ authors:
 affiliations:
  - name: Applied Mathematics Münster, University of Münster, Germany
    index: 1
-date: 25 May 2021 # TODO: date
+date: 25 May 2021
 bibliography: paper.bib
 ---
 
