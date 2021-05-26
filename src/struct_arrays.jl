@@ -23,30 +23,18 @@ for Dtype in _subtypes(AbstractDerivativeOperator)
     iterate_mul!(Tuple(components(dest)), D, Tuple(components(u)))
   end
 
-  @eval Base.@propagate_inbounds function iterate_mul!(dest::NTuple{N}, D::$Dtype, u::NTuple{N}) where N
-    mul!(first(dest), D, first(u))
-    iterate_mul!(Base.tail(dest), D, Base.tail(u))
-  end
-
-
   @eval Base.@propagate_inbounds function mul!(dest::A, D::$Dtype, u::A, α) where {A<:StructArray}
     iterate_mul!(Tuple(components(dest)), D, Tuple(components(u)), α)
   end
 
-  @eval Base.@propagate_inbounds function iterate_mul!(dest::NTuple{N}, D::$Dtype, u::NTuple{N}, α) where N
-    mul!(first(dest), D, first(u), α)
-    iterate_mul!(Base.tail(dest), D, Base.tail(u), α)
-  end
-
-
   @eval Base.@propagate_inbounds function mul!(dest::A, D::$Dtype, u::A, α, β) where {A<:StructArray}
     iterate_mul!(Tuple(components(dest)), D, Tuple(components(u)), α, β)
   end
+end
 
-  @eval Base.@propagate_inbounds function iterate_mul!(dest::NTuple{N}, D::$Dtype, u::NTuple{N}, α, β) where N
-    mul!(first(dest), D, first(u), α, β)
-    iterate_mul!(Base.tail(dest), D, Base.tail(u), α, β)
-  end
+Base.@propagate_inbounds function iterate_mul!(dest::NTuple{N}, D::AbstractDerivativeOperator, u::NTuple{N}, args...) where N
+  mul!(first(dest), D, first(u), args...)
+  iterate_mul!(Base.tail(dest), D, Base.tail(u), args...)
 end
 
 iterate_mul!(::Tuple{}, D::AbstractDerivativeOperator, ::Tuple{}, args...) = nothing

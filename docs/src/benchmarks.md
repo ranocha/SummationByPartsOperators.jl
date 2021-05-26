@@ -124,11 +124,12 @@ using SummationByPartsOperators, BandedMatrices
 
 BLAS.set_num_threads(1) # make sure that BLAS is serial to be fair
 
-struct Vec4{T} <: FieldVector{4,T}
+struct Vec5{T} <: FieldVector{5,T}
   x1::T
   x2::T
   x3::T
   x4::T
+  x5::T
 end
 
 # Apply `mul!` to each component of a plain array of structures one after another
@@ -142,12 +143,23 @@ T = Float64
 xmin, xmax = T(0), T(1)
 
 D_SBP = derivative_operator(MattssonNordström2004(), derivative_order=1,
-                            accuracy_order=6, xmin=xmin, xmax=xmax, N=101)
+                            accuracy_order=4, xmin=xmin, xmax=xmax, N=101)
 D_sparse = sparse(D_SBP)
 D_full   = Matrix(D_SBP)
 
+println("Scalar case")
+u = randn(T, size(D_SBP, 1)); du = similar(u)
+println("D_SBP")
+show(stdout, MIME"text/plain"(), @benchmark mul!($du, $D_SBP, $u))
+println("\nD_sparse")
+show(stdout, MIME"text/plain"(), @benchmark mul!($du, $D_sparse, $u))
+println("\nD_full")
+show(stdout, MIME"text/plain"(), @benchmark mul!($du, $D_full, $u))
+```
+
+```@example soa-aos
 println("Plain Array of Structures")
-u_aos_plain = randn(T, 4, size(D_SBP, 1)); du_aos_plain = similar(u_aos_plain)
+u_aos_plain = randn(T, 5, size(D_SBP, 1)); du_aos_plain = similar(u_aos_plain)
 println("D_SBP")
 show(stdout, MIME"text/plain"(), @benchmark mul_aos!($du_aos_plain, $D_SBP, $u_aos_plain))
 println("\nD_sparse")
@@ -158,7 +170,7 @@ show(stdout, MIME"text/plain"(), @benchmark mul_aos!($du_aos_plain, $D_full, $u_
 
 ```@example soa-aos
 println("Array of Structures (reinterpreted array)")
-u_aos_r = reinterpret(reshape, Vec4{T}, u_aos_plain); du_aos_r = similar(u_aos_r)
+u_aos_r = reinterpret(reshape, Vec5{T}, u_aos_plain); du_aos_r = similar(u_aos_r)
 @show D_SBP * u_aos_r ≈ D_sparse * u_aos_r ≈ D_full * u_aos_r
 mul!(du_aos_r, D_SBP, u_aos_r)
 @show reinterpret(reshape, T, du_aos_r) ≈ du_aos_plain
