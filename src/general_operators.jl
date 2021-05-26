@@ -78,7 +78,7 @@ end
 
 
 Base.@propagate_inbounds function mul!(dest, D::AbstractDerivativeOperator, u)
-    mul!(dest, D, u, one(eltype(dest)))
+    mul!(dest, D, u, one(recursive_bottom_eltype(dest)))
 end
 
 @noinline function Base.:*(D::AbstractDerivativeOperator, u)

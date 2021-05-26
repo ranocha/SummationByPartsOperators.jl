@@ -11,6 +11,7 @@ using Test
 @time @testset "Sum of Operators" begin include("sum_of_operators_test.jl") end
 @time @testset "Upwind Operators" begin include("upwind_operators_test.jl") end
 @time @testset "Coupling" begin include("coupling_test.jl") end
+@time @testset "Special Matrix Types" begin include("special_matrix_types.jl") end
 @time @testset "Conservation Laws" begin
     include("conservation_laws/burgers_test.jl")
     include("conservation_laws/cubic_test.jl")
