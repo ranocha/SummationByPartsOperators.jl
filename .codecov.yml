@@ -1,1 +1,19 @@
-comment: false
+# https://docs.codecov.io/docs/codecovyml-reference
+
+# We have
+#   [number of parts] * [number of OS]
+#           2         *        3
+# parallel jobs in ci.yml
+codecov:
+  notify:
+    after_n_builds: 6
+comment:
+  after_n_builds: 6
+
+coverage:
+  range: 70..95
+  round: down
+  precision: 2
+
+github_checks:
+  annotations: false
