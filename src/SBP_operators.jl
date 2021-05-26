@@ -261,6 +261,87 @@ end
 end
 
 
+@static if VERSION >= v"1.6" # `reinterpret(reshape, ...)` was introduced in Julia v1.6
+    # Specialized for vectors of `StaticVector`s
+    @generated function convolve_interior_coefficients!(_dest::AbstractVector{<:StaticVector{N,T1}}, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset}, _u::AbstractVector{<:StaticVector{N,T2}}, α, β, left_boundary_width, right_boundary_width, parallel) where {LowerOffset, UpperOffset, N, T1, T2}
+        if LowerOffset > 0
+            ex = :( lower_coef[$LowerOffset]*u[v, i-$LowerOffset] )
+            for j in LowerOffset-1:-1:1
+                ex = :( $ex + lower_coef[$j]*u[v, i-$j] )
+            end
+            ex = :( $ex + central_coef*u[v, i] )
+        else
+            ex = :( central_coef*u[v, i] )
+        end
+        for j in 1:UpperOffset
+            ex = :( $ex + upper_coef[$j]*u[v, i+$j] )
+        end
+
+        if parallel <: Val{:threads}
+            quote
+                Base.@_inline_meta
+                dest = reinterpret(reshape, $T1, _dest)
+                u    = reinterpret(reshape, $T2, _u)
+                @tturbo for i in (left_boundary_width+1):(lastindex(dest, 2)-right_boundary_width)
+                    for v in LoopVectorization.indices((dest, u), (1, 1))
+                        dest[v, i] = β*dest[v, i] + α*$ex
+                    end
+                end
+            end
+        else
+            quote
+                Base.@_inline_meta
+                dest = reinterpret(reshape, $T1, _dest)
+                u    = reinterpret(reshape, $T2, _u)
+                @turbo for i in (left_boundary_width+1):(lastindex(dest, 2)-right_boundary_width)
+                    for v in LoopVectorization.indices((dest, u), (1, 1))
+                        dest[v, i] = β*dest[v, i] + α*$ex
+                    end
+                end
+            end
+        end
+    end
+
+    @generated function convolve_interior_coefficients!(_dest::AbstractVector{<:StaticVector{N,T1}}, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset}, _u::AbstractVector{<:StaticVector{N,T2}}, α, left_boundary_width, right_boundary_width, parallel) where {LowerOffset, UpperOffset, N, T1, T2}
+        if LowerOffset > 0
+            ex = :( lower_coef[$LowerOffset]*u[v, i-$LowerOffset] )
+            for j in LowerOffset-1:-1:1
+                ex = :( $ex + lower_coef[$j]*u[v, i-$j] )
+            end
+            ex = :( $ex + central_coef*u[v, i] )
+        else
+            ex = :( central_coef*u[v, i] )
+        end
+        for j in 1:UpperOffset
+            ex = :( $ex + upper_coef[$j]*u[v, i+$j] )
+        end
+
+        if parallel <: Val{:threads}
+            quote
+                Base.@_inline_meta
+                dest = reinterpret(reshape, $T1, _dest)
+                u    = reinterpret(reshape, $T2, _u)
+                @tturbo for i in (left_boundary_width+1):(lastindex(dest, 2)-right_boundary_width)
+                    for v in LoopVectorization.indices((dest, u), (1, 1))
+                        dest[v, i] = α*$ex
+                    end
+                end
+            end
+        else
+            quote
+                Base.@_inline_meta
+                dest = reinterpret(reshape, $T1, _dest)
+                u    = reinterpret(reshape, $T2, _u)
+                @turbo for i in (left_boundary_width+1):(lastindex(dest, 2)-right_boundary_width)
+                    for v in LoopVectorization.indices((dest, u), (1, 1))
+                        dest[v, i] = α*$ex
+                    end
+                end
+            end
+        end
+    end
+end
+
 
 """
     DerivativeOperator
