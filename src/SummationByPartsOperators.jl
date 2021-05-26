@@ -84,6 +84,7 @@ include("coupling.jl")
 
 function __init__()
   @require BandedMatrices="aae01518-5342-5314-be14-df237901396f" include("banded_matrices.jl")
+  @require StructArrays="09ab397b-f2b6-538f-b94a-2f83cf4a842a" include("struct_arrays.jl")
 end
 
 include("filter.jl")
