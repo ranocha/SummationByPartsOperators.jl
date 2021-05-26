@@ -40,7 +40,7 @@ using SparseArrays
 
 using ArgCheck: @argcheck
 using FFTW
-using LoopVectorization: @turbo, @tturbo
+using LoopVectorization: LoopVectorization, @turbo, @tturbo
 using RecursiveArrayTools: recursive_bottom_eltype
 using Reexport: @reexport
 using Requires

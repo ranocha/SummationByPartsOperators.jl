@@ -22,6 +22,7 @@ end
 for T in (Float32, Float64)
   D = derivative_operator(MattssonNordström2004(), derivative_order=1, accuracy_order=4,
                           xmin=zero(T), xmax=one(T), N=51)
+  D_sparse = sparse(D)
 
   # 3-arg mul!
   u_aos_plain = randn(T, 4, size(D, 1)); du_aos_plain = similar(u_aos_plain)
@@ -30,14 +31,17 @@ for T in (Float32, Float64)
   u_aos_r = reinterpret(reshape, Vec4{T}, u_aos_plain); du_aos_r = similar(u_aos_r)
   mul!(du_aos_r, D, u_aos_r)
   @test reinterpret(reshape, T, du_aos_r) ≈ du_aos_plain
+  @test D * u_aos_r ≈ D_sparse * u_aos_r
 
   u_aos = Array(u_aos_r); du_aos = similar(u_aos)
   mul!(du_aos, D, u_aos)
   @test du_aos ≈ du_aos_r
+  @test D * u_aos ≈ D_sparse * u_aos
 
   u_soa = StructArray(u_aos); du_soa = similar(u_soa)
   mul!(du_soa, D, u_soa)
   @test du_soa ≈ du_aos
+  @test D * u_soa ≈ D_sparse * u_soa
 
 
   # 4-arg mul!

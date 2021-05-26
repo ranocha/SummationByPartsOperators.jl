@@ -113,8 +113,10 @@ doit(Di_full, "Di_full:", du, u)
 ## Structure-of-Arrays (SoA) and Array-of-Structures (AoS)
 
 [SummationByPartsOperators.jl](https://github.com/ranocha/SummationByPartsOperators.jl)
-tries to support [StructArrays.jl](https://github.com/JuliaArrays/StructArrays.jl)
-efficiently.
+tries to provide efficient support of
+- `StaticVector`s from [StaticArrays.jl](https://github.com/JuliaArrays/StaticArrays.jl)
+- [StructArrays.jl](https://github.com/JuliaArrays/StructArrays.jl)
+
 
 ```@example soa-aos
 using BenchmarkTools
