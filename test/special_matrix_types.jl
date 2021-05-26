@@ -2,6 +2,7 @@ module SpecialMatrixTypesTest
 
 using Test
 using LinearAlgebra
+using SparseArrays
 using StaticArrays
 using StructArrays
 using SummationByPartsOperators
