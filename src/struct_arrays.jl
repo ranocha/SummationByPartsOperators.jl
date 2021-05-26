@@ -1,3 +1,4 @@
+using InteractiveUtils: subtypes
 using .StructArrays: StructArray, components
 
 function _subtypes(type::Type)

@@ -81,12 +81,12 @@ Base.@propagate_inbounds function mul!(dest, D::AbstractDerivativeOperator, u)
     mul!(dest, D, u, one(recursive_bottom_eltype(dest)))
 end
 
-@noinline function Base.:*(D::AbstractDerivativeOperator, u)
+function Base.:*(D::AbstractDerivativeOperator, u)
     @boundscheck begin
         @argcheck size(D,1) == size(D,2) == length(u) DimensionMismatch
     end
-    T = promote_type(eltype(D), eltype(u))
-    dest = similar(u, T); fill!(dest, zero(T))
+    T = typeof(one(eltype(D)) * first(u))
+    dest = similar(u, T); fill!(dest, zero(eltype(dest)))
     @inbounds mul!(dest, D, u)
     dest
 end
@@ -94,15 +94,15 @@ end
 
 function Base.Matrix(D::AbstractDerivativeOperator{T}) where {T}
     v = Array{T}(undef, size(D, 2)...)
-    fill!(v, T(0))
+    fill!(v, zero(eltype(v)))
     A = Array{T}(undef, size(D)...)
     for i in 1:size(D,2)
-        v[i] = T(1)
+        v[i] = one(T)
         # Using a view here can cause problems with FFT based operators.
         # Since this part is not performance critical, we can also just use copies.
         # mul!(view(A,:,i), D, v)
         A[:,i] .= D * v
-        v[i] = T(0)
+        v[i] = zero(T)
     end
     A
 end
@@ -117,7 +117,7 @@ function SparseArrays.sparse(D::AbstractDerivativeOperator{T}) where {T}
     dest = Array{T}(undef, M)
 
     for i = 1:N
-        v[i] = T(1)
+        v[i] = one(T)
         mul!(dest, D, v)
         js = findall(!iszero, dest)
         colptr[i] = length(nzval)+1
@@ -125,7 +125,7 @@ function SparseArrays.sparse(D::AbstractDerivativeOperator{T}) where {T}
             append!(rowind, js)
             append!(nzval, dest[js])
         end
-        v[i] = T(0)
+        v[i] = zero(T)
     end
     colptr[N+1] = length(nzval)+1
 

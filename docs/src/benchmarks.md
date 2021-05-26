@@ -108,3 +108,92 @@ doit(Di_sparse, "Di_sparse:", du, u)
 doit(Di_banded, "Di_banded:", du, u)
 doit(Di_full, "Di_full:", du, u)
 ```
+
+
+## Structure-of-Arrays (SoA) and Array-of-Structures (AoS)
+
+[SummationByPartsOperators.jl](https://github.com/ranocha/SummationByPartsOperators.jl)
+tries to support [StructArrays.jl](https://github.com/JuliaArrays/StructArrays.jl)
+efficiently.
+
+```@example soa-aos
+using BenchmarkTools
+using StaticArrays, StructArrays
+using LinearAlgebra, SparseArrays
+using SummationByPartsOperators, BandedMatrices
+
+BLAS.set_num_threads(1) # make sure that BLAS is serial to be fair
+
+struct Vec4{T} <: FieldVector{4,T}
+  x1::T
+  x2::T
+  x3::T
+  x4::T
+end
+
+# Apply `mul!` to each component of a plain array of structures one after another
+function mul_aos!(du, D, u, args...)
+  for i in 1:size(du, 1)
+    mul!(view(du, i, :), D, view(u, i, :), args...)
+  end
+end
+
+T = Float64
+xmin, xmax = T(0), T(1)
+
+D_SBP = derivative_operator(MattssonNordström2004(), derivative_order=1,
+                            accuracy_order=6, xmin=xmin, xmax=xmax, N=101)
+D_sparse = sparse(D_SBP)
+D_full   = Matrix(D_SBP)
+
+println("Plain Array of Structures")
+u_aos_plain = randn(T, 4, size(D_SBP, 1)); du_aos_plain = similar(u_aos_plain)
+println("D_SBP")
+show(stdout, MIME"text/plain"(), @benchmark mul_aos!($du_aos_plain, $D_SBP, $u_aos_plain))
+println("\nD_sparse")
+show(stdout, MIME"text/plain"(), @benchmark mul_aos!($du_aos_plain, $D_sparse, $u_aos_plain))
+println("\nD_full")
+show(stdout, MIME"text/plain"(), @benchmark mul_aos!($du_aos_plain, $D_full, $u_aos_plain))
+```
+
+```@example soa-aos
+println("Array of Structures (reinterpreted array)")
+u_aos_r = reinterpret(reshape, Vec4{T}, u_aos_plain); du_aos_r = similar(u_aos_r)
+@show D_SBP * u_aos_r ≈ D_sparse * u_aos_r ≈ D_full * u_aos_r
+mul!(du_aos_r, D_SBP, u_aos_r)
+@show reinterpret(reshape, T, du_aos_r) ≈ du_aos_plain
+println("D_SBP")
+show(stdout, MIME"text/plain"(), @benchmark mul!($du_aos_r, $D_SBP, $u_aos_r))
+println("\nD_sparse")
+show(stdout, MIME"text/plain"(), @benchmark mul!($du_aos_r, $D_sparse, $u_aos_r))
+println("\nD_full")
+show(stdout, MIME"text/plain"(), @benchmark mul!($du_aos_r, $D_full, $u_aos_r))
+```
+
+```@example soa-aos
+println("Array of Structures")
+u_aos = Array(u_aos_r); du_aos = similar(u_aos)
+@show D_SBP * u_aos ≈ D_sparse * u_aos ≈ D_full * u_aos
+mul!(du_aos, D_SBP, u_aos)
+@show du_aos ≈ du_aos_r
+println("D_SBP")
+show(stdout, MIME"text/plain"(), @benchmark mul!($du_aos, $D_SBP, $u_aos))
+println("\nD_sparse")
+show(stdout, MIME"text/plain"(), @benchmark mul!($du_aos, $D_sparse, $u_aos))
+println("\nD_full")
+show(stdout, MIME"text/plain"(), @benchmark mul!($du_aos, $D_full, $u_aos))
+```
+
+```@example soa-aos
+println("Structure of Arrays")
+u_soa = StructArray(u_aos); du_soa = similar(u_soa)
+@show D_SBP * u_soa ≈ D_sparse * u_soa ≈ D_full * u_soa
+mul!(du_soa, D_SBP, u_soa)
+@show du_soa ≈ du_aos
+println("D_SBP")
+show(stdout, MIME"text/plain"(), @benchmark mul!($du_soa, $D_SBP, $u_soa))
+println("\nD_sparse")
+show(stdout, MIME"text/plain"(), @benchmark mul!($du_soa, $D_sparse, $u_soa))
+println("\nD_full")
+show(stdout, MIME"text/plain"(), @benchmark mul!($du_soa, $D_full, $u_soa))
+```
