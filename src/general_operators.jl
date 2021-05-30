@@ -58,6 +58,7 @@ LinearAlgebra.issymmetric(coefficients::AbstractDerivativeCoefficients) = coeffi
 derivative_order(D::AbstractDerivativeOperator) = derivative_order(D.coefficients)
 accuracy_order(D::AbstractDerivativeOperator) = accuracy_order(D.coefficients)
 Base.eltype(D::AbstractDerivativeOperator{T}) where {T} = T
+Base.real(D::AbstractDerivativeOperator) = real(eltype(D))
 LinearAlgebra.issymmetric(D::AbstractDerivativeOperator) = issymmetric(D.coefficients)
 function Base.size(D::AbstractDerivativeOperator)
     N = length(grid(D))
