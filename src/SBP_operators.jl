@@ -277,11 +277,19 @@ end
             ex = :( $ex + upper_coef[$j]*u[v, i+$j] )
         end
 
+        if N == 1
+            ex_dest = :( reshape(reinterpret($T1, _dest), 1, length(_dest)) )
+            ex_u    = :( reshape(reinterpret($T2, _u),    1, length(_u)) )
+        else
+            ex_dest = :( reinterpret(reshape, $T1, _dest) )
+            ex_u    = :( reinterpret(reshape, $T2, _u) )
+        end
+
         if parallel <: Val{:threads}
             quote
                 Base.@_inline_meta
-                dest = reinterpret(reshape, $T1, _dest)
-                u    = reinterpret(reshape, $T2, _u)
+                dest = $ex_dest
+                u    = $ex_u
                 @tturbo for i in (left_boundary_width+1):(lastindex(dest, 2)-right_boundary_width)
                     for v in LoopVectorization.indices((dest, u), (1, 1))
                         dest[v, i] = β*dest[v, i] + α*$ex
@@ -291,8 +299,8 @@ end
         else
             quote
                 Base.@_inline_meta
-                dest = reinterpret(reshape, $T1, _dest)
-                u    = reinterpret(reshape, $T2, _u)
+                dest = $ex_dest
+                u    = $ex_u
                 @turbo for i in (left_boundary_width+1):(lastindex(dest, 2)-right_boundary_width)
                     for v in LoopVectorization.indices((dest, u), (1, 1))
                         dest[v, i] = β*dest[v, i] + α*$ex
@@ -316,11 +324,19 @@ end
             ex = :( $ex + upper_coef[$j]*u[v, i+$j] )
         end
 
+        if N == 1
+            ex_dest = :( reshape(reinterpret($T1, _dest), 1, length(_dest)) )
+            ex_u    = :( reshape(reinterpret($T2, _u),    1, length(_u)) )
+        else
+            ex_dest = :( reinterpret(reshape, $T1, _dest) )
+            ex_u    = :( reinterpret(reshape, $T2, _u) )
+        end
+
         if parallel <: Val{:threads}
             quote
                 Base.@_inline_meta
-                dest = reinterpret(reshape, $T1, _dest)
-                u    = reinterpret(reshape, $T2, _u)
+                dest = $ex_dest
+                u    = $ex_u
                 @tturbo for i in (left_boundary_width+1):(lastindex(dest, 2)-right_boundary_width)
                     for v in LoopVectorization.indices((dest, u), (1, 1))
                         dest[v, i] = α*$ex
@@ -330,8 +346,8 @@ end
         else
             quote
                 Base.@_inline_meta
-                dest = reinterpret(reshape, $T1, _dest)
-                u    = reinterpret(reshape, $T2, _u)
+                dest = $ex_dest
+                u    = $ex_u
                 @turbo for i in (left_boundary_width+1):(lastindex(dest, 2)-right_boundary_width)
                     for v in LoopVectorization.indices((dest, u), (1, 1))
                         dest[v, i] = α*$ex
