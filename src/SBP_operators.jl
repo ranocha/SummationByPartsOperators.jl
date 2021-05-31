@@ -86,7 +86,7 @@ function mul!(dest::AbstractVector, coefficients::DerivativeCoefficients, u::Abs
     end
 
     convolve_boundary_coefficients!(dest, left_boundary, right_boundary, u, α, β)
-    convolve_interior_coefficients!(dest, lower_coef, central_coef, upper_coef, u, α, β, length(left_boundary), length(right_boundary), parallel)
+    convolve_interior_coefficients!(dest, lower_coef, central_coef, upper_coef, u, α, β, static_length(left_boundary), static_length(right_boundary), parallel)
 end
 
 # Compute `α*D*u` and store the result in `dest`.
@@ -100,7 +100,7 @@ function mul!(dest::AbstractVector, coefficients::DerivativeCoefficients, u::Abs
     end
 
     convolve_boundary_coefficients!(dest, left_boundary, right_boundary, u, α)
-    convolve_interior_coefficients!(dest, lower_coef, central_coef, upper_coef, u, α, length(left_boundary), length(right_boundary), parallel)
+    convolve_interior_coefficients!(dest, lower_coef, central_coef, upper_coef, u, α, static_length(left_boundary), static_length(right_boundary), parallel)
 end
 
 
@@ -198,7 +198,11 @@ end
 end
 
 
-@generated function convolve_interior_coefficients!(dest::AbstractVector, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset}, u::AbstractVector, α, β, left_boundary_width, right_boundary_width, parallel) where {LowerOffset, UpperOffset}
+@generated function convolve_interior_coefficients!(
+        dest::AbstractVector,
+        lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset},
+        u::AbstractVector, α, β,
+        ::StaticInt{left_boundary_width}, ::StaticInt{right_boundary_width}, parallel) where {LowerOffset, UpperOffset, left_boundary_width, right_boundary_width}
     if LowerOffset > 0
         ex = :( lower_coef[$LowerOffset]*u[i-$LowerOffset] )
         for j in LowerOffset-1:-1:1
@@ -216,6 +220,13 @@ end
         quote
             Base.@_inline_meta
             @tturbo for i in (left_boundary_width+1):(length(dest)-right_boundary_width)
+                dest[i] = β*dest[i] + α*$ex
+            end
+        end
+    elseif parallel <: Val{:plain}
+        quote
+            Base.@_inline_meta
+            @inbounds for i in (left_boundary_width+1):(length(dest)-right_boundary_width)
                 dest[i] = β*dest[i] + α*$ex
             end
         end
@@ -229,7 +240,7 @@ end
     end
 end
 
-@generated function convolve_interior_coefficients!(dest::AbstractVector, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset}, u::AbstractVector, α, left_boundary_width, right_boundary_width, parallel) where {LowerOffset, UpperOffset}
+@generated function convolve_interior_coefficients!(dest::AbstractVector, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset}, u::AbstractVector, α, ::StaticInt{left_boundary_width}, ::StaticInt{right_boundary_width}, parallel) where {LowerOffset, UpperOffset, left_boundary_width, right_boundary_width}
     if LowerOffset > 0
         ex = :( lower_coef[$LowerOffset]*u[i-$LowerOffset] )
         for j in LowerOffset-1:-1:1
@@ -246,14 +257,21 @@ end
     if parallel <: Val{:threads}
         quote
             Base.@_inline_meta
-            @tturbo for i in (left_boundary_width+1):(length(dest)-right_boundary_width)
+            @tturbo for i in (firstindex(dest) + $left_boundary_width):(lastindex(dest) - $right_boundary_width)
                 dest[i] = α*$ex
+            end
+        end
+    elseif parallel <: Val{:plain}
+        quote
+            Base.@_inline_meta
+            @simd ivdep for i in (firstindex(dest) + $left_boundary_width):(lastindex(dest) - $right_boundary_width)
+                @inbounds dest[i] = α*$ex
             end
         end
     else
         quote
             Base.@_inline_meta
-            @turbo for i in (left_boundary_width+1):(length(dest)-right_boundary_width)
+            @turbo for i in (firstindex(dest) + $left_boundary_width):(lastindex(dest) - $right_boundary_width)
                 dest[i] = α*$ex
             end
         end
@@ -263,7 +281,7 @@ end
 
 @static if VERSION >= v"1.6" # `reinterpret(reshape, ...)` was introduced in Julia v1.6
     # Specialized for vectors of `StaticVector`s
-    @generated function convolve_interior_coefficients!(_dest::AbstractVector{<:StaticVector{N,T1}}, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset}, _u::AbstractVector{<:StaticVector{N,T2}}, α, β, left_boundary_width, right_boundary_width, parallel) where {LowerOffset, UpperOffset, N, T1, T2}
+    @generated function convolve_interior_coefficients!(_dest::AbstractVector{<:StaticVector{N,T1}}, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset}, _u::AbstractVector{<:StaticVector{N,T2}}, α, β, ::StaticInt{left_boundary_width}, ::StaticInt{right_boundary_width}, parallel) where {LowerOffset, UpperOffset, N, T1, T2, left_boundary_width, right_boundary_width}
         if LowerOffset > 0
             ex = :( lower_coef[$LowerOffset]*u[v, i-$LowerOffset] )
             for j in LowerOffset-1:-1:1
@@ -290,7 +308,18 @@ end
                 Base.@_inline_meta
                 dest = $ex_dest
                 u    = $ex_u
-                @tturbo for i in (left_boundary_width+1):(lastindex(dest, 2)-right_boundary_width)
+                @tturbo for i in (firstindex(dest, 2) + left_boundary_width):(lastindex(dest, 2) - right_boundary_width)
+                    for v in LoopVectorization.indices((dest, u), (1, 1))
+                        dest[v, i] = β*dest[v, i] + α*$ex
+                    end
+                end
+            end
+        elseif parallel <: Val{:plain}
+            quote
+                Base.@_inline_meta
+                dest = $ex_dest
+                u    = $ex_u
+                @inbounds for i in (firstindex(dest, 2) + left_boundary_width):(lastindex(dest, 2) - right_boundary_width)
                     for v in LoopVectorization.indices((dest, u), (1, 1))
                         dest[v, i] = β*dest[v, i] + α*$ex
                     end
@@ -301,7 +330,7 @@ end
                 Base.@_inline_meta
                 dest = $ex_dest
                 u    = $ex_u
-                @turbo for i in (left_boundary_width+1):(lastindex(dest, 2)-right_boundary_width)
+                @turbo for i in (firstindex(dest, 2) + left_boundary_width):(lastindex(dest, 2) - right_boundary_width)
                     for v in LoopVectorization.indices((dest, u), (1, 1))
                         dest[v, i] = β*dest[v, i] + α*$ex
                     end
@@ -310,7 +339,7 @@ end
         end
     end
 
-    @generated function convolve_interior_coefficients!(_dest::AbstractVector{<:StaticVector{N,T1}}, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset}, _u::AbstractVector{<:StaticVector{N,T2}}, α, left_boundary_width, right_boundary_width, parallel) where {LowerOffset, UpperOffset, N, T1, T2}
+    @generated function convolve_interior_coefficients!(_dest::AbstractVector{<:StaticVector{N,T1}}, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset}, _u::AbstractVector{<:StaticVector{N,T2}}, α, ::StaticInt{left_boundary_width}, ::StaticInt{right_boundary_width}, parallel) where {LowerOffset, UpperOffset, N, T1, T2, left_boundary_width, right_boundary_width}
         if LowerOffset > 0
             ex = :( lower_coef[$LowerOffset]*u[v, i-$LowerOffset] )
             for j in LowerOffset-1:-1:1
@@ -337,7 +366,18 @@ end
                 Base.@_inline_meta
                 dest = $ex_dest
                 u    = $ex_u
-                @tturbo for i in (left_boundary_width+1):(lastindex(dest, 2)-right_boundary_width)
+                @tturbo for i in (firstindex(dest, 2) + left_boundary_width):(lastindex(dest, 2) - right_boundary_width)
+                    for v in LoopVectorization.indices((dest, u), (1, 1))
+                        dest[v, i] = α*$ex
+                    end
+                end
+            end
+        elseif parallel <: Val{:plain}
+            quote
+                Base.@_inline_meta
+                dest = $ex_dest
+                u    = $ex_u
+                @inbounds for i in (firstindex(dest, 2) + left_boundary_width):(lastindex(dest, 2) - right_boundary_width)
                     for v in LoopVectorization.indices((dest, u), (1, 1))
                         dest[v, i] = α*$ex
                     end
@@ -348,7 +388,7 @@ end
                 Base.@_inline_meta
                 dest = $ex_dest
                 u    = $ex_u
-                @turbo for i in (left_boundary_width+1):(lastindex(dest, 2)-right_boundary_width)
+                @turbo for i in (firstindex(dest, 2) + left_boundary_width):(lastindex(dest, 2) - right_boundary_width)
                     for v in LoopVectorization.indices((dest, u), (1, 1))
                         dest[v, i] = α*$ex
                     end
@@ -363,6 +403,7 @@ end
     DerivativeOperator
 
 A derivative operator on a nonperiodic finite difference grid.
+See [`derivative_operator`](@ref).
 """
 struct DerivativeOperator{T,LeftBoundary,RightBoundary,LeftBoundaryDerivatives,RightBoundaryDerivatives,
                           LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel,SourceOfCoefficients,Grid} <: AbstractNonperiodicDerivativeOperator{T}

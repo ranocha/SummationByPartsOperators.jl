@@ -39,6 +39,7 @@ using LinearAlgebra
 using SparseArrays
 
 using ArgCheck: @argcheck
+using ArrayInterface: StaticInt, static_length
 using FFTW
 using LoopVectorization: LoopVectorization, @turbo, @tturbo
 using RecursiveArrayTools: recursive_bottom_eltype

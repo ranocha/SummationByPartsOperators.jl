@@ -39,7 +39,7 @@ function mul!(dest::AbstractVector, coefficients::PeriodicDerivativeCoefficients
 
     @unpack lower_coef, central_coef, upper_coef, parallel = coefficients
     convolve_periodic_boundary_coefficients!(dest, lower_coef, central_coef, upper_coef, u, α, β)
-    convolve_interior_coefficients!(dest, lower_coef, central_coef, upper_coef, u, α, β, parallel)
+    convolve_interior_coefficients!(dest, lower_coef, central_coef, upper_coef, u, α, β, static_length(lower_coef), static_length(upper_coef), parallel)
 end
 
 # Compute `α*D*u` and store the result in `dest`.
@@ -51,7 +51,7 @@ function mul!(dest::AbstractVector, coefficients::PeriodicDerivativeCoefficients
 
     @unpack lower_coef, central_coef, upper_coef, parallel = coefficients
     convolve_periodic_boundary_coefficients!(dest, lower_coef, central_coef, upper_coef, u, α)
-    convolve_interior_coefficients!(dest, lower_coef, central_coef, upper_coef, u, α, parallel)
+    convolve_interior_coefficients!(dest, lower_coef, central_coef, upper_coef, u, α, static_length(lower_coef), static_length(upper_coef), parallel)
 end
 
 
@@ -155,66 +155,6 @@ end
     end
 end
 
-
-@generated function convolve_interior_coefficients!(dest::AbstractVector, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset},
-                                                    u::AbstractVector, α, β, parallel) where {LowerOffset, UpperOffset}
-    ex = :( lower_coef[$LowerOffset]*u[i-$LowerOffset] )
-    for j in LowerOffset-1:-1:1
-        ex = :( $ex + lower_coef[$j]*u[i-$j] )
-    end
-    ex = :( $ex + central_coef*u[i] )
-    for j in 1:UpperOffset
-        ex = :( $ex + upper_coef[$j]*u[i+$j] )
-    end
-
-    if parallel <: Val{:threads}
-        quote
-            Base.@_inline_meta
-            @tturbo for i in $(LowerOffset+1):(length(dest)-$UpperOffset)
-                dest[i] = β*dest[i] + α*$ex
-            end
-        end
-    else
-        quote
-            Base.@_inline_meta
-            @turbo for i in $(LowerOffset+1):(length(dest)-$UpperOffset)
-                dest[i] = β*dest[i] + α*$ex
-            end
-        end
-    end
-end
-
-@generated function convolve_interior_coefficients!(dest::AbstractVector, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset},
-                                                    u::AbstractVector, α, parallel) where {LowerOffset, UpperOffset}
-    if LowerOffset > 0
-        ex = :( lower_coef[$LowerOffset]*u[i-$LowerOffset] )
-        for j in LowerOffset-1:-1:1
-            ex = :( $ex + lower_coef[$j]*u[i-$j] )
-        end
-        ex = :( $ex + central_coef*u[i] )
-    else
-        ex = :( central_coef*u[i] )
-    end
-    for j in 1:UpperOffset
-        ex = :( $ex + upper_coef[$j]*u[i+$j] )
-    end
-
-    if parallel <: Val{:threads}
-        quote
-            Base.@_inline_meta
-            @tturbo for i in $(LowerOffset+1):(length(dest)-$UpperOffset)
-                dest[i] = α*$ex
-            end
-        end
-    else
-        quote
-            Base.@_inline_meta
-            @turbo for i in $(LowerOffset+1):(length(dest)-$UpperOffset)
-                dest[i] = α*$ex
-            end
-        end
-    end
-end
 
 
 """

@@ -48,6 +48,11 @@ the derivative operator `D`.
 """
 function right_boundary_weight end
 
+function Base.summary(io::IO, D::AbstractDerivativeOperator)
+    print(io, nameof(typeof(D)), "(derivative_order=", derivative_order(D),
+              ", accuracy_order=", accuracy_order(D), ")")
+end
+
 
 derivative_order(coefficients::AbstractDerivativeCoefficients) = coefficients.derivative_order
 accuracy_order(coefficients::AbstractDerivativeCoefficients) = coefficients.accuracy_order
