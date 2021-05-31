@@ -650,13 +650,10 @@ The evaluation of the derivative can be parallized using threads by chosing
 ```jldoctest
 julia> periodic_derivative_operator(derivative_order=1, accuracy_order=2,
                                     xmin=0.0, xmax=1.0, N=11)
-Periodic 1st derivative operator of order 2 {T=Float64, Parallel=Val{:serial}}
-on a grid in [0.0, 1.0] using 11 nodes,
-stencils with 1 nodes to the left, 1 nodes to the right, and coefficients from
-  Fornberg (1998)
+Periodic first-derivative operator of order 2 on a grid in [0.0, 1.0] using 11 nodes,
+stencils with 1 nodes to the left, 1 nodes to the right, and coefficients of Fornberg (1998)
   Calculation of Weights in Finite Difference Formulas.
   SIAM Rev. 40.3, pp. 685-691.
-
 ```
 """
 function periodic_derivative_operator(derivative_order::Integer, accuracy_order,
@@ -699,13 +696,10 @@ The evaluation of the derivative can be parallized using threads by chosing
 ```jldoctest
 julia> periodic_derivative_operator(Holoborodko2008(), derivative_order=1, accuracy_order=2,
                                     xmin=0.0, xmax=1.0, N=11)
-Periodic 1st derivative operator of order 2 {T=Float64, Parallel=Val{:serial}}
-on a grid in [0.0, 1.0] using 11 nodes,
-stencils with 2 nodes to the left, 2 nodes to the right, and coefficients from
-  Holoborodko (2008)
+Periodic first-derivative operator of order 2 on a grid in [0.0, 1.0] using 11 nodes,
+stencils with 2 nodes to the left, 2 nodes to the right, and coefficients of   Holoborodko (2008)
   Smooth Noise Robust Differentiators.
   http://www.holoborodko.com/pavel/numerical-methods/numerical-derivative/smooth-low-noise-differentiators/
-
 ```
 """
 function periodic_derivative_operator(source::Holoborodko2008, derivative_order, accuracy_order,
@@ -749,6 +743,7 @@ end
     PeriodicDissipationOperator
 
 A dissipation operator on a periodic finite difference grid.
+See [`dissipation_operator`](@ref).
 """
 struct PeriodicDissipationOperator{T,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients,Grid} <: AbstractPeriodicDerivativeOperator{T}
     factor::T
