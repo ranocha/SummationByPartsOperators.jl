@@ -33,7 +33,8 @@ function Base.show(io::IO, source::Mattsson2017)
 end
 
 
-function first_derivative_coefficients(source::Mattsson2017, order::Int, T=Float64, parallel=Val{:serial}())
+function first_derivative_coefficients(source::Mattsson2017, order::Int,
+                                       T=Float64, mode=FastMode())
     if order == 2
         left_boundary_plus = (
             DerivativeCoefficientRow{T,1,3}(SVector(T(-3),
@@ -107,7 +108,7 @@ function first_derivative_coefficients(source::Mattsson2017, order::Int, T=Float
         DerivativeCoefficients(left_boundary, right_boundary,
                                 left_boundary_derivatives, right_boundary_derivatives,
                                 lower_coef, central_coef, upper_coef,
-                                left_weights, right_weights, parallel, 1, order, source)
+                                left_weights, right_weights, mode, 1, order, source)
     elseif order == 3
       left_boundary_plus = (
           DerivativeCoefficientRow{T,1,3}(SVector(T(-7//5),
@@ -183,7 +184,7 @@ function first_derivative_coefficients(source::Mattsson2017, order::Int, T=Float
       DerivativeCoefficients(left_boundary, right_boundary,
                               left_boundary_derivatives, right_boundary_derivatives,
                               lower_coef, central_coef, upper_coef,
-                              left_weights, right_weights, parallel, 1, order, source)
+                              left_weights, right_weights, mode, 1, order, source)
     elseif order == 4
       left_boundary_plus = (
           DerivativeCoefficientRow{T,1,4}(SVector(T(-75//49),
@@ -316,7 +317,7 @@ function first_derivative_coefficients(source::Mattsson2017, order::Int, T=Float
       DerivativeCoefficients(left_boundary, right_boundary,
                               left_boundary_derivatives, right_boundary_derivatives,
                               lower_coef, central_coef, upper_coef,
-                              left_weights, right_weights, parallel, 1, order, source)
+                              left_weights, right_weights, mode, 1, order, source)
     elseif order == 5
       left_boundary_plus = (
           DerivativeCoefficientRow{T,1,4}(SVector(T(-366//251),
@@ -454,7 +455,7 @@ function first_derivative_coefficients(source::Mattsson2017, order::Int, T=Float
       DerivativeCoefficients(left_boundary, right_boundary,
                               left_boundary_derivatives, right_boundary_derivatives,
                               lower_coef, central_coef, upper_coef,
-                              left_weights, right_weights, parallel, 1, order, source)
+                              left_weights, right_weights, mode, 1, order, source)
     elseif order == 6
       left_boundary_plus = (
           DerivativeCoefficientRow{T,1,6}(SVector(T(-58148100//36496453),
@@ -683,7 +684,7 @@ function first_derivative_coefficients(source::Mattsson2017, order::Int, T=Float
       DerivativeCoefficients(left_boundary, right_boundary,
                               left_boundary_derivatives, right_boundary_derivatives,
                               lower_coef, central_coef, upper_coef,
-                              left_weights, right_weights, parallel, 1, order, source)
+                              left_weights, right_weights, mode, 1, order, source)
     elseif order == 7
       left_boundary_plus = (
           DerivativeCoefficientRow{T,1,6}(SVector(T(-81216540//51172247),
@@ -919,7 +920,7 @@ function first_derivative_coefficients(source::Mattsson2017, order::Int, T=Float
       DerivativeCoefficients(left_boundary, right_boundary,
                               left_boundary_derivatives, right_boundary_derivatives,
                               lower_coef, central_coef, upper_coef,
-                              left_weights, right_weights, parallel, 1, order, source)
+                              left_weights, right_weights, mode, 1, order, source)
     # elseif order == 6
     #   left_boundary_plus = (
     #       DerivativeCoefficientRow{T,1,6}(SVector(T(),
@@ -1148,14 +1149,14 @@ function first_derivative_coefficients(source::Mattsson2017, order::Int, T=Float
     #   DerivativeCoefficients(left_boundary, right_boundary,
     #                           left_boundary_derivatives, right_boundary_derivatives,
     #                           lower_coef, central_coef, upper_coef,
-    #                           left_weights, right_weights, parallel, 1, order, source)
+    #                           left_weights, right_weights, mode, 1, order, source)
   else
         throw(ArgumentError("Order $order not implemented/derived."))
     end
 end
 
 
-# function second_derivative_coefficients(source::Mattsson2017, order::Int, T=Float64, parallel=Val{:serial}())
+# function second_derivative_coefficients(source::Mattsson2017, order::Int, T=Float64, mode=FastMode())
 #     if order == 2
 #         left_boundary = (
 #             # d1
@@ -1179,7 +1180,7 @@ end
 #         DerivativeCoefficients(left_boundary, right_boundary,
 #                                 left_boundary_derivatives, right_boundary_derivatives,
 #                                 lower_coef, central_coef, upper_coef,
-#                                 left_weights, right_weights, parallel, 2, order, source)
+#                                 left_weights, right_weights, mode, 2, order, source)
 #     else
 #         throw(ArgumentError("Order $order not implemented/derived."))
 #     end

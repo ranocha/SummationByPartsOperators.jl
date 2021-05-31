@@ -4,28 +4,31 @@
 
 The coefficients of a derivative operator on a periodic grid.
 """
-struct PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients} <: AbstractDerivativeCoefficients{T}
+struct PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,ExecutionMode,SourceOfCoefficients} <: AbstractDerivativeCoefficients{T}
     # coefficients defining the operator and its action
     lower_coef::SVector{LowerOffset, T}
     central_coef::T
     upper_coef::SVector{UpperOffset, T}
-    parallel::Parallel
+    mode::ExecutionMode
     # corresponding orders etc.
     derivative_order::Int
     accuracy_order  ::Int
     symmetric       ::Bool
     source_of_coefficients::SourceOfCoefficients
 
-    function PeriodicDerivativeCoefficients(lower_coef::SVector{LowerOffset, T}, central_coef::T, upper_coef::SVector{UpperOffset, T},
-                                            parallel::Parallel, derivative_order::Int, accuracy_order::Int,
-                                            source_of_coefficients::SourceOfCoefficients) where {T,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients}
+    function PeriodicDerivativeCoefficients(
+            lower_coef::SVector{LowerOffset, T}, central_coef::T, upper_coef::SVector{UpperOffset, T},
+            mode::ExecutionMode, derivative_order::Int, accuracy_order::Int,
+            source_of_coefficients::SourceOfCoefficients) where {T,LowerOffset,UpperOffset,ExecutionMode,SourceOfCoefficients}
         symmetric = LowerOffset == UpperOffset
         if symmetric
             @inbounds for i in Base.OneTo(LowerOffset)
                 symmetric = symmetric && lower_coef[i] == upper_coef[i]
             end
         end
-        new{T,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients}(lower_coef, central_coef, upper_coef, parallel, derivative_order, accuracy_order, symmetric)
+        new{T,LowerOffset,UpperOffset,ExecutionMode,SourceOfCoefficients}(
+            lower_coef, central_coef, upper_coef, mode,
+            derivative_order, accuracy_order, symmetric, source_of_coefficients)
     end
 end
 
@@ -37,9 +40,9 @@ function mul!(dest::AbstractVector, coefficients::PeriodicDerivativeCoefficients
         @argcheck length(u) > LowerOffset+UpperOffset DimensionMismatch
     end
 
-    @unpack lower_coef, central_coef, upper_coef, parallel = coefficients
+    @unpack lower_coef, central_coef, upper_coef, mode = coefficients
     convolve_periodic_boundary_coefficients!(dest, lower_coef, central_coef, upper_coef, u, α, β)
-    convolve_interior_coefficients!(dest, lower_coef, central_coef, upper_coef, u, α, β, static_length(lower_coef), static_length(upper_coef), parallel)
+    convolve_interior_coefficients!(dest, lower_coef, central_coef, upper_coef, u, α, β, static_length(lower_coef), static_length(upper_coef), mode)
 end
 
 # Compute `α*D*u` and store the result in `dest`.
@@ -49,9 +52,9 @@ function mul!(dest::AbstractVector, coefficients::PeriodicDerivativeCoefficients
         @argcheck length(u) > LowerOffset+UpperOffset DimensionMismatch
     end
 
-    @unpack lower_coef, central_coef, upper_coef, parallel = coefficients
+    @unpack lower_coef, central_coef, upper_coef, mode = coefficients
     convolve_periodic_boundary_coefficients!(dest, lower_coef, central_coef, upper_coef, u, α)
-    convolve_interior_coefficients!(dest, lower_coef, central_coef, upper_coef, u, α, static_length(lower_coef), static_length(upper_coef), parallel)
+    convolve_interior_coefficients!(dest, lower_coef, central_coef, upper_coef, u, α, static_length(lower_coef), static_length(upper_coef), mode)
 end
 
 
@@ -181,17 +184,16 @@ function Base.show(io::IO, source::BeljaddLeFlochMishraParés2017)
 end
 
 """
-    periodic_central_derivative_coefficients(derivative_order, accuracy_order, T=Float64, parallel=Val{:serial}())
+    periodic_central_derivative_coefficients(derivative_order, accuracy_order, T=Float64, mode=FastMode())
 
 Create the `PeriodicDerivativeCoefficients` approximating the `derivative_order`-th
 derivative with an order of accuracy `accuracy_order` and scalar type `T`.
 The evaluation of the derivative can be parallized using threads by chosing
-`parallel=Val{:threads}())`.
+`mode=ThreadedMode())`.
 """
-function periodic_central_derivative_coefficients(derivative_order, accuracy_order, T=Float64, parallel=Val{:serial}())
+function periodic_central_derivative_coefficients(derivative_order, accuracy_order, T=Float64, mode=FastMode())
     @argcheck derivative_order > 0
     @argcheck accuracy_order > 0
-    @argcheck typeof(parallel) <: Union{Val{:serial}, Val{:threads}}
 
     if isodd(accuracy_order)
         @warn("Central derivative operators support only even orders of accuracy.")
@@ -269,7 +271,7 @@ function periodic_central_derivative_coefficients(derivative_order, accuracy_ord
         throw(ArgumentError("Derivative order $derivative_order not implemented yet."))
     end
 
-    PeriodicDerivativeCoefficients(lower_coef, central_coef, upper_coef, parallel, derivative_order, accuracy_order, source)
+    PeriodicDerivativeCoefficients(lower_coef, central_coef, upper_coef, mode, derivative_order, accuracy_order, source)
 end
 
 """
@@ -342,15 +344,19 @@ function fornberg(xx::Vector{T}, m::Int) where {T}
 end
 
 """
-    periodic_derivative_coefficients(derivative_order, accuracy_order, left_offset=-(accuracy_order+1)÷2, T=Float64, parallel=Val{:serial}())
+    periodic_derivative_coefficients(derivative_order, accuracy_order,
+                                     left_offset=-(accuracy_order+1)÷2,
+                                     T=Float64, mode=FastMode())
 
 Create the `PeriodicDerivativeCoefficients` approximating the `derivative_order`-th
 derivative with an order of accuracy `accuracy_order` and scalar type `T` where
 the leftmost grid point used is determined by `left_offset`.
 The evaluation of the derivative can be parallized using threads by chosing
-parallel=Val{:threads}())`.
+mode=ThreadedMode()`.
 """
-function periodic_derivative_coefficients(derivative_order, accuracy_order, left_offset::Int=-(accuracy_order+1)÷2, T=Float64, parallel=Val{:serial}())
+function periodic_derivative_coefficients(derivative_order, accuracy_order,
+                                          left_offset::Int=-(accuracy_order+1)÷2,
+                                          T=Float64, mode=FastMode())
     @argcheck -accuracy_order <= left_offset <= 0
 
     x = Rational{Int128}.(left_offset:left_offset+accuracy_order)
@@ -370,7 +376,7 @@ function periodic_derivative_coefficients(derivative_order, accuracy_order, left
 
     source = Fornberg1998()
 
-    PeriodicDerivativeCoefficients(lower_coef, central_coef, upper_coef, parallel, derivative_order, accuracy_order, source)
+    PeriodicDerivativeCoefficients(lower_coef, central_coef, upper_coef, mode, derivative_order, accuracy_order, source)
 end
 
 
@@ -398,17 +404,17 @@ end
 
 """
     periodic_derivative_coefficients(source::Holoborodko2008, derivative_order, accuracy_order;
-                                     T=Float64, parallel=Val{:serial}(),
+                                     T=Float64, mode=FastMode(),
                                      stencil_width=accuracy_order+3)
 
 Create the `PeriodicDerivativeCoefficients` approximating the `derivative_order`-th
 derivative with an order of accuracy `accuracy_order` and scalar type `T` given
-by Holoborodko2008.
+by [`Holoborodko2008`](@ref).
 The evaluation of the derivative can be parallized using threads by chosing
-parallel=Val{:threads}())`.
+mode=ThreadedMode()`.
 """
 function periodic_derivative_coefficients(source::Holoborodko2008, derivative_order, accuracy_order;
-                                          T=Float64, parallel=Val{:serial}(),
+                                          T=Float64, mode=FastMode(),
                                           stencil_width=accuracy_order+3)
     method_exists = true
     if derivative_order == 1
@@ -514,7 +520,7 @@ function periodic_derivative_coefficients(source::Holoborodko2008, derivative_or
         throw(ArgumentError("Method with derivative_order=$derivative_order, accuracy_order=$accuracy_order, stencil_width=$stencil_width not implemented/derived."))
     end
 
-    PeriodicDerivativeCoefficients(lower_coef, central_coef, upper_coef, parallel, derivative_order, accuracy_order, source)
+    PeriodicDerivativeCoefficients(lower_coef, central_coef, upper_coef, mode, derivative_order, accuracy_order, source)
 end
 
 
@@ -525,21 +531,21 @@ A derivative operator on a uniform periodic grid.
 See [`periodic_derivative_operator`](@ref) and
 [`periodic_central_derivative_operator`](@ref).
 """
-struct PeriodicDerivativeOperator{T,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients,Grid} <: AbstractPeriodicDerivativeOperator{T}
-    coefficients::PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients}
+struct PeriodicDerivativeOperator{T,LowerOffset,UpperOffset,ExecutionMode,SourceOfCoefficients,Grid} <: AbstractPeriodicDerivativeOperator{T}
+    coefficients::PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,ExecutionMode,SourceOfCoefficients}
     grid_compute::Grid   # N   nodes, including the left and excluding the right boundary
     grid_evaluate::Grid #  N+1 nodes, including both boundaries
     Δx::T
     factor::T
 
-    function PeriodicDerivativeOperator(coefficients::PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients},
-                                        grid_evaluate::Grid) where {T,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients,Grid}
+    function PeriodicDerivativeOperator(coefficients::PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,ExecutionMode,SourceOfCoefficients},
+                                        grid_evaluate::Grid) where {T,LowerOffset,UpperOffset,ExecutionMode,SourceOfCoefficients,Grid}
         @argcheck length(grid_evaluate) > LowerOffset+UpperOffset DimensionMismatch
         grid_compute = range(grid_evaluate[1], stop=grid_evaluate[end-1], length=length(grid_evaluate)-1)
 
         Δx = step(grid_evaluate)
         factor = inv(Δx^coefficients.derivative_order)
-        new{T,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients,Grid}(coefficients, grid_compute, grid_evaluate, Δx, factor)
+        new{T,LowerOffset,UpperOffset,ExecutionMode,SourceOfCoefficients,Grid}(coefficients, grid_compute, grid_evaluate, Δx, factor)
     end
 end
 
@@ -614,17 +620,24 @@ end
 
 """
     periodic_central_derivative_operator(derivative_order, accuracy_order,
-                                         xmin, xmax, N, parallel=Val{:serial}())
+                                         xmin, xmax, N, mode=FastMode())
 
 Create a [`PeriodicDerivativeOperator`](@ref) approximating the `derivative_order`-th
 derivative on a uniform grid between `xmin` and `xmax` with `N` grid points up
 to order of accuracy `accuracy_order`.
 The evaluation of the derivative can be parallized using threads by chosing
-`parallel=Val{:threads}())`.
+`mode=ThreadedMode()`.
 """
-function periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N, parallel=Val{:serial}())
+function periodic_central_derivative_operator(derivative_order, accuracy_order,
+                                              xmin, xmax, N, mode=FastMode())
+    if mode === Val(:serial) || mode === Val(:threads)
+        # TODO: deprecated in v0.5
+        Base.depwarn("Providing the argument `parallel` is deprecated." *
+                     "Use `mode` instead.", :periodic_central_derivative_operator)
+        mode = _parallel_to_mode(mode)
+    end
     grid_evaluate = range(xmin, stop=xmax, length=N+1) # N includes two identical boundary nodes
-    coefficients = periodic_central_derivative_coefficients(derivative_order, accuracy_order, eltype(grid_evaluate), parallel)
+    coefficients = periodic_central_derivative_coefficients(derivative_order, accuracy_order, eltype(grid_evaluate), mode)
     PeriodicDerivativeOperator(coefficients, grid_evaluate)
 end
 
@@ -632,18 +645,18 @@ end
     periodic_derivative_operator(derivative_order, accuracy_order,
                                  xmin, xmax, N,
                                  left_offset=-(accuracy_order+1)÷2,
-                                 parallel=Val{:serial}())
+                                 mode=FastMode())
     periodic_derivative_operator(; derivative_order, accuracy_order,
                                  xmin, xmax, N,
                                  left_offset=-(accuracy_order+1)÷2,
-                                 parallel=Val{:serial}())
+                                 mode=FastMode())
 
 Create a [`PeriodicDerivativeOperator`](@ref) approximating the `derivative_order`-th
 derivative on a uniform grid between `xmin` and `xmax` with `N` grid points up
 to order of accuracy `accuracy_order` where the leftmost grid point used is
 determined by `left_offset`.
 The evaluation of the derivative can be parallized using threads by chosing
-`parallel=Val{:threads}())`.
+`mode=ThreadedMode())`.
 
 ## Examples
 
@@ -658,38 +671,56 @@ stencils with 1 nodes to the left, 1 nodes to the right, and coefficients of For
 """
 function periodic_derivative_operator(derivative_order::Integer, accuracy_order,
                                       xmin, xmax, N, left_offset::Int=-(accuracy_order+1)÷2,
-                                      parallel::Union{Val{:serial},Val{:threads}}=Val{:serial}())
+                                      mode=FastMode())
+    if mode === Val(:serial) || mode === Val(:threads)
+        # TODO: deprecated in v0.5
+        Base.depwarn("Providing the argument `parallel` is deprecated." *
+                     "Use `mode` instead.", :periodic_derivative_operator)
+        mode = _parallel_to_mode(mode)
+    end
     grid = range(xmin, stop=xmax, length=N+1) # N includes two identical boundary nodes
-    coefficients = periodic_derivative_coefficients(derivative_order, accuracy_order, left_offset, eltype(grid), parallel)
+    coefficients = periodic_derivative_coefficients(derivative_order, accuracy_order, left_offset, eltype(grid), mode)
     PeriodicDerivativeOperator(coefficients, grid)
 end
 
 @inline function periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N,
-                                              parallel::Union{Val{:serial},Val{:threads}}, left_offset::Int=-(accuracy_order+1)÷2)
-    periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N, left_offset, parallel)
+                                              mode, left_offset::Int=-(accuracy_order+1)÷2)
+    if mode === Val(:serial) || mode === Val(:threads)
+        # TODO: deprecated in v0.5
+        Base.depwarn("Providing the argument `parallel` is deprecated." *
+                     "Use `mode` instead.", :periodic_derivative_operator)
+        mode = _parallel_to_mode(mode)
+    end
+    periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N, left_offset, mode)
 end
 
 function periodic_derivative_operator(; derivative_order, accuracy_order,
                                       xmin, xmax, N, left_offset::Int=-(accuracy_order+1)÷2,
-                                      parallel::Union{Val{:serial},Val{:threads}}=Val{:serial}())
+                                      mode=FastMode())
+    if mode === Val(:serial) || mode === Val(:threads)
+        # TODO: deprecated in v0.5
+        Base.depwarn("Providing the argument `parallel` is deprecated." *
+                     "Use `mode` instead.", :periodic_derivative_operator)
+        mode = _parallel_to_mode(mode)
+    end
     periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N,
-                                 left_offset, parallel)
+                                 left_offset, mode)
 end
 
 """
     periodic_derivative_operator(source::Holoborodko2008,
                                  derivative_order, accuracy_order,
-                                 xmin, xmax, N; parallel=Val{:serial}(), kwargs...)
+                                 xmin, xmax, N; mode=FastMode(), kwargs...)
     periodic_derivative_operator(source::Holoborodko2008;
                                  derivative_order, accuracy_order,
-                                 xmin, xmax, N, parallel=Val{:serial}(), kwargs...)
+                                 xmin, xmax, N, mode=FastMode(), kwargs...)
 
 Create a `PeriodicDerivativeOperator` approximating the `derivative_order`-th
 derivative on a uniform grid between `xmin` and `xmax` with `N` grid points up
 to order of accuracy `accuracy_order` where the leftmost grid point used is
 determined by `left_offset`.
 The evaluation of the derivative can be parallized using threads by chosing
-`parallel=Val{:threads}())`.
+`mode=ThreadedMode()`.
 
 ## Examples
 
@@ -703,38 +734,67 @@ stencils with 2 nodes to the left, 2 nodes to the right, and coefficients of   H
 ```
 """
 function periodic_derivative_operator(source::Holoborodko2008, derivative_order, accuracy_order,
-                                      xmin, xmax, N; parallel=Val{:serial}(), kwargs...)
+                                      xmin, xmax, N; mode=FastMode(), parallel=nothing, kwargs...)
+    if parallel !== nothing
+        # TODO: deprecated in v0.5
+        Base.depwarn("Providing the keyword argument `parallel` is deprecated." *
+                     "Use `mode` instead.", :periodic_derivative_operator)
+        mode = _parallel_to_mode(parallel)
+    end
     grid = range(xmin, stop=xmax, length=N+1) # N includes two identical boundary nodes
     coefficients = periodic_derivative_coefficients(source, derivative_order, accuracy_order;
-                                                    kwargs..., T=eltype(grid), parallel=parallel)
+                                                    kwargs..., T=eltype(grid), mode=mode)
     PeriodicDerivativeOperator(coefficients, grid)
 end
 
 function periodic_derivative_operator(source::Holoborodko2008; derivative_order, accuracy_order,
-                                      xmin, xmax, N, parallel=Val{:serial}(), kwargs...)
+                                      xmin, xmax, N, mode=FastMode(), parallel=nothing, kwargs...)
+    if parallel !== nothing
+        # TODO: deprecated in v0.5
+        Base.depwarn("Providing the keyword argument `parallel` is deprecated." *
+                     "Use `mode` instead.", :periodic_derivative_operator)
+        mode = _parallel_to_mode(parallel)
+    end
     periodic_derivative_operator(source, derivative_order, accuracy_order, xmin, xmax, N;
-                                 parallel=parallel, kwargs...)
+                                 mode=mode, kwargs...)
 end
 
 """
     periodic_derivative_operator(derivative_order, accuracy_order, grid,
-                                 left_offset=-(accuracy_order+1)÷2, parallel=Val{:serial}())
+                                 left_offset=-(accuracy_order+1)÷2, mode=FastMode())
 
 Create a `PeriodicDerivativeOperator` approximating the `derivative_order`-th
 derivative on thr uniform `grid` up to order of accuracy `accuracy_order` where
 the leftmost grid point used is determined by `left_offset`.
 The evaluation of the derivative can be parallized using threads by chosing
-`parallel=Val{:threads}())`.
+`mode=ThreadedMode())`.
 """
-function periodic_derivative_operator(derivative_order, accuracy_order, grid::Union{LinRange,StepRangeLen},
-                                      left_offset::Int=-(accuracy_order+1)÷2, parallel=Val{:serial}())
-    coefficients = periodic_derivative_coefficients(derivative_order, accuracy_order, left_offset, eltype(grid), parallel)
+function periodic_derivative_operator(derivative_order, accuracy_order,
+                                      grid::Union{LinRange,StepRangeLen},
+                                      left_offset::Int=-(accuracy_order+1)÷2,
+                                      mode=FastMode())
+    if mode === Val(:serial) || mode === Val(:threads)
+        # TODO: deprecated in v0.5
+        Base.depwarn("Providing the argument `parallel` is deprecated." *
+                     "Use `mode` instead.", :periodic_derivative_operator)
+        mode = _parallel_to_mode(mode)
+    end
+    coefficients = periodic_derivative_coefficients(derivative_order, accuracy_order,
+        left_offset, eltype(grid), mode)
     PeriodicDerivativeOperator(coefficients, grid)
 end
 
-@inline function periodic_derivative_operator(derivative_order, accuracy_order, grid::Union{LinRange,StepRangeLen},
-                                              parallel::Union{Val{:serial},Val{:threads}}, left_offset::Int=-(accuracy_order+1)÷2)
-    periodic_derivative_operator(derivative_order, accuracy_order, grid, left_offset, parallel)
+@inline function periodic_derivative_operator(derivative_order, accuracy_order,
+                                              grid::Union{LinRange,StepRangeLen},
+                                              mode::AbstractExecutionMode,
+                                              left_offset::Int=-(accuracy_order+1)÷2)
+    if mode === Val(:serial) || mode === Val(:threads)
+        # TODO: deprecated in v0.5
+        Base.depwarn("Providing the argument `parallel` is deprecated." *
+                     "Use `mode` instead.", :periodic_derivative_operator)
+        mode = _parallel_to_mode(mode)
+    end
+    periodic_derivative_operator(derivative_order, accuracy_order, grid, left_offset, mode)
 end
 
 
@@ -745,15 +805,15 @@ end
 A dissipation operator on a periodic finite difference grid.
 See [`dissipation_operator`](@ref).
 """
-struct PeriodicDissipationOperator{T,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients,Grid} <: AbstractPeriodicDerivativeOperator{T}
+struct PeriodicDissipationOperator{T,LowerOffset,UpperOffset,ExecutionMode,SourceOfCoefficients,Grid} <: AbstractPeriodicDerivativeOperator{T}
     factor::T
-    Di::PeriodicDerivativeOperator{T,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients,Grid}
+    Di::PeriodicDerivativeOperator{T,LowerOffset,UpperOffset,ExecutionMode,SourceOfCoefficients,Grid}
 
-    function PeriodicDissipationOperator(factor::T, Di::PeriodicDerivativeOperator{T,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients,Grid}) where {T,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients,Grid}
+    function PeriodicDissipationOperator(factor::T, Di::PeriodicDerivativeOperator{T,LowerOffset,UpperOffset,ExecutionMode,SourceOfCoefficients,Grid}) where {T,LowerOffset,UpperOffset,ExecutionMode,SourceOfCoefficients,Grid}
         # check validity
         @argcheck iseven(derivative_order(Di))
         @argcheck (-1)^(1+derivative_order(Di)÷2)*factor >= 0
-        new{T,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients,Grid}(factor, Di)
+        new{T,LowerOffset,UpperOffset,ExecutionMode,SourceOfCoefficients,Grid}(factor, Di)
     end
 end
 
@@ -796,23 +856,30 @@ end
     dissipation_operator(D::PeriodicDerivativeOperator;
                          strength=one(eltype(D)),
                          order=accuracy_order(D),
-                         parallel=D.coefficients.parallel)
+                         mode=D.coefficients.mode)
 
 Create a negative semidefinite `DissipationOperator` using undivided differences
 approximating a `order`-th derivative with strength `strength` adapted to the
 derivative operator `D`.
 The evaluation of the derivative can be parallized using threads by chosing
-`parallel=Val{:threads}())`.
+`mode=ThreadedMode()`.
 """
 function dissipation_operator(D::PeriodicDerivativeOperator;
                               strength=eltype(D)(1),
                               order=accuracy_order(D),
-                              parallel=D.coefficients.parallel)
+                              mode=D.coefficients.mode,
+                              parallel=nothing)
+    if parallel !== nothing
+        # TODO: deprecated in v0.5
+        Base.depwarn("Providing the keyword argument `parallel` is deprecated." *
+                     "Use `mode` instead.", :dissipation_operator)
+        mode = _parallel_to_mode(parallel)
+    end
     @argcheck iseven(order) ArgumentError("Dissipation operators require even derivatives.")
     # account for the grid spacing
     factor = strength * (-1)^(1 + order÷2) * D.Δx^order
     x = D.grid_evaluate
-    Di = periodic_derivative_operator(order, order, first(x), last(x), size(D, 1), parallel)
+    Di = periodic_derivative_operator(order, order, first(x), last(x), size(D, 1), mode)
     PeriodicDissipationOperator(factor, Di)
 end
 

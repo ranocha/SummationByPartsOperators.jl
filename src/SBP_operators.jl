@@ -5,7 +5,7 @@
 The coefficients of a derivative operator on a nonperiodic grid.
 """
 struct DerivativeCoefficients{T,LeftBoundary,RightBoundary,LeftBoundaryDerivatives,RightBoundaryDerivatives,
-                              LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel,SourceOfCoefficients} <: AbstractDerivativeCoefficients{T}
+                              LowerOffset,UpperOffset,LeftWidth,RightWidth,ExecutionMode,SourceOfCoefficients} <: AbstractDerivativeCoefficients{T}
     # coefficients defining the operator and its action
     left_boundary::LeftBoundary
     right_boundary::RightBoundary
@@ -16,7 +16,7 @@ struct DerivativeCoefficients{T,LeftBoundary,RightBoundary,LeftBoundaryDerivativ
     upper_coef::SVector{UpperOffset, T}
     left_weights::SVector{LeftWidth, T}
     right_weights::SVector{RightWidth, T}
-    parallel::Parallel
+    mode::ExecutionMode
     # corresponding orders etc.
     derivative_order::Int
     accuracy_order  ::Int
@@ -28,9 +28,9 @@ struct DerivativeCoefficients{T,LeftBoundary,RightBoundary,LeftBoundaryDerivativ
                                     right_boundary_derivatives::RightBoundaryDerivatives,
                                     lower_coef::SVector{LowerOffset, T}, central_coef::T, upper_coef::SVector{UpperOffset, T},
                                     left_weights::SVector{LeftWidth, T}, right_weights::SVector{RightWidth, T},
-                                    parallel::Parallel, derivative_order::Int, accuracy_order::Int,
+                                    mode::ExecutionMode, derivative_order::Int, accuracy_order::Int,
                                     source_of_coefficients::SourceOfCoefficients) where {T,LeftBoundary,RightBoundary,LeftBoundaryDerivatives,RightBoundaryDerivatives,
-                                                                                        LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel,SourceOfCoefficients}
+                                                                                        LowerOffset,UpperOffset,LeftWidth,RightWidth,ExecutionMode,SourceOfCoefficients}
         @argcheck length(left_boundary) == LeftWidth
         @argcheck length(right_boundary) == RightWidth
         @argcheck length(left_boundary_derivatives) == length(right_boundary_derivatives)
@@ -45,10 +45,10 @@ struct DerivativeCoefficients{T,LeftBoundary,RightBoundary,LeftBoundaryDerivativ
         if derivative_order-1 != length(left_boundary_derivatives)
             warn("Derivative coefficients of degree $derivative_order should provide $(derivative_order-1) boundary derivatives.")
         end
-        new{T,LeftBoundary,RightBoundary,LeftBoundaryDerivatives,RightBoundaryDerivatives,LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel,SourceOfCoefficients}(
+        new{T,LeftBoundary,RightBoundary,LeftBoundaryDerivatives,RightBoundaryDerivatives,LowerOffset,UpperOffset,LeftWidth,RightWidth,ExecutionMode,SourceOfCoefficients}(
             left_boundary, right_boundary, left_boundary_derivatives, right_boundary_derivatives,
             lower_coef, central_coef, upper_coef, left_weights, right_weights,
-            parallel, derivative_order, accuracy_order, symmetric, source_of_coefficients)
+            mode, derivative_order, accuracy_order, symmetric, source_of_coefficients)
     end
 end
 
@@ -74,7 +74,7 @@ end
 
 # Compute `α*D*u + β*dest` and store the result in `dest`.
 function mul!(dest::AbstractVector, coefficients::DerivativeCoefficients, u::AbstractVector, α, β)
-    @unpack left_boundary, right_boundary, lower_coef, central_coef, upper_coef, parallel = coefficients
+    @unpack left_boundary, right_boundary, lower_coef, central_coef, upper_coef, mode = coefficients
 
     @boundscheck begin
         @argcheck length(dest) == length(u) DimensionMismatch
@@ -83,12 +83,12 @@ function mul!(dest::AbstractVector, coefficients::DerivativeCoefficients, u::Abs
     end
 
     convolve_boundary_coefficients!(dest, left_boundary, right_boundary, u, α, β)
-    convolve_interior_coefficients!(dest, lower_coef, central_coef, upper_coef, u, α, β, static_length(left_boundary), static_length(right_boundary), parallel)
+    convolve_interior_coefficients!(dest, lower_coef, central_coef, upper_coef, u, α, β, static_length(left_boundary), static_length(right_boundary), mode)
 end
 
 # Compute `α*D*u` and store the result in `dest`.
 function mul!(dest::AbstractVector, coefficients::DerivativeCoefficients, u::AbstractVector, α)
-    @unpack left_boundary, right_boundary, lower_coef, central_coef, upper_coef, parallel = coefficients
+    @unpack left_boundary, right_boundary, lower_coef, central_coef, upper_coef, mode = coefficients
 
     @boundscheck begin
         @argcheck length(dest) == length(u) DimensionMismatch
@@ -97,7 +97,7 @@ function mul!(dest::AbstractVector, coefficients::DerivativeCoefficients, u::Abs
     end
 
     convolve_boundary_coefficients!(dest, left_boundary, right_boundary, u, α)
-    convolve_interior_coefficients!(dest, lower_coef, central_coef, upper_coef, u, α, static_length(left_boundary), static_length(right_boundary), parallel)
+    convolve_interior_coefficients!(dest, lower_coef, central_coef, upper_coef, u, α, static_length(left_boundary), static_length(right_boundary), mode)
 end
 
 
@@ -199,7 +199,7 @@ end
         dest::AbstractVector,
         lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset},
         u::AbstractVector, α, β,
-        ::StaticInt{left_boundary_width}, ::StaticInt{right_boundary_width}, parallel) where {LowerOffset, UpperOffset, left_boundary_width, right_boundary_width}
+        ::StaticInt{left_boundary_width}, ::StaticInt{right_boundary_width}, mode) where {LowerOffset, UpperOffset, left_boundary_width, right_boundary_width}
     if LowerOffset > 0
         ex = :( lower_coef[$LowerOffset]*u[i-$LowerOffset] )
         for j in LowerOffset-1:-1:1
@@ -213,14 +213,14 @@ end
         ex = :( $ex + upper_coef[$j]*u[i+$j] )
     end
 
-    if parallel <: Val{:threads}
+    if mode <: ThreadedMode
         quote
             Base.@_inline_meta
             @tturbo for i in (left_boundary_width+1):(length(dest)-right_boundary_width)
                 dest[i] = β*dest[i] + α*$ex
             end
         end
-    elseif parallel <: Val{:plain}
+    elseif mode <: SafeMode
         quote
             Base.@_inline_meta
             @inbounds for i in (left_boundary_width+1):(length(dest)-right_boundary_width)
@@ -237,7 +237,7 @@ end
     end
 end
 
-@generated function convolve_interior_coefficients!(dest::AbstractVector, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset}, u::AbstractVector, α, ::StaticInt{left_boundary_width}, ::StaticInt{right_boundary_width}, parallel) where {LowerOffset, UpperOffset, left_boundary_width, right_boundary_width}
+@generated function convolve_interior_coefficients!(dest::AbstractVector, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset}, u::AbstractVector, α, ::StaticInt{left_boundary_width}, ::StaticInt{right_boundary_width}, mode) where {LowerOffset, UpperOffset, left_boundary_width, right_boundary_width}
     if LowerOffset > 0
         ex = :( lower_coef[$LowerOffset]*u[i-$LowerOffset] )
         for j in LowerOffset-1:-1:1
@@ -251,14 +251,14 @@ end
         ex = :( $ex + upper_coef[$j]*u[i+$j] )
     end
 
-    if parallel <: Val{:threads}
+    if mode <: ThreadedMode
         quote
             Base.@_inline_meta
             @tturbo for i in (firstindex(dest) + $left_boundary_width):(lastindex(dest) - $right_boundary_width)
                 dest[i] = α*$ex
             end
         end
-    elseif parallel <: Val{:plain}
+    elseif mode <: SafeMode
         quote
             Base.@_inline_meta
             @simd ivdep for i in (firstindex(dest) + $left_boundary_width):(lastindex(dest) - $right_boundary_width)
@@ -278,7 +278,7 @@ end
 
 @static if VERSION >= v"1.6" # `reinterpret(reshape, ...)` was introduced in Julia v1.6
     # Specialized for vectors of `StaticVector`s
-    @generated function convolve_interior_coefficients!(_dest::AbstractVector{<:StaticVector{N,T1}}, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset}, _u::AbstractVector{<:StaticVector{N,T2}}, α, β, ::StaticInt{left_boundary_width}, ::StaticInt{right_boundary_width}, parallel) where {LowerOffset, UpperOffset, N, T1, T2, left_boundary_width, right_boundary_width}
+    @generated function convolve_interior_coefficients!(_dest::AbstractVector{<:StaticVector{N,T1}}, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset}, _u::AbstractVector{<:StaticVector{N,T2}}, α, β, ::StaticInt{left_boundary_width}, ::StaticInt{right_boundary_width}, mode) where {LowerOffset, UpperOffset, N, T1, T2, left_boundary_width, right_boundary_width}
         if LowerOffset > 0
             ex = :( lower_coef[$LowerOffset]*u[v, i-$LowerOffset] )
             for j in LowerOffset-1:-1:1
@@ -300,7 +300,7 @@ end
             ex_u    = :( reinterpret(reshape, $T2, _u) )
         end
 
-        if parallel <: Val{:threads}
+        if mode <: ThreadedMode
             quote
                 Base.@_inline_meta
                 dest = $ex_dest
@@ -311,7 +311,7 @@ end
                     end
                 end
             end
-        elseif parallel <: Val{:plain}
+        elseif mode <: SafeMode
             quote
                 Base.@_inline_meta
                 dest = $ex_dest
@@ -336,7 +336,7 @@ end
         end
     end
 
-    @generated function convolve_interior_coefficients!(_dest::AbstractVector{<:StaticVector{N,T1}}, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset}, _u::AbstractVector{<:StaticVector{N,T2}}, α, ::StaticInt{left_boundary_width}, ::StaticInt{right_boundary_width}, parallel) where {LowerOffset, UpperOffset, N, T1, T2, left_boundary_width, right_boundary_width}
+    @generated function convolve_interior_coefficients!(_dest::AbstractVector{<:StaticVector{N,T1}}, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset}, _u::AbstractVector{<:StaticVector{N,T2}}, α, ::StaticInt{left_boundary_width}, ::StaticInt{right_boundary_width}, mode) where {LowerOffset, UpperOffset, N, T1, T2, left_boundary_width, right_boundary_width}
         if LowerOffset > 0
             ex = :( lower_coef[$LowerOffset]*u[v, i-$LowerOffset] )
             for j in LowerOffset-1:-1:1
@@ -358,7 +358,7 @@ end
             ex_u    = :( reinterpret(reshape, $T2, _u) )
         end
 
-        if parallel <: Val{:threads}
+        if mode <: ThreadedMode
             quote
                 Base.@_inline_meta
                 dest = $ex_dest
@@ -369,7 +369,7 @@ end
                     end
                 end
             end
-        elseif parallel <: Val{:plain}
+        elseif mode <: SafeMode
             quote
                 Base.@_inline_meta
                 dest = $ex_dest
@@ -403,23 +403,23 @@ A derivative operator on a nonperiodic finite difference grid.
 See [`derivative_operator`](@ref).
 """
 struct DerivativeOperator{T,LeftBoundary,RightBoundary,LeftBoundaryDerivatives,RightBoundaryDerivatives,
-                          LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel,SourceOfCoefficients,Grid} <: AbstractNonperiodicDerivativeOperator{T}
+                          LowerOffset,UpperOffset,LeftWidth,RightWidth,ExecutionMode,SourceOfCoefficients,Grid} <: AbstractNonperiodicDerivativeOperator{T}
     coefficients::DerivativeCoefficients{T,LeftBoundary,RightBoundary,LeftBoundaryDerivatives,RightBoundaryDerivatives,
-                                         LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel,SourceOfCoefficients}
+                                         LowerOffset,UpperOffset,LeftWidth,RightWidth,ExecutionMode,SourceOfCoefficients}
     grid::Grid
     Δx::T
     factor::T
 
     function DerivativeOperator(coefficients::DerivativeCoefficients{T,LeftBoundary,RightBoundary,LeftBoundaryDerivatives,RightBoundaryDerivatives,
-                                                                     LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel,SourceOfCoefficients},
+                                                                     LowerOffset,UpperOffset,LeftWidth,RightWidth,ExecutionMode,SourceOfCoefficients},
                                 grid::Grid) where {T,LeftBoundary,RightBoundary,LeftBoundaryDerivatives,RightBoundaryDerivatives,
-                                                   LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel,SourceOfCoefficients,Grid}
+                                                   LowerOffset,UpperOffset,LeftWidth,RightWidth,ExecutionMode,SourceOfCoefficients,Grid}
         @argcheck length(grid) > LowerOffset+UpperOffset DimensionMismatch
         @argcheck length(grid) > length(coefficients.left_boundary) + length(coefficients.right_boundary) DimensionMismatch
 
         Δx = step(grid)
         factor = inv(Δx^derivative_order(coefficients))
-        new{T,LeftBoundary,RightBoundary,LeftBoundaryDerivatives,RightBoundaryDerivatives,LowerOffset,UpperOffset,LeftWidth,RightWidth,Parallel,SourceOfCoefficients,Grid}(
+        new{T,LeftBoundary,RightBoundary,LeftBoundaryDerivatives,RightBoundaryDerivatives,LowerOffset,UpperOffset,LeftWidth,RightWidth,ExecutionMode,SourceOfCoefficients,Grid}(
             coefficients, grid, Δx, factor)
     end
 end
@@ -613,27 +613,34 @@ end
 """
     derivative_operator(source_of_coefficients,
                         derivative_order, accuracy_order,
-                        xmin, xmax, N, parallel=Val{:serial}())
+                        xmin, xmax, N, mode=FastMode())
     derivative_operator(source_of_coefficients;
                         derivative_order, accuracy_order,
-                        xmin, xmax, N, parallel=Val{:serial}())
+                        xmin, xmax, N, mode=FastMode())
 
 Create a [`DerivativeOperator`](@ref) approximating the `derivative_order`-th derivative
 on a grid between `xmin` and `xmax` with `N` grid points up to order of accuracy
 `accuracy_order`. with coefficients given by `source_of_coefficients`.
 The evaluation of the derivative can be parallized using threads by chosing
-`parallel=Val{:threads}())`.
+`mode=ThreadedMode()`.
 """
-function derivative_operator(source_of_coefficients, derivative_order, accuracy_order, xmin, xmax, N, parallel=Val{:serial}())
+function derivative_operator(source_of_coefficients, derivative_order, accuracy_order,
+                            xmin, xmax, N, mode=FastMode())
+    if mode === Val(:serial) || mode === Val(:threads)
+        # TODO: deprecated in v0.5
+        Base.depwarn("Providing the argument `parallel` is deprecated." *
+                     "Use `mode` instead.", :derivative_operator)
+        mode = _parallel_to_mode(mode)
+    end
     grid = construct_grid(source_of_coefficients, accuracy_order, xmin, xmax, N)
     if derivative_order == 1
-        coefficients = first_derivative_coefficients(source_of_coefficients, accuracy_order, eltype(grid), parallel)
+        coefficients = first_derivative_coefficients(source_of_coefficients, accuracy_order, eltype(grid), mode)
     elseif derivative_order == 2
-        coefficients = second_derivative_coefficients(source_of_coefficients, accuracy_order, eltype(grid), parallel)
+        coefficients = second_derivative_coefficients(source_of_coefficients, accuracy_order, eltype(grid), mode)
     elseif derivative_order == 3
-        coefficients = third_derivative_coefficients(source_of_coefficients, accuracy_order, eltype(grid), parallel)
+        coefficients = third_derivative_coefficients(source_of_coefficients, accuracy_order, eltype(grid), mode)
     elseif derivative_order == 4
-        coefficients = fourth_derivative_coefficients(source_of_coefficients, accuracy_order, eltype(grid), parallel)
+        coefficients = fourth_derivative_coefficients(source_of_coefficients, accuracy_order, eltype(grid), mode)
     else
         throw(ArgumentError("Derivative order $derivative_order not implemented."))
     end
@@ -642,9 +649,15 @@ end
 
 function derivative_operator(source_of_coefficients;
                              derivative_order, accuracy_order,
-                             xmin, xmax, N, parallel=Val{:serial}())
+                             xmin, xmax, N, mode=FastMode(), parallel=nothing)
+    if parallel !== nothing
+        # TODO: deprecated in v0.5
+        Base.depwarn("Providing the keyword argument `parallel` is deprecated." *
+                     "Use `mode` instead.", :dissipation_operator)
+        mode = _parallel_to_mode(parallel)
+    end
     derivative_operator(source_of_coefficients, derivative_order, accuracy_order,
-                        xmin, xmax, N, parallel)
+                        xmin, xmax, N, mode)
 end
 
 

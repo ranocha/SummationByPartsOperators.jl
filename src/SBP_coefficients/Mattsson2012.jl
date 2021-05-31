@@ -28,16 +28,16 @@ function Base.show(io::IO, source::Mattsson2012)
 end
 
 
-@inline function first_derivative_coefficients(source::Mattsson2012, order::Int, T=Float64, parallel=Val{:serial}())
-    first_derivative_coefficients(MattssonNordström2004(), order, T, parallel)
+@inline function first_derivative_coefficients(source::Mattsson2012, order::Int, T=Float64, mode=FastMode())
+    first_derivative_coefficients(MattssonNordström2004(), order, T, mode)
 end
 
-@inline function second_derivative_coefficients(source::Mattsson2012, order::Int, T=Float64, parallel=Val{:serial}())
-    second_derivative_coefficients(MattssonNordström2004(), order, T, parallel)
+@inline function second_derivative_coefficients(source::Mattsson2012, order::Int, T=Float64, mode=FastMode())
+    second_derivative_coefficients(MattssonNordström2004(), order, T, mode)
 end
 
 
-function var_coef_derivative_coefficients(source::Mattsson2012, derivative_order::Int, accuracy_order::Int, grid, parallel=Val{:serial}())
+function var_coef_derivative_coefficients(source::Mattsson2012, derivative_order::Int, accuracy_order::Int, grid, mode=FastMode())
     @argcheck derivative_order == 2
     T = eltype(grid)
     if accuracy_order == 2
@@ -65,7 +65,7 @@ function var_coef_derivative_coefficients(source::Mattsson2012, derivative_order
     end
 
     VarCoefDerivativeCoefficients(coefficient_cache, left_weights, right_weights,
-                                  parallel, derivative_order, accuracy_order, source)
+                                  mode, derivative_order, accuracy_order, source)
 end
 
 

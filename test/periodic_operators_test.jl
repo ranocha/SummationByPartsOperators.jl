@@ -405,7 +405,7 @@ for T in (Float32, Float64), accuracy_order in 1:10, derivative_order in 1:3
     xmax = 5*one(T)
     N = 50
     D_serial = periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
-    D_threads= periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N, Val{:threads}())
+    D_threads= periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N, ThreadedMode())
 
     u = compute_coefficients(x->x^5, D_serial)
     dest_serial = fill(zero(eltype(u)), length(u))
@@ -430,7 +430,8 @@ for T in (Float32, Float64), accuracy_order in 1:10, derivative_order in 1:3
     xmax = 5*one(T)
     N = 51
     D_serial = periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
-    D_threads= periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N, Val{:threads}())
+    D_threads= periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N, ThreadedMode())
+    D_safe   = periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N, SafeMode())
 
     u = compute_coefficients(x->x^5, D_serial)
     dest1 = fill(zero(eltype(u)), length(u))
@@ -442,6 +443,7 @@ for T in (Float32, Float64), accuracy_order in 1:10, derivative_order in 1:3
     mul!(dest1, D_threads, u, one(T), zero(T))
     mul!(dest2, D_threads, u, one(T))
     @test all(i->dest1[i] ≈ dest2[i], eachindex(u))
+    @test dest1 ≈ D_safe * u
 end
 
 # Accuracy tests for periodic signals

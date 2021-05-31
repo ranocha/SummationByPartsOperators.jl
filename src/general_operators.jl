@@ -54,6 +54,34 @@ function Base.summary(io::IO, D::AbstractDerivativeOperator)
 end
 
 
+
+abstract type AbstractExecutionMode end
+"""
+    SafeMode()
+
+A safe execution mode relying only on basic functionality of Julia.
+"""
+struct SafeMode <: AbstractExecutionMode end
+"""
+    FastMode()
+
+A (probably) faster execution mode that might depend on packages such as
+[LoopVectorization.jl](https://github.com/JuliaSIMD/LoopVectorization.jl).
+"""
+struct FastMode <: AbstractExecutionMode end
+"""
+    ThreadedMode()
+
+An execution mode using multiple threads and possibly further optimizations, cf.
+[`FastMode`](@ref).
+"""
+struct ThreadedMode <: AbstractExecutionMode end
+
+# TODO: deprecated in v0.5
+_parallel_to_mode(::Val{:threads}) = ThreadedMode()
+_parallel_to_mode(::Val{:serial}) = FastMode()
+
+
 derivative_order(coefficients::AbstractDerivativeCoefficients) = coefficients.derivative_order
 accuracy_order(coefficients::AbstractDerivativeCoefficients) = coefficients.accuracy_order
 Base.eltype(coefficients::AbstractDerivativeCoefficients{T}) where {T} = T

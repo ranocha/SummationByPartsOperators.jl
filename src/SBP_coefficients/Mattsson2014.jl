@@ -23,7 +23,7 @@ function Base.show(io::IO, source::Mattsson2014)
 end
 
 
-function first_derivative_coefficients(source::Mattsson2014, order::Int, T=Float64, parallel=Val{:serial}())
+function first_derivative_coefficients(source::Mattsson2014, order::Int, T=Float64, mode=FastMode())
     if order == 2
         left_boundary = (
             # d1
@@ -42,7 +42,7 @@ function first_derivative_coefficients(source::Mattsson2014, order::Int, T=Float
         DerivativeCoefficients(left_boundary, right_boundary,
                                 left_boundary_derivatives, right_boundary_derivatives,
                                 lower_coef, central_coef, upper_coef,
-                                left_weights, right_weights, parallel, 1, order, source)
+                                left_weights, right_weights, mode, 1, order, source)
     elseif order == 4
         left_boundary = (
             # d1
@@ -108,7 +108,7 @@ function first_derivative_coefficients(source::Mattsson2014, order::Int, T=Float
         DerivativeCoefficients(left_boundary, right_boundary,
                                 left_boundary_derivatives, right_boundary_derivatives,
                                 lower_coef, central_coef, upper_coef,
-                                left_weights, right_weights, parallel, 1, order, source)
+                                left_weights, right_weights, mode, 1, order, source)
     elseif order == 6
         left_boundary = (
             # d1
@@ -209,14 +209,14 @@ function first_derivative_coefficients(source::Mattsson2014, order::Int, T=Float
         DerivativeCoefficients(left_boundary, right_boundary,
                                 left_boundary_derivatives, right_boundary_derivatives,
                                 lower_coef, central_coef, upper_coef,
-                                left_weights, right_weights, parallel, 1, order, source)
+                                left_weights, right_weights, mode, 1, order, source)
     else
         throw(ArgumentError("Order $order not implemented/derived."))
     end
 end
 
 
-function second_derivative_coefficients(source::Mattsson2014, order::Int, T=Float64, parallel=Val{:serial}())
+function second_derivative_coefficients(source::Mattsson2014, order::Int, T=Float64, mode=FastMode())
     if order == 2
         left_boundary = (
             # d1
@@ -243,7 +243,7 @@ function second_derivative_coefficients(source::Mattsson2014, order::Int, T=Floa
         DerivativeCoefficients(left_boundary, right_boundary,
                                 left_boundary_derivatives, right_boundary_derivatives,
                                 lower_coef, central_coef, upper_coef,
-                                left_weights, right_weights, parallel, 2, order, source)
+                                left_weights, right_weights, mode, 2, order, source)
     elseif order == 4
         left_boundary = (
             # d1
@@ -317,7 +317,7 @@ function second_derivative_coefficients(source::Mattsson2014, order::Int, T=Floa
         DerivativeCoefficients(left_boundary, right_boundary,
                                 left_boundary_derivatives, right_boundary_derivatives,
                                 lower_coef, central_coef, upper_coef,
-                                left_weights, right_weights, parallel, 2, order, source)
+                                left_weights, right_weights, mode, 2, order, source)
     elseif order == 6
         left_boundary = (
             # d1
@@ -427,14 +427,14 @@ function second_derivative_coefficients(source::Mattsson2014, order::Int, T=Floa
         DerivativeCoefficients(left_boundary, right_boundary,
                                 left_boundary_derivatives, right_boundary_derivatives,
                                 lower_coef, central_coef, upper_coef,
-                                left_weights, right_weights, parallel, 2, order, source)
+                                left_weights, right_weights, mode, 2, order, source)
     else
         throw(ArgumentError("Order $order not implemented/derived."))
     end
 end
 
 
-function third_derivative_coefficients(source::Mattsson2014, order::Int, T=Float64, parallel=Val{:serial}())
+function third_derivative_coefficients(source::Mattsson2014, order::Int, T=Float64, mode=FastMode())
     if order == 2
         left_boundary = (
             # d1
@@ -478,7 +478,7 @@ function third_derivative_coefficients(source::Mattsson2014, order::Int, T=Float
         DerivativeCoefficients(left_boundary, right_boundary,
                                 left_boundary_derivatives, right_boundary_derivatives,
                                 lower_coef, central_coef, upper_coef,
-                                left_weights, right_weights, parallel, 3, order, source)
+                                left_weights, right_weights, mode, 3, order, source)
     elseif order == 4
         left_boundary = (
             # d1
@@ -561,7 +561,7 @@ function third_derivative_coefficients(source::Mattsson2014, order::Int, T=Float
         DerivativeCoefficients(left_boundary, right_boundary,
                                 left_boundary_derivatives, right_boundary_derivatives,
                                 lower_coef, central_coef, upper_coef,
-                                left_weights, right_weights, parallel, 3, order, source)
+                                left_weights, right_weights, mode, 3, order, source)
     elseif order == 6
         left_boundary = (
             # d1
@@ -682,14 +682,14 @@ function third_derivative_coefficients(source::Mattsson2014, order::Int, T=Float
         DerivativeCoefficients(left_boundary, right_boundary,
                                 left_boundary_derivatives, right_boundary_derivatives,
                                 lower_coef, central_coef, upper_coef,
-                                left_weights, right_weights, parallel, 3, order, source)
+                                left_weights, right_weights, mode, 3, order, source)
     else
         throw(ArgumentError("Order $order not implemented/derived."))
     end
 end
 
 
-function fourth_derivative_coefficients(source::Mattsson2014, order::Int, T=Float64, parallel=Val{:serial}())
+function fourth_derivative_coefficients(source::Mattsson2014, order::Int, T=Float64, mode=FastMode())
     if order == 2
         left_boundary = (
             # d1
@@ -746,7 +746,7 @@ function fourth_derivative_coefficients(source::Mattsson2014, order::Int, T=Floa
         DerivativeCoefficients(left_boundary, right_boundary,
                                 left_boundary_derivatives, right_boundary_derivatives,
                                 lower_coef, central_coef, upper_coef,
-                                left_weights, right_weights, parallel, 4, order, source)
+                                left_weights, right_weights, mode, 4, order, source)
     elseif order == 4
         left_boundary = (
             # d1
@@ -835,7 +835,7 @@ function fourth_derivative_coefficients(source::Mattsson2014, order::Int, T=Floa
         DerivativeCoefficients(left_boundary, right_boundary,
                                 left_boundary_derivatives, right_boundary_derivatives,
                                 lower_coef, central_coef, upper_coef,
-                                left_weights, right_weights, parallel, 4, order, source)
+                                left_weights, right_weights, mode, 4, order, source)
     elseif order == 6
         left_boundary = (
             # d1
@@ -963,7 +963,7 @@ function fourth_derivative_coefficients(source::Mattsson2014, order::Int, T=Floa
         DerivativeCoefficients(left_boundary, right_boundary,
                                 left_boundary_derivatives, right_boundary_derivatives,
                                 lower_coef, central_coef, upper_coef,
-                                left_weights, right_weights, parallel, 4, order, source)
+                                left_weights, right_weights, mode, 4, order, source)
     else
         throw(ArgumentError("Order $order not implemented/derived."))
     end

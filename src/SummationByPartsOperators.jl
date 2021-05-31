@@ -120,6 +120,7 @@ export PeriodicDerivativeOperator, PeriodicDissipationOperator,
        FourierDerivativeOperator2D,
        LegendreDerivativeOperator, LegendreSecondDerivativeOperator
 export FilterCallback, ConstantFilter, ExponentialFilter
+export SafeMode, FastMode, ThreadedMode
 export derivative_order, accuracy_order, source_of_coefficients, grid, semidiscretize
 export mass_matrix
 export integrate, left_boundary_weight, right_boundary_weight,

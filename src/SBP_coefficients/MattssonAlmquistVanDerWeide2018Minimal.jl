@@ -108,7 +108,8 @@ function construct_grid(::MattssonAlmquistVanDerWeide2018Minimal, accuracy_order
 end
 
 
-function first_derivative_coefficients(source::MattssonAlmquistVanDerWeide2018Minimal, order::Int, T=Float64, parallel=Val{:serial}())
+function first_derivative_coefficients(source::MattssonAlmquistVanDerWeide2018Minimal,
+                                       order::Int, T=Float64, mode=FastMode())
   if order == 4
     left_boundary = (
         # d1
@@ -141,7 +142,7 @@ function first_derivative_coefficients(source::MattssonAlmquistVanDerWeide2018Mi
     DerivativeCoefficients(left_boundary, right_boundary,
                             left_boundary_derivatives, right_boundary_derivatives,
                             lower_coef, central_coef, upper_coef,
-                            left_weights, right_weights, parallel, 1, order, source)
+                            left_weights, right_weights, mode, 1, order, source)
   elseif order == 6
     left_boundary = (
         # d1
@@ -197,7 +198,7 @@ function first_derivative_coefficients(source::MattssonAlmquistVanDerWeide2018Mi
     DerivativeCoefficients(left_boundary, right_boundary,
                             left_boundary_derivatives, right_boundary_derivatives,
                             lower_coef, central_coef, upper_coef,
-                            left_weights, right_weights, parallel, 1, order, source)
+                            left_weights, right_weights, mode, 1, order, source)
   elseif order == 8
     left_boundary = (
         # d1
@@ -270,7 +271,7 @@ function first_derivative_coefficients(source::MattssonAlmquistVanDerWeide2018Mi
     DerivativeCoefficients(left_boundary, right_boundary,
                             left_boundary_derivatives, right_boundary_derivatives,
                             lower_coef, central_coef, upper_coef,
-                            left_weights, right_weights, parallel, 1, order, source)
+                            left_weights, right_weights, mode, 1, order, source)
   # elseif order == 8
   #   left_boundary = (
   #       # d1
@@ -343,7 +344,7 @@ function first_derivative_coefficients(source::MattssonAlmquistVanDerWeide2018Mi
   #   DerivativeCoefficients(left_boundary, right_boundary,
   #                           left_boundary_derivatives, right_boundary_derivatives,
   #                           lower_coef, central_coef, upper_coef,
-  #                           left_weights, right_weights, parallel, 1, order, source)
+  #                           left_weights, right_weights, mode, 1, order, source)
   else
     throw(ArgumentError("Order $order not implemented/derived."))
   end
