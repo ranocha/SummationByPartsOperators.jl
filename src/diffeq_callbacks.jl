@@ -1,4 +1,4 @@
-import .DiffEqCallbacks: SavingCallback
+import .DiffEqCallbacks: SavingCallback, SavedValues
 
 function SavingCallback(semi::AbstractSemidiscretization; kwargs...)
   T = eltype(semi.derivative)
