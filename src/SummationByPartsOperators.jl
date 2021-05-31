@@ -49,7 +49,6 @@ using UnPack: @unpack
 using Unrolled
 
 @reexport using DiffEqBase
-using DiffEqCallbacks
 
 import LinearAlgebra: mul!
 @reexport using PolynomialBases
@@ -85,6 +84,7 @@ include("coupling.jl")
 function __init__()
   @require BandedMatrices="aae01518-5342-5314-be14-df237901396f" include("banded_matrices.jl")
   @require StructArrays="09ab397b-f2b6-538f-b94a-2f83cf4a842a" include("struct_arrays.jl")
+  @require DiffEqCallbacks="459566f4-90b8-5000-8ac3-15dfb0a30def" include("diffeq_callbacks.jl")
 end
 
 include("filter.jl")
