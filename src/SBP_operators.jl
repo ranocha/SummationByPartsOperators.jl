@@ -58,19 +58,16 @@ end
 
 function Base.show(io::IO, coefficients::DerivativeCoefficients)
     if derivative_order(coefficients) == 1
-        print(io, "Coefficients of the SBP 1st derivative operator of order ",
-                    accuracy_order(coefficients), " given in \n")
+        print(io, "Coefficients of the first-derivative operator")
     elseif  derivative_order(coefficients) == 2
-        print(io, "Coefficients of the SBP 2nd derivative operator of order ",
-                    accuracy_order(coefficients), " given in \n")
+        print(io, "Coefficients of the second-derivative operator")
     elseif  derivative_order(coefficients) == 3
-        print(io, "Coefficients of the SBP 3rd derivative operator of order ",
-                    accuracy_order(coefficients), " given in \n")
+        print(io, "Coefficients of the third-derivative operator")
     else
-        print(io, "Coefficients of the SBP ", derivative_order(coefficients),
-                    "th derivative operator of order ", accuracy_order(coefficients),
-                    " given in \n")
+        print(io, "Coefficients of the ", derivative_order(coefficients),
+              "-derivative operator")
     end
+    print(io, " of order ", accuracy_order(coefficients), " of ")
     print(io, source_of_coefficients(coefficients))
 end
 
@@ -431,21 +428,24 @@ end
 @inline source_of_coefficients(D::DerivativeOperator) = source_of_coefficients(D.coefficients)
 
 
-function Base.show(io::IO, D::DerivativeOperator{T}) where {T}
+function Base.show(io::IO, D::DerivativeOperator)
     if derivative_order(D) == 1
-        print(io, "SBP 1st derivative operator of order ")
+        print(io, "SBP first-derivative operator")
     elseif  derivative_order(D) == 2
-        print(io, "SBP 2nd derivative operator of order ")
+        print(io, "SBP second-derivative operator")
     elseif  derivative_order(D) == 3
-        print(io, "SBP 3rd derivative operator of order ")
+        print(io, "SBP third-derivative operator")
     else
-        print(io, "SBP ", derivative_order(D), "th derivative operator of order ")
+        print(io, "SBP ", derivative_order(D),
+              "-derivative operator")
     end
-    print(io, accuracy_order(D), " {T=", T, ", Parallel=", typeof(D.coefficients.parallel), "} \n")
-    print(io, "on a grid in [", first(grid(D)), ", ", last(grid(D)),
+    print(io, " of order ", accuracy_order(D))
+    if get(io, :compact, false) == false
+        print(io, " on a grid in [", first(grid(D)), ", ", last(grid(D)),
                 "] using ", length(grid(D)), " nodes \n")
-    print(io, "and coefficients given in \n")
-    print(io, source_of_coefficients(D))
+        print(io, "and coefficients")
+    end
+    print(io, " of ", source_of_coefficients(D))
 end
 
 

@@ -3,7 +3,7 @@
     Mattsson2017(version::Symbol)
 
 Coefficients of the upwind SBP operators given in
-  Mattsson (2017)
+- Mattsson (2017)
   Diagonal-norm upwind SBP operators.
   Journal of Computational Physics 335, pp. 283-310.
 
@@ -21,11 +21,15 @@ struct Mattsson2017 <: SourceOfCoefficients
 end
 
 function Base.show(io::IO, source::Mattsson2017)
-print(io,
-    "  Upwind coefficients (", source.kind, ") of \n",
-    "  Mattsson (2017) \n",
-    "  Diagonal-norm upwind SBP operators. \n",
-    "  Journal of Computational Physics 335, pp. 283-310. \n")
+  if get(io, :compact, false)
+    summary(io, source)
+  else
+    print(io,
+        "Mattsson (2017) \n",
+        "  Diagonal-norm upwind SBP operators. \n",
+        "  Journal of Computational Physics 335, pp. 283-310. \n",
+        "  (upwind coefficients ", source.kind, ")")
+  end
 end
 
 

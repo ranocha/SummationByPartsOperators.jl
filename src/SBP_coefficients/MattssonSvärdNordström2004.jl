@@ -3,22 +3,26 @@
     MattssonSvärdNordström2004()
 
 Coefficients of the SBP operators given in
-  Mattsson, Svärd, Nordström (2004)
+- Mattsson, Svärd, Nordström (2004)
   Stable and Accurate Artificial Dissipation.
   Journal of Scientific Computing 21.1, pp. 57-79.
 """
 struct MattssonSvärdNordström2004 <: SourceOfCoefficients end
 
-function Base.show(io::IO, ::MattssonSvärdNordström2004)
-    print(io,
-        "  Mattsson, Svärd, Nordström (2004) \n",
-        "  Stable and Accurate Artificial Dissipation. \n",
-        "  Journal of Scientific Computing 21.1, pp. 57-79. \n",
-        "See also (first and second derivatives) \n",
-        "  Mattsson, Nordström (2004) \n",
-        "  Summation by parts operators for finite difference approximations of second \n",
-        "    derivatives. \n",
-        "  Journal of Computational Physics 199, pp. 503-540. \n")
+function Base.show(io::IO, source::MattssonSvärdNordström2004)
+    if get(io, :compact, false)
+      summary(io, source)
+    else
+        print(io,
+            "Mattsson, Svärd, Nordström (2004) \n",
+            "  Stable and Accurate Artificial Dissipation. \n",
+            "  Journal of Scientific Computing 21.1, pp. 57-79. \n",
+            "See also (first and second derivatives) \n",
+            "  Mattsson, Nordström (2004) \n",
+            "  Summation by parts operators for finite difference approximations of second \n",
+            "    derivatives. \n",
+            "  Journal of Computational Physics 199, pp. 503-540.")
+    end
 end
 
 

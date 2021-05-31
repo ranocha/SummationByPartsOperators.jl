@@ -36,18 +36,17 @@ end
 
 
 function Base.show(io::IO, coefficients::VarCoefDerivativeCoefficients)
-    print(io, "Coefficients of the variable coefficient ")
-    if  derivative_order(coefficients) == 1
-        print(io, "1st")
+    if derivative_order(coefficients) == 1
+        print(io, "Coefficients of the variable-coefficient first-derivative operator")
     elseif  derivative_order(coefficients) == 2
-        print(io, "2nd")
+        print(io, "Coefficients of the variable-coefficient second-derivative operator")
     elseif  derivative_order(coefficients) == 3
-        print(io, "3rd")
+        print(io, "Coefficients of the variable-coefficient third-derivative operator")
     else
-        print(io, derivative_order(coefficients), "th")
+        print(io, "Coefficients of the variable-coefficient ", derivative_order(coefficients),
+              "-derivative operator")
     end
-    print(io, "derivative operator with order of accuracy ",
-            accuracy_order(coefficients), " given in \n")
+    print(io, " of order ", accuracy_order(coefficients), " of ")
     print(io, source_of_coefficients(coefficients))
 end
 
@@ -167,15 +166,18 @@ end
 
 function Base.show(io::IO, D::DissipationOperator{T}) where {T}
     if  derivative_order(D) == 2
-        print(io, "SBP 2nd derivative dissipation operator of order ")
+        print(io, "SBP second-derivative dissipation operator")
     else
-        print(io, "SBP ", derivative_order(D), "th derivative dissipation operator of order ")
+        print(io, "SBP ", derivative_order(D),
+              "-derivative dissipation operator")
     end
-    print(io, accuracy_order(D), " {T=", T, ", Parallel=", typeof(D.coefficients.parallel), "} \n")
-    print(io, "on a grid in [", first(grid(D)), ", ", last(grid(D)),
+    print(io, " of order ", accuracy_order(D))
+    if get(io, :compact, false) == false
+        print(io, " on a grid in [", first(grid(D)), ", ", last(grid(D)),
                 "] using ", length(grid(D)), " nodes \n")
-    print(io, "and coefficients given in \n")
-    print(io, source_of_coefficients(D))
+        print(io, "and coefficients")
+    end
+    print(io, " of ", source_of_coefficients(D))
 end
 
 

@@ -3,17 +3,21 @@
     MattssonAlmquistCarpenter2014Optimal()
 
 Coefficients of the optimal SBP operators with nonuniform grid given in
-  Mattsson, Almquist, Carpenter (2014)
+- Mattsson, Almquist, Carpenter (2014)
   Optimal diagonal-norm SBP operators.
   Journal of Computational Physics 264, pp. 91-111.
 """
 struct MattssonAlmquistCarpenter2014Optimal <: SourceOfCoefficients end
 
-function Base.show(io::IO, ::MattssonAlmquistCarpenter2014Optimal)
-    print(io,
-        "  Mattsson, Almquist, Carpenter (2014) \n",
-        "  Optimal diagonal-norm SBP operators. \n",
-        "  Journal of Computational Physics 264, pp. 91-111. \n")
+function Base.show(io::IO, source::MattssonAlmquistCarpenter2014Optimal)
+    if get(io, :compact, false)
+        summary(io, source)
+    else
+        print(io,
+            "Mattsson, Almquist, Carpenter (2014) \n",
+            "  Optimal diagonal-norm SBP operators. \n",
+            "  Journal of Computational Physics 264, pp. 91-111. \n")
+    end
 end
 
 

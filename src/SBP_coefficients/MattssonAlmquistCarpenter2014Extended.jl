@@ -3,17 +3,21 @@
     MattssonAlmquistCarpenter2014Extended()
 
 Coefficients of the extended SBP operators given in
-  Mattsson, Almquist, Carpenter (2014)
+- Mattsson, Almquist, Carpenter (2014)
   Optimal diagonal-norm SBP operators.
   Journal of Computational Physics 264, pp. 91-111.
 """
 struct MattssonAlmquistCarpenter2014Extended <: SourceOfCoefficients end
 
-function Base.show(io::IO, ::MattssonAlmquistCarpenter2014Extended)
-    print(io,
-        "  Mattsson, Almquist, Carpenter (2014) \n",
-        "  Optimal diagonal-norm SBP operators. \n",
-        "  Journal of Computational Physics 264, pp. 91-111. \n")
+function Base.show(io::IO, source::MattssonAlmquistCarpenter2014Extended)
+    if get(io, :compact, false)
+        summary(io, source)
+    else
+        print(io,
+            "Mattsson, Almquist, Carpenter (2014) \n",
+            "  Optimal diagonal-norm SBP operators. \n",
+            "  Journal of Computational Physics 264, pp. 91-111.")
+    end
 end
 
 

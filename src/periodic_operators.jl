@@ -161,19 +161,23 @@ end
     BeljaddLeFlochMishraParés2017()
 
 Coefficients of the periodic operators given in
-  Beljadid, LeFloch, Mishra, Parés (2017)
+- Beljadid, LeFloch, Mishra, Parés (2017)
   Schemes with Well-Controlled Dissipation. Hyperbolic Systems in
     Nonconservative Form.
   Communications in Computational Physics 21.4, pp. 913-946.
 """
 struct BeljaddLeFlochMishraParés2017 <: SourceOfCoefficients end
 
-function Base.show(io::IO, ::BeljaddLeFlochMishraParés2017)
-    print(io,
-        "  Beljadid, LeFloch, Mishra, Parés (2017) \n",
-        "  Schemes with Well-Controlled Dissipation. Hyperbolic Systems in \n",
-        "    Nonconservative Form. \n",
-        "  Communications in Computational Physics 21.4, pp. 913-946. \n")
+function Base.show(io::IO, source::BeljaddLeFlochMishraParés2017)
+    if get(io, :compact, false)
+        summary(io, source)
+    else
+        print(io,
+            "Beljadid, LeFloch, Mishra, Parés (2017) \n",
+            "  Schemes with Well-Controlled Dissipation. Hyperbolic Systems in \n",
+            "    Nonconservative Form. \n",
+            "  Communications in Computational Physics 21.4, pp. 913-946.")
+    end
 end
 
 """
@@ -272,17 +276,21 @@ end
     Fornberg1998()
 
 Coefficients of the periodic operators given in
-  Fornberg (1998)
+- Fornberg (1998)
   Calculation of Weights in Finite Difference Formulas.
   SIAM Rev. 40.3, pp. 685-691.
 """
 struct Fornberg1998 <: SourceOfCoefficients end
 
-function Base.show(io::IO, ::Fornberg1998)
-    print(io,
-        "  Fornberg (1998) \n",
-        "  Calculation of Weights in Finite Difference Formulas. \n",
-        "  SIAM Rev. 40.3, pp. 685-691. \n")
+function Base.show(io::IO, source::Fornberg1998)
+    if get(io, :compact, false)
+        summary(io, source)
+    else
+        print(io,
+            "Fornberg (1998) \n",
+            "  Calculation of Weights in Finite Difference Formulas. \n",
+            "  SIAM Rev. 40.3, pp. 685-691.")
+    end
 end
 
 """
@@ -371,17 +379,21 @@ end
     Holoborodko2008()
 
 Coefficients of the periodic operators given in
-  Holoborodko (2008)
+- Holoborodko (2008)
   Smooth Noise Robust Differentiators.
   http://www.holoborodko.com/pavel/numerical-methods/numerical-derivative/smooth-low-noise-differentiators/
 """
 struct Holoborodko2008 <: SourceOfCoefficients end
 
-function Base.show(io::IO, ::Holoborodko2008)
-    print(io,
-        "  Holoborodko (2008) \n",
-        "  Smooth Noise Robust Differentiators. \n",
-        "  http://www.holoborodko.com/pavel/numerical-methods/numerical-derivative/smooth-low-noise-differentiators/ \n")
+function Base.show(io::IO, source::Holoborodko2008)
+    if get(io, :compact, false)
+        summary(io, source)
+    else
+        print(io,
+            "  Holoborodko (2008) \n",
+            "  Smooth Noise Robust Differentiators. \n",
+            "  http://www.holoborodko.com/pavel/numerical-methods/numerical-derivative/smooth-low-noise-differentiators/")
+    end
 end
 
 """
@@ -510,6 +522,8 @@ end
     PeriodicDerivativeOperator
 
 A derivative operator on a uniform periodic grid.
+See [`periodic_derivative_operator`](@ref) and
+[`periodic_central_derivative_operator`](@ref).
 """
 struct PeriodicDerivativeOperator{T,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients,Grid} <: AbstractPeriodicDerivativeOperator{T}
     coefficients::PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,Parallel,SourceOfCoefficients}
@@ -535,18 +549,23 @@ end
 function Base.show(io::IO, D::PeriodicDerivativeOperator{T,LowerOffset,UpperOffset}) where {T,LowerOffset,UpperOffset}
     x = D.grid_evaluate
     if derivative_order(D) == 1
-        print(io, "Periodic 1st derivative operator of order ")
+        print(io, "Periodic first-derivative operator")
     elseif  derivative_order(D) == 2
-        print(io, "Periodic 2nd derivative operator of order ")
+        print(io, "Periodic second-derivative operator")
     elseif  derivative_order(D) == 3
-        print(io, "Periodic 3rd derivative operator of order ")
+        print(io, "Periodic third-derivative operator")
     else
-        print(io, "Periodic ", derivative_order(D), "th derivative operator of order ")
+        print(io, "Periodic ", derivative_order(D),
+              "-derivative operator")
     end
-    print(io, accuracy_order(D), " {T=", T, ", Parallel=", typeof(D.coefficients.parallel), "} \n")
-    print(io, "on a grid in [", first(x), ", ", last(x), "] using ", size(D, 1), " nodes, \n")
-    print(io, "stencils with ", LowerOffset, " nodes to the left, ", UpperOffset,
-                " nodes to the right, and coefficients from \n", source_of_coefficients(D))
+    print(io, " of order ", accuracy_order(D))
+    if get(io, :compact, false) == false
+        print(io, " on a grid in [", first(x), ", ", last(x),
+                "] using ", size(D, 1), " nodes, \n")
+        print(io, "stencils with ", LowerOffset, " nodes to the left, ",
+                UpperOffset, " nodes to the right, and coefficients")
+    end
+    print(io, " of ", source_of_coefficients(D))
 end
 
 
@@ -748,17 +767,20 @@ derivative_order(Di::PeriodicDissipationOperator) = derivative_order(Di.Di)
 accuracy_order(Di::PeriodicDissipationOperator) = accuracy_order(Di.Di)
 source_of_coefficients(Di::PeriodicDissipationOperator) = MattssonSvärdNordström2004()
 
-function Base.show(io::IO, Di::PeriodicDissipationOperator{T}) where {T}
+function Base.show(io::IO, Di::PeriodicDissipationOperator)
     if  derivative_order(Di) == 2
-        print(io, "SBP 2nd derivative dissipation operator of order ")
+        print(io, "Periodic second-derivative dissipation operator")
     else
-        print(io, "SBP ", derivative_order(Di), "th derivative dissipation operator of order ")
+        print(io, "Periodic ", derivative_order(Di),
+              "-derivative dissipation operator")
     end
-    x = Di.Di.grid_evaluate
-    print(io, accuracy_order(Di), " {T=", T, ", Parallel=", typeof(Di.Di.coefficients.parallel), "} \n")
-    print(io, "on a grid in [", first(x), ", ", last(x), "] using ", size(Di, 1), " nodes \n")
-    print(io, "and coefficients given in \n")
-    print(io, source_of_coefficients(Di))
+    print(io, " of order ", accuracy_order(Di))
+    if get(io, :compact, false) == false
+        print(io, " on a grid in [", first(Di.Di.grid_evaluate), ", ", last(Di.Di.grid_evaluate),
+                "] using ", size(Di, 1), " nodes \n")
+        print(io, "and coefficients")
+    end
+    print(io, " of ", source_of_coefficients(Di))
 end
 
 
@@ -869,12 +891,16 @@ Base.size(rat::PeriodicRationalDerivativeOperator) = size(rat.D)
 grid(rat::PeriodicRationalDerivativeOperator) = grid(rat.D)
 
 function Base.show(io::IO, rat::PeriodicRationalDerivativeOperator)
-    print(io, "Rational periodic operator with coefficients\n")
-    print(io, rat.num_coef)
-    print(io, "\nand\n")
-    print(io, rat.den_coef)
-    print(io, "\nof the operator:\n")
-    print(io, rat.D)
+    if get(io, :compact, false)
+        print(io, "Rational periodic operator")
+    else
+        print(io, "Rational periodic operator with coefficients\n")
+        print(io, rat.num_coef)
+        print(io, "\nand\n")
+        print(io, rat.den_coef)
+        print(io, "\nof the operator:\n")
+        print(io, rat.D)
+    end
 end
 
 

@@ -22,9 +22,11 @@ for source in D_test_list, T in (Float32,Float64)
     catch
         nothing
     end
-    if D != nothing
-        println(D)
-        println(D.coefficients)
+    if D !== nothing
+        for compact in (true, false)
+            show(IOContext(devnull, :compact=>false), D)
+            show(IOContext(devnull, :compact=>false), D.coefficients)
+        end
         x1 = grid(D)
         x0 = fill(one(eltype(x1)), length(x1))
         x2 = x1 .* x1
@@ -55,10 +57,12 @@ for source in D_test_list, T in (Float32,Float64)
     catch
         nothing
     end
-    if D != nothing
+    if D !== nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
-        println(D)
-        println(D.coefficients)
+        for compact in (true, false)
+            show(IOContext(devnull, :compact=>false), D)
+            show(IOContext(devnull, :compact=>false), D.coefficients)
+        end
         x1 = grid(D)
         x0 = fill(one(eltype(x1)), length(x1))
         x2 = x1 .* x1
@@ -101,10 +105,12 @@ for source in D_test_list, T in (Float32,Float64)
     catch
         nothing
     end
-    if D != nothing
+    if D !== nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
-        println(D)
-        println(D.coefficients)
+        for compact in (true, false)
+            show(IOContext(devnull, :compact=>false), D)
+            show(IOContext(devnull, :compact=>false), D.coefficients)
+        end
         x1 = grid(D)
         x0 = fill(one(eltype(x1)), length(x1))
         x2 = x1 .* x1
@@ -153,10 +159,12 @@ for source in D_test_list, T in (Float32,Float64)
     catch
         nothing
     end
-    if D != nothing
+    if D !== nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
-        println(D)
-        println(D.coefficients)
+        for compact in (true, false)
+            show(IOContext(devnull, :compact=>false), D)
+            show(IOContext(devnull, :compact=>false), D.coefficients)
+        end
         x1 = grid(D)
         x0 = fill(one(eltype(x1)), length(x1))
         x2 = x1 .* x1
@@ -213,10 +221,12 @@ for source in D_test_list, T in (Float32,Float64)
     catch
         nothing
     end
-    if D != nothing
+    if D !== nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
-        println(D)
-        println(D.coefficients)
+        for compact in (true, false)
+            show(IOContext(devnull, :compact=>false), D)
+            show(IOContext(devnull, :compact=>false), D.coefficients)
+        end
         x1 = grid(D)
         x0 = fill(one(eltype(x1)), length(x1))
         x2 = x1 .* x1
@@ -254,10 +264,12 @@ for source in D_test_list, T in (Float32,Float64)
     catch
         nothing
     end
-    if D != nothing
+    if D !== nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
-        println(D)
-        println(D.coefficients)
+        for compact in (true, false)
+            show(IOContext(devnull, :compact=>false), D)
+            show(IOContext(devnull, :compact=>false), D.coefficients)
+        end
         x1 = grid(D)
         x0 = fill(one(eltype(x1)), length(x1))
         x2 = x1 .* x1
@@ -304,10 +316,12 @@ for source in D_test_list, T in (Float32,Float64)
     catch
         nothing
     end
-    if D != nothing
+    if D !== nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
-        println(D)
-        println(D.coefficients)
+        for compact in (true, false)
+            show(IOContext(devnull, :compact=>false), D)
+            show(IOContext(devnull, :compact=>false), D.coefficients)
+        end
         x1 = grid(D)
         x0 = fill(one(eltype(x1)), length(x1))
         x2 = x1 .* x1
@@ -358,10 +372,12 @@ for source in D_test_list, T in (Float32,Float64)
     catch
         nothing
     end
-    if D != nothing
+    if D !== nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
-        println(D)
-        println(D.coefficients)
+        for compact in (true, false)
+            show(IOContext(devnull, :compact=>false), D)
+            show(IOContext(devnull, :compact=>false), D.coefficients)
+        end
         x1 = grid(D)
         x0 = fill(one(eltype(x1)), length(x1))
         x2 = x1 .* x1
@@ -427,10 +443,12 @@ for source in D_test_list, T in (Float32,Float64)
     catch
         nothing
     end
-    if D != nothing
+    if D !== nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
-        println(D)
-        println(D.coefficients)
+        for compact in (true, false)
+            show(IOContext(devnull, :compact=>false), D)
+            show(IOContext(devnull, :compact=>false), D.coefficients)
+        end
         x1 = grid(D)
         x0 = fill(one(eltype(x1)), length(x1))
         x2 = x1 .* x1
@@ -477,10 +495,12 @@ for source in D_test_list, T in (Float32,Float64)
     catch
         nothing
     end
-    if D != nothing
+    if D !== nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
-        println(D)
-        println(D.coefficients)
+        for compact in (true, false)
+            show(IOContext(devnull, :compact=>false), D)
+            show(IOContext(devnull, :compact=>false), D.coefficients)
+        end
         x1 = grid(D)
         x0 = fill(one(eltype(x1)), length(x1))
         x2 = x1 .* x1
@@ -532,10 +552,12 @@ for source in D_test_list, T in (Float32,Float64)
     catch
         nothing
     end
-    if D != nothing
+    if D !== nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
-        println(D)
-        println(D.coefficients)
+        for compact in (true, false)
+            show(IOContext(devnull, :compact=>false), D)
+            show(IOContext(devnull, :compact=>false), D.coefficients)
+        end
         x1 = grid(D)
         x0 = fill(one(eltype(x1)), length(x1))
         x2 = x1 .* x1
@@ -602,10 +624,12 @@ for source in D_test_list, T in (Float32,Float64)
     catch
         nothing
     end
-    if D != nothing
+    if D !== nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
-        println(D)
-        println(D.coefficients)
+        for compact in (true, false)
+            show(IOContext(devnull, :compact=>false), D)
+            show(IOContext(devnull, :compact=>false), D.coefficients)
+        end
         x1 = grid(D)
         x0 = fill(one(eltype(x1)), length(x1))
         x2 = x1 .* x1
@@ -659,10 +683,12 @@ for source in D_test_list, T in (Float32,Float64)
     catch
         nothing
     end
-    if D != nothing
+    if D !== nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
-        println(D)
-        println(D.coefficients)
+        for compact in (true, false)
+            show(IOContext(devnull, :compact=>false), D)
+            show(IOContext(devnull, :compact=>false), D.coefficients)
+        end
         x1 = grid(D)
         x0 = fill(one(eltype(x1)), length(x1))
         x2 = x1 .* x1
@@ -724,10 +750,12 @@ for source in D_test_list, T in (Float32,Float64)
     catch
         nothing
     end
-    if D != nothing
+    if D !== nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
-        println(D)
-        println(D.coefficients)
+        for compact in (true, false)
+            show(IOContext(devnull, :compact=>false), D)
+            show(IOContext(devnull, :compact=>false), D.coefficients)
+        end
         x1 = grid(D)
         x0 = fill(one(eltype(x1)), length(x1))
         x2 = x1 .* x1

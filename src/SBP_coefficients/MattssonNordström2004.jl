@@ -3,19 +3,22 @@
     MattssonNordström2004()
 
 Coefficients of the SBP operators given in
-  Mattsson, Nordström (2004)
-  Summation by parts operators for finite difference approximations of second
-    derivatives.
+- Mattsson, Nordström (2004)
+  Summation by parts operators for finite difference approximations of second derivatives.
   Journal of Computational Physics 199, pp. 503-540.
 """
 struct MattssonNordström2004 <: SourceOfCoefficients end
 
-function Base.show(io::IO, ::MattssonNordström2004)
-print(io,
-    "  Mattsson, Nordström (2004) \n",
-    "  Summation by parts operators for finite difference approximations of second \n",
-    "    derivatives. \n",
-    "  Journal of Computational Physics 199, pp. 503-540. \n")
+function Base.show(io::IO, source::MattssonNordström2004)
+    if get(io, :compact, false)
+        summary(io, source)
+    else
+        print(io,
+            "Mattsson, Nordström (2004) \n",
+            "  Summation by parts operators for finite difference approximations of second \n",
+            "    derivatives. \n",
+            "  Journal of Computational Physics 199, pp. 503-540. \n")
+    end
 end
 
 

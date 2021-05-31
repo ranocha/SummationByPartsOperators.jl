@@ -17,10 +17,13 @@ for source in test_list, acc_order in (2,4,6), T in (Float32,Float64)
         !isa(err, ArgumentError) && throw(err)
         nothing
     end
-    D2var == nothing && continue
+    D2var === nothing && continue
 
-    println(devnull, D2var)
-    println(devnull, D2var.coefficients)
+    for compact in (true, false)
+        show(IOContext(devnull, :compact=>false), D2var)
+        show(IOContext(devnull, :compact=>false), D2var.coefficients)
+    end
+
     @test maximum(abs, Matrix(D2) - Matrix(D2var)) < 10000*eps(T)
 end
 

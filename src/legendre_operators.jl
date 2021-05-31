@@ -147,18 +147,24 @@ function get_weight(D::Union{LegendreDerivativeOperator,LegendreSecondDerivative
     ω
 end
 
-function Base.show(io::IO, D::LegendreDerivativeOperator{T}) where {T}
-    x = grid(D)
-    print(io, "First derivative operator {T=", T, "} \n")
-    print(io, "on the Lobatto Legendre nodes in [", first(x), ", ", last(x),
-                "] using ", length(x), " nodes \n")
+function Base.show(io::IO, D::LegendreDerivativeOperator)
+    if get(io, :compact, false)
+        summary(io, D)
+    else
+        x = grid(D)
+        print(io, "First derivative operator {T=", eltype(D), "}")
+        print(io, " on ", length(x), " Lobatto Legendre nodes in [", first(x), ", ", last(x), "]")
+    end
 end
 
-function Base.show(io::IO, D::LegendreSecondDerivativeOperator{T}) where {T}
-    x = grid(D)
-    print(io, "Second derivative operator {T=", T, "} \n")
-    print(io, "on the Lobatto Legendre nodes in [", first(x), ", ", last(x),
-                "] using ", length(x), " nodes \n")
+function Base.show(io::IO, D::LegendreSecondDerivativeOperator)
+    if get(io, :compact, false)
+        summary(io, D)
+    else
+        x = grid(D)
+        print(io, "Second derivative operator {T=", eltype(D), "}")
+        print(io, " on ", length(x), " Lobatto Legendre nodes in [", first(x), ", ", last(x), "]")
+    end
 end
 
 

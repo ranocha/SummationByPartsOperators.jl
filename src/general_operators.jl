@@ -259,9 +259,12 @@ function Base.:+(sum1::SumOfDerivativeOperators, sum2::SumOfDerivativeOperators)
 end
 
 function Base.show(io::IO, sum::SumOfDerivativeOperators)
-    print(io, "Sum of operators:\n")
-    for D in sum.operators
-        print(io, D)
+    print(io, "Sum of ", length(sum.operators), " operators")
+    if get(io, :compact, false) == false
+        print(io, ":")
+        for D in sum.operators
+            print(io, "\n", D)
+        end
     end
 end
 

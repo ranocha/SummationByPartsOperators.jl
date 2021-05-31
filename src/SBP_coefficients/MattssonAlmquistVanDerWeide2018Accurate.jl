@@ -3,17 +3,21 @@
     MattssonAlmquistVanDerWeide2018Accurate()
 
 Coefficients of the optimized SBP operators with nonuniform grid given in
-  Mattsson, Almquist, van der Weide (2018)
+- Mattsson, Almquist, van der Weide (2018)
   Boundary optimized diagonal-norm SBP operators.
   Journal of Computational Physics 374, pp. 1261-1266.
 """
 struct MattssonAlmquistVanDerWeide2018Accurate <: SourceOfCoefficients end
 
-function Base.show(io::IO, ::MattssonAlmquistVanDerWeide2018Accurate)
-  print(io,
-      "  Mattsson, Almquist, van der Weide (2018) \n",
-      "  Boundary optimized diagonal-norm SBP operators ('Accurate'). \n",
-      "  Journal of Computational Physics 374, pp. 1261-1266. \n")
+function Base.show(io::IO, source::MattssonAlmquistVanDerWeide2018Accurate)
+  if get(io, :compact, false)
+    summary(io, source)
+  else
+    print(io,
+        "Mattsson, Almquist, van der Weide (2018) \n",
+        "  Boundary optimized diagonal-norm SBP operators ('Accurate'). \n",
+        "  Journal of Computational Physics 374, pp. 1261-1266.")
+  end
 end
 
 

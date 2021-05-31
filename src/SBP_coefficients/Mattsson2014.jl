@@ -3,19 +3,23 @@
     Mattsson2014()
 
 Coefficients of the SBP operators given in
-  Mattsson (2014)
+- Mattsson (2014)
   Diagonal-norm summation by parts operators for fiite difference approximations
     of third and fourth derivatives.
   Journal of Computational Physics 274, pp. 432-454.
 """
 struct Mattsson2014 <: SourceOfCoefficients end
 
-function Base.show(io::IO, ::Mattsson2014)
-    print(io,
-        "  Mattsson (2014) \n",
-        "  Diagonal-norm summation by parts operators for fiite difference approximations\n",
-        "    of third and fourth derivatives. \n",
-        "  Journal of Computational Physics 274, pp. 432-454. \n")
+function Base.show(io::IO, source::Mattsson2014)
+    if get(io, :compact, false)
+        summary(io, source)
+    else
+        print(io,
+            "Mattsson (2014) \n",
+            "  Diagonal-norm summation by parts operators for fiite difference approximations\n",
+            "    of third and fourth derivatives. \n",
+            "  Journal of Computational Physics 274, pp. 432-454.")
+    end
 end
 
 
