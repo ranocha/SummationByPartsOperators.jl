@@ -90,10 +90,12 @@ for T in (Float32, Float64)
   mul!(du_vector, D, u_vector)
   @test du_scalar ≈ reinterpret(T, du_vector)
 
+  α = 2 * one(T)
   mul!(du_scalar, D, u_scalar, α)
   mul!(du_vector, D, u_vector, α)
   @test du_scalar ≈ reinterpret(T, du_vector)
 
+  β = 3 * one(T)
   mul!(du_scalar, D, u_scalar, α, β)
   mul!(du_vector, D, u_vector, α, β)
   @test du_scalar ≈ reinterpret(T, du_vector)
