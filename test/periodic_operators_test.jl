@@ -23,7 +23,9 @@ let T=Float32
     derivative_order = 1
     accuracy_order = 2
     D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
-    println(devnull, D)
+    for compact in (true, false)
+        show(IOContext(devnull, :compact=>false), D)
+    end
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
@@ -36,7 +38,9 @@ let T=Float32
 
     accuracy_order = 4
     D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
-    println(devnull, D)
+    for compact in (true, false)
+        show(IOContext(devnull, :compact=>false), D)
+    end
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
@@ -53,7 +57,9 @@ let T=Float32
 
     accuracy_order = 6
     D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
-    println(devnull, D)
+    for compact in (true, false)
+        show(IOContext(devnull, :compact=>false), D)
+    end
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
@@ -76,7 +82,9 @@ let T=Float32
     derivative_order = 2
     accuracy_order = 2
     D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
-    println(devnull, D)
+    for compact in (true, false)
+        show(IOContext(devnull, :compact=>false), D)
+    end
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == true
@@ -93,7 +101,9 @@ let T=Float32
 
     accuracy_order = 4
     D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
-    println(devnull, D)
+    for compact in (true, false)
+        show(IOContext(devnull, :compact=>false), D)
+    end
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == true
@@ -112,7 +122,9 @@ let T=Float32
 
     accuracy_order = 6
     D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
-    println(devnull, D)
+    for compact in (true, false)
+        show(IOContext(devnull, :compact=>false), D)
+    end
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == true
@@ -133,7 +145,9 @@ let T=Float32
     derivative_order = 3
     accuracy_order = 2
     D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
-    println(devnull, D)
+    for compact in (true, false)
+        show(IOContext(devnull, :compact=>false), D)
+    end
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == true # because this operator is zero!
@@ -144,7 +158,9 @@ let T=Float32
 
     accuracy_order = 4
     D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
-    println(devnull, D)
+    for compact in (true, false)
+        show(IOContext(devnull, :compact=>false), D)
+    end
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
@@ -157,7 +173,9 @@ let T=Float32
 
     accuracy_order = 6
     D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
-    println(devnull, D)
+    for compact in (true, false)
+        show(IOContext(devnull, :compact=>false), D)
+    end
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
@@ -387,7 +405,7 @@ for T in (Float32, Float64), accuracy_order in 1:10, derivative_order in 1:3
     xmax = 5*one(T)
     N = 50
     D_serial = periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
-    D_threads= periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N, Val{:threads}())
+    D_threads= periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N, ThreadedMode())
 
     u = compute_coefficients(x->x^5, D_serial)
     dest_serial = fill(zero(eltype(u)), length(u))
@@ -412,7 +430,8 @@ for T in (Float32, Float64), accuracy_order in 1:10, derivative_order in 1:3
     xmax = 5*one(T)
     N = 51
     D_serial = periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
-    D_threads= periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N, Val{:threads}())
+    D_threads= periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N, ThreadedMode())
+    D_safe   = periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N, SafeMode())
 
     u = compute_coefficients(x->x^5, D_serial)
     dest1 = fill(zero(eltype(u)), length(u))
@@ -424,6 +443,7 @@ for T in (Float32, Float64), accuracy_order in 1:10, derivative_order in 1:3
     mul!(dest1, D_threads, u, one(T), zero(T))
     mul!(dest2, D_threads, u, one(T))
     @test all(i->dest1[i] ≈ dest2[i], eachindex(u))
+    @test dest1 ≈ D_safe * u
 end
 
 # Accuracy tests for periodic signals

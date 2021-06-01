@@ -131,7 +131,7 @@ iscontinuous(meshgrid::UniformMeshGrid1D) = meshgrid.continuous
 
 function Base.show(io::IO, meshgrid::UniformMeshGrid1D)
   print(io,
-    "UniformMeshGrid1D with ", numcells(meshgrid), " cells with ", length(meshgrid.grid), " nodes in ", bounds(meshgrid), "\n ")
+    "UniformMeshGrid1D with ", numcells(meshgrid), " cells with ", length(meshgrid.grid), " nodes in ", bounds(meshgrid))
 end
 
 function Base.length(meshgrid::UniformMeshGrid1D)
@@ -213,14 +213,17 @@ const UniformCoupledOperator = Union{UniformNonperiodicCoupledOperator, UniformP
 iscontinuous(cD::UniformCoupledOperator) = iscontinuous(cD.meshgrid)
 
 function Base.show(io::IO, cD::UniformCoupledOperator)
+
   print(io, cD.D)
-  if iscontinuous(cD)
-    print(io, "coupled continuously")
-  else
-    print(io, "coupled discontinuously (upwind: ", cD.coupling, ")")
+  if get(io, :compact, false) == false
+    if iscontinuous(cD)
+      print(io, "\ncoupled continuously")
+    else
+      print(io, "\ncoupled discontinuously (upwind: ", cD.coupling, ")")
+    end
   end
-  print(io, " on the mesh \n")
-  print(io, cD.meshgrid.mesh, "\n ")
+  print(io, " on ")
+  print(io, cD.meshgrid.mesh)
 end
 
 Base.eltype(cD::UniformCoupledOperator) = eltype(cD.D)
@@ -255,9 +258,6 @@ end
 function couple_continuously(D::AbstractNonperiodicDerivativeOperator, mesh::UniformPeriodicMesh1D)
   UniformPeriodicCoupledOperator(D, mesh, Val(:continuous))
 end
-
-@deprecate couple_continuosly couple_continuously
-@deprecate couple_discontinuosly couple_discontinuously
 
 function couple_discontinuously(D::AbstractNonperiodicDerivativeOperator, mesh::UniformMesh1D, coupling::Union{Val{:plus}, Val{:central}, Val{:minus}}=Val(:central))
   UniformNonperiodicCoupledOperator(D, mesh, coupling)

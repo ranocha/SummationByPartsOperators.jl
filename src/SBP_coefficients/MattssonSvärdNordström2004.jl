@@ -3,26 +3,31 @@
     MattssonSvärdNordström2004()
 
 Coefficients of the SBP operators given in
-  Mattsson, Svärd, Nordström (2004)
+- Mattsson, Svärd, Nordström (2004)
   Stable and Accurate Artificial Dissipation.
   Journal of Scientific Computing 21.1, pp. 57-79.
 """
 struct MattssonSvärdNordström2004 <: SourceOfCoefficients end
 
-function Base.show(io::IO, ::MattssonSvärdNordström2004)
-    print(io,
-        "  Mattsson, Svärd, Nordström (2004) \n",
-        "  Stable and Accurate Artificial Dissipation. \n",
-        "  Journal of Scientific Computing 21.1, pp. 57-79. \n",
-        "See also (first and second derivatives) \n",
-        "  Mattsson, Nordström (2004) \n",
-        "  Summation by parts operators for finite difference approximations of second \n",
-        "    derivatives. \n",
-        "  Journal of Computational Physics 199, pp. 503-540. \n")
+function Base.show(io::IO, source::MattssonSvärdNordström2004)
+    if get(io, :compact, false)
+      summary(io, source)
+    else
+        print(io,
+            "Mattsson, Svärd, Nordström (2004) \n",
+            "  Stable and Accurate Artificial Dissipation. \n",
+            "  Journal of Scientific Computing 21.1, pp. 57-79. \n",
+            "See also (first and second derivatives) \n",
+            "  Mattsson, Nordström (2004) \n",
+            "  Summation by parts operators for finite difference approximations of second \n",
+            "    derivatives. \n",
+            "  Journal of Computational Physics 199, pp. 503-540.")
+    end
 end
 
 
-function dissipation_coefficients(source::MattssonSvärdNordström2004, order::Int, grid, left_weights, right_weights, parallel=Val{:serial}())
+function dissipation_coefficients(source::MattssonSvärdNordström2004, order::Int,
+                                  grid, left_weights, right_weights, mode=FastMode())
     T = promote_type(eltype(grid), eltype(left_weights), eltype(right_weights))
     inv_left_weights = one(T) ./ left_weights
     inv_right_weights = one(T) ./ right_weights
@@ -47,7 +52,7 @@ function dissipation_coefficients(source::MattssonSvärdNordström2004, order::I
     end
 
 
-    VarCoefDerivativeCoefficients(coefficient_cache, left_weights, right_weights, parallel, order, 2, source), b
+    VarCoefDerivativeCoefficients(coefficient_cache, left_weights, right_weights, mode, order, 2, source), b
 end
 
 
@@ -851,7 +856,8 @@ end
 end
 
 
-function first_derivative_coefficients(source::MattssonSvärdNordström2004, order::Int, T=Float64, parallel=Val{:serial}())
+function first_derivative_coefficients(source::MattssonSvärdNordström2004, order::Int,
+                                       T=Float64, mode=FastMode())
     if order == 2
         left_boundary = (
             DerivativeCoefficientRow{T,1,2}(SVector(-one(T), one(T))),
@@ -868,7 +874,7 @@ function first_derivative_coefficients(source::MattssonSvärdNordström2004, ord
         DerivativeCoefficients(left_boundary, right_boundary,
                                 left_boundary_derivatives, right_boundary_derivatives,
                                 lower_coef, central_coef, upper_coef,
-                                left_weights, right_weights, parallel, 1, order, source)
+                                left_weights, right_weights, mode, 1, order, source)
     elseif order == 4
         left_boundary = (
             # q1
@@ -909,7 +915,7 @@ function first_derivative_coefficients(source::MattssonSvärdNordström2004, ord
         DerivativeCoefficients(left_boundary, right_boundary,
                                 left_boundary_derivatives, right_boundary_derivatives,
                                 lower_coef, central_coef, upper_coef,
-                                left_weights, right_weights, parallel, 1, order, source)
+                                left_weights, right_weights, mode, 1, order, source)
     elseif order == 6
         left_boundary = (
             # q1
@@ -978,7 +984,7 @@ function first_derivative_coefficients(source::MattssonSvärdNordström2004, ord
         DerivativeCoefficients(left_boundary, right_boundary,
                                 left_boundary_derivatives, right_boundary_derivatives,
                                 lower_coef, central_coef, upper_coef,
-                                left_weights, right_weights, parallel, 1, order, source)
+                                left_weights, right_weights, mode, 1, order, source)
     elseif order == 8
         left_boundary = (
             # q1
@@ -1083,14 +1089,15 @@ function first_derivative_coefficients(source::MattssonSvärdNordström2004, ord
         DerivativeCoefficients(left_boundary, right_boundary,
                                 left_boundary_derivatives, right_boundary_derivatives,
                                 lower_coef, central_coef, upper_coef,
-                                left_weights, right_weights, parallel, 1, order, source)
+                                left_weights, right_weights, mode, 1, order, source)
     else
         throw(ArgumentError("Order $order not implemented/derived."))
     end
 end
 
 
-function second_derivative_coefficients(source::MattssonSvärdNordström2004, order::Int, T=Float64, parallel=Val{:serial}())
+function second_derivative_coefficients(source::MattssonSvärdNordström2004, order::Int,
+                                        T=Float64, mode=FastMode())
     if order == 2
         left_boundary = (
             # d1
@@ -1114,7 +1121,7 @@ function second_derivative_coefficients(source::MattssonSvärdNordström2004, or
         DerivativeCoefficients(left_boundary, right_boundary,
                                 left_boundary_derivatives, right_boundary_derivatives,
                                 lower_coef, central_coef, upper_coef,
-                                left_weights, right_weights, parallel, 2, order, source)
+                                left_weights, right_weights, mode, 2, order, source)
     elseif order == 4
         left_boundary = (
             #TODO:
@@ -1158,7 +1165,7 @@ function second_derivative_coefficients(source::MattssonSvärdNordström2004, or
         DerivativeCoefficients(left_boundary, right_boundary,
                                 left_boundary_derivatives, right_boundary_derivatives,
                                 lower_coef, central_coef, upper_coef,
-                                left_weights, right_weights, parallel, 2, order, source)
+                                left_weights, right_weights, mode, 2, order, source)
     elseif order == 6
         left_boundary = (
             # d1
@@ -1233,7 +1240,7 @@ function second_derivative_coefficients(source::MattssonSvärdNordström2004, or
         DerivativeCoefficients(left_boundary, right_boundary,
                                 left_boundary_derivatives, right_boundary_derivatives,
                                 lower_coef, central_coef, upper_coef,
-                                left_weights, right_weights, parallel, 2, order, source)
+                                left_weights, right_weights, mode, 2, order, source)
     elseif order == 8
         left_boundary = (
             # d1
@@ -1346,7 +1353,7 @@ function second_derivative_coefficients(source::MattssonSvärdNordström2004, or
         DerivativeCoefficients(left_boundary, right_boundary,
                                 left_boundary_derivatives, right_boundary_derivatives,
                                 lower_coef, central_coef, upper_coef,
-                                left_weights, right_weights, parallel, 2, order, source)
+                                left_weights, right_weights, mode, 2, order, source)
     else
         throw(ArgumentError("Order $order not implemented/derived."))
     end

@@ -3,37 +3,41 @@
     Mattsson2012()
 
 Coefficients of the SBP operators given in
-  Mattsson (2012)
+- Mattsson (2012)
   Summation by Parts Operators for Finite Difference Approximations of
     Second-Derivatives with Variable Coefficients.
   Journal of Scientific Computing 51, pp. 650-682.
 """
 struct Mattsson2012 <: SourceOfCoefficients end
 
-function Base.show(io::IO, ::Mattsson2012)
-    print(io,
-        "  Mattsson (2012) \n",
-        "  Summation by Parts Operators for Finite Difference Approximations of\n",
-        "    Second-Derivatives with Variable Coefficients. \n",
-        "  Journal of Scientific Computing 51, pp. 650-682. \n",
-        "See also (first derivatives) \n",
-        "  Mattsson, Nordström (2004) \n",
-        "  Summation by parts operators for finite difference approximations of second \n",
-        "    derivatives. \n",
-        "  Journal of Computational Physics 199, pp. 503-540. \n")
+function Base.show(io::IO, source::Mattsson2012)
+  if get(io, :compact, false)
+    summary(io, source)
+  else
+      print(io,
+          "Mattsson (2012) \n",
+          "  Summation by Parts Operators for Finite Difference Approximations of\n",
+          "    Second-Derivatives with Variable Coefficients. \n",
+          "  Journal of Scientific Computing 51, pp. 650-682. \n",
+          "See also (first derivatives) \n",
+          "  Mattsson, Nordström (2004) \n",
+          "  Summation by parts operators for finite difference approximations of second \n",
+          "    derivatives. \n",
+          "  Journal of Computational Physics 199, pp. 503-540.")
+  end
 end
 
 
-@inline function first_derivative_coefficients(source::Mattsson2012, order::Int, T=Float64, parallel=Val{:serial}())
-    first_derivative_coefficients(MattssonNordström2004(), order, T, parallel)
+@inline function first_derivative_coefficients(source::Mattsson2012, order::Int, T=Float64, mode=FastMode())
+    first_derivative_coefficients(MattssonNordström2004(), order, T, mode)
 end
 
-@inline function second_derivative_coefficients(source::Mattsson2012, order::Int, T=Float64, parallel=Val{:serial}())
-    second_derivative_coefficients(MattssonNordström2004(), order, T, parallel)
+@inline function second_derivative_coefficients(source::Mattsson2012, order::Int, T=Float64, mode=FastMode())
+    second_derivative_coefficients(MattssonNordström2004(), order, T, mode)
 end
 
 
-function var_coef_derivative_coefficients(source::Mattsson2012, derivative_order::Int, accuracy_order::Int, grid, parallel=Val{:serial}())
+function var_coef_derivative_coefficients(source::Mattsson2012, derivative_order::Int, accuracy_order::Int, grid, mode=FastMode())
     @argcheck derivative_order == 2
     T = eltype(grid)
     if accuracy_order == 2
@@ -61,7 +65,7 @@ function var_coef_derivative_coefficients(source::Mattsson2012, derivative_order
     end
 
     VarCoefDerivativeCoefficients(coefficient_cache, left_weights, right_weights,
-                                  parallel, derivative_order, accuracy_order, source)
+                                  mode, derivative_order, accuracy_order, source)
 end
 
 

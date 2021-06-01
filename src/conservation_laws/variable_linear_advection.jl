@@ -25,7 +25,7 @@ struct VariableLinearAdvectionNonperiodicSemidiscretization{T,Derivative<:Abstra
     right_bc::RightBC
 
     function VariableLinearAdvectionNonperiodicSemidiscretization(derivative::Derivative, dissipation::Dissipation, afunc, split_form::SplitForm, left_bc::LeftBC, right_bc::RightBC) where {T, Derivative<:AbstractDerivativeOperator{T}, Dissipation, SplitForm<:Union{Val{false}, Val{true}}, LeftBC, RightBC}
-        if dissipation != nothing
+        if dissipation !== nothing
             @argcheck size(derivative) == size(dissipation) DimensionMismatch
             @argcheck grid(derivative) == grid(dissipation) ArgumentError
         end
@@ -39,16 +39,20 @@ end
 
 
 function Base.show(io::IO, semi::VariableLinearAdvectionNonperiodicSemidiscretization)
-    print(io, "Semidiscretization of the linear advection equation\n")
-    print(io, "  \$ \\partial_t u(t,x) + \\partial_x ( a(x) u(t,x) ) = 0 \$ \n")
-    print(io, "with nonperiodic boundaries using")
-    if semi.split_form == Val{true}()
-        print(io, " a split form and: \n")
+    if get(io, :compact, false)
+        print(io, "Semidiscretization of the linear advection equation (periodic)")
     else
-        print(io, " no split form and: \n")
+        print(io, "Semidiscretization of the linear advection equation\n")
+        print(io, "  \$ \\partial_t u(t,x) + \\partial_x ( a(x) u(t,x) ) = 0 \$ \n")
+        print(io, "with nonperiodic boundaries using")
+        if semi.split_form == Val{true}()
+            print(io, " a split form and: \n")
+        else
+            print(io, " no split form and: \n")
+        end
+        print(io, semi.derivative)
+        print(io, semi.dissipation)
     end
-    print(io, semi.derivative)
-    print(io, semi.dissipation)
 end
 
 
@@ -86,7 +90,7 @@ function (disc::VariableLinearAdvectionNonperiodicSemidiscretization)(du, u, p, 
     end
 
     # dissipation
-    if dissipation != nothing
+    if dissipation !== nothing
         mul!(tmp1, dissipation, u)
         @. du += tmp1
     end

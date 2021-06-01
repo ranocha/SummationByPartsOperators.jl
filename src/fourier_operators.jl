@@ -68,12 +68,16 @@ end
 derivative_order(D::FourierDerivativeOperator) = 1
 LinearAlgebra.issymmetric(D::FourierDerivativeOperator) = false
 
-function Base.show(io::IO, D::FourierDerivativeOperator{T}) where {T}
-    grid = D.grid_evaluate
-    print(io, "Periodic 1st derivative Fourier operator {T=", T, "} \n")
-    print(io, "on a grid in [", first(grid), ", ", last(grid),
-                "] using ", length(D.rfft_plan), " nodes and ",
-                length(D.brfft_plan), " modes. \n")
+function Base.show(io::IO, D::FourierDerivativeOperator)
+    if get(io, :compact, false)
+        print(io, "Periodic 1st derivative Fourier operator")
+    else
+        grid = D.grid_evaluate
+        print(io, "Periodic 1st derivative Fourier operator {T=", eltype(D), "} \n")
+        print(io, "on a grid in [", first(grid), ", ", last(grid),
+                    "] using ", length(D.rfft_plan), " nodes and ",
+                    length(D.brfft_plan), " modes")
+    end
 end
 
 
@@ -194,10 +198,14 @@ end
 grid(poly::FourierPolynomialDerivativeOperator) = grid(poly.D1)
 
 function Base.show(io::IO, poly::FourierPolynomialDerivativeOperator)
-    print(io, "Fourier polynomial with coefficients\n")
-    print(io, poly.coef)
-    print(io, "\nof the operator:\n")
-    print(io, poly.D1)
+    if get(io, :compact, false)
+        print(io, "Fourier polynomial")
+    else
+        print(io, "Fourier polynomial with coefficients\n")
+        print(io, poly.coef)
+        print(io, "\nof the operator:\n")
+        print(io, poly.D1)
+    end
 end
 
 
@@ -420,12 +428,16 @@ Base.size(rat::FourierRationalDerivativeOperator) = size(rat.D1)
 grid(rat::FourierRationalDerivativeOperator) = grid(rat.D1)
 
 function Base.show(io::IO, rat::FourierRationalDerivativeOperator)
-    print(io, "Rational Fourier operator with coefficients\n")
-    print(io, rat.num_coef)
-    print(io, "\nand\n")
-    print(io, rat.den_coef)
-    print(io, "\nof the operator:\n")
-    print(io, rat.D1)
+    if get(io, :compact, false)
+        print(io, "Rational Fourier operator")
+    else
+        print(io, "Rational Fourier operator with coefficients\n")
+        print(io, rat.num_coef)
+        print(io, "\nand\n")
+        print(io, rat.den_coef)
+        print(io, "\nof the operator:\n")
+        print(io, rat.D1)
+    end
 end
 
 function LinearAlgebra.issymmetric(rat::FourierRationalDerivativeOperator)
@@ -635,14 +647,18 @@ Base.size(quot::PeriodicDerivativeOperatorQuotient) = size(quot.num_D)
 grid(quot::PeriodicDerivativeOperatorQuotient) = grid(quot.num_D)
 
 function Base.show(io::IO, quot::PeriodicDerivativeOperatorQuotient)
-    print(io, "Quotient of the polynomial with coefficients\n")
-    print(io, quot.num_coef)
-    print(io, "\nof the operator:\n")
-    print(io, quot.num_D)
-    print(io, "and the polynomial with coefficients\n")
-    print(io, quot.den_coef)
-    print(io, "\nof the operator:\n")
-    print(io, quot.den_D)
+    if get(io, :compact, false)
+        print(io, "Rational operator (", quot.num_D, ", ", quot.den_D, ")")
+    else
+        print(io, "Quotient of the polynomial with coefficients\n")
+        print(io, quot.num_coef)
+        print(io, "\nof the operator:\n")
+        print(io, quot.num_D)
+        print(io, "and the polynomial with coefficients\n")
+        print(io, quot.den_coef)
+        print(io, "\nof the operator:\n")
+        print(io, quot.den_D)
+    end
 end
 
 
@@ -891,13 +907,17 @@ struct FourierConstantViscosity{T<:Real, Grid, RFFT, BRFFT} <: AbstractFourierVi
     end
 end
 
-function Base.show(io::IO, Di::FourierConstantViscosity{T}) where {T}
-    grid = Di.D.grid_evaluate
-    print(io, "Fourier viscosity operator with constant coefficients for the periodic 1st\n")
-    print(io, "derivative Fourier operator {T=", T, "} on a grid in [",
-            first(grid), ", ", last(grid), "]\n")
-    print(io, "using ", length(Di.D.rfft_plan), " nodes and ",
-            length(Di.D.brfft_plan), " modes with coefficients from\n")
+function Base.show(io::IO, Di::FourierConstantViscosity)
+    if get(io, :compact, false)
+        print(io, "Fourier viscosity operator with constant coefficients of ")
+    else
+        grid = Di.D.grid_evaluate
+        print(io, "Fourier viscosity operator with constant coefficients for the periodic 1st\n")
+        print(io, "derivative Fourier operator {T=", eltype(Di), "} on a grid in [",
+                first(grid), ", ", last(grid), "]\n")
+        print(io, "using ", length(Di.D.rfft_plan), " nodes and ",
+                length(Di.D.brfft_plan), " modes with coefficients of ")
+    end
     print(io, Di.source_of_coefficients)
 end
 
@@ -909,20 +929,24 @@ end
 
 
 """
-    Tadmor1989
+    Tadmor1989()
 
 Coefficients of the Fourier spectral viscosity given in
-  Tadmor (1989)
+- Tadmor (1989)
   Convergence of Spectral Methods for Nonlinear Conservation Laws.
   SIAM Journal on Numerical Analysis 26.1, pp. 30-44.
 """
 struct Tadmor1989 <: SourceOfCoefficients end
 
-function Base.show(io::IO, ::Tadmor1989)
-    print(io,
-        "  Tadmor (1989) \n",
-        "  Convergence of Spectral Methods for Nonlinear Conservation Laws. \n",
-        "  SIAM Journal on Numerical Analysis 26.1, pp. 30-44. \n")
+function Base.show(io::IO, source::Tadmor1989)
+    if get(io, :compact, false)
+        summary(io, source)
+    else
+        print(io,
+            "Tadmor (1989) \n",
+            "  Convergence of Spectral Methods for Nonlinear Conservation Laws. \n",
+            "  SIAM Journal on Numerical Analysis 26.1, pp. 30-44. \n")
+    end
 end
 
 function set_filter_coefficients!(coefficients::AbstractVector{T},
@@ -932,29 +956,33 @@ function set_filter_coefficients!(coefficients::AbstractVector{T},
     @argcheck cutoff >= 1
     fill!(coefficients, zero(T))
     jac = jac^2 / N # ^2: 2nd derivative; /N: brfft instead of irfft
-    @inbounds @simd for j in cutoff:length(coefficients)
-        coefficients[j] = -strength * (j-1)^2 * jac
+    @simd for j in cutoff:length(coefficients)
+        @inbounds coefficients[j] = -strength * (j-1)^2 * jac
     end
 end
 
 
 """
-    MadayTadmor1989
+    MadayTadmor1989()
 
 Coefficients of the Fourier spectral viscosity given in
-  Maday, Tadmor (1989)
+- Maday, Tadmor (1989)
   Analysis of the Spectral Vanishing Viscosity Method for Periodic Conservation
     Laws.
   SIAM Journal on Numerical Analysis 26.4, pp. 854-870.
 """
 struct MadayTadmor1989 <: SourceOfCoefficients end
 
-function Base.show(io::IO, ::MadayTadmor1989)
-    print(io,
-        "  Maday, Tadmor (1989) \n",
-        "  Analysis of the Spectral Vanishing Viscosity Method for Periodic Conservation\n",
-        "    Laws. \n",
-        "  SIAM Journal on Numerical Analysis 26.4, pp. 854-870. \n")
+function Base.show(io::IO, source::MadayTadmor1989)
+    if get(io, :compact, false)
+        summary(io, source)
+    else
+        print(io,
+            "Maday, Tadmor (1989) \n",
+            "  Analysis of the Spectral Vanishing Viscosity Method for Periodic Conservation\n",
+            "    Laws. \n",
+            "  SIAM Journal on Numerical Analysis 26.4, pp. 854-870.")
+    end
 end
 
 function set_filter_coefficients!(coefficients::AbstractVector{T},
@@ -974,20 +1002,24 @@ end
 
 
 """
-    TadmorWaagan2012Standard
+    TadmorWaagan2012Standard()
 
 Coefficients of the Fourier spectral viscosity given in
-  Tadmor, Waagan (2012)
+- Tadmor, Waagan (2012)
   Adaptive Spectral Viscosity for Hyperbolic Conservation Laws.
   SIAM Journal on Scientific Computing 34.2, pp. A993-A1009.
 """
 struct TadmorWaagan2012Standard <: SourceOfCoefficients end
 
-function Base.show(io::IO, ::TadmorWaagan2012Standard)
-    print(io,
-        "  Tadmor, Waagan (2012) \n",
-        "  Adaptive Spectral Viscosity for Hyperbolic Conservation Laws. \n",
-        "  SIAM Journal on Scientific Computing 34.2, pp. A993-A1009. \n")
+function Base.show(io::IO, source::TadmorWaagan2012Standard)
+    if get(io, :compact, false)
+        summary(io, source)
+    else
+        print(io,
+            "Tadmor, Waagan (2012) \n",
+            "  Adaptive Spectral Viscosity for Hyperbolic Conservation Laws. \n",
+            "  SIAM Journal on Scientific Computing 34.2, pp. A993-A1009.")
+    end
 end
 
 function set_filter_coefficients!(coefficients::AbstractVector{T},
@@ -1004,25 +1036,30 @@ end
 
 
 """
-    TadmorWaagan2012Convergent
+    TadmorWaagan2012Convergent()
 
 Coefficients of the Fourier spectral viscosity given in
-  Tadmor, Waagan (2012)
+- Tadmor, Waagan (2012)
   Adaptive Spectral Viscosity for Hyperbolic Conservation Laws.
   SIAM Journal on Scientific Computing 34.2, pp. A993-A1009.
+
 See also
-  Schochet (1990)
+- Schochet (1990)
   The Rate of Convergence of Spectral-Viscosity Methods for Periodic Scalar
     Conservation Laws.
   SIAM Journal on Numerical Analysis 27.5, pp. 1142-1159.
 """
 struct TadmorWaagan2012Convergent <: SourceOfCoefficients end
 
-function Base.show(io::IO, ::TadmorWaagan2012Convergent)
-    print(io,
-        "  Tadmor, Waagan (2012) \n",
-        "  Adaptive Spectral Viscosity for Hyperbolic Conservation Laws. \n",
-        "  SIAM Journal on Scientific Computing 34.2, pp. A993-A1009. \n")
+function Base.show(io::IO, source::TadmorWaagan2012Convergent)
+    if get(io, :compact, false)
+        summary(io, source)
+    else
+        print(io,
+            "Tadmor, Waagan (2012) \n",
+            "  Adaptive Spectral Viscosity for Hyperbolic Conservation Laws. \n",
+            "  SIAM Journal on Scientific Computing 34.2, pp. A993-A1009.")
+    end
 end
 
 function set_filter_coefficients!(coefficients::AbstractVector{T},
@@ -1055,20 +1092,24 @@ end
 
 
 """
-    Tadmor1993
+    Tadmor1993()
 
 Coefficients of the Fourier super spectral viscosity given in
-  Tadmor (1993)
+- Tadmor (1993)
   Super Viscosity and Spectral Approximations of Nonlinear Conservation Laws.
   Numerical Methods for Fluid Dynamics IV, pp. 69-82.
 """
 struct Tadmor1993 <: SourceOfCoefficients end
 
-function Base.show(io::IO, ::Tadmor1993)
-    print(io,
-        "  Tadmor (1993) \n",
-        "  Super Viscosity and Spectral Approximations of Nonlinear Conservation Laws. \n",
-        "  Numerical Methods for Fluid Dynamics IV, pp. 69-82. \n")
+function Base.show(io::IO, source::Tadmor1993)
+    if get(io, :compact, false)
+        summary(io, source)
+    else
+        print(io,
+            "Tadmor (1993) \n",
+            "  Super Viscosity and Spectral Approximations of Nonlinear Conservation Laws. \n",
+            "  Numerical Methods for Fluid Dynamics IV, pp. 69-82.")
+    end
 end
 
 function set_filter_coefficients!(coefficients::AbstractVector{T},

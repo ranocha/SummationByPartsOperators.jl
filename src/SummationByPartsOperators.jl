@@ -39,6 +39,7 @@ using LinearAlgebra
 using SparseArrays
 
 using ArgCheck: @argcheck
+using ArrayInterface: StaticInt, static_length
 using FFTW
 using LoopVectorization: LoopVectorization, @turbo, @tturbo
 using RecursiveArrayTools: recursive_bottom_eltype
@@ -49,7 +50,6 @@ using UnPack: @unpack
 using Unrolled
 
 @reexport using DiffEqBase
-using DiffEqCallbacks
 
 import LinearAlgebra: mul!
 @reexport using PolynomialBases
@@ -85,6 +85,7 @@ include("coupling.jl")
 function __init__()
   @require BandedMatrices="aae01518-5342-5314-be14-df237901396f" include("banded_matrices.jl")
   @require StructArrays="09ab397b-f2b6-538f-b94a-2f83cf4a842a" include("struct_arrays.jl")
+  @require DiffEqCallbacks="459566f4-90b8-5000-8ac3-15dfb0a30def" include("diffeq_callbacks.jl")
 end
 
 include("filter.jl")
@@ -119,6 +120,7 @@ export PeriodicDerivativeOperator, PeriodicDissipationOperator,
        FourierDerivativeOperator2D,
        LegendreDerivativeOperator, LegendreSecondDerivativeOperator
 export FilterCallback, ConstantFilter, ExponentialFilter
+export SafeMode, FastMode, ThreadedMode
 export derivative_order, accuracy_order, source_of_coefficients, grid, semidiscretize
 export mass_matrix
 export integrate, left_boundary_weight, right_boundary_weight,
@@ -131,7 +133,7 @@ export periodic_central_derivative_operator, periodic_derivative_operator, deriv
        fourier_derivative_operator, spectral_viscosity_operator, super_spectral_viscosity_operator,
        legendre_derivative_operator, legendre_second_derivative_operator
 export UniformMesh1D, UniformPeriodicMesh1D
-export couple_continuously, couple_continuosly, couple_discontinuosly, couple_discontinuously # TODO: deprecated typo
+export couple_continuously, couple_discontinuously
 export mul!
 
 export Fornberg1998, Holoborodko2008, BeljaddLeFlochMishraParés2017

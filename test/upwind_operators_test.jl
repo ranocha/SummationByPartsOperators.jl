@@ -14,7 +14,11 @@ using SummationByPartsOperators
     Dp_bounded = derivative_operator(Mattsson2017(:plus   ), 1, acc_order, xmin, xmax, N)
     Dm_bounded = derivative_operator(Mattsson2017(:minus  ), 1, acc_order, xmin, xmax, N)
     Dc_bounded = derivative_operator(Mattsson2017(:central), 1, acc_order, xmin, xmax, N)
-    println(devnull, Dp_bounded)
+    for compact in (true, false)
+      show(IOContext(devnull, :compact=>false), Dp_bounded)
+      show(IOContext(devnull, :compact=>false), Dm_bounded)
+      show(IOContext(devnull, :compact=>false), Dc_bounded)
+    end
     M = mass_matrix(Dp_bounded)
     @test M == mass_matrix(Dm_bounded)
     @test M == mass_matrix(Dc_bounded)

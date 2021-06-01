@@ -3,17 +3,21 @@
     MattssonAlmquistVanDerWeide2018Accurate()
 
 Coefficients of the optimized SBP operators with nonuniform grid given in
-  Mattsson, Almquist, van der Weide (2018)
+- Mattsson, Almquist, van der Weide (2018)
   Boundary optimized diagonal-norm SBP operators.
   Journal of Computational Physics 374, pp. 1261-1266.
 """
 struct MattssonAlmquistVanDerWeide2018Accurate <: SourceOfCoefficients end
 
-function Base.show(io::IO, ::MattssonAlmquistVanDerWeide2018Accurate)
-  print(io,
-      "  Mattsson, Almquist, van der Weide (2018) \n",
-      "  Boundary optimized diagonal-norm SBP operators ('Accurate'). \n",
-      "  Journal of Computational Physics 374, pp. 1261-1266. \n")
+function Base.show(io::IO, source::MattssonAlmquistVanDerWeide2018Accurate)
+  if get(io, :compact, false)
+    summary(io, source)
+  else
+    print(io,
+        "Mattsson, Almquist, van der Weide (2018) \n",
+        "  Boundary optimized diagonal-norm SBP operators ('Accurate'). \n",
+        "  Journal of Computational Physics 374, pp. 1261-1266.")
+  end
 end
 
 
@@ -59,7 +63,8 @@ function construct_grid(::MattssonAlmquistVanDerWeide2018Accurate, accuracy_orde
 end
 
 
-function first_derivative_coefficients(source::MattssonAlmquistVanDerWeide2018Accurate, order::Int, T=Float64, parallel=Val{:serial}())
+function first_derivative_coefficients(source::MattssonAlmquistVanDerWeide2018Accurate,
+                                       order::Int, T=Float64, mode=FastMode())
   if order == 4
     left_boundary = (
         # d1
@@ -101,7 +106,7 @@ function first_derivative_coefficients(source::MattssonAlmquistVanDerWeide2018Ac
     DerivativeCoefficients(left_boundary, right_boundary,
                             left_boundary_derivatives, right_boundary_derivatives,
                             lower_coef, central_coef, upper_coef,
-                            left_weights, right_weights, parallel, 1, order, source)
+                            left_weights, right_weights, mode, 1, order, source)
   elseif order == 6
     left_boundary = (
         # d1
@@ -170,7 +175,7 @@ function first_derivative_coefficients(source::MattssonAlmquistVanDerWeide2018Ac
     DerivativeCoefficients(left_boundary, right_boundary,
                             left_boundary_derivatives, right_boundary_derivatives,
                             lower_coef, central_coef, upper_coef,
-                            left_weights, right_weights, parallel, 1, order, source)
+                            left_weights, right_weights, mode, 1, order, source)
   elseif order == 8
     left_boundary = (
         # d1
@@ -275,7 +280,7 @@ function first_derivative_coefficients(source::MattssonAlmquistVanDerWeide2018Ac
     DerivativeCoefficients(left_boundary, right_boundary,
                             left_boundary_derivatives, right_boundary_derivatives,
                             lower_coef, central_coef, upper_coef,
-                            left_weights, right_weights, parallel, 1, order, source)
+                            left_weights, right_weights, mode, 1, order, source)
   # elseif order == 8
   #   left_boundary = (
   #       # d1
@@ -348,7 +353,7 @@ function first_derivative_coefficients(source::MattssonAlmquistVanDerWeide2018Ac
   #   DerivativeCoefficients(left_boundary, right_boundary,
   #                           left_boundary_derivatives, right_boundary_derivatives,
   #                           lower_coef, central_coef, upper_coef,
-  #                           left_weights, right_weights, parallel, 1, order, source)
+  #                           left_weights, right_weights, mode, 1, order, source)
   else
     throw(ArgumentError("Order $order not implemented/derived."))
   end

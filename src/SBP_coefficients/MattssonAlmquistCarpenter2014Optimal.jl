@@ -3,17 +3,21 @@
     MattssonAlmquistCarpenter2014Optimal()
 
 Coefficients of the optimal SBP operators with nonuniform grid given in
-  Mattsson, Almquist, Carpenter (2014)
+- Mattsson, Almquist, Carpenter (2014)
   Optimal diagonal-norm SBP operators.
   Journal of Computational Physics 264, pp. 91-111.
 """
 struct MattssonAlmquistCarpenter2014Optimal <: SourceOfCoefficients end
 
-function Base.show(io::IO, ::MattssonAlmquistCarpenter2014Optimal)
-    print(io,
-        "  Mattsson, Almquist, Carpenter (2014) \n",
-        "  Optimal diagonal-norm SBP operators. \n",
-        "  Journal of Computational Physics 264, pp. 91-111. \n")
+function Base.show(io::IO, source::MattssonAlmquistCarpenter2014Optimal)
+    if get(io, :compact, false)
+        summary(io, source)
+    else
+        print(io,
+            "Mattsson, Almquist, Carpenter (2014) \n",
+            "  Optimal diagonal-norm SBP operators. \n",
+            "  Journal of Computational Physics 264, pp. 91-111. \n")
+    end
 end
 
 
@@ -105,7 +109,8 @@ function construct_grid(::MattssonAlmquistCarpenter2014Optimal, accuracy_order, 
 end
 
 
-function first_derivative_coefficients(source::MattssonAlmquistCarpenter2014Optimal, order::Int, T=Float64, parallel=Val{:serial}())
+function first_derivative_coefficients(source::MattssonAlmquistCarpenter2014Optimal,
+                                       order::Int, T=Float64, mode=FastMode())
     if order == 2
         left_boundary = (
             # d1
@@ -136,7 +141,7 @@ function first_derivative_coefficients(source::MattssonAlmquistCarpenter2014Opti
         DerivativeCoefficients(left_boundary, right_boundary,
                                 left_boundary_derivatives, right_boundary_derivatives,
                                 lower_coef, central_coef, upper_coef,
-                                left_weights, right_weights, parallel, 1, order, source)
+                                left_weights, right_weights, mode, 1, order, source)
     elseif order == 4
         left_boundary = (
             # d1
@@ -189,7 +194,7 @@ function first_derivative_coefficients(source::MattssonAlmquistCarpenter2014Opti
         DerivativeCoefficients(left_boundary, right_boundary,
                                 left_boundary_derivatives, right_boundary_derivatives,
                                 lower_coef, central_coef, upper_coef,
-                                left_weights, right_weights, parallel, 1, order, source)
+                                left_weights, right_weights, mode, 1, order, source)
     elseif order == 6
         left_boundary = (
             # d1
@@ -273,7 +278,7 @@ function first_derivative_coefficients(source::MattssonAlmquistCarpenter2014Opti
         DerivativeCoefficients(left_boundary, right_boundary,
                                 left_boundary_derivatives, right_boundary_derivatives,
                                 lower_coef, central_coef, upper_coef,
-                                left_weights, right_weights, parallel, 1, order, source)
+                                left_weights, right_weights, mode, 1, order, source)
     #= FIXME: There seem to be some errors in the coefficients...
     elseif order == 8
         left_boundary = (
@@ -379,7 +384,7 @@ function first_derivative_coefficients(source::MattssonAlmquistCarpenter2014Opti
         DerivativeCoefficients(left_boundary, right_boundary,
                                 left_boundary_derivatives, right_boundary_derivatives,
                                 lower_coef, central_coef, upper_coef,
-                                left_weights, right_weights, parallel, 1, order, source)
+                                left_weights, right_weights, mode, 1, order, source)
     =#
     else
         throw(ArgumentError("Order $order not implemented/derived."))

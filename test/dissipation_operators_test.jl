@@ -55,8 +55,8 @@ for T in (Float32, Float64), order in (2,4,6,8)
     dest1 = fill(zero(eltype(u)), length(u))
     dest2 = fill(zero(eltype(u)), length(u))
 
-    Di_serial = dissipation_operator(D, order=order, parallel=Val{:serial}())
-    Di_threads= dissipation_operator(D, order=order, parallel=Val{:threads}())
+    Di_serial = dissipation_operator(D, order=order, mode=FastMode())
+    Di_threads= dissipation_operator(D, order=order, mode=ThreadedMode())
     Di_full   = Matrix(Di_serial)
 
     mul!(dest1, Di_serial, u, one(T), zero(T))
@@ -101,8 +101,9 @@ for T in (Float32, Float64), order in (2,4,6,8)
     dest1 = fill(zero(eltype(u)), length(u))
     dest2 = fill(zero(eltype(u)), length(u))
 
-    Di_serial = dissipation_operator(D, order=order, parallel=Val{:serial}())
-    Di_threads= dissipation_operator(D, order=order, parallel=Val{:threads}())
+    Di_serial = dissipation_operator(D, order=order, mode=FastMode())
+    Di_threads= dissipation_operator(D, order=order, mode=ThreadedMode())
+    Di_safe   = dissipation_operator(D, order=order, mode=SafeMode())
     Di_full   = Matrix(Di_serial)
 
     mul!(dest1, Di_serial, u, one(T), zero(T))
@@ -114,6 +115,8 @@ for T in (Float32, Float64), order in (2,4,6,8)
     dest3 = Di_serial*u
     @test maximum(abs, dest1 - dest3) < u[end]*N*eps(T)
     dest3 = Di_full*u
+    @test maximum(abs, dest1 - dest3) < 5*u[end]*N*eps(T)
+    dest3 = Di_safe*u
     @test maximum(abs, dest1 - dest3) < 5*u[end]*N*eps(T)
 end
 

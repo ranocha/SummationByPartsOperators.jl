@@ -49,13 +49,10 @@ julia> using Plots: plot, plot!
 
 julia> D = periodic_derivative_operator(derivative_order=1, accuracy_order=2,
                                         xmin=0.0, xmax=2.0, N=20)
-Periodic 1st derivative operator of order 2 {T=Float64, Parallel=Val{:serial}}
-on a grid in [0.0, 2.0] using 20 nodes,
-stencils with 1 nodes to the left, 1 nodes to the right, and coefficients from
-  Fornberg (1998)
+Periodic first-derivative operator of order 2 on a grid in [0.0, 2.0] using 20 nodes,
+stencils with 1 nodes to the left, 1 nodes to the right, and coefficients of Fornberg (1998)
   Calculation of Weights in Finite Difference Formulas.
   SIAM Rev. 40.3, pp. 685-691.
-
 
 julia> x = grid(D); u = sinpi.(x);
 
@@ -78,14 +75,11 @@ julia> using Plots: plot, plot!
 
 julia> D = derivative_operator(MattssonNordström2004(), derivative_order=1, accuracy_order=2,
                                xmin=0.0, xmax=1.0, N=21)
-SBP 1st derivative operator of order 2 {T=Float64, Parallel=Val{:serial}}
-on a grid in [0.0, 1.0] using 21 nodes
-and coefficients given in
-  Mattsson, Nordström (2004)
+SBP first-derivative operator of order 2 on a grid in [0.0, 1.0] using 21 nodes
+and coefficients of Mattsson, Nordström (2004)
   Summation by parts operators for finite difference approximations of second
     derivatives.
   Journal of Computational Physics 199, pp. 503-540.
-
 
 julia> x = grid(D); u = exp.(x);
 
@@ -112,18 +106,18 @@ supported.
 
 ### Periodic domains
 
-- `periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)`
+- `periodic_derivative_operator(; derivative_order, accuracy_order, xmin, xmax, N)`
 
   These are classical central finite difference operators using `N` nodes on the
   interval `[xmin, xmax]`.
 
-- `periodic_derivative_operator(Holoborodko2008(), derivative_order, accuracy_order, xmin, xmax, N)`
+- `periodic_derivative_operator(Holoborodko2008(); derivative_order, accuracy_order, xmin, xmax, N)`
 
   These are central finite difference operators using `N` nodes on the
   interval `[xmin, xmax]` and the coefficients of
   [Pavel Holoborodko](http://www.holoborodko.com/pavel/numerical-methods/numerical-derivative/smooth-low-noise-differentiators/).
 
-- `fourier_derivative_operator(xmin, xmax, N)`
+- `fourier_derivative_operator(; xmin, xmax, N)`
 
   Fourier derivative operators are implemented using the fast Fourier transform of
   [FFTW.jl](https://github.com/JuliaMath/FFTW.jl).
@@ -135,14 +129,14 @@ e.g. to solve elliptic problems of the form `u = (D^2 + I) \ f`.
 
 ### Finite (nonperiodic) domains
 
-- `derivative_operator(source_of_coefficients, derivative_order, accuracy_order, xmin, xmax, N)`
+- `derivative_operator(source_of_coefficients; derivative_order, accuracy_order, xmin, xmax, N)`
 
   Finite difference SBP operators for first and second derivatives can be obtained
   by using `MattssonNordström2004()` as `source_of_coefficients`.
   Other sources of coefficients are implemented as well. To obtain a full list
   of all operators, use `subtypes(SourceOfCoefficients)`.
 
-- `legendre_derivative_operator(xmin, xmax, N)`
+- `legendre_derivative_operator(; xmin, xmax, N)`
 
   Use Lobatto Legendre polynomial collocation schemes on `N`, i.e.
   polynomials of degree `N-1`, implemented via
@@ -181,15 +175,14 @@ of the operators. Therefore, some conversion functions are supplied, e.g.
 ```julia
 julia> using SummationByPartsOperators
 
-julia> D = derivative_operator(MattssonNordström2004(), 1, 2, 0., 1., 5)
-SBP 1st derivative operator of order 2 {T=Float64, Parallel=Val{:serial}}
-on a grid in [0.0, 1.0] using 5 nodes
-and coefficients given in
-  Mattsson, Nordström (2004)
+julia> D = derivative_operator(MattssonNordström2004(),
+                               derivative_order=1, accuracy_order=2,
+                               xmin=0.0, xmax=1.0, N=5)
+SBP first-derivative operator of order 2 on a grid in [0.0, 1.0] using 5 nodes
+and coefficients of Mattsson, Nordström (2004)
   Summation by parts operators for finite difference approximations of second
     derivatives.
-  Journal of Computational Physics 199, pp.503-540.
-
+  Journal of Computational Physics 199, pp. 503-540.
 
 julia> Matrix(D)
 5×5 Array{Float64,2}:

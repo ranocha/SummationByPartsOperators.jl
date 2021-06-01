@@ -11,12 +11,12 @@ end
 The coefficients of a variable coefficient derivative operator on a nonperiodic grid.
 """
 struct VarCoefDerivativeCoefficients{T,CoefficientCache<:AbstractCoefficientCache{T},
-                                     LeftWidth,RightWidth,Parallel,SourceOfCoefficients} <: AbstractDerivativeCoefficients{T}
+                                     LeftWidth,RightWidth,ExecutionMode,SourceOfCoefficients} <: AbstractDerivativeCoefficients{T}
     # coefficients defining the operator and its action
     coefficient_cache::CoefficientCache
     left_weights::SVector{LeftWidth, T}
     right_weights::SVector{RightWidth, T}
-    parallel::Parallel
+    mode::ExecutionMode
     # corresponding orders etc.
     derivative_order::Int
     accuracy_order  ::Int
@@ -25,29 +25,28 @@ struct VarCoefDerivativeCoefficients{T,CoefficientCache<:AbstractCoefficientCach
     function VarCoefDerivativeCoefficients(coefficient_cache::CoefficientCache,
                                            left_weights::SVector{LeftWidth, T},
                                            right_weights::SVector{RightWidth, T},
-                                           parallel::Parallel,
+                                           mode::ExecutionMode,
                                            derivative_order::Int, accuracy_order::Int,
                                            source_of_coefficients::SourceOfCoefficients) where {T,CoefficientCache<:AbstractCoefficientCache{T},
-                                                                                                LeftWidth,RightWidth,Parallel,SourceOfCoefficients}
-        new{T,CoefficientCache,LeftWidth,RightWidth,Parallel,SourceOfCoefficients}(
-            coefficient_cache, left_weights, right_weights, parallel, derivative_order, accuracy_order, source_of_coefficients)
+                                                                                                LeftWidth,RightWidth,ExecutionMode,SourceOfCoefficients}
+        new{T,CoefficientCache,LeftWidth,RightWidth,ExecutionMode,SourceOfCoefficients}(
+            coefficient_cache, left_weights, right_weights, mode, derivative_order, accuracy_order, source_of_coefficients)
     end
 end
 
 
 function Base.show(io::IO, coefficients::VarCoefDerivativeCoefficients)
-    print(io, "Coefficients of the variable coefficient ")
-    if  derivative_order(coefficients) == 1
-        print(io, "1st")
+    if derivative_order(coefficients) == 1
+        print(io, "Coefficients of the variable-coefficient first-derivative operator")
     elseif  derivative_order(coefficients) == 2
-        print(io, "2nd")
+        print(io, "Coefficients of the variable-coefficient second-derivative operator")
     elseif  derivative_order(coefficients) == 3
-        print(io, "3rd")
+        print(io, "Coefficients of the variable-coefficient third-derivative operator")
     else
-        print(io, derivative_order(coefficients), "th")
+        print(io, "Coefficients of the variable-coefficient ", derivative_order(coefficients),
+              "-derivative operator")
     end
-    print(io, "derivative operator with order of accuracy ",
-            accuracy_order(coefficients), " given in \n")
+    print(io, " of order ", accuracy_order(coefficients), " of ")
     print(io, source_of_coefficients(coefficients))
 end
 
@@ -55,7 +54,7 @@ end
 # Compute `α*D*u + β*dest` using the coefficients `b` and store the result in `dest`.
 function mul!(dest::AbstractVector, coefficients::VarCoefDerivativeCoefficients,
                 u::AbstractVector, b::AbstractVector, α, β)
-    @unpack coefficient_cache, parallel = coefficients
+    @unpack coefficient_cache, mode = coefficients
 
     @boundscheck begin
         @argcheck length(dest) == length(u) DimensionMismatch
@@ -64,13 +63,13 @@ function mul!(dest::AbstractVector, coefficients::VarCoefDerivativeCoefficients,
     end
 
     convolve_boundary_coefficients!(dest, coefficient_cache, u, b, α, β)
-    convolve_interior_coefficients!(dest, coefficient_cache, u, b, α, β, parallel)
+    convolve_interior_coefficients!(dest, coefficient_cache, u, b, α, β, mode)
 end
 
 # Compute `α*D*u` using the coefficients `b` and store the result in `dest`.
 function mul!(dest::AbstractVector, coefficients::VarCoefDerivativeCoefficients,
                 u::AbstractVector, b::AbstractVector, α)
-    @unpack coefficient_cache, parallel = coefficients
+    @unpack coefficient_cache, mode = coefficients
 
     @boundscheck begin
         @argcheck length(dest) == length(u) DimensionMismatch
@@ -79,7 +78,7 @@ function mul!(dest::AbstractVector, coefficients::VarCoefDerivativeCoefficients,
     end
 
     convolve_boundary_coefficients!(dest, coefficient_cache, u, b, α)
-    convolve_interior_coefficients!(dest, coefficient_cache, u, b, α, parallel)
+    convolve_interior_coefficients!(dest, coefficient_cache, u, b, α, mode)
 end
 
 @inline function left_length(cache::AbstractCoefficientCache)
@@ -92,7 +91,7 @@ end
 
 
 function convolve_interior_coefficients!(dest::AbstractVector, cache::AbstractCoefficientCache,
-                                         u::AbstractVector, b::AbstractVector, α, parallel)
+                                         u::AbstractVector, b::AbstractVector, α, mode)
     for i in (left_length(cache)+1):(length(dest)-right_length(cache)) @inbounds begin
         retval = convolve_interior_coefficients_loopbody(i, cache, u, b)
         dest[i] = α*retval
@@ -100,7 +99,7 @@ function convolve_interior_coefficients!(dest::AbstractVector, cache::AbstractCo
 end
 
 function convolve_interior_coefficients!(dest::AbstractVector, cache::AbstractCoefficientCache,
-                                         u::AbstractVector, b::AbstractVector, α, ::Val{:threads})
+                                         u::AbstractVector, b::AbstractVector, α, mode::ThreadedMode)
     Threads.@threads for i in (left_length(cache)+1):(length(dest)-right_length(cache)) @inbounds begin
         retval = convolve_interior_coefficients_loopbody(i, cache, u, b)
         dest[i] = α*retval
@@ -109,7 +108,7 @@ end
 
 
 function convolve_interior_coefficients!(dest::AbstractVector, cache::AbstractCoefficientCache,
-                                         u::AbstractVector, b::AbstractVector, α, β, parallel)
+                                         u::AbstractVector, b::AbstractVector, α, β, mode)
     for i in (left_length(cache)+1):(length(dest)-right_length(cache)) @inbounds begin
         retval = convolve_interior_coefficients_loopbody(i, cache, u, b)
         dest[i] = α*retval + β*dest[i]
@@ -117,7 +116,7 @@ function convolve_interior_coefficients!(dest::AbstractVector, cache::AbstractCo
 end
 
 function convolve_interior_coefficients!(dest::AbstractVector, cache::AbstractCoefficientCache,
-                                         u::AbstractVector, b::AbstractVector, α, β, ::Val{:threads})
+                                         u::AbstractVector, b::AbstractVector, α, β, mode::ThreadedMode)
     Threads.@threads for i in (left_length(cache)+1):(length(dest)-right_length(cache)) @inbounds begin
         retval = convolve_interior_coefficients_loopbody(i, cache, u, b)
         dest[i] = α*retval + β*dest[i]
@@ -146,6 +145,7 @@ end
     DissipationOperator
 
 A dissipation operator on a nonperiodic finite difference grid.
+See [`dissipation_operator`](@ref).
 """
 struct DissipationOperator{T,Coefficients<:VarCoefDerivativeCoefficients{T},Grid} <: AbstractVariableCoefficientNonperiodicDerivativeOperator{T}
     factor::T
@@ -167,15 +167,18 @@ end
 
 function Base.show(io::IO, D::DissipationOperator{T}) where {T}
     if  derivative_order(D) == 2
-        print(io, "SBP 2nd derivative dissipation operator of order ")
+        print(io, "SBP second-derivative dissipation operator")
     else
-        print(io, "SBP ", derivative_order(D), "th derivative dissipation operator of order ")
+        print(io, "SBP ", derivative_order(D),
+              "-derivative dissipation operator")
     end
-    print(io, accuracy_order(D), " {T=", T, ", Parallel=", typeof(D.coefficients.parallel), "} \n")
-    print(io, "on a grid in [", first(grid(D)), ", ", last(grid(D)),
+    print(io, " of order ", accuracy_order(D))
+    if get(io, :compact, false) == false
+        print(io, " on a grid in [", first(grid(D)), ", ", last(grid(D)),
                 "] using ", length(grid(D)), " nodes \n")
-    print(io, "and coefficients given in \n")
-    print(io, source_of_coefficients(D))
+        print(io, "and coefficients")
+    end
+    print(io, " of ", source_of_coefficients(D))
 end
 
 
@@ -203,7 +206,7 @@ end
 
 """
     dissipation_operator(source_of_coefficients, order, xmin, xmax, N,
-                         left_weights, right_weights, parallel=Val{:serial}())
+                         left_weights, right_weights, mode=FastMode())
 
 Create a negative semidefinite `DissipationOperator` using undivided differences
 approximating a weighted `order`-th derivative on a grid between `xmin` and
@@ -211,46 +214,52 @@ approximating a weighted `order`-th derivative on a grid between `xmin` and
 by `source_of_coefficients`.
 The norm matrix is given by `left_weights` and `right_weights`.
 The evaluation of the derivative can be parallized using threads by chosing
-`parallel=Val{:threads}())`.
+`mode=ThreadedMode()`.
 """
 function dissipation_operator(source_of_coefficients, order, xmin, xmax, N,
                               left_weights, right_weights,
                               strength=one(xmin+xmax),
-                              parallel=Val{:serial}())
+                              mode=FastMode(),
+                              parallel=nothing)
+    if parallel !== nothing
+        # TODO: deprecated in v0.5
+        Base.depwarn("Providing the keyword argument `parallel` is deprecated." *
+                     "Use `mode` instead.", :dissipation_operator)
+        mode = _parallel_to_mode(parallel)
+    end
     grid = construct_grid(source_of_coefficients, order, xmin, xmax, N)
-    coefficients, b = dissipation_coefficients(source_of_coefficients, order, grid, left_weights, right_weights, parallel)
+    coefficients, b = dissipation_coefficients(source_of_coefficients, order, grid, left_weights, right_weights, mode)
     DissipationOperator(strength, coefficients, grid, b)
 end
 
 """
-    dissipation_operator(source_of_coefficients, D::DerivativeOperator{T};
+    dissipation_operator([source_of_coefficients=MattssonSvärdNordström2004()],
+                         D::DerivativeOperator{T};
                          strength=one(T),
                          order::Int=accuracy_order(D),
-                         parallel=D.coefficients.parallel)
+                         mode=D.coefficients.mode)
 
 Create a negative semidefinite `DissipationOperator` using undivided differences
 approximating a weighted `order`-th derivative adapted to the derivative
 operator `D` with coefficients given in `source_of_coefficients`.
 The evaluation of the derivative can be parallized using threads by chosing
-`parallel=Val{:threads}())`.
+`mode=ThreadedMode()`.
 """
 function dissipation_operator(source_of_coefficients, D::DerivativeOperator{T};
                               strength=one(T),
                               order::Int=accuracy_order(D),
-                              parallel=D.coefficients.parallel) where {T}
+                              mode=D.coefficients.mode,
+                              parallel=nothing) where {T}
+    if parallel !== nothing
+        # TODO: deprecated in v0.5
+        Base.depwarn("Providing the keyword argument `parallel` is deprecated." *
+                     "Use `mode` instead.", :dissipation_operator)
+        mode = _parallel_to_mode(parallel)
+    end
     x = grid(D)
-    dissipation_operator(source_of_coefficients, order, first(x), last(x), length(x), D.coefficients.left_weights, D.coefficients.right_weights, strength, parallel)
+    dissipation_operator(source_of_coefficients, order, first(x), last(x), length(x), D.coefficients.left_weights, D.coefficients.right_weights, strength, mode)
 end
 
-"""
-    dissipation_operator(D::DerivativeOperator; kwargs...)
-
-Create a negative semidefinite `DissipationOperator` using undivided differences
-approximating a weighted `order`-th derivative adapted to the derivative
-operator `D`.
-The evaluation of the derivative can be parallized using threads by chosing
-`parallel=Val{:threads}())`.
-"""
 function dissipation_operator(D::DerivativeOperator; kwargs...)
     source = MattssonSvärdNordström2004()
     dissipation_operator(source, D; kwargs...)

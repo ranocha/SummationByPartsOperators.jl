@@ -48,6 +48,39 @@ the derivative operator `D`.
 """
 function right_boundary_weight end
 
+function Base.summary(io::IO, D::AbstractDerivativeOperator)
+    print(io, nameof(typeof(D)), "(derivative_order=", derivative_order(D),
+              ", accuracy_order=", accuracy_order(D), ")")
+end
+
+
+
+abstract type AbstractExecutionMode end
+"""
+    SafeMode()
+
+A safe execution mode relying only on basic functionality of Julia.
+"""
+struct SafeMode <: AbstractExecutionMode end
+"""
+    FastMode()
+
+A (probably) faster execution mode that might depend on packages such as
+[LoopVectorization.jl](https://github.com/JuliaSIMD/LoopVectorization.jl).
+"""
+struct FastMode <: AbstractExecutionMode end
+"""
+    ThreadedMode()
+
+An execution mode using multiple threads and possibly further optimizations, cf.
+[`FastMode`](@ref).
+"""
+struct ThreadedMode <: AbstractExecutionMode end
+
+# TODO: deprecated in v0.5
+_parallel_to_mode(::Val{:threads}) = ThreadedMode()
+_parallel_to_mode(::Val{:serial}) = FastMode()
+
 
 derivative_order(coefficients::AbstractDerivativeCoefficients) = coefficients.derivative_order
 accuracy_order(coefficients::AbstractDerivativeCoefficients) = coefficients.accuracy_order
@@ -58,6 +91,7 @@ LinearAlgebra.issymmetric(coefficients::AbstractDerivativeCoefficients) = coeffi
 derivative_order(D::AbstractDerivativeOperator) = derivative_order(D.coefficients)
 accuracy_order(D::AbstractDerivativeOperator) = accuracy_order(D.coefficients)
 Base.eltype(D::AbstractDerivativeOperator{T}) where {T} = T
+Base.real(D::AbstractDerivativeOperator) = real(eltype(D))
 LinearAlgebra.issymmetric(D::AbstractDerivativeOperator) = issymmetric(D.coefficients)
 function Base.size(D::AbstractDerivativeOperator)
     N = length(grid(D))
@@ -253,9 +287,12 @@ function Base.:+(sum1::SumOfDerivativeOperators, sum2::SumOfDerivativeOperators)
 end
 
 function Base.show(io::IO, sum::SumOfDerivativeOperators)
-    print(io, "Sum of operators:\n")
-    for D in sum.operators
-        print(io, D)
+    print(io, "Sum of ", length(sum.operators), " operators")
+    if get(io, :compact, false) == false
+        print(io, ":")
+        for D in sum.operators
+            print(io, "\n", D)
+        end
     end
 end
 

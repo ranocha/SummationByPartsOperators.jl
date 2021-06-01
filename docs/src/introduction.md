@@ -44,13 +44,10 @@ julia> using SummationByPartsOperators, LinearAlgebra
 
 julia> D = periodic_derivative_operator(derivative_order=1, accuracy_order=2,
                                         xmin=0.0, xmax=2.0, N=20)
-Periodic 1st derivative operator of order 2 {T=Float64, Parallel=Val{:serial}}
-on a grid in [0.0, 2.0] using 20 nodes,
-stencils with 1 nodes to the left, 1 nodes to the right, and coefficients from
-  Fornberg (1998)
+Periodic first-derivative operator of order 2 on a grid in [0.0, 2.0] using 20 nodes,
+stencils with 1 nodes to the left, 1 nodes to the right, and coefficients of Fornberg (1998)
   Calculation of Weights in Finite Difference Formulas.
   SIAM Rev. 40.3, pp. 685-691.
-
 
 julia> M = mass_matrix(D)
 UniformScaling{Float64}
@@ -61,8 +58,7 @@ julia> M * Matrix(D) + Matrix(D)' * M |> norm
 
 julia> D = fourier_derivative_operator(xmin=0.0, xmax=2.0, N=20)
 Periodic 1st derivative Fourier operator {T=Float64}
-on a grid in [0.0, 2.0] using 20 nodes and 11 modes.
-
+on a grid in [0.0, 2.0] using 20 nodes and 11 modes
 
 julia> M = mass_matrix(D)
 UniformScaling{Float64}
@@ -111,14 +107,11 @@ julia> using SummationByPartsOperators, LinearAlgebra
 
 julia> D = derivative_operator(MattssonNordström2004(), derivative_order=1, accuracy_order=2,
                                xmin=0//1, xmax=1//1, N=9)
-SBP 1st derivative operator of order 2 {T=Rational{Int64}, Parallel=Val{:serial}}
-on a grid in [0//1, 1//1] using 9 nodes
-and coefficients given in
-  Mattsson, Nordström (2004)
+SBP first-derivative operator of order 2 on a grid in [0//1, 1//1] using 9 nodes
+and coefficients of Mattsson, Nordström (2004)
   Summation by parts operators for finite difference approximations of second
     derivatives.
   Journal of Computational Physics 199, pp. 503-540.
-
 
 julia> tL = zeros(eltype(D), size(D, 1)); tL[1] = 1; tL'
 1×9 adjoint(::Vector{Rational{Int64}}) with eltype Rational{Int64}:
@@ -186,14 +179,11 @@ julia> using SummationByPartsOperators, LinearAlgebra
 
 julia> D = derivative_operator(MattssonNordström2004(), derivative_order=2, accuracy_order=2,
                                xmin=0//1, xmax=1//1, N=9)
-SBP 2nd derivative operator of order 2 {T=Rational{Int64}, Parallel=Val{:serial}}
-on a grid in [0//1, 1//1] using 9 nodes
-and coefficients given in
-  Mattsson, Nordström (2004)
+SBP second-derivative operator of order 2 on a grid in [0//1, 1//1] using 9 nodes
+and coefficients of Mattsson, Nordström (2004)
   Summation by parts operators for finite difference approximations of second
     derivatives.
   Journal of Computational Physics 199, pp. 503-540.
-
 
 julia> M = mass_matrix(D)
 9×9 Diagonal{Rational{Int64}, Vector{Rational{Int64}}}:
@@ -262,25 +252,19 @@ julia> using SummationByPartsOperators, LinearAlgebra
 
 julia> Dp = derivative_operator(Mattsson2017(:plus), derivative_order=1, accuracy_order=2,
                                 xmin=0//1, xmax=1//1, N=9)
-SBP 1st derivative operator of order 2 {T=Rational{Int64}, Parallel=Val{:serial}}
-on a grid in [0//1, 1//1] using 9 nodes
-and coefficients given in
-  Upwind coefficients (plus) of
-  Mattsson (2017)
+SBP first-derivative operator of order 2 on a grid in [0//1, 1//1] using 9 nodes
+and coefficients of Mattsson (2017)
   Diagonal-norm upwind SBP operators.
   Journal of Computational Physics 335, pp. 283-310.
-
+  (upwind coefficients plus)
 
 julia> Dm = derivative_operator(Mattsson2017(:minus), derivative_order=1, accuracy_order=2,
                                 xmin=0//1, xmax=1//1, N=9)
-SBP 1st derivative operator of order 2 {T=Rational{Int64}, Parallel=Val{:serial}}
-on a grid in [0//1, 1//1] using 9 nodes
-and coefficients given in
-  Upwind coefficients (minus) of
-  Mattsson (2017)
+SBP first-derivative operator of order 2 on a grid in [0//1, 1//1] using 9 nodes
+and coefficients of Mattsson (2017)
   Diagonal-norm upwind SBP operators.
   Journal of Computational Physics 335, pp. 283-310.
-
+  (upwind coefficients minus)
 
 julia> M = mass_matrix(Dp)
 9×9 Diagonal{Rational{Int64}, Vector{Rational{Int64}}}:
@@ -324,11 +308,8 @@ julia> using SummationByPartsOperators, LinearAlgebra
 julia> D = couple_continuously(
                legendre_derivative_operator(xmin=-1.0, xmax=1.0, N=3),
                UniformMesh1D(xmin=0.0, xmax=1.0, Nx=3))
-First derivative operator {T=Float64}
-on the Lobatto Legendre nodes in [-1.0, 1.0] using 3 nodes
-coupled continuously on the mesh
-UniformMesh1D{Float64} with 3 cells in (0.0, 1.0)
-
+First derivative operator {T=Float64} on 3 Lobatto Legendre nodes in [-1.0, 1.0]
+coupled continuously on UniformMesh1D{Float64} with 3 cells in (0.0, 1.0)
 
 julia> Matrix(D)
 7×7 Matrix{Float64}:
@@ -363,11 +344,8 @@ julia> D = couple_discontinuously(
                legendre_derivative_operator(xmin=-1.0, xmax=1.0, N=3),
                UniformPeriodicMesh1D(xmin=0.0, xmax=1.0, Nx=3),
                Val(:central))
-First derivative operator {T=Float64}
-on the Lobatto Legendre nodes in [-1.0, 1.0] using 3 nodes
-coupled discontinuously (upwind: Val{:central}()) on the mesh
-UniformPeriodicMesh1D{Float64} with 3 cells in (0.0, 1.0)
-
+First derivative operator {T=Float64} on 3 Lobatto Legendre nodes in [-1.0, 1.0]
+coupled discontinuously (upwind: Val{:central}()) on UniformPeriodicMesh1D{Float64} with 3 cells in (0.0, 1.0)
 
 julia> M = mass_matrix(D);
 

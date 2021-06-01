@@ -20,7 +20,7 @@ struct QuarticNonconvexPeriodicSemidiscretization{T,Derivative<:AbstractDerivati
     split_form::SplitForm
 
     function QuarticNonconvexPeriodicSemidiscretization(derivative::Derivative, dissipation::Dissipation, split_form::SplitForm=Val{false}()) where {T, Derivative<:AbstractDerivativeOperator{T}, Dissipation, SplitForm<:Union{Val{false}, Val{true}}}
-        if dissipation != nothing
+        if dissipation !== nothing
             @argcheck size(derivative) == size(dissipation) DimensionMismatch
             @argcheck grid(derivative) == grid(dissipation) ArgumentError
         end
@@ -33,16 +33,20 @@ end
 
 
 function Base.show(io::IO, semi::QuarticNonconvexPeriodicSemidiscretization)
-    print(io, "Semidiscretization of the quartic nonconvex conservation law\n")
-    print(io, "  \$ \\partial_t u(t,x) + \\partial_x ( u(t,x)^4 - 10 u(t,x)^2 + 3 u(t,x) ) = 0 \$ \n")
-    print(io, "with periodic boundaries using")
-    if semi.split_form == Val{true}()
-        print(io, " a split form and: \n")
+    if get(io, :compact, false)
+        print(io, "Semidiscretization of the quartic nonconvex conservation law (periodic)")
     else
-        print(io, " no split form and: \n")
+        print(io, "Semidiscretization of the quartic nonconvex conservation law\n")
+        print(io, "  \$ \\partial_t u(t,x) + \\partial_x ( u(t,x)^4 - 10 u(t,x)^2 + 3 u(t,x) ) = 0 \$ \n")
+        print(io, "with periodic boundaries using")
+        if semi.split_form == Val{true}()
+            print(io, " a split form and: \n")
+        else
+            print(io, " no split form and: \n")
+        end
+        print(io, semi.derivative)
+        print(io, semi.dissipation)
     end
-    print(io, semi.derivative)
-    print(io, semi.dissipation)
 end
 
 
@@ -94,7 +98,7 @@ function (disc::QuarticNonconvexPeriodicSemidiscretization)(du, u, p, t)
     end
 
     # dissipation
-    if dissipation != nothing
+    if dissipation !== nothing
         mul!(tmp1, dissipation, u)
         @. du += tmp1
     end

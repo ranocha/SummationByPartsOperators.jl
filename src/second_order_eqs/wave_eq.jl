@@ -23,10 +23,14 @@ end
 
 
 function Base.show(io::IO, semi::WaveEquationNonperiodicSemidiscretization)
-    print(io, "Semidiscretization of the linear wave equation\n")
-    print(io, "  \$ \\partial_t^2 u(t,x) = \\partial_x^2 u(t,x) \$ \n")
-    print(io, "with nonperiodic boundaries using")
-    print(io, semi.derivative)
+    if get(io, :compact, false)
+        print(io, "Semidiscretization of the linear wave equation (non-periodic)")
+    else
+        print(io, "Semidiscretization of the linear wave equation\n")
+        print(io, "  \$ \\partial_t^2 u(t,x) = \\partial_x^2 u(t,x) \$ \n")
+        print(io, "with nonperiodic boundaries using")
+        print(io, semi.derivative)
+    end
 end
 
 

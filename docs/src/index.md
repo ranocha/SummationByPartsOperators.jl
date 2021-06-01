@@ -32,13 +32,10 @@ julia> using Plots: plot, plot!
 
 julia> D = periodic_derivative_operator(derivative_order=1, accuracy_order=2,
                                         xmin=0.0, xmax=2.0, N=20)
-Periodic 1st derivative operator of order 2 {T=Float64, Parallel=Val{:serial}}
-on a grid in [0.0, 2.0] using 20 nodes,
-stencils with 1 nodes to the left, 1 nodes to the right, and coefficients from
-  Fornberg (1998)
+Periodic first-derivative operator of order 2 on a grid in [0.0, 2.0] using 20 nodes,
+stencils with 1 nodes to the left, 1 nodes to the right, and coefficients of Fornberg (1998)
   Calculation of Weights in Finite Difference Formulas.
   SIAM Rev. 40.3, pp. 685-691.
-
 
 julia> x = grid(D); u = sinpi.(x);
 
@@ -59,14 +56,11 @@ julia> using Plots: plot, plot!
 
 julia> D = derivative_operator(MattssonNordström2004(), derivative_order=1, accuracy_order=2,
                                xmin=0.0, xmax=1.0, N=21)
-SBP 1st derivative operator of order 2 {T=Float64, Parallel=Val{:serial}}
-on a grid in [0.0, 1.0] using 21 nodes
-and coefficients given in
-  Mattsson, Nordström (2004)
+SBP first-derivative operator of order 2 on a grid in [0.0, 1.0] using 21 nodes
+and coefficients of Mattsson, Nordström (2004)
   Summation by parts operators for finite difference approximations of second
     derivatives.
   Journal of Computational Physics 199, pp. 503-540.
-
 
 julia> x = grid(D); u = exp.(x);
 

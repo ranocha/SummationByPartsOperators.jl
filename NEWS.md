@@ -6,6 +6,15 @@ used in the Julia ecosystem. Notable changes will be documented in this file
 for human readability.
 
 
+## Changes in the v0.5 lifecycle
+
+#### Deprecated
+
+- The (keyword) argument `parallel::Union{Val{:serial}, Val{:threads}}`
+  is deprecated in favor of `mode` with possible values
+  `FastMode()` (default), `SafeMode()`, and `ThreadedMode()`
+
+
 ## Breaking changes from v0.4.x to v0.5
 
 - Switch from British English to American English consistently, e.g.,
