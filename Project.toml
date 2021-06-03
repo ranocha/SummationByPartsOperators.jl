@@ -1,7 +1,7 @@
 name = "SummationByPartsOperators"
 uuid = "9f78cca6-572e-554e-b819-917d2f1cf240"
 author = ["Hendrik Ranocha"]
-version = "0.5.4-pre"
+version = "0.5.4"
 
 [deps]
 ArgCheck = "dce04be8-c92d-5529-be00-80e4d2c0e197"
@@ -22,7 +22,7 @@ Unrolled = "9602ed7d-8fef-5bc8-8597-8f21381861e8"
 
 [compat]
 ArgCheck = "1, 2.0"
-ArrayInterface = "3.1"
+ArrayInterface = "3.1.16"
 DiffEqBase = "6"
 FFTW = "1"
 LoopVectorization = "0.12.22"
