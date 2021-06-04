@@ -84,7 +84,7 @@ for your research, please cite it using the bibtex entry
          semidiscretization techniques with mimetic properties},
   author={Ranocha, Hendrik},
   year={2021},
-  howpublished={\url{https://github.com/ranocha/SummationByPartsOperators.jl},
+  howpublished={\url{https://github.com/ranocha/SummationByPartsOperators.jl}},
   doi={10.5281/zenodo.4773575}
 }
 ```
