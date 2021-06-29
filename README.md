@@ -7,7 +7,7 @@
 [![Coveralls](https://coveralls.io/repos/github/ranocha/SummationByPartsOperators.jl/badge.svg?branch=main)](https://coveralls.io/github/ranocha/SummationByPartsOperators.jl?branch=main)
 [![License: MIT](https://img.shields.io/badge/License-MIT-success.svg)](https://opensource.org/licenses/MIT)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4773575.svg)](https://doi.org/10.5281/zenodo.4773575)
-[![GitHub commits since tagged version](https://img.shields.io/github/commits-since/ranocha/SummationByPartsOperators.jl/v0.5.4.svg?style=social&logo=github)](https://github.com/ranocha/SummationByPartsOperators.jl)
+[![GitHub commits since tagged version](https://img.shields.io/github/commits-since/ranocha/SummationByPartsOperators.jl/v0.5.5.svg?style=social&logo=github)](https://github.com/ranocha/SummationByPartsOperators.jl)
 <!-- [![PkgEval](https://juliaci.github.io/NanosoldierReports/pkgeval_badges/S/SummationByPartsOperators.svg)](https://juliaci.github.io/NanosoldierReports/pkgeval_badges/report.html) -->
 
 [SummationByPartsOperators.jl](https://github.com/ranocha/SummationByPartsOperators.jl)
