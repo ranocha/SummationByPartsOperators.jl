@@ -30,36 +30,36 @@ doit(D_SBP, &quot;D_SBP:&quot;, du, u)
 doit(D_DEO, &quot;D_DEO:&quot;, du, u)
 doit(D_sparse, &quot;D_sparse:&quot;, du, u)</code></pre><pre class="documenter-example-output">D_SBP * u ≈ D_DEO * u ≈ D_sparse * u = true
 D_SBP:
-BechmarkTools.Trial: 10000 samples with 992 evaluations.
- Range (min … max):  37.601 ns … 85.182 ns  ┊ GC (min … max): 0.00% … 0.00%
- Time  (median):     38.004 ns              ┊ GC (median):    0.00%
- Time  (mean ± σ):   39.014 ns ±  3.221 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
+BechmarkTools.Trial: 10000 samples with 990 evaluations.
+ Range (min … max):  35.660 ns … 89.502 ns  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     44.447 ns              ┊ GC (median):    0.00%
+ Time  (mean ± σ):   45.470 ns ±  3.720 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
 
-  ██   ▂▆           ▄▂                                        ▂
-  ██▅▁▁██▇▃▁▁▁▃▄▁▁▃▃██▇▆▆▅▄▅▅▄▅▄▁▃▁▄▁▁▃▁▁▁▁▄▄▅▆▇▇▇▇▇▅▃▅▅▅▆▆▇▆ █
-  37.6 ns      Histogram: log(frequency) by time      55.5 ns &lt;
+              ▄      ██          ▁       ▅                    ▂
+  ▇▁▁▁▁▁▁▁▁▁▁▄█▆▁▃▃▁▅██▅▅█▅▁▁▄██▆█▇▅▄▅▄▄▇█▆▅▅▅▅▁▃▁▁▃▄▄▇▆▄▆▅▄▅ █
+  35.7 ns      Histogram: log(frequency) by time      61.3 ns &lt;
 
  Memory estimate: 0 bytes, allocs estimate: 0.
 D_DEO:
-BechmarkTools.Trial: 10000 samples with 200 evaluations.
- Range (min … max):  405.505 ns … 648.005 ns  ┊ GC (min … max): 0.00% … 0.00%
- Time  (median):     407.010 ns               ┊ GC (median):    0.00%
- Time  (mean ± σ):   408.736 ns ±   6.087 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
+BechmarkTools.Trial: 10000 samples with 199 evaluations.
+ Range (min … max):  433.201 ns … 769.412 ns  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     468.382 ns               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   469.831 ns ±  10.906 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
 
-    █   ▃▆
-  █▇█▃▂▃██▃▂▂▁▂▁▂▁▂▂▂▂▂▂▂▂▂▂▁▁▁▂▁▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▂▂▂▂▂▂▂▂▂▂▂▂▂ ▂
-  406 ns           Histogram: frequency by time          440 ns &lt;
+  ▃                            ▂█     ▂▁▂▄           ▁          ▁
+  █▆▁▃▄▄▅▅▅█▁▁▄▁▁▁▁▁▃▃▄▅▄▁▁▁▃▁▁██▇▄▇██████▇▅▆▅▄▃▄▃▅▅▇██▇▆▄▆▅▅▅▆ █
+  433 ns        Histogram: log(frequency) by time        505 ns &lt;
 
  Memory estimate: 0 bytes, allocs estimate: 0.
 D_sparse:
-BechmarkTools.Trial: 10000 samples with 191 evaluations.
- Range (min … max):  523.042 ns … 767.550 ns  ┊ GC (min … max): 0.00% … 0.00%
- Time  (median):     524.618 ns               ┊ GC (median):    0.00%
- Time  (mean ± σ):   525.594 ns ±   5.800 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
+BechmarkTools.Trial: 10000 samples with 245 evaluations.
+ Range (min … max):  349.008 ns … 553.514 ns  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     433.098 ns               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   433.062 ns ±   9.539 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
 
-  ▂▄▆█▇▂▂                                                       ▂
-  ███████▇▅▅▁▄▅█▆▃▁▄▆▆▇▆▇▆▅▅▄▄▄▃▁▁▁▁▁▁▃▁▁▁▁▁▁▁▁▁▁▁▁▁▄▁▅▆▇█▇▇▇▇▆ █
-  523 ns        Histogram: log(frequency) by time        554 ns &lt;
+                             ▃                ▆█  ▁      ▁▁     ▁
+  ▇▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁█▆▄▁▄▁▁▁▁▃▁▄▅▁▁▁▁██▆▄█▅▃▁▅▃▅██▇▇▆▇ █
+  349 ns        Histogram: log(frequency) by time        463 ns &lt;
 
  Memory estimate: 0 bytes, allocs estimate: 0.</pre><p>Bounded domains:</p><pre><code class="language-julia">using BenchmarkTools
 using LinearAlgebra, SparseArrays
@@ -89,36 +89,36 @@ doit(D_SBP, &quot;D_SBP:&quot;, du, u)
 doit(D_sparse, &quot;D_sparse:&quot;, du, u)
 doit(D_banded, &quot;D_banded:&quot;, du, u)</code></pre><pre class="documenter-example-output">D_SBP * u ≈ D_sparse * u ≈ D_banded * u = true
 D_SBP:
-BechmarkTools.Trial: 10000 samples with 198 evaluations.
- Range (min … max):  446.470 ns … 793.444 ns  ┊ GC (min … max): 0.00% … 0.00%
- Time  (median):     466.677 ns               ┊ GC (median):    0.00%
- Time  (mean ± σ):   479.791 ns ±  36.907 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
+BechmarkTools.Trial: 10000 samples with 201 evaluations.
+ Range (min … max):  306.990 ns … 674.184 ns  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     430.881 ns               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   437.242 ns ±  35.814 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
 
-  ▇      █                ▇  ▁▁ ▁▁▁▁▁ ▁▁▁                       ▂
-  █▃▁▇▅▁▁█▇▁▆█▇▅▆▆▅▅▄▆▇▇▇▅███████████████████▇█▇▇▆▆▇▆▆▆▇▇▅▆▇▆▆▇ █
-  446 ns        Histogram: log(frequency) by time        609 ns &lt;
+  ▂        ▁            ▄      █▄     ▁ ▁          ▅            ▁
+  █▃▁▁▃▁▁▁▁█▁▃▁▁▃▃▃▁▁▃▃▆█▄▁▃▄▅▆███▇▃▁██▇██▅▅▆▆▅▅▆▆▆█▇▆▆▆▆▅▆▇▅▆▇ █
+  307 ns        Histogram: log(frequency) by time        559 ns &lt;
 
  Memory estimate: 0 bytes, allocs estimate: 0.
 D_sparse:
-BechmarkTools.Trial: 10000 samples with 1 evaluations.
- Range (min … max):  10.300 μs …  31.101 μs  ┊ GC (min … max): 0.00% … 0.00%
- Time  (median):     10.500 μs               ┊ GC (median):    0.00%
- Time  (mean ± σ):   10.515 μs ± 424.066 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
+BechmarkTools.Trial: 10000 samples with 5 evaluations.
+ Range (min … max):  5.240 μs …  12.161 μs  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     7.561 μs               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   7.550 μs ± 246.309 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
 
-                                         █
-  ▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▆▃▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁█▅▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▅ ▂
-  10.3 μs         Histogram: frequency by time         10.6 μs &lt;
+                                ▂▃        ▆█                  ▁
+  ▅▁▁▁▁▁▁▁▁▁▁▁▁▁▃▄▁▁▁▁▁▁▁▁▁▁▁▁▁▁██▁▁▁▁▁▁▁▁██▄▁▃▁▆▅▅▅▄▅▃▁▁▃▁▆▇ █
+  5.24 μs      Histogram: log(frequency) by time      8.56 μs &lt;
 
  Memory estimate: 0 bytes, allocs estimate: 0.
 D_banded:
 BechmarkTools.Trial: 10000 samples with 1 evaluations.
- Range (min … max):  16.500 μs …  43.300 μs  ┊ GC (min … max): 0.00% … 0.00%
- Time  (median):     16.701 μs               ┊ GC (median):    0.00%
- Time  (mean ± σ):   16.767 μs ± 540.575 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
+ Range (min … max):  14.701 μs …  52.505 μs  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     16.101 μs               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   16.055 μs ± 718.024 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
 
-                               █              ▇
-  ▂▁▁▁▁▁▁▁▁▁▁▁▁▁▆▃▁▁▁▁▁▁▁▁▁▁▁▁▁█▇▁▁▁▁▁▁▁▁▁▁▁▁▁█▆▁▁▁▁▁▁▁▁▁▁▁▁▁▄ ▂
-  16.5 μs         Histogram: frequency by time         16.9 μs &lt;
+     ▂   ▄   ▂                                    ▇   █   ▆    ▂
+  ▅▁▁█▁▁▁█▁▁▁█▁▁▃▁▁▁▃▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁█▆▁▁█▁▁▁█▁▁▁█▁▁█ █
+  14.7 μs       Histogram: log(frequency) by time      16.3 μs &lt;
 
  Memory estimate: 0 bytes, allocs estimate: 0.</pre><h2 id="Dissipation-operators"><a class="docs-heading-anchor" href="#Dissipation-operators">Dissipation operators</a><a id="Dissipation-operators-1"></a><a class="docs-heading-anchor-permalink" href="#Dissipation-operators" title="Permalink"></a></h2><pre><code class="language-julia">using BenchmarkTools
 using LinearAlgebra, SparseArrays
@@ -152,58 +152,58 @@ doit(Di_sparse, &quot;Di_sparse:&quot;, du, u)
 doit(Di_banded, &quot;Di_banded:&quot;, du, u)
 doit(Di_full, &quot;Di_full:&quot;, du, u)</code></pre><pre class="documenter-example-output">Di_SBP * u ≈ Di_sparse * u ≈ Di_banded * u ≈ Di_full * u = true
 D_SBP:
-BechmarkTools.Trial: 10000 samples with 42 evaluations.
- Range (min … max):  907.143 ns …  2.205 μs  ┊ GC (min … max): 0.00% … 0.00%
- Time  (median):     911.929 ns              ┊ GC (median):    0.00%
- Time  (mean ± σ):   959.408 ns ± 92.336 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
+BechmarkTools.Trial: 10000 samples with 202 evaluations.
+ Range (min … max):  389.639 ns … 808.485 ns  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     552.525 ns               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   563.570 ns ±  41.158 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
 
-  █▂   ▆▆           ▆▂                                         ▂
-  ██▁▁▁██▅▁▁▄▅▅▃▁▁▁▄██▆▄▃▁▅▆▆▄▄▃▄▃▁▁▁▃▁▃▃▅▄▁▅▆█████▇▅▄▅▅▇▇▇▇█▇ █
-  907 ns        Histogram: log(frequency) by time      1.34 μs &lt;
+                        ▃▅     ▇██▁ ▁▂▁            ▄▄▄          ▂
+  ▇▁▁▁▁▁▁▁▁▇▃▃▃▃▁▁▁▃▃▁▁▄██▅▁▄▆▄████▆███▇███▆▆▅▇▇▆▆▇███▇▇▆▇█▇▇▇▇ █
+  390 ns        Histogram: log(frequency) by time        711 ns &lt;
 
  Memory estimate: 0 bytes, allocs estimate: 0.
 Di_SBP:
-BechmarkTools.Trial: 10000 samples with 9 evaluations.
- Range (min … max):  2.089 μs …  5.289 μs  ┊ GC (min … max): 0.00% … 0.00%
- Time  (median):     2.100 μs              ┊ GC (median):    0.00%
- Time  (mean ± σ):   2.103 μs ± 55.921 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
+BechmarkTools.Trial: 10000 samples with 10 evaluations.
+ Range (min … max):  1.690 μs …  4.810 μs  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     2.110 μs              ┊ GC (median):    0.00%
+ Time  (mean ± σ):   2.095 μs ± 96.390 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
 
-                              █
-  ▅▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁█▅▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▄ ▂
-  290 μs         Histogram: frequency by time        2.11 μs &lt;
+                                                         ▃█
+  ▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▂▃▁▄▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▂▅▁██▃ ▂
+  1.69 μs        Histogram: frequency by time        2.12 μs &lt;
 
  Memory estimate: 0 bytes, allocs estimate: 0.
 Di_sparse:
-BechmarkTools.Trial: 10000 samples with 1 evaluations.
- Range (min … max):  11.500 μs …  29.200 μs  ┊ GC (min … max): 0.00% … 0.00%
- Time  (median):     11.600 μs               ┊ GC (median):    0.00%
- Time  (mean ± σ):   11.586 μs ± 525.925 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
+BechmarkTools.Trial: 10000 samples with 4 evaluations.
+ Range (min … max):  7.901 μs …  12.876 μs  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     8.576 μs               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   8.581 μs ± 219.526 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
 
-  ▆                                                          █
-  █▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁█ ▂
-  11.5 μs         Histogram: frequency by time         11.6 μs &lt;
+  ▂▁                  ▃█▅▁     ▁▁                             ▁
+  ██▄▁▁▁▁▁▃▄▃▁▁▁▁▁▁▁▁▄████▅▁▁▁▁██▆▄▅▄▅▄▄▄▃▄▄▄▁▃▃▁▁▁▃▁▁▁▁▁▁▁▁▃ █
+  7.9 μs       Histogram: log(frequency) by time      9.73 μs &lt;
 
  Memory estimate: 0 bytes, allocs estimate: 0.
 Di_banded:
 BechmarkTools.Trial: 10000 samples with 1 evaluations.
- Range (min … max):  13.000 μs …  41.601 μs  ┊ GC (min … max): 0.00% … 0.00%
- Time  (median):     13.500 μs               ┊ GC (median):    0.00%
- Time  (mean ± σ):   13.516 μs ± 529.191 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
+ Range (min … max):  11.500 μs …  47.904 μs  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     12.801 μs               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   12.812 μs ± 657.953 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
 
-                        ▁      ▃       █      ▆       ▁
-  ▂▁▁▁▁▁▁▃▁▁▁▁▁▁▅▃▁▁▁▁▁▁█▁▁▁▁▁▁█▄▁▁▁▁▁▁█▁▁▁▁▁▁█▅▁▁▁▁▁▁█▁▁▁▁▁▁▃ ▃
-  13 μs           Histogram: frequency by time         13.8 μs &lt;
+                                               ▆  █   █   ▅
+  ▂▁▁▂▁▁▁▂▁▁▁▂▁▁▂▂▁▁▂▁▁▁▂▁▁▁▁▁▁▁▂▁▁▃▁▁▁▆▁▁▁█▁▁▁█▁▁█▁▁▁█▁▁▁█▁▁▃ ▃
+  11.5 μs         Histogram: frequency by time         13.1 μs &lt;
 
  Memory estimate: 0 bytes, allocs estimate: 0.
 Di_full:
 BechmarkTools.Trial: 10000 samples with 1 evaluations.
- Range (min … max):  351.405 μs … 659.110 μs  ┊ GC (min … max): 0.00% … 0.00%
- Time  (median):     355.305 μs               ┊ GC (median):    0.00%
- Time  (mean ± σ):   360.386 μs ±  11.207 μs  ┊ GC (mean ± σ):  0.00% ± 0.00%
+ Range (min … max):  322.427 μs … 661.755 μs  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     351.329 μs               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   357.208 μs ±  13.446 μs  ┊ GC (mean ± σ):  0.00% ± 0.00%
 
-    ▁█▇▄▂▂▄▄▄▃▂▂▁ ▁▁ ▁▂▁▂▂▁▁▁▁  ▁▁                              ▁
-  ▅▆████████████████████████████████▇▇▆▇▇█▇▇▇▇▆▆▅▆▆▅▅▅▅▅▅▆▅▅▅▅▅ █
-  351 μs        Histogram: log(frequency) by time        404 μs &lt;
+                     ▃▁▁█▃▁ ▄▂▂▁   ▁             ▄▂▁  ▁         ▁
+  ▄▁▄▁▁▁▁▁▁▁▃▁▁▁▁▁▃▄▅██████▆█████▆████▇█▇▇▇▇▇█▇████████████▇▆▇▇ █
+  322 μs        Histogram: log(frequency) by time        401 μs &lt;
 
  Memory estimate: 0 bytes, allocs estimate: 0.</pre><h2 id="Structure-of-Arrays-(SoA)-and-Array-of-Structures-(AoS)"><a class="docs-heading-anchor" href="#Structure-of-Arrays-(SoA)-and-Array-of-Structures-(AoS)">Structure-of-Arrays (SoA) and Array-of-Structures (AoS)</a><a id="Structure-of-Arrays-(SoA)-and-Array-of-Structures-(AoS)-1"></a><a class="docs-heading-anchor-permalink" href="#Structure-of-Arrays-(SoA)-and-Array-of-Structures-(AoS)" title="Permalink"></a></h2><p><a href="https://github.com/ranocha/SummationByPartsOperators.jl">SummationByPartsOperators.jl</a> tries to provide efficient support of</p><ul><li><code>StaticVector</code>s from <a href="https://github.com/JuliaArrays/StaticArrays.jl">StaticArrays.jl</a></li><li><a href="https://github.com/JuliaArrays/StructArrays.jl">StructArrays.jl</a></li></ul><pre><code class="language-julia">using BenchmarkTools
 using StaticArrays, StructArrays
@@ -245,36 +245,36 @@ println(&quot;\nD_full&quot;)
 show(stdout, MIME&quot;text/plain&quot;(), @benchmark mul!($du, $D_full, $u))</code></pre><pre class="documenter-example-output">WARNING: both BipartiteGraphs and Symbolics export &quot;degree&quot;; uses of it in module ModelingToolkit must be qualified
 Scalar case
 D_SBP
-BechmarkTools.Trial: 10000 samples with 982 evaluations.
- Range (min … max):  59.165 ns … 98.984 ns  ┊ GC (min … max): 0.00% … 0.00%
- Time  (median):     59.573 ns              ┊ GC (median):    0.00%
- Time  (mean ± σ):   60.672 ns ±  3.446 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
+BechmarkTools.Trial: 10000 samples with 985 evaluations.
+ Range (min … max):  45.993 ns … 95.237 ns  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     57.162 ns              ┊ GC (median):    0.00%
+ Time  (mean ± σ):   58.387 ns ±  4.348 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
 
-  ▇█      ▃▆                  ▂                               ▂
-  ██▄▁▁▄█▇██▅▁▁▁▃▃▃▆▇█▆▇▅▅▃▄▄██▇▃▁▄▄▃▄▄▁▃▄▃▁▁▆▆▆▆▇▆▇▆▆▅▅▅▆▆▆▇ █
-  59.2 ns      Histogram: log(frequency) by time      77.8 ns &lt;
+               ▄       ▆█         ▂          ▅                ▁
+  ▇▁▁▁▁▁▁▁▁▁▁▁▁█▄▁▄▁▁▁▁██▅▆█▃▁▁▃▁██▇▅▄▅▆▅▃▄▄▄█▇▃▄▆▅▅▅▅▅▅▄▆▆▅▅ █
+  46 ns        Histogram: log(frequency) by time      75.7 ns &lt;
 
  Memory estimate: 0 bytes, allocs estimate: 0.
 D_sparse
-BechmarkTools.Trial: 10000 samples with 107 evaluations.
- Range (min … max):  775.710 ns …  1.129 μs  ┊ GC (min … max): 0.00% … 0.00%
- Time  (median):     777.579 ns              ┊ GC (median):    0.00%
- Time  (mean ± σ):   778.934 ns ± 10.017 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
+BechmarkTools.Trial: 10000 samples with 186 evaluations.
+ Range (min … max):  558.108 ns … 777.489 ns  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     603.280 ns               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   606.054 ns ±  17.959 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
 
-   █▇▆▆▁                                                       ▂
-  ▄█████▅▁▁▁▁▁▁▁▁▁▅▆▇▇▅▇▆▅▃▁▁▁▃▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▃▁▁▁▁▁▁▁▅▅▅▇▇▇▇▅ █
-  776 ns        Histogram: log(frequency) by time       829 ns &lt;
+  ▄                        ██                    ▅              ▂
+  █▃▁▁▄▃▁▁▁▁▃▁▁▁▁▄▅▃▃▁█▁▃▁▄██▅▁▁▆▅▅▅▅▅▅▅▄▃▅▇▇▆▆▆▇█▇▆▇▇▇▆▇▇▇▇▇▇▆ █
+  558 ns        Histogram: log(frequency) by time        665 ns &lt;
 
  Memory estimate: 0 bytes, allocs estimate: 0.
 D_full
 BechmarkTools.Trial: 10000 samples with 9 evaluations.
- Range (min … max):  2.289 μs …   6.089 μs  ┊ GC (min … max): 0.00% … 0.00%
- Time  (median):     2.311 μs               ┊ GC (median):    0.00%
- Time  (mean ± σ):   2.345 μs ± 177.079 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
+ Range (min … max):  1.845 μs …   5.723 μs  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     2.300 μs               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   2.365 μs ± 230.540 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
 
-   █
-  ██▅▂▁▁▁▁▂▃▄▃▁▁▁▁▂▂▂▁▂▁▂▁▁▂▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▂▂▂▂▂▂▂▂▂▂▂▂▂ ▂
-  2.29 μs         Histogram: frequency by time           3 μs &lt;
+            ▁    ▃█      ▃       ▃▄                           ▁
+  ▅▁▁▁▁▁▁▁▁▆█▁▁▁▁██▄▃▁▁▅▇█▅▁▁▃▁▁▃██▃▁▅▆▆▅▅▃▁▃▃▄▁▁▁▁▁▁▄▁▃▃▁▄▁▄ █
+  1.84 μs      Histogram: log(frequency) by time      3.48 μs &lt;
 
  Memory estimate: 0 bytes, allocs estimate: 0.</pre><pre><code class="language-julia">println(&quot;Plain Array of Structures&quot;)
 u_aos_plain = randn(T, 5, size(D_SBP, 1)); du_aos_plain = similar(u_aos_plain)
@@ -286,35 +286,35 @@ println(&quot;\nD_full&quot;)
 show(stdout, MIME&quot;text/plain&quot;(), @benchmark mul_aos!($du_aos_plain, $D_full, $u_aos_plain))</code></pre><pre class="documenter-example-output">Plain Array of Structures
 D_SBP
 BechmarkTools.Trial: 10000 samples with 10 evaluations.
- Range (min … max):  1.330 μs …   5.580 μs  ┊ GC (min … max): 0.00% … 0.00%
- Time  (median):     1.350 μs               ┊ GC (median):    0.00%
- Time  (mean ± σ):   1.377 μs ± 151.611 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
+ Range (min … max):  1.170 μs …   4.350 μs  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     1.270 μs               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   1.322 μs ± 245.905 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
 
-   ▄█
-  ▂██▂▂▁▂▅▅▂▁▁▁▁▁▁▁▁▁▂▂▃▂▁▂▁▁▂▂▁▁▁▁▁▁▁▁▁▁▂▁▁▁▁▁▁▁▁▁▁▂▂▂▁▁▂▁▂▂ ▂
-  1.33 μs         Histogram: frequency by time        1.91 μs &lt;
+  ▂  █▃       ▂▄                                              ▁
+  █▁▁██▁▁▅▇▅▆▁██▄▁▄▃▁▄▁▃▅▇▄▄▄▃▄▆▃▃▃▁▄▆▃▃▄▃▁▄▄▁▄▄▄▄▄▃▆█▄▄▄▄▃▄▄ █
+  1.17 μs      Histogram: log(frequency) by time      2.68 μs &lt;
 
  Memory estimate: 0 bytes, allocs estimate: 0.
 D_sparse
 BechmarkTools.Trial: 10000 samples with 8 evaluations.
- Range (min … max):  3.838 μs …  6.550 μs  ┊ GC (min … max): 0.00% … 0.00%
- Time  (median):     3.888 μs              ┊ GC (median):    0.00%
- Time  (mean ± σ):   3.895 μs ± 80.431 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
+ Range (min … max):  2.938 μs …   6.901 μs  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     3.663 μs               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   3.655 μs ± 132.523 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
 
-          ▃  █  ▃
-  ▂▁▂▁▁▄▁▁█▁▁█▁▁█▁▁▄▁▁▂▁▁▂▁▁▂▁▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▂▁▁▂▁▂ ▂
-  3.84 μs        Histogram: frequency by time         490 μs &lt;
+                          ▄             ▂▇█                   ▁
+  ▇▅▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁██▄▁▁▁▁▁▁▁▃▁▁▁███▇▁▁▁▁▁▁▁▄▅▄▆▄▄▃▃▁▃ █
+  2.94 μs      Histogram: log(frequency) by time         4 μs &lt;
 
  Memory estimate: 0 bytes, allocs estimate: 0.
 D_full
 BechmarkTools.Trial: 10000 samples with 1 evaluations.
- Range (min … max):  12.700 μs … 37.100 μs  ┊ GC (min … max): 0.00% … 0.00%
- Time  (median):     12.900 μs              ┊ GC (median):    0.00%
- Time  (mean ± σ):   13.118 μs ±  1.364 μs  ┊ GC (mean ± σ):  0.00% ± 0.00%
+ Range (min … max):  10.900 μs … 31.802 μs  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     11.901 μs              ┊ GC (median):    0.00%
+ Time  (mean ± σ):   12.149 μs ±  1.189 μs  ┊ GC (mean ± σ):  0.00% ± 0.00%
 
-    █
-  ▂▇█▃▁▂▂▄▃▂▁▁▁▁▁▁▂▁▁▁▂▂▂▁▂▂▁▂▁▁▁▁▁▁▁▁▁▁▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▂ ▂
-  12.7 μs         Histogram: frequency by time        18.1 μs &lt;
+   ▂              ▆█ ▃               ▁                     ▄▃ ▁
+  ▇█▁▇▁▁▁▁▁▁▁▁▁▁▄▁██▁█▁▁▁▁▁▃▁▁▁▁▁▁▁▄▁█▁▇▁▁▁▁▃▁▅▁▄▁▃▁▁▃▁▃▁▆▁██ █
+  10.9 μs      Histogram: log(frequency) by time      14.2 μs &lt;
 
  Memory estimate: 0 bytes, allocs estimate: 0.</pre><pre><code class="language-julia">println(&quot;Array of Structures (reinterpreted array)&quot;)
 u_aos_r = reinterpret(reshape, Vec5{T}, u_aos_plain); du_aos_r = similar(u_aos_r)
@@ -330,36 +330,36 @@ show(stdout, MIME&quot;text/plain&quot;(), @benchmark mul!($du_aos_r, $D_full, $
 D_SBP * u_aos_r ≈ D_sparse * u_aos_r ≈ D_full * u_aos_r = true
 reinterpret(reshape, T, du_aos_r) ≈ du_aos_plain = true
 D_SBP
-BechmarkTools.Trial: 10000 samples with 413 evaluations.
- Range (min … max):  237.533 ns … 389.351 ns  ┊ GC (min … max): 0.00% … 0.00%
- Time  (median):     242.620 ns               ┊ GC (median):    0.00%
- Time  (mean ± σ):   245.456 ns ±  12.833 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
+BechmarkTools.Trial: 10000 samples with 525 evaluations.
+ Range (min … max):  167.442 ns … 356.600 ns  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     238.688 ns               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   241.893 ns ±  17.606 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
 
-  █▃  ▁█    ▃▄   ▄▄                 ▁     ▂                     ▂
-  ██▁▁██▇▁▅███▆▇███▇██▇▅▄▃▅▇▆▅▄▅▅▅▆▆██▆▆▇██▇█▇▇██▇▇▆▆▇▇▆▅▇▅▄▅▅▄ █
-  238 ns        Histogram: log(frequency) by time        298 ns &lt;
+                        ▂ ▄     ▇ █▁▁ ▂             ▃ ▅         ▂
+  ▅▄▁▁▁▁▁▁▁▅▁▇▃▁▃▁▁▁▁▁▃▁█▅█▆▄▄▆▆█████▇████▆█▆▆▅▇▆▆▆▆█▇█▆▇▇▆▇█▇▇ █
+  167 ns        Histogram: log(frequency) by time        303 ns &lt;
 
  Memory estimate: 0 bytes, allocs estimate: 0.
 D_sparse
-BechmarkTools.Trial: 10000 samples with 13 evaluations.
- Range (min … max):  984.615 ns …  2.454 μs  ┊ GC (min … max): 0.00% … 0.00%
- Time  (median):       1.000 μs              ┊ GC (median):    0.00%
- Time  (mean ± σ):     1.005 μs ± 32.426 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
+BechmarkTools.Trial: 10000 samples with 36 evaluations.
+ Range (min … max):  800.056 ns …  1.531 μs  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     994.528 ns              ┊ GC (median):    0.00%
+ Time  (mean ± σ):   993.005 ns ± 31.751 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
 
-                               █              ▇
-  ▂▁▁▁▁▁▁▁▁▁▁▁▁▁▄▂▁▁▁▁▁▁▁▁▁▁▁▁▁█▅▁▁▁▁▁▁▁▁▁▁▁▁▁█▅▁▁▁▁▁▁▁▁▁▁▁▁▁▄ ▂
-  985 ns          Histogram: frequency by time          120 μs &lt;
+                       ▃▃           ▆█                         ▁
+  ▆▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁██▁▁▁▁▁▁▁▁▃▁▁██▆▃▁▁▁▄▆▆▄▄▃▁▁▁▁▁▁▁▃▁▃▁▅▆ █
+  800 ns        Histogram: log(frequency) by time      1.13 μs &lt;
 
  Memory estimate: 0 bytes, allocs estimate: 0.
 D_full
 BechmarkTools.Trial: 10000 samples with 1 evaluations.
- Range (min … max):  18.000 μs … 48.201 μs  ┊ GC (min … max): 0.00% … 0.00%
- Time  (median):     18.400 μs              ┊ GC (median):    0.00%
- Time  (mean ± σ):   18.678 μs ±  1.500 μs  ┊ GC (mean ± σ):  0.00% ± 0.00%
+ Range (min … max):  16.301 μs … 63.205 μs  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     17.701 μs              ┊ GC (median):    0.00%
+ Time  (mean ± σ):   18.027 μs ±  1.803 μs  ┊ GC (mean ± σ):  0.00% ± 0.00%
 
-  ▅▁▂█▇▄ ▂▁  ▅▄▁               ▁▂                             ▂
-  ██████▄██▆▇███▁▁▃▁▃▃▅▄▄▁▁▃▃▃▁██▇▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▃▄▄▄▃▄▆▄ █
-  18 μs        Histogram: log(frequency) by time      23.9 μs &lt;
+  ▅        ▃▂ ▅█▃                             ▃▄              ▁
+  █▆▁▁▁▁▁▁▁██▁███▃▁▃▁▁▁▁▁▁▃▁▃█▇▄▁▁▁▁▁▁▃▁▃▃▇▇▁▃██▄▁▁▁▁▁▁▁▁▁▃▁▅ █
+  16.3 μs      Histogram: log(frequency) by time      22.5 μs &lt;
 
  Memory estimate: 0 bytes, allocs estimate: 0.</pre><pre><code class="language-julia">println(&quot;Array of Structures&quot;)
 u_aos = Array(u_aos_r); du_aos = similar(u_aos)
@@ -375,36 +375,36 @@ show(stdout, MIME&quot;text/plain&quot;(), @benchmark mul!($du_aos, $D_full, $u_
 D_SBP * u_aos ≈ D_sparse * u_aos ≈ D_full * u_aos = true
 du_aos ≈ du_aos_r = true
 D_SBP
-BechmarkTools.Trial: 10000 samples with 482 evaluations.
- Range (min … max):  224.068 ns … 400.214 ns  ┊ GC (min … max): 0.00% … 0.00%
- Time  (median):     230.293 ns               ┊ GC (median):    0.00%
- Time  (mean ± σ):   232.385 ns ±  11.471 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
+BechmarkTools.Trial: 10000 samples with 585 evaluations.
+ Range (min … max):  159.843 ns … 324.643 ns  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     224.121 ns               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   227.637 ns ±  16.403 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
 
-  █     ▆█   ▅     ▂▅                 ▂      ▂▁                 ▂
-  █▇▁▅█▅██▄▁██▇██▆▆█████▆▆▆▆▅▄▄▅▄▅▇▆▆▆█▇██▇█▆███████▇▆▆▆▅▆▆▄▅▆▅ █
-  224 ns        Histogram: log(frequency) by time        278 ns &lt;
+                       ▂ ▄     ▆ █▅▂  ▂             ▃  ▅        ▂
+  ▅▁▁▁▁▁▁▁▆▁█▄▁▁▁▁▁▁▁▁▁█▃█▃▅▃▆▄█▇███▇▇█▇█▆▆█▆▇▆▆▇▆▆▇█▇▆█▇▇▆▆█▇▇ █
+  160 ns        Histogram: log(frequency) by time        282 ns &lt;
 
  Memory estimate: 0 bytes, allocs estimate: 0.
 D_sparse
-BechmarkTools.Trial: 10000 samples with 45 evaluations.
- Range (min … max):  897.778 ns …  1.393 μs  ┊ GC (min … max): 0.00% … 0.00%
- Time  (median):     902.244 ns              ┊ GC (median):    0.00%
- Time  (mean ± σ):   903.951 ns ± 14.960 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
+BechmarkTools.Trial: 10000 samples with 92 evaluations.
+ Range (min … max):  702.228 ns …  1.128 μs  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     875.076 ns              ┊ GC (median):    0.00%
+ Time  (mean ± σ):   872.629 ns ± 23.579 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
 
-       █
-  ▂▁▇▁▁█▁█▁▁▃▁▁▂▁▂▁▁▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▂▁▂▁▁▂▁▂▁▁▂▁▁▂▁▂▁▁▂▁▂ ▂
-  898 ns          Histogram: frequency by time          949 ns &lt;
+                            ▁▄▃             ▄██▂           ▁▁  ▂
+  ▇▃▁▁▁▁▁▁▁▁▁▁▃▁▁▁▁▁▁▁▁▁▁▁▁▃███▄▁▅▄▁▁▁▁▁▁▄▄▆████▁▇█▆▄▁▁▁▁▃▇██▇ █
+  702 ns        Histogram: log(frequency) by time       939 ns &lt;
 
  Memory estimate: 0 bytes, allocs estimate: 0.
 D_full
 BechmarkTools.Trial: 10000 samples with 1 evaluations.
- Range (min … max):  18.300 μs … 64.501 μs  ┊ GC (min … max): 0.00% … 0.00%
- Time  (median):     18.700 μs              ┊ GC (median):    0.00%
- Time  (mean ± σ):   19.050 μs ±  1.732 μs  ┊ GC (mean ± σ):  0.00% ± 0.00%
+ Range (min … max):  16.201 μs … 59.705 μs  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     17.601 μs              ┊ GC (median):    0.00%
+ Time  (mean ± σ):   17.923 μs ±  1.729 μs  ┊ GC (mean ± σ):  0.00% ± 0.00%
 
-   █
-  ▄█▅▂▃▄▃▁▂▂▂▁▂▁▃▂▁▁▁▁▁▁▁▁▁▂▂▂▂▂▂▁▂▂▂▁▂▁▂▂▂▁▂▁▂▁▁▁▁▂▂▂▁▁▁▁▁▁▂ ▂
-  18.3 μs         Histogram: frequency by time        30.9 μs &lt;
+               █
+  ▄▂▁▁▁▁▁▁▁▃▃▁▃█▄▂▁▂▁▁▁▁▁▁▂▁▁▁▂▂▂▁▂▁▁▁▁▁▁▂▁▁▂▂▁▂▃▃▂▂▁▂▁▁▁▂▁▂▂ ▂
+  16.2 μs         Histogram: frequency by time        22.2 μs &lt;
 
  Memory estimate: 0 bytes, allocs estimate: 0.</pre><pre><code class="language-julia">println(&quot;Structure of Arrays&quot;)
 u_soa = StructArray(u_aos); du_soa = similar(u_soa)
@@ -420,35 +420,35 @@ show(stdout, MIME&quot;text/plain&quot;(), @benchmark mul!($du_soa, $D_full, $u_
 D_SBP * u_soa ≈ D_sparse * u_soa ≈ D_full * u_soa = true
 du_soa ≈ du_aos = true
 D_SBP
-BechmarkTools.Trial: 10000 samples with 231 evaluations.
- Range (min … max):  319.052 ns … 540.701 ns  ┊ GC (min … max): 0.00% … 0.00%
- Time  (median):     322.948 ns               ┊ GC (median):    0.00%
- Time  (mean ± σ):   330.817 ns ±  20.552 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
+BechmarkTools.Trial: 10000 samples with 269 evaluations.
+ Range (min … max):  252.439 ns … 508.595 ns  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     313.781 ns               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   320.316 ns ±  23.351 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
 
-   █▇▁      ▆▅                  ▁▃▂                             ▂
-  ▇███▁▆█▇▅▅██▆▃▃▅▇▇█▇▆▅▄▄▄▃▄▆▆▆███▃▁▃▃▅▆▇▆▇▇▆▇▇▇▇▇▇██▇▇▇▇▆▆▄▅▆ █
-  319 ns        Histogram: log(frequency) by time        414 ns &lt;
+                 ▄        █ ▁    ▁               ▃▄             ▁
+  ▆▁▁▁▁▁▁▁▁▁▁▁▁▁██▁▅▁▃▁▅▅██▆█▅▁▁▁██▆▇█▅▅▄▅▆▅▅▄▆▅▆██▅▆▄▆▆▅▅▆▆▅▆▆ █
+  252 ns        Histogram: log(frequency) by time        406 ns &lt;
 
  Memory estimate: 0 bytes, allocs estimate: 0.
 D_sparse
 BechmarkTools.Trial: 10000 samples with 1 evaluations.
- Range (min … max):  140.502 μs … 249.203 μs  ┊ GC (min … max): 0.00% … 0.00%
- Time  (median):     140.902 μs               ┊ GC (median):    0.00%
- Time  (mean ± σ):   141.396 μs ±   3.722 μs  ┊ GC (mean ± σ):  0.00% ± 0.00%
+ Range (min … max):  109.409 μs … 177.715 μs  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     135.711 μs               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   135.531 μs ±   2.664 μs  ┊ GC (mean ± σ):  0.00% ± 0.00%
 
-   ▁█▇▄▁                                                        ▁
-  ▅█████▅▆▅▅▆▆▅▇▆█▄▃▄▁▃▁▁▁▁▃▃▁▄▆▄▆▅▅▆▅▆▇▅▇▆▇█▇▇▆▆▇▄▅▅▁▄▅▄▄▃▃▅▁▄ █
-  141 μs        Histogram: log(frequency) by time        149 μs &lt;
+                               ▃          ▁     ▄█       ▁▁     ▁
+  ▅▁▁▁▁▁▁▁▃▁▁▁▁▁▁▁▁▁▁▁▁▃▁▁▁▁▁▁██▄▅▃▁▄▃▄▄▄▅█▃▁▄▄▁████▇▆▆████▇▅▆▆ █
+  109 μs        Histogram: log(frequency) by time        143 μs &lt;
 
  Memory estimate: 0 bytes, allocs estimate: 0.
 D_full
 BechmarkTools.Trial: 10000 samples with 1 evaluations.
- Range (min … max):  27.100 μs …  49.701 μs  ┊ GC (min … max): 0.00% … 0.00%
- Time  (median):     27.200 μs               ┊ GC (median):    0.00%
- Time  (mean ± σ):   27.237 μs ± 648.360 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
+ Range (min … max):  24.102 μs …  44.404 μs  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     26.202 μs               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   26.190 μs ± 762.102 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
 
-                     █▃
-  █▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁██▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▂ ▂
-  27.1 μs         Histogram: frequency by time         27.4 μs &lt;
+   ▂                                 ▆ █▂                      ▁
+  ▅█▁█▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▃▁▁▃▁▁▁▁▁█▁██▁▅▁▃▁▃▃▁▁▁▁▁▁▁▁▁▁▁▁▄▅ █
+  24.1 μs       Histogram: log(frequency) by time      27.5 μs &lt;
 
- Memory estimate: 0 bytes, allocs estimate: 0.</pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../applications/">« Applications &amp; references</a><a class="docs-footer-nextpage" href="../api_reference/">API reference »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Tuesday 29 June 2021 05:28">Tuesday 29 June 2021</span>. Using Julia version 1.6.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+ Memory estimate: 0 bytes, allocs estimate: 0.</pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../applications/">« Applications &amp; references</a><a class="docs-footer-nextpage" href="../api_reference/">API reference »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.3 on <span class="colophon-date" title="Monday 5 July 2021 10:01">Monday 5 July 2021</span>. Using Julia version 1.6.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
