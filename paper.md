@@ -123,7 +123,7 @@ julia> x = grid(D); u = sinpi.(x); # evaluate the function `sinpi` on the discre
 julia> du = D * u; # evaluate the discrete derivative of `u` using the SBP operator `D`
 
 julia> integrate(u -> u^2,
-         du - π * cospi.(x), D) |> sqrt # compute the discrete L² error of the approximation
+         du - pi * cospi.(x), D) |> sqrt # compute the discrete L² error of the approximation
 4.238102975456189e-13
 ```
 
