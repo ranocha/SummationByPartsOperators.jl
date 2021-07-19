@@ -11,18 +11,23 @@
 <!-- [![GitHub commits since tagged version](https://img.shields.io/github/commits-since/ranocha/SummationByPartsOperators.jl/v0.5.5.svg?style=social&logo=github)](https://github.com/ranocha/SummationByPartsOperators.jl) -->
 <!-- [![PkgEval](https://juliaci.github.io/NanosoldierReports/pkgeval_badges/S/SummationByPartsOperators.svg)](https://juliaci.github.io/NanosoldierReports/pkgeval_badges/report.html) -->
 
+The Julia library
 [SummationByPartsOperators.jl](https://github.com/ranocha/SummationByPartsOperators.jl)
-is a Julia library of summation-by-parts (SBP) operators, which are discrete
-derivative operators developed to get provably stable (semi-) discretizations,
-paying special attention to boundary conditions. Discretizations included in this
-framework are finite difference, Fourier pseudospectral, continuous Galerkin,
-and discontinuous Galerkin methods.
-The main aim of SummationByPartsOperators.jl is to be useful for both students
-learning the basic concepts and researchers developing new numerical algorithms based
-on SBP operators. Therefore, SummationByPartsOperators.jl provides a unified
-framework of all of these seemingly different discretizations. At the same time,
-the implementation is reasonably optimized to achieve good performance without
-sacrificing flexibility.
+provides a unified interface of different discretization approaches including
+finite difference, Fourier pseudospectral, continuous Galerkin, and discontinuous
+Galerkin methods.
+This unified interface is based on the notion of summation-by-parts (SBP)
+operators. Originally developed for finite difference methods, SBP operators
+are discrete derivative operators designed specifically to get provably stable
+(semi-) discretizations, mimicking energy/entropy estimates from the continuous
+level discretely and paying special attention to boundary conditions.
+
+SummationByPartsOperators.jl is mainly written to be useful for both students
+learning the basic concepts and researchers developing new numerical algorithms
+based on SBP operators. Thus, this package uses Julia's multiple dispatch and
+strong type system to provide a unified framework of all of these seemingly
+different discretizations while being reasonably optimized at the same time,
+achieving good performance without sacrificing flexibility.
 
 
 ## Installation
