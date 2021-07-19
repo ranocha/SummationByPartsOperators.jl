@@ -132,7 +132,7 @@ du = D * u
 integrate(u -> u^2, du - pi * cospi.(x), D) |> sqrt
 ```
 The output of the last command will be a relatively small number on the order of
-`4.2-13`.
+`4.2e-13`.
 
 Following good software development practices, SummationByPartsOperators.jl
 makes use of continuous integration and automated tests required before merging
