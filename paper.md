@@ -119,8 +119,9 @@ using SummationByPartsOperators
 
 # create a finite difference SBP operator
 D = derivative_operator(MattssonAlmquistVanDerWeide2018Accurate(),
-                        derivative_order=1, accuracy_order=6,
-                        xmin=0.0, xmax=1.0, N=10^3)
+  derivative_order=1, accuracy_order=6,
+  xmin=0.0, xmax=1.0, N=10^3
+)
 
 # evaluate the function `sinpi` on the discrete grid
 x = grid(D); u = sinpi.(x)
