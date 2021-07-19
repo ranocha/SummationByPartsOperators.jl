@@ -103,11 +103,29 @@ on sparse/banded matrices have a memory requirement growing linearly with the
 number of grid points. In addition, the structure of the operators can be taken
 into account for operator-vector multiplications, usually resulting in speed-ups
 of an order of magnitude or more on consumer hardware. For example, the application
-of the sixth-order (in the interior) finite difference SBP operator on a grid
-with 1000 nodes takes roughly 330 ns on a consumer CPU from 2017 (Intel® Core™ i7-8700K)
-using version v0.5.5 of SummationByPartsOperators.jl. In contrast, the same
-operation takes roughly 3.9 microseconds using a sparse matrix format used in
-other implementations of this operator [@almquist2017optimized].
+an optimized the sixth-order (in the interior) finite difference SBP operator
+[@almquist2017optimized] on a grid with 1000 nodes takes roughly 330 ns
+on a consumer CPU from 2017 (Intel® Core™ i7-8700K) using version v0.5.5 of
+SummationByPartsOperators.jl. In contrast, the same operation takes roughly
+3.9 microseconds using a sparse matrix format used in other implementations of
+this operator [@almquist2017optimized]. This benchmark is based on the following
+code, which also provides a very basic example of SummationByPartsOperators.jl.
+```julia
+julia> using Pkg; Pkg.add("SummationByPartsOperators") # if not installed previously
+
+julia> using SummationByPartsOperators # load the package
+
+julia> D = derivative_operator(MattssonAlmquistVanDerWeide2018Accurate(), derivative_order=1,
+                               accuracy_order=6, xmin=0.0, xmax=1.0, N=10^3)
+
+julia> x = grid(D); u = sinpi.(x); # evaluate the function `sinpi` on the discrete grid
+
+julia> du = D * u; # evaluate the discrete derivative of `u` using the SBP operator `D`
+
+julia> integrate(u -> u^2,
+         du - π * cospi.(x), D) |> sqrt # compute the discrete L² error of the approximation
+4.238102975456189e-13
+```
 
 Following good software development practices, SummationByPartsOperators.jl
 makes use of continuous integration and automated tests required before merging
