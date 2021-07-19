@@ -16,7 +16,7 @@ authors:
 affiliations:
  - name: Applied Mathematics Münster, University of Münster, Germany
    index: 1
-date: 25 May 2021
+date: 19 July 2021
 bibliography: paper.bib
 ---
 
@@ -41,8 +41,12 @@ sacrificing flexibility.
 
 Partial differential equations (PDEs) are widely used in science and engineering
 to create mathematical models of real-world processes. Since PDEs often need to
-be solved numerically, a vast amount of numerical methods has been developed,
-resulting sometimes in completely disjoint communities. To transfer developments
+be solved numerically, a vast amount of numerical methods has been developed.
+Since it is impossible to keep up with all recent research, sub-communities
+focussing on specific applications or numerical methods emerged. Sometimes,
+these communities develop different vocabulary and notations, making it hard for
+newcomers (or even experienced researchers) to see similarities and connections
+between seemingly unrelated approaches. To transfer new ideas and developments
 and knowledge from one community to another, common abstractions can be helpful.
 The concept of SBP operators is such an abstraction.
 In recent years, SBP operators have attracted a lot of attention, in particular
@@ -61,7 +65,10 @@ provides a unified interface for different SBP operators. At the same time,
 the implementations are reasonably fast. Together, this facilitates the development
 of new algorithms and research in numerical analysis, which is the primary goal
 of this package. In addition, SummationByPartsOperators.jl has been used in a
-number of graduate-level numerical analysis courses.
+number of graduate-level numerical analysis courses, allowing students to
+understand the connections between different SBP methods by presenting them in
+a unified framework. In addition, some of the operators were not available in
+open source software previously (to the author's knowledge).
 
 
 # Features
@@ -74,7 +81,7 @@ of the following classes:
 - continuous Galerkin methods
 - discontinuous Galerkin methods
 
-Since a discrete derivative operator is basically a linear operator, all of
+Since a discrete derivative operator is a linear operator, all of
 these SBP operators implement the basic interface of such linear operators
 (`AbstractMatrix` in Julia) such as multiplication by vectors and addition of
 operators. Finite difference and Fourier operators on periodic domains also
@@ -82,29 +89,48 @@ allow the construction of rational functions of operators and their efficient
 implementation using the fast Fourier transform [@frigo2005design].
 
 In addition to basic SBP derivative operators, SummationByPartsOperators.jl
-contains a number of artificial dissipation and filtering operators, such as
+contains a number of related operators, such as
 
 - SBP artificial dissipation operators
 - spectral viscosity operators for Fourier methods
 - modal filter operators for Fourier methods and Legendre pseudospectral methods
 
+Using Julia's rich type system, all of these operators are implemented as their
+own types. This enables several optimizations such as a memory requirement
+independent of the number of grid points. In contrast, implementations based
+on sparse/banded matrices have a memory requirement growing linearly with the
+number of grid points. In addition, the structure of the operators can be taken
+into account for operator-vector multiplications, usually resulting in speed-ups
+of an order of magnitude or more on consumer hardware. For example, the application
+of the sixth-order (in the interior) finite difference SBP operator on a grid
+with 1000 nodes takes roughly 330 ns on a consumer CPU from 2017 (Intel® Core™ i7-8700K)
+using version v0.5.5 of SummationByPartsOperators.jl. In contrast, the same
+operation takes roughly 3.9 microseconds using a sparse matrix format used in
+other implementations of this operator [@almquist2017optimized].
+
 Following good software development practices, SummationByPartsOperators.jl
 makes use of continuous integration and automated tests required before merging
-pull requests. Documentation is provided both in form of docstrings, a general
-introduction, and tutorials.
+pull requests. Documentation is provided in form of docstrings, a general
+introduction, and tutorials. In addition, SummationByPartsOperators.jl is a
+registered Julia package and can be installed using the built-in package manager,
+handling dependencies and version requirements automatically.
 
 
 # Related research and software
 
 There are of course many open-source software packages providing discretizations
 of differential equations. However, many of them focus on a single class of
-numerical methods, e.g.,
+numerical methods or a specific application, e.g.,
 
-- finite difference methods ([DiffEqOperators.jl](https://github.com/SciML/DiffEqOperators.jl), a part of DifferentialEquations.jl [@rackauckas2017differentialequations])
-- finite volume methods [@ramadhan2020oceananigans;@xiao2021kinetic]
-- spectral methods [@olver2014practical;@constantinou2021fourierflows]
-- finite element methods [@badia2020gridap]
-- discontinuous spectral element methods [@schlottkelakemper2021purely;@schlottkelakemper2020trixi]
+- finite difference methods ([DiffEqOperators.jl](https://github.com/SciML/DiffEqOperators.jl),
+  a part of DifferentialEquations.jl [@rackauckas2017differentialequations])
+- finite volume methods (Oceananigans.jl [@ramadhan2020oceananigans],
+  Kinetic.jl [@xiao2021kinetic])
+- spectral methods (ApproxFun.jl [@olver2014practical],
+  FourierFlows.jl [@constantinou2021fourierflows])
+- finite element methods (Gridap.jl [@badia2020gridap])
+- discontinuous spectral element methods
+  (Trixi.jl [@schlottkelakemper2021purely;@schlottkelakemper2020trixi])
 
 We are not aware of any open-source software library implementing all of the
 SBP classes using a unified interface or even several finite difference
@@ -113,6 +139,19 @@ optimized [@mattsson2014optimal;@mattsson2018boundary] and not available in
 other open source packages. Sometimes, restricted sets of coefficients are
 available online [@almquist2017optimized;@oreilly2019sbp], but there is no other
 extensive collection of these methods.
+
+Of course, there is a plethora of additional open source software implementing
+numerical methods for PDEs and each package has its own design criteria and goals.
+SummationByPartsOperators.jl provides a unified interface of different SBP
+operators. Thus, there is a partial overlap with some of the packages mentioned
+above such as finite difference operators on periodic domains (DiffEqOperators.jl,
+but with a different handling of bounded domains) or Fourier methods on periodic
+domains (ApproxFun.jl, but with a different interface and extensions). In addition,
+many packages focus on a specific application such as some specific fluid models
+(Oceananigans.jl, FourierFlows.jl) or hyperbolic PDEs (Trixi.jl). In contrast,
+SummationByPartsOperators.jl focuses on the numerical methods and provides them
+in a form usable for rather general PDEs. For example, there is ongoing work to
+use the basic operators provided by SummationByPartsOperators.jl in Trixi.jl.
 
 Some of the research projects that have made use of SummationByPartsOperators.jl
 (most of which have led to its further development) include numerical analysis
