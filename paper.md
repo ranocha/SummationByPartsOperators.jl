@@ -127,10 +127,10 @@ numerical methods or a specific application, e.g.,
 - finite volume methods ([Oceananigans.jl](https://github.com/CliMA/Oceananigans.jl) [@ramadhan2020oceananigans],
   [Kinetic.jl](https://github.com/vavrines/Kinetic.jl) [@xiao2021kinetic])
 - spectral methods ([ApproxFun.jl](https://github.com/JuliaApproximation/ApproxFun.jl) [@olver2014practical],
-  [FourierFlows.jl](https://doi.org/10.5281/zenodo.1161724) [@constantinou2021fourierflows])
+  [FourierFlows.jl](https://github.com/FourierFlows/FourierFlows.jl) [@constantinou2021fourierflows])
 - finite element methods ([Gridap.jl](https://github.com/gridap/Gridap.jl) [@badia2020gridap])
 - discontinuous spectral element methods
-  ([Trixi.jl](https://doi.org/10.5281/zenodo.3996439) [@schlottkelakemper2021purely;@schlottkelakemper2020trixi])
+  ([Trixi.jl](https://github.com/trixi-framework/Trixi.jl) [@schlottkelakemper2021purely;@schlottkelakemper2020trixi])
 
 We are not aware of any open-source software library implementing all of the
 SBP classes using a unified interface or even several finite difference
