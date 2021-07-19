@@ -6,7 +6,16 @@ using SummationByPartsOperators
 DocMeta.setdocmeta!(SummationByPartsOperators,
   :DocTestSetup, :(using SummationByPartsOperators); recursive=true)
 
+# Copy some files from the top level directory to the docs and modify them
+# as necessary
 open(joinpath(@__DIR__, "src", "license.md"), "w") do io
+  # Point to source license file
+  println(io, """
+  ```@meta
+  EditURL = "https://github.com/ranocha/SummationByPartsOperators.jl/blob/main/LICENSE.md"
+  ```
+  """)
+  # Write the modified contents
   println(io, "# License")
   println(io, "")
   for line in eachline(joinpath(dirname(@__DIR__), "LICENSE.md"))
@@ -16,6 +25,13 @@ open(joinpath(@__DIR__, "src", "license.md"), "w") do io
 end
 
 open(joinpath(@__DIR__, "src", "contributing.md"), "w") do io
+  # Point to source license file
+  println(io, """
+  ```@meta
+  EditURL = "https://github.com/ranocha/SummationByPartsOperators.jl/blob/main/CONTRIBUTING.md"
+  ```
+  """)
+  # Write the modified contents
   println(io, "# Contributing")
   println(io, "")
   for line in eachline(joinpath(dirname(@__DIR__), "CONTRIBUTING.md"))
