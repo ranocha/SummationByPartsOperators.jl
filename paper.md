@@ -68,7 +68,7 @@ of this package. In addition, SummationByPartsOperators.jl has been used in a
 number of graduate-level numerical analysis courses, allowing students to
 understand the connections between different SBP methods by presenting them in
 a unified framework. In addition, some of the operators were not available in
-open source software previously (to the author's knowledge).
+open source software previously (to the best of the author's knowledge).
 
 
 # Features
