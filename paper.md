@@ -62,7 +62,8 @@ methods for PDEs.
 SummationByPartsOperators.jl is written entirely in Julia [@bezanson2017julia].
 Making use of multiple dispatch and generic types, SummationByPartsOperators.jl
 provides a unified interface for different SBP operators. At the same time,
-the implementations are reasonably fast. Together, this facilitates the development
+the implementations are reasonably fast (again, due to multiple dispatch and specialized
+implementations for each operator class). Together, this facilitates the development
 of new algorithms and research in numerical analysis, which is the primary goal
 of this package. In addition, SummationByPartsOperators.jl has been used in a
 number of graduate-level numerical analysis courses, allowing students to
