@@ -111,19 +111,26 @@ SummationByPartsOperators.jl. In contrast, the same operation takes roughly
 this operator [@almquist2017optimized]. This benchmark is based on the following
 code, which also provides a very basic example of SummationByPartsOperators.jl.
 ```julia
-julia> using Pkg; Pkg.add("SummationByPartsOperators") # if not installed previously
+julia> # install the package if necessary
+       using Pkg; Pkg.add("SummationByPartsOperators")
 
 julia> using SummationByPartsOperators # load the package
 
-julia> D = derivative_operator(MattssonAlmquistVanDerWeide2018Accurate(), derivative_order=1,
-                               accuracy_order=6, xmin=0.0, xmax=1.0, N=10^3)
+julia> # create a finite difference SBP operator
+       D = derivative_operator(MattssonAlmquistVanDerWeide2018Accurate(),
+          derivative_order=1, accuracy_order=6, xmin=0.0, xmax=1.0, N=10^3)
+SBP first-derivative operator of order 6 on a grid in [0.0, 1.0] using 1000 nodes
+and coefficients of Mattsson, Almquist, van der Weide (2018)
+  Boundary optimized diagonal-norm SBP operators ('Accurate').
+  Journal of Computational Physics 374, pp. 1261-1266.
 
-julia> x = grid(D); u = sinpi.(x); # evaluate the function `sinpi` on the discrete grid
+julia> # evaluate the function `sinpi` on the discrete grid
+       x = grid(D); u = sinpi.(x);
 
-julia> du = D * u; # evaluate the discrete derivative of `u` using the SBP operator `D`
+julia> du = D * u; # use `D` to approximate the derivative of `u`
 
-julia> integrate(u -> u^2,
-         du - pi * cospi.(x), D) |> sqrt # compute the discrete L² error of the approximation
+julia> # compute the discrete L² error of the approximation
+       integrate(u -> u^2, du - pi * cospi.(x), D) |> sqrt
 4.238102975456189e-13
 ```
 
