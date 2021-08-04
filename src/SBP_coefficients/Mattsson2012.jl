@@ -516,16 +516,16 @@ function convolve_boundary_coefficients!(dest::AbstractVector, cache::Mattsson20
                         + (d363*b[3] + d364*b[4] + d365*b[5]) * u[6]
                     )
         dest[  4] = α * (
-                          (d411*b[1] + d413*b[3] + d414) * u[1]
-                        + (d421*b[1] + d423*b[3] + d424) * u[2]
+                          (d411*b[1] + d413*b[3] + d414*b[4]) * u[1]
+                        + (d421*b[1] + d423*b[3] + d424*b[4]) * u[2]
                         + (d431*b[1] + d433*b[3] + d434*b[4] + d435*b[5]) * u[3]
                         + (d441*b[1] + d443*b[3] + d444*b[4] + d445*b[5] + d446*b[6]) * u[4]
                         + (d453*b[3] + d454*b[4] + d455*b[5] + d456*b[6]) * u[5]
                         + (d463*b[3] + d464*b[4] + d465*b[5] + d466*b[6]) * u[6]
                     )
         dest[  5] = α * (
-                          (d513*b[3] + d514) * u[1]
-                        + (d523*b[3] + d524) * u[2]
+                          (d513*b[3] + d514*b[4]) * u[1]
+                        + (d523*b[3] + d524*b[4]) * u[2]
                         + (d533*b[3] + d534*b[4] + d535*b[5]) * u[3]
                         + (d543*b[3] + d544*b[4] + d545*b[5] + d546*b[6]) * u[4]
                         + (d553*b[3] + d554*b[4] + d555*b[5] + d556*b[6] + d557*b[7]) * u[5]
@@ -533,13 +533,13 @@ function convolve_boundary_coefficients!(dest::AbstractVector, cache::Mattsson20
                         + (d575*b[5] + d576*b[6] + d577*b[7]) * u[7]
                     )
         dest[  6] = α * (
-                          (d613*b[3] + d614) * u[1]
-                        + (d623*b[3] + d624) * u[2]
+                          (d613*b[3] + d614*b[4]) * u[1]
+                        + (d623*b[3] + d624*b[4]) * u[2]
                         + (d633*b[3] + d634*b[4] + d635*b[5]) * u[3]
                         + (d643*b[3] + d644*b[4] + d645*b[5] + d646*b[6]) * u[4]
                         + (d653*b[3] + d654*b[4] + d655*b[5] + d656*b[6] + d657*b[7]) * u[5]
                         + (d663*b[3] + d664*b[4] + d665*b[5] + d666*b[6] + d667*b[7] + d668*b[8]) * u[6]
-                        + (d675*b[5] + d676*b[6] + d677*b[7] + d678) * u[7]
+                        + (d675*b[5] + d676*b[6] + d677*b[7] + d678*b[8]) * u[7]
                         + (d686*b[6] + d687*b[7] + d688*b[8]) * u[8]
                     )
 
@@ -569,16 +569,16 @@ function convolve_boundary_coefficients!(dest::AbstractVector, cache::Mattsson20
                         + (d363*b[end-2] + d364*b[end-3] + d365*b[end-4]) * u[end-5]
                     )
         dest[end-3] = α * (
-                          (d411*b[end] + d413*b[end-2] + d414) * u[end]
-                        + (d421*b[end] + d423*b[end-2] + d424) * u[end-1]
+                          (d411*b[end] + d413*b[end-2] + d414*b[end-3]) * u[end]
+                        + (d421*b[end] + d423*b[end-2] + d424*b[end-3]) * u[end-1]
                         + (d431*b[end] + d433*b[end-2] + d434*b[end-3] + d435*b[end-4]) * u[end-2]
                         + (d441*b[end] + d443*b[end-2] + d444*b[end-3] + d445*b[end-4] + d446*b[end-5]) * u[end-3]
                         + (d453*b[end-2] + d454*b[end-3] + d455*b[end-4] + d456*b[end-5]) * u[end-4]
                         + (d463*b[end-2] + d464*b[end-3] + d465*b[end-4] + d466*b[end-5]) * u[end-5]
                     )
         dest[end-4] = α * (
-                          (d513*b[end-2] + d514) * u[end]
-                        + (d523*b[end-2] + d524) * u[end-1]
+                          (d513*b[end-2] + d514*b[end-3]) * u[end]
+                        + (d523*b[end-2] + d524*b[end-3]) * u[end-1]
                         + (d533*b[end-2] + d534*b[end-3] + d535*b[end-4]) * u[end-2]
                         + (d543*b[end-2] + d544*b[end-3] + d545*b[end-4] + d546*b[end-5]) * u[end-3]
                         + (d553*b[end-2] + d554*b[end-3] + d555*b[end-4] + d556*b[end-5] + d557*b[end-6]) * u[end-4]
@@ -586,13 +586,13 @@ function convolve_boundary_coefficients!(dest::AbstractVector, cache::Mattsson20
                         + (d575*b[end-4] + d576*b[end-5] + d577*b[end-6]) * u[end-6]
                     )
         dest[end-5] = α * (
-                          (d613*b[end-2] + d614) * u[end]
-                        + (d623*b[end-2] + d624) * u[end-1]
+                          (d613*b[end-2] + d614*b[end-3]) * u[end]
+                        + (d623*b[end-2] + d624*b[end-3]) * u[end-1]
                         + (d633*b[end-2] + d634*b[end-3] + d635*b[end-4]) * u[end-2]
                         + (d643*b[end-2] + d644*b[end-3] + d645*b[end-4] + d646*b[end-5]) * u[end-3]
                         + (d653*b[end-2] + d654*b[end-3] + d655*b[end-4] + d656*b[end-5] + d657*b[end-6]) * u[end-4]
                         + (d663*b[end-2] + d664*b[end-3] + d665*b[end-4] + d666*b[end-5] + d667*b[end-6] + d668*b[end-7]) * u[end-5]
-                        + (d675*b[end-4] + d676*b[end-5] + d677*b[end-6] + d678) * u[end-6]
+                        + (d675*b[end-4] + d676*b[end-5] + d677*b[end-6] + d678*b[end-7]) * u[end-6]
                         + (d686*b[end-5] + d687*b[end-6] + d688*b[end-7]) * u[end-7]
                     )
     end
@@ -650,16 +650,16 @@ function convolve_boundary_coefficients!(dest::AbstractVector, cache::Mattsson20
                         + (d363*b[3] + d364*b[4] + d365*b[5]) * u[6]
                     ) + β*dest[3]
         dest[  4] = α * (
-                          (d411*b[1] + d413*b[3] + d414) * u[1]
-                        + (d421*b[1] + d423*b[3] + d424) * u[2]
+                          (d411*b[1] + d413*b[3] + d414*b[4]) * u[1]
+                        + (d421*b[1] + d423*b[3] + d424*b[4]) * u[2]
                         + (d431*b[1] + d433*b[3] + d434*b[4] + d435*b[5]) * u[3]
                         + (d441*b[1] + d443*b[3] + d444*b[4] + d445*b[5] + d446*b[6]) * u[4]
                         + (d453*b[3] + d454*b[4] + d455*b[5] + d456*b[6]) * u[5]
                         + (d463*b[3] + d464*b[4] + d465*b[5] + d466*b[6]) * u[6]
                     ) + β*dest[4]
         dest[  5] = α * (
-                          (d513*b[3] + d514) * u[1]
-                        + (d523*b[3] + d524) * u[2]
+                          (d513*b[3] + d514*b[4]) * u[1]
+                        + (d523*b[3] + d524*b[4]) * u[2]
                         + (d533*b[3] + d534*b[4] + d535*b[5]) * u[3]
                         + (d543*b[3] + d544*b[4] + d545*b[5] + d546*b[6]) * u[4]
                         + (d553*b[3] + d554*b[4] + d555*b[5] + d556*b[6] + d557*b[7]) * u[5]
@@ -667,13 +667,13 @@ function convolve_boundary_coefficients!(dest::AbstractVector, cache::Mattsson20
                         + (d575*b[5] + d576*b[6] + d577*b[7]) * u[7]
                     ) + β*dest[5]
         dest[  6] = α * (
-                          (d613*b[3] + d614) * u[1]
-                        + (d623*b[3] + d624) * u[2]
+                          (d613*b[3] + d614*b[4]) * u[1]
+                        + (d623*b[3] + d624*b[4]) * u[2]
                         + (d633*b[3] + d634*b[4] + d635*b[5]) * u[3]
                         + (d643*b[3] + d644*b[4] + d645*b[5] + d646*b[6]) * u[4]
                         + (d653*b[3] + d654*b[4] + d655*b[5] + d656*b[6] + d657*b[7]) * u[5]
                         + (d663*b[3] + d664*b[4] + d665*b[5] + d666*b[6] + d667*b[7] + d668*b[8]) * u[6]
-                        + (d675*b[5] + d676*b[6] + d677*b[7] + d678) * u[7]
+                        + (d675*b[5] + d676*b[6] + d677*b[7] + d678*b[8]) * u[7]
                         + (d686*b[6] + d687*b[7] + d688*b[8]) * u[8]
                     ) + β*dest[6]
 
@@ -703,16 +703,16 @@ function convolve_boundary_coefficients!(dest::AbstractVector, cache::Mattsson20
                         + (d363*b[end-2] + d364*b[end-3] + d365*b[end-4]) * u[end-5]
                     ) + β*dest[end-2]
         dest[end-3] = α * (
-                          (d411*b[end] + d413*b[end-2] + d414) * u[end]
-                        + (d421*b[end] + d423*b[end-2] + d424) * u[end-1]
+                          (d411*b[end] + d413*b[end-2] + d414*b[end-3]) * u[end]
+                        + (d421*b[end] + d423*b[end-2] + d424*b[end-3]) * u[end-1]
                         + (d431*b[end] + d433*b[end-2] + d434*b[end-3] + d435*b[end-4]) * u[end-2]
                         + (d441*b[end] + d443*b[end-2] + d444*b[end-3] + d445*b[end-4] + d446*b[end-5]) * u[end-3]
                         + (d453*b[end-2] + d454*b[end-3] + d455*b[end-4] + d456*b[end-5]) * u[end-4]
                         + (d463*b[end-2] + d464*b[end-3] + d465*b[end-4] + d466*b[end-5]) * u[end-5]
                     ) + β*dest[end-3]
         dest[end-4] = α * (
-                          (d513*b[end-2] + d514) * u[end]
-                        + (d523*b[end-2] + d524) * u[end-1]
+                          (d513*b[end-2] + d514*b[end-3]) * u[end]
+                        + (d523*b[end-2] + d524*b[end-3]) * u[end-1]
                         + (d533*b[end-2] + d534*b[end-3] + d535*b[end-4]) * u[end-2]
                         + (d543*b[end-2] + d544*b[end-3] + d545*b[end-4] + d546*b[end-5]) * u[end-3]
                         + (d553*b[end-2] + d554*b[end-3] + d555*b[end-4] + d556*b[end-5] + d557*b[end-6]) * u[end-4]
@@ -720,13 +720,13 @@ function convolve_boundary_coefficients!(dest::AbstractVector, cache::Mattsson20
                         + (d575*b[end-4] + d576*b[end-5] + d577*b[end-6]) * u[end-6]
                     ) + β*dest[end-4]
         dest[end-5] = α * (
-                          (d613*b[end-2] + d614) * u[end]
-                        + (d623*b[end-2] + d624) * u[end-1]
+                          (d613*b[end-2] + d614*b[end-3]) * u[end]
+                        + (d623*b[end-2] + d624*b[end-3]) * u[end-1]
                         + (d633*b[end-2] + d634*b[end-3] + d635*b[end-4]) * u[end-2]
                         + (d643*b[end-2] + d644*b[end-3] + d645*b[end-4] + d646*b[end-5]) * u[end-3]
                         + (d653*b[end-2] + d654*b[end-3] + d655*b[end-4] + d656*b[end-5] + d657*b[end-6]) * u[end-4]
                         + (d663*b[end-2] + d664*b[end-3] + d665*b[end-4] + d666*b[end-5] + d667*b[end-6] + d668*b[end-7]) * u[end-5]
-                        + (d675*b[end-4] + d676*b[end-5] + d677*b[end-6] + d678) * u[end-6]
+                        + (d675*b[end-4] + d676*b[end-5] + d677*b[end-6] + d678*b[end-7]) * u[end-6]
                         + (d686*b[end-5] + d687*b[end-6] + d688*b[end-7]) * u[end-7]
                     ) + β*dest[end-5]
     end
