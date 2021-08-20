@@ -6,8 +6,11 @@ on virtual machines in the cloud to generate the documentation automatically.
 
 ## First-derivative operators
 
-Periodic domains:
-```@example
+#### Periodic domains
+
+Let's set up some benchmark code.
+
+```@example first-derivative-periodic
 using BenchmarkTools
 using LinearAlgebra, SparseArrays
 using SummationByPartsOperators, DiffEqOperators
@@ -34,15 +37,32 @@ function doit(D, text, du, u)
   show(stdout, MIME"text/plain"(), @benchmark mul!($du, $D, $u))
   println()
 end
+```
 
+First, we benchmark the implementation from SummationByPartsOperators.jl.
+```@example first-derivative-periodic
 doit(D_SBP, "D_SBP:", du, u)
-doit(D_DEO, "D_DEO:", du, u)
+```
+
+Next, we compare this to the runtime obtained using a sparse matrix representation
+of the derivative operator. Depending on the hardware etc., this can be an order
+of magnitude slower than the optimized implementation from SummationByPartsOperators.jl.
+```@example first-derivative-periodic
 doit(D_sparse, "D_sparse:", du, u)
 ```
 
+Finally, we benchmark the implementation of the same derivative operator in
+DiffEqOperators.jl.
+```@example first-derivative-periodic
+doit(D_DEO, "D_DEO:", du, u)
+```
 
-Bounded domains:
-```@example
+
+#### Bounded domains
+
+We start again by setting up some benchmark code.
+
+```@example first-derivative-bounded
 using BenchmarkTools
 using LinearAlgebra, SparseArrays
 using SummationByPartsOperators, BandedMatrices
@@ -66,16 +86,32 @@ function doit(D, text, du, u)
   show(stdout, MIME"text/plain"(), @benchmark mul!($du, $D, $u))
   println()
 end
+```
 
+First, we benchmark the implementation from SummationByPartsOperators.jl.
+```@example first-derivative-bounded
 doit(D_SBP, "D_SBP:", du, u)
+```
+
+Again, we compare this to a representation of the derivative operator as a
+sparse matrix. No surprise - it is again much slower, as in periodic domains.
+```@example first-derivative-bounded
 doit(D_sparse, "D_sparse:", du, u)
+```
+
+FInally, we compare it to a representation as banded matrix. Disappointingly,
+this is still much slower than the optimized implementation from
+SummationByPartsOperators.jl.
+```@example first-derivative-bounded
 doit(D_banded, "D_banded:", du, u)
 ```
 
 
 ## Dissipation operators
 
-```@example
+We follow the same structure as before. At first, we set up some benchmark code.
+
+```@example dissipation
 using BenchmarkTools
 using LinearAlgebra, SparseArrays
 using SummationByPartsOperators, BandedMatrices
@@ -101,11 +137,26 @@ function doit(D, text, du, u)
   show(stdout, MIME"text/plain"(), @benchmark mul!($du, $D, $u))
   println()
 end
+```
 
+At first, let us benchmark the derivative and dissipation operators implemented
+in SummationByPartsOperators.jl.
+```@example dissipation
 doit(D_SBP, "D_SBP:", du, u)
 doit(Di_SBP, "Di_SBP:", du, u)
+```
+
+Next, we compare the results to sparse matrix representations. It will not
+come as a surprise that these are again much (around an order of magnitude)
+slower.
+```@example dissipation
 doit(Di_sparse, "Di_sparse:", du, u)
 doit(Di_banded, "Di_banded:", du, u)
+```
+
+Finally, let's benchmark the same computation if a full (dense) matrix is used
+to represent the derivative operator. This is obviously a bad idea but 🤷
+```@example dissipation
 doit(Di_full, "Di_full:", du, u)
 ```
 
@@ -114,9 +165,11 @@ doit(Di_full, "Di_full:", du, u)
 
 [SummationByPartsOperators.jl](https://github.com/ranocha/SummationByPartsOperators.jl)
 tries to provide efficient support of
+
 - `StaticVector`s from [StaticArrays.jl](https://github.com/JuliaArrays/StaticArrays.jl)
 - [StructArrays.jl](https://github.com/JuliaArrays/StructArrays.jl)
 
+To demonstrate this, let us set up some benchmark code.
 
 ```@example soa-aos
 using BenchmarkTools
@@ -148,7 +201,14 @@ D_SBP = derivative_operator(MattssonNordström2004(), derivative_order=1,
                             accuracy_order=4, xmin=xmin, xmax=xmax, N=101)
 D_sparse = sparse(D_SBP)
 D_full   = Matrix(D_SBP)
+```
 
+At first, we benchmark the application of the operators implemented in
+SummationByPartsOperators.jl and their representations as sparse and dense
+matrices in the scalar case. As before, the sparse matrix representation
+is around an order of magnitude slower and the dense matrix representation
+is far off.
+```@example soa-aos
 println("Scalar case")
 u = randn(T, size(D_SBP, 1)); du = similar(u)
 println("D_SBP")
@@ -159,6 +219,10 @@ println("\nD_full")
 show(stdout, MIME"text/plain"(), @benchmark mul!($du, $D_full, $u))
 ```
 
+Next, we use a plain array of structures (AoS) in the form of a two-dimensional
+array and our custom `mul_aos!` implementation that loops over each component,
+using `mul!` on `view`s.
+Here, the differences between the timings are less pronounced.
 ```@example soa-aos
 println("Plain Array of Structures")
 u_aos_plain = randn(T, 5, size(D_SBP, 1)); du_aos_plain = similar(u_aos_plain)
@@ -170,6 +234,10 @@ println("\nD_full")
 show(stdout, MIME"text/plain"(), @benchmark mul_aos!($du_aos_plain, $D_full, $u_aos_plain))
 ```
 
+Now, we use an array of structures (AoS) based on `reinterpret` and standard
+`mul!`. This is much more efficient for the implementation in SummationByPartsOperators.jl.
+In Julia v1.6, this is also more efficient for sparse matrices but less efficient
+for dense matrices (compared to the plain AoS approach with `mul_aos!` above).
 ```@example soa-aos
 println("Array of Structures (reinterpreted array)")
 u_aos_r = reinterpret(reshape, Vec5{T}, u_aos_plain); du_aos_r = similar(u_aos_r)
@@ -184,6 +252,9 @@ println("\nD_full")
 show(stdout, MIME"text/plain"(), @benchmark mul!($du_aos_r, $D_full, $u_aos_r))
 ```
 
+Next, we still use an array of structures (AoS), but copy the data into a plain
+`Array` instead of using the `reinterpret`ed versions. There is no significant
+difference to the previous version in this case.
 ```@example soa-aos
 println("Array of Structures")
 u_aos = Array(u_aos_r); du_aos = similar(u_aos)
@@ -198,6 +269,9 @@ println("\nD_full")
 show(stdout, MIME"text/plain"(), @benchmark mul!($du_aos, $D_full, $u_aos))
 ```
 
+Finally, let's look at a structure of arrays (SoA). Interestingly, this is
+slower than the array of structures we used above. On Julia v1.6, the sparse
+matrix representation performs particularly bad in this case.
 ```@example soa-aos
 println("Structure of Arrays")
 u_soa = StructArray(u_aos); du_soa = similar(u_soa)
