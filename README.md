@@ -40,6 +40,11 @@ julia> using Pkg; Pkg.add("SummationByPartsOperators")
 
 If you want to update SummationByPartsOperators.jl, you can use
 ```julia
+julia> using Pkg; Pkg.update("SummationByPartsOperators")
+```
+As usual, if you want to update SummationByPartsOperators.jl and all other
+packages in your current project, you can execute
+```julia
 julia> using Pkg; Pkg.update()
 ```
 A brief list of notable changes is available in [`NEWS.md`](NEWS.md).
