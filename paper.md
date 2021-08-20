@@ -157,7 +157,7 @@ numerical methods or a specific application, e.g.,
   [FourierFlows.jl](https://github.com/FourierFlows/FourierFlows.jl) [@constantinou2021fourierflows])
 - finite element methods ([Gridap.jl](https://github.com/gridap/Gridap.jl) [@badia2020gridap])
 - discontinuous spectral element methods
-  ([Trixi.jl](https://github.com/trixi-framework/Trixi.jl) [@schlottkelakemper2021purely;@schlottkelakemper2020trixi])
+  ([Trixi.jl](https://github.com/trixi-framework/Trixi.jl) [@ranocha2021adaptive;@schlottkelakemper2021purely;@schlottkelakemper2020trixi])
 
 We are not aware of any open-source software library implementing all of the
 SBP classes using a unified interface or even several finite difference
