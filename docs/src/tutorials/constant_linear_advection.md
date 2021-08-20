@@ -43,7 +43,9 @@ Next, we implement the semidiscretization using the interface of
 which is part of [DifferentialEquations.jl](https://diffeq.sciml.ai/latest/).
 
 ```@example linear_advection
-function rhs!(du, u, D, t)
+function rhs!(du, u, params, t)
+  D = params.D
+
   # Set `du = - D * u` using in-place multiplication avoiding allocations
   # for efficiency
   mul!(du, D, u, -one(eltype(D)))
@@ -72,7 +74,8 @@ set up the semidiscretization as an ODE problem.
 D = derivative_operator(MattssonNordström2004(), derivative_order=1, accuracy_order=4,
                         xmin=xmin, xmax=xmax, N=101)
 u0 = compute_coefficients(u0_func, D)
-ode = ODEProblem(rhs!, u0, tspan, D);
+params = (D=D, )
+ode = ODEProblem(rhs!, u0, tspan, params);
 ```
 
 Finally, we can solve the ODE using an explicit Runge-Kutta method with adaptive
@@ -125,7 +128,7 @@ plot!(evaluate_coefficients(sol[end], D), label=L"u_\mathrm{FD}")
 D_CGSEM = couple_continuously(
             legendre_derivative_operator(xmin=-1.0, xmax=1.0, N=4),
             UniformMesh1D(xmin=xmin, xmax=xmax, Nx=30))
-ode_CGSEM = ODEProblem(rhs!, compute_coefficients(u0_func, D_CGSEM), tspan, D_CGSEM)
+ode_CGSEM = ODEProblem(rhs!, compute_coefficients(u0_func, D_CGSEM), tspan, (D=D_CGSEM,))
 sol_CGSEM = solve(ode_CGSEM, Tsit5(), save_everystep=false)
 plot!(evaluate_coefficients(sol_CGSEM[end], D_CGSEM), label=L"u_\mathrm{CG}")
 
@@ -135,7 +138,7 @@ D_DGSEM = couple_discontinuously(
             legendre_derivative_operator(xmin=-1.0, xmax=1.0, N=4),
             UniformMesh1D(xmin=xmin, xmax=xmax, Nx=30),
             Val(:minus))
-ode_DGSEM = ODEProblem(rhs!, compute_coefficients(u0_func, D_DGSEM), tspan, D_DGSEM)
+ode_DGSEM = ODEProblem(rhs!, compute_coefficients(u0_func, D_DGSEM), tspan, (D=D_DGSEM,))
 sol_DGSEM = solve(ode_DGSEM, Tsit5(), save_everystep=false)
 plot!(evaluate_coefficients(sol_DGSEM[end], D_DGSEM), label=L"u_\mathrm{DG}")
 
