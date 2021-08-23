@@ -187,7 +187,7 @@ of and algorithms for
 - nonlinear dispersive wave equations
   [@ranocha2021broad;@ranocha2021rate]
 - hyperbolic conservation laws
-  [@offner2019error;@lefloch2021kinetic;@ranocha2020preventing]
+  [@offner2019error;@lefloch2021kinetic;@ranocha2021preventing]
 - ordinary differential equations
   [@ranocha2021class;@ranocha2020energy;@ranocha2021strong]
 - Helmholtz Hodge decomposition and analysis of plasma waves
