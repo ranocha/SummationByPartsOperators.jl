@@ -246,13 +246,19 @@ If you use
 [SummationByPartsOperators.jl](https://github.com/ranocha/SummationByPartsOperators.jl)
 for your research, please cite it using the bibtex entry
 ```bibtex
-@misc{ranocha2021sbp,
+@article{ranocha2021sbp,
   title={{SummationByPartsOperators.jl}: {A} {J}ulia library of provably stable
          semidiscretization techniques with mimetic properties},
   author={Ranocha, Hendrik},
+  journal={Journal of Open Source Software},
   year={2021},
-  howpublished={\url{https://github.com/ranocha/SummationByPartsOperators.jl}},
-  doi={10.5281/zenodo.4773575}
+  month={08},
+  doi={10.21105/joss.03454},
+  volume={6},
+  number={64},
+  pages={3454},
+  publisher={The Open Journal},
+  url={https://github.com/ranocha/SummationByPartsOperators.jl}
 }
 ```
 
