@@ -50,7 +50,7 @@ using FFTW
 using LoopVectorization: LoopVectorization, @turbo, @tturbo
 using RecursiveArrayTools: recursive_bottom_eltype
 using Reexport: @reexport
-using Requires
+using Requires: @require
 using StaticArrays
 using UnPack: @unpack
 using Unrolled

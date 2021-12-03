@@ -44,13 +44,13 @@ concurrency:
 jobs:
   test:
     if: "!contains(github.event.head_commit.message, 'skip ci')"
-    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.sbp_test }} - ${{ matrix.arch }} - ${{ github.event_name }}
+    name: ${{ matrix.sbp_test }} - Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         version:
-          - '1.5'
+          - '1.6'
           - '1'
           # - 'nightly'
         os:
@@ -91,19 +91,73 @@ jobs:
           name: codecov-umbrella
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
-      - uses: coverallsapp/github-action@master
+      # The standard setup of Coveralls is just annoying for parallel builds, see, e.g.,
+      # https://github.com/trixi-framework/Trixi.jl/issues/691
+      # https://github.com/coverallsapp/github-action/issues/47
+      # https://github.com/coverallsapp/github-action/issues/67
+      # This standard setup is reproduced below for completeness.
+      # - uses: coverallsapp/github-action@master
+      #   with:
+      #     github-token: ${{ secrets.GITHUB_TOKEN }}
+      #     flag-name: run-${{ matrix.sbp_test }}-${{ matrix.os }}-${{ matrix.version }}-${{ matrix.arch }}-${{ github.run_id }}
+      #     parallel: true
+      #     path-to-lcov: ./lcov.info
+      # Instead, we use a more tedious approach:
+      # - Store all individual coverage files as artifacts (directly below)
+      # - Download and merge individual coverage reports in another step
+      # - Upload only the merged coverage report to Coveralls
+      - shell: bash
+        run: |
+          cp ./lcov.info ./lcov-${{ matrix.sbp_test }}-${{ matrix.os }}-${{ matrix.version }}-${{ matrix.arch }}.info
+      - uses: actions/upload-artifact@v2
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          flag-name: run-${{ matrix.version }}-${{ matrix.os }}-${{ matrix.sbp_test }}-${{ matrix.arch }}
-          parallel: true
-          path-to-lcov: ./lcov.info
+          name: lcov-${{ matrix.sbp_test }}-${{ matrix.os }}-${{ matrix.version }}-${{ matrix.arch }}
+          path: ./lcov-${{ matrix.sbp_test }}-${{ matrix.os }}-${{ matrix.version }}-${{ matrix.arch }}.info
 
   finish:
     needs: test
     runs-on: ubuntu-latest
     steps:
-    - name: Coveralls Finished
-      uses: coverallsapp/github-action@master
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        parallel-finished: true
+      # The standard setup of Coveralls is just annoying for parallel builds, see, e.g.,
+      # https://github.com/trixi-framework/Trixi.jl/issues/691
+      # https://github.com/coverallsapp/github-action/issues/47
+      # https://github.com/coverallsapp/github-action/issues/67
+      # This standard setup is reproduced below for completeness.
+      # - name: Coveralls Finished
+      #   uses: coverallsapp/github-action@master
+      #   with:
+      #     github-token: ${{ secrets.GITHUB_TOKEN }}
+      #     parallel-finished: true
+      # Instead, we use the more tedious approach described above.
+      # At first, we check out the repository and download all artifacts
+      # (and list files for debugging).
+      - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v2
+      - run: ls -R
+      # Next, we merge the individual coverage files and upload
+      # the combined results to Coveralls.
+      - name: Merge lcov files using Coverage.jl
+        shell: julia --color=yes {0}
+        run: |
+          using Pkg
+          Pkg.activate(temp=true)
+          Pkg.add("Coverage")
+          using Coverage
+          coverage = LCOV.readfolder(".")
+          for cov in coverage
+            cov.filename = replace(cov.filename, "\\" => "/")
+          end
+          coverage = merge_coverage_counts(coverage)
+          @show covered_lines, total_lines = get_summary(coverage)
+          LCOV.writefile("./lcov.info", coverage)
+      - uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path-to-lcov: ./lcov.info
+      # Upload merged coverage data as artifact for debugging
+      - uses: actions/upload-artifact@v2
+        with:
+          name: lcov
+          path: ./lcov.info
+      # That's it
+      - run: echo "Finished testing SummationByPartsOperators"

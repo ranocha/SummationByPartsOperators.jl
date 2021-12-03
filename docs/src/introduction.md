@@ -102,7 +102,7 @@ The boundary operators are represented matrix-free via
 [`derivative_left`](@ref) and [`derivative_right`](@ref) for zeroth-order
 derivatives.
 
-```jldoctest
+```jldoctest; filter = r"((┌.*[\n\r]+)(│ `LoopVectorization.check_args` on your inputs failed; running fallback `@inbounds @fastmath` loop instead\.*[\n\r]+)(│.*[\n\r]+)(└.*[\n\r]+))"
 julia> using SummationByPartsOperators, LinearAlgebra
 
 julia> D = derivative_operator(MattssonNordström2004(), derivative_order=1, accuracy_order=2,
