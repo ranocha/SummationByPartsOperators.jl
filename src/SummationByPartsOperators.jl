@@ -55,7 +55,7 @@ using StaticArrays
 using UnPack: @unpack
 using Unrolled
 
-@reexport using DiffEqBase
+@reexport using DiffEqBase: DiscreteCallback, ODEProblem
 
 import LinearAlgebra: mul!
 @reexport using PolynomialBases
