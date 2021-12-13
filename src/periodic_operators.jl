@@ -574,6 +574,9 @@ function Base.show(io::IO, D::PeriodicDerivativeOperator{T,LowerOffset,UpperOffs
     print(io, " of ", source_of_coefficients(D))
 end
 
+xmin(D::PeriodicDerivativeOperator) = first(D.grid_evaluate)
+xmax(D::PeriodicDerivativeOperator) = last(D.grid_evaluate)
+
 
 # Compute `α*D*u + β*dest` and store the result in `dest`.
 Base.@propagate_inbounds function mul!(dest::AbstractVector, D::PeriodicDerivativeOperator, u::AbstractVector, α, β)
