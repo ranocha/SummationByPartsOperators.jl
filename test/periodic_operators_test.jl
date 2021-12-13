@@ -29,6 +29,8 @@ let T=Float32
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
+    @test SummationByPartsOperators.xmin(D) ≈ xmin
+    @test SummationByPartsOperators.xmax(D) ≈ xmax
     mul!(res, D, x0)
     @test all(i->abs(res[i]) < eps(T), accuracy_order:length(res)-accuracy_order)
     mul!(res, D, x1)
@@ -44,6 +46,8 @@ let T=Float32
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
+    @test SummationByPartsOperators.xmin(D) ≈ xmin
+    @test SummationByPartsOperators.xmax(D) ≈ xmax
     mul!(res, D, x0)
     @test all(i->abs(res[i]) < 50*eps(T), accuracy_order:length(res)-accuracy_order)
     mul!(res, D, x1)
@@ -63,6 +67,8 @@ let T=Float32
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
+    @test SummationByPartsOperators.xmin(D) ≈ xmin
+    @test SummationByPartsOperators.xmax(D) ≈ xmax
     mul!(res, D, x0)
     @test all(i->abs(res[i]) < 50*eps(T), accuracy_order:length(res)-accuracy_order)
     mul!(res, D, x1)
@@ -88,6 +94,8 @@ let T=Float32
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == true
+    @test SummationByPartsOperators.xmin(D) ≈ xmin
+    @test SummationByPartsOperators.xmax(D) ≈ xmax
     mul!(res, D, x0)
     @test all(i->abs(res[i]) < eps(T), accuracy_order:length(res)-accuracy_order)
     mul!(res, D, x1)

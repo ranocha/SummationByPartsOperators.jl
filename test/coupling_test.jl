@@ -39,6 +39,8 @@ using SummationByPartsOperators
           @test cD * u ≈ BandedMatrix(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
           @test cD * u ≈ Matrix(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
           @test cD * u ≈ sparse(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
+          @test SummationByPartsOperators.xmin(cD) ≈ xmin
+          @test SummationByPartsOperators.xmax(cD) ≈ xmax
         end
         M = mass_matrix(cD_central)
         @test M ≈ mass_matrix(cD_plus)
@@ -98,6 +100,8 @@ using SummationByPartsOperators
           @test integrate(u->u^2, u, cD) ≈ sum(u' * mass_matrix(cD) * u)
           @test cD * u ≈ Matrix(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
           @test cD * u ≈ sparse(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
+          @test SummationByPartsOperators.xmin(cD) ≈ xmin
+          @test SummationByPartsOperators.xmax(cD) ≈ xmax
         end
         M = mass_matrix(cD_central)
         @test M ≈ mass_matrix(cD_plus)
@@ -160,6 +164,8 @@ end
             @test cD * u ≈ BandedMatrix(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
             @test cD * u ≈ Matrix(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
             @test cD * u ≈ sparse(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
+            @test SummationByPartsOperators.xmin(cD) ≈ xmin
+            @test SummationByPartsOperators.xmax(cD) ≈ xmax
           end
           M = mass_matrix(cD_central)
           @test M ≈ mass_matrix(cD_plus)
@@ -218,6 +224,8 @@ end
             @test integrate(u->u^2, u, cD) ≈ sum(u' * mass_matrix(cD) * u)
             @test cD * u ≈ Matrix(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
             @test cD * u ≈ sparse(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
+            @test SummationByPartsOperators.xmin(cD) ≈ xmin
+            @test SummationByPartsOperators.xmax(cD) ≈ xmax
           end
           M = mass_matrix(cD_central)
           @test M ≈ mass_matrix(cD_plus)
@@ -281,6 +289,8 @@ end
           @test cD * u ≈ BandedMatrix(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
           @test cD * u ≈ Matrix(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
           @test cD * u ≈ sparse(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
+          @test SummationByPartsOperators.xmin(cD) ≈ xmin
+          @test SummationByPartsOperators.xmax(cD) ≈ xmax
         end
         for (cDp,cDm) in ((cDp_continuous,cDm_continuous), (cDp_central,cDm_central), (cDp_plus,cDm_minus))
           cDp_dense = Matrix(cDp)
@@ -325,6 +335,8 @@ end
           @test integrate(u->u^2, u, cD) ≈ sum(u' * mass_matrix(cD) * u)
           @test cD * u ≈ Matrix(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
           @test cD * u ≈ sparse(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
+          @test SummationByPartsOperators.xmin(cD) ≈ xmin
+          @test SummationByPartsOperators.xmax(cD) ≈ xmax
         end
         for (cDp,cDm) in ((cDp_continuous,cDm_continuous), (cDp_central,cDm_central), (cDp_plus,cDm_minus))
           cDp_dense = Matrix(cDp)
@@ -358,6 +370,8 @@ end
     D2op2 = couple_continuously(derivative_operator(MattssonNordström2004(), 2, 2, xmin, xmax, 5),
                                UniformMesh1D(xmin, xmax, 2))
     @test Matrix(D2op1) ≈ Matrix(D2op2) ≈ BandedMatrix(D2op1) ≈ BandedMatrix(D2op2)
+    @test SummationByPartsOperators.xmin(D2op2) ≈ xmin
+    @test SummationByPartsOperators.xmax(D2op2) ≈ xmax
   end
 end
 
@@ -371,5 +385,7 @@ end
     @test Matrix(D2op1) ≈ Matrix(D2op2)
 
     D2op2 = couple_continuously(D2op1, UniformPeriodicMesh1D(xmin, xmax, 1))
+    @test SummationByPartsOperators.xmin(D2op2) ≈ xmin
+    @test SummationByPartsOperators.xmax(D2op2) ≈ xmax
   end
 end

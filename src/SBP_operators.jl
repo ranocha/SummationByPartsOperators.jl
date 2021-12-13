@@ -653,7 +653,7 @@ function derivative_operator(source_of_coefficients;
     if parallel !== nothing
         # TODO: deprecated in v0.5
         Base.depwarn("Providing the keyword argument `parallel` is deprecated." *
-                     "Use `mode` instead.", :dissipation_operator)
+                     "Use `mode` instead.", :derivative_operator)
         mode = _parallel_to_mode(parallel)
     end
     derivative_operator(source_of_coefficients, derivative_order, accuracy_order,

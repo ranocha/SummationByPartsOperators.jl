@@ -269,6 +269,9 @@ end
 
 grid(cD::UniformCoupledOperator) = cD.meshgrid
 
+xmin(cD::UniformCoupledOperator) = first(bounds(grid(cD)))
+xmax(cD::UniformCoupledOperator) = last(bounds(grid(cD)))
+
 
 function mass_matrix(cD::UniformCoupledOperator)
   m = ones(eltype(cD), size(cD, 1))
