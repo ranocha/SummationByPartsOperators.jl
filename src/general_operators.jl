@@ -8,6 +8,26 @@ Return the grid associated to a derivative operator `D`.
 function grid end
 
 """
+    xmin(D)
+
+Return the left boundary `xmin` of the domain specified when constructing the
+derivative operator `D`. Note that this might be different from the leftmost
+node of the [`grid`](@ref) of `D` when not all boundary nodes are included,
+e.g., for periodic derivative operators.
+"""
+function xmin end
+
+"""
+    xmax(D)
+
+Return the right boundary `xmax` of the domain specified when constructing the
+derivative operator `D`. Note that this might be different from the rightmost
+node of the [`grid`](@ref) of `D` when not all boundary nodes are included,
+e.g., for periodic derivative operators.
+"""
+function xmax end
+
+"""
     accuracy_order(D)
 
 Return the order of accuracy of a derivative operator `D`. For SBP finite difference
@@ -109,6 +129,9 @@ end
 
 @inline grid(D::AbstractDerivativeOperator) = D.grid
 @inline grid(D::AbstractPeriodicDerivativeOperator) = D.grid_compute
+
+xmin(D::AbstractDerivativeOperator) = first(grid(D))
+xmax(D::AbstractDerivativeOperator) = last(grid(D))
 
 
 Base.@propagate_inbounds function mul!(dest, D::AbstractDerivativeOperator, u)

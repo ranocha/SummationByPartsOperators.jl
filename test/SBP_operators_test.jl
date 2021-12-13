@@ -36,6 +36,8 @@ for source in D_test_list, T in (Float32,Float64)
         @test derivative_order(D) == der_order
         @test accuracy_order(D)   == acc_order
         @test issymmetric(D) == false
+        @test SummationByPartsOperators.xmin(D) ≈ xmin
+        @test SummationByPartsOperators.xmax(D) ≈ xmax
         # interior and boundary
         mul!(res, D, x0)
         @test all(i->abs(res[i]) < 1000*eps(T), eachindex(res))
@@ -76,6 +78,8 @@ for source in D_test_list, T in (Float32,Float64)
         @test derivative_order(D) == der_order
         @test accuracy_order(D)   == acc_order
         @test issymmetric(D) == false
+        @test SummationByPartsOperators.xmin(D) ≈ xmin
+        @test SummationByPartsOperators.xmax(D) ≈ xmax
         # interior and boundary
         mul!(res, D, x0)
         @test all(i->abs(res[i]) < 1000*eps(T), eachindex(res))
@@ -124,6 +128,8 @@ for source in D_test_list, T in (Float32,Float64)
         @test derivative_order(D) == der_order
         @test accuracy_order(D)   == acc_order
         @test issymmetric(D) == false
+        @test SummationByPartsOperators.xmin(D) ≈ xmin
+        @test SummationByPartsOperators.xmax(D) ≈ xmax
         # interior and boundary
         mul!(res, D, x0)
         @test all(i->abs(res[i]) < 1000*eps(T), eachindex(res))
@@ -178,6 +184,8 @@ for source in D_test_list, T in (Float32,Float64)
         @test derivative_order(D) == der_order
         @test accuracy_order(D)   == acc_order
         @test issymmetric(D) == false
+        @test SummationByPartsOperators.xmin(D) ≈ xmin
+        @test SummationByPartsOperators.xmax(D) ≈ xmax
         # interior and boundary
         mul!(res, D, x0)
         @test all(i->abs(res[i]) < 16000*eps(T), eachindex(res))
@@ -237,6 +245,8 @@ for source in D_test_list, T in (Float32,Float64)
         @test derivative_order(D) == der_order
         @test accuracy_order(D)   == acc_order
         @test issymmetric(D) == false
+        @test SummationByPartsOperators.xmin(D) ≈ xmin
+        @test SummationByPartsOperators.xmax(D) ≈ xmax
         # interior and boundary
         mul!(res, D, x0)
         @test all(i->abs(res[i]) < eps(T), eachindex(res))
@@ -283,6 +293,8 @@ for source in D_test_list, T in (Float32,Float64)
         @test derivative_order(D) == der_order
         @test accuracy_order(D)   == acc_order
         @test issymmetric(D) == false
+        @test SummationByPartsOperators.xmin(D) ≈ xmin
+        @test SummationByPartsOperators.xmax(D) ≈ xmax
         # interior and boundary
         mul!(res, D, x0)
         @test all(i->abs(res[i]) < 2000*eps(T), eachindex(res))
@@ -335,6 +347,8 @@ for source in D_test_list, T in (Float32,Float64)
         @test derivative_order(D) == der_order
         @test accuracy_order(D)   == acc_order
         @test issymmetric(D) == false
+        @test SummationByPartsOperators.xmin(D) ≈ xmin
+        @test SummationByPartsOperators.xmax(D) ≈ xmax
         # interior and boundary
         mul!(res, D, x0)
         @test all(i->abs(res[i]) < 10000*eps(T), eachindex(res))
@@ -392,6 +406,8 @@ for source in D_test_list, T in (Float32,Float64)
         @test derivative_order(D) == der_order
         @test accuracy_order(D)   == acc_order
         @test issymmetric(D) == false
+        @test SummationByPartsOperators.xmin(D) ≈ xmin
+        @test SummationByPartsOperators.xmax(D) ≈ xmax
         # interior and boundary
         mul!(res, D, x0)
         @test all(i->abs(res[i]) < 10000*eps(T), eachindex(res))
