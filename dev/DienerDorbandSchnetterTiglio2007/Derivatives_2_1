@@ -1,0 +1,12 @@
+  a(1) = 1.0/2.0
+
+  q(1,1) = -1.0
+  q(2,1) = 1.0
+  q(3,1) = 0
+
+  q(1,2) = -1.0/2.0
+  q(2,2) = 0
+  q(3,2) = 1.0/2.0
+
+# from https://bitbucket.org/cactuscode/cactusnumerical/src/master/SummationByParts/src/GetScalProdDiag.F90
+  CCTK_REAL, dimension(2), parameter :: bmask_2 = (/ 0.5_wp, 1.0_wp /)
