@@ -107,3 +107,12 @@
   q(11,8) = 0.03774295064549892262457196046834677037969
   q(12,8) = -0.003538401623015523996053621293907509723096
 
+  # from https://bitbucket.org/cactuscode/cactusnumerical/src/master/SummationByParts/src/GetScalProdDiag.F90
+  CCTK_REAL, dimension(8), parameter :: bmask_8 = (/ 1498139.0_wp/5080320.0_wp,&
+                                                     1107307.0_wp/725760.0_wp, &
+                                                     20761.0_wp/80640.0_wp, &
+                                                     1304999.0_wp/725760.0_wp, &
+                                                     299527.0_wp/725760.0_wp, &
+                                                     103097.0_wp/80640.0_wp, &
+                                                     670091.0_wp/725760.0_wp, &
+                                                     5127739.0_wp/5080320.0_wp/)
