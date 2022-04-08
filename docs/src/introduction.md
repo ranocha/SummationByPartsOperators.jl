@@ -102,45 +102,18 @@ The boundary operators are represented matrix-free via
 [`derivative_left`](@ref) and [`derivative_right`](@ref) for zeroth-order
 derivatives.
 
-```jldoctest
-julia> using SummationByPartsOperators, LinearAlgebra
+```@repl
+using SummationByPartsOperators, LinearAlgebra
 
-julia> D = derivative_operator(MattssonNordström2004(), derivative_order=1, accuracy_order=2,
-                               xmin=0//1, xmax=1//1, N=9)
-SBP first-derivative operator of order 2 on a grid in [0//1, 1//1] using 9 nodes
-and coefficients of Mattsson, Nordström (2004)
-  Summation by parts operators for finite difference approximations of second
-    derivatives.
-  Journal of Computational Physics 199, pp. 503-540.
+D = derivative_operator(MattssonNordström2004(), derivative_order=1, accuracy_order=2,
+                        xmin=0//1, xmax=1//1, N=9)
+tL = zeros(eltype(D), size(D, 1)); tL[1] = 1; tL'
+tR = zeros(eltype(D), size(D, 1)); tR[end] = 1; tR'
+M = mass_matrix(D)
 
-julia> tL = zeros(eltype(D), size(D, 1)); tL[1] = 1; tL'
-1×9 adjoint(::Vector{Rational{Int64}}) with eltype Rational{Int64}:
- 1//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1
-
-julia> tR = zeros(eltype(D), size(D, 1)); tR[end] = 1; tR'
-1×9 adjoint(::Vector{Rational{Int64}}) with eltype Rational{Int64}:
- 0//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1  1//1
-
-julia> M = mass_matrix(D)
-9×9 Diagonal{Rational{Int64}, Vector{Rational{Int64}}}:
- 1//16   ⋅     ⋅     ⋅     ⋅     ⋅     ⋅     ⋅     ⋅
-  ⋅     1//8   ⋅     ⋅     ⋅     ⋅     ⋅     ⋅     ⋅
-  ⋅      ⋅    1//8   ⋅     ⋅     ⋅     ⋅     ⋅     ⋅
-  ⋅      ⋅     ⋅    1//8   ⋅     ⋅     ⋅     ⋅     ⋅
-  ⋅      ⋅     ⋅     ⋅    1//8   ⋅     ⋅     ⋅     ⋅
-  ⋅      ⋅     ⋅     ⋅     ⋅    1//8   ⋅     ⋅     ⋅
-  ⋅      ⋅     ⋅     ⋅     ⋅     ⋅    1//8   ⋅     ⋅
-  ⋅      ⋅     ⋅     ⋅     ⋅     ⋅     ⋅    1//8   ⋅
-  ⋅      ⋅     ⋅     ⋅     ⋅     ⋅     ⋅     ⋅    1//16
-
-julia> M * Matrix(D) + Matrix(D)' * M == tR * tR' - tL * tL'
-true
-
-julia> u = randn(size(grid(D))); derivative_left(D, u, Val(0)) == u[begin]
-true
-
-julia> u = randn(size(grid(D))); derivative_right(D, u, Val(0)) == u[end]
-true
+M * Matrix(D) + Matrix(D)' * M == tR * tR' - tL * tL'
+u = randn(size(grid(D))); derivative_left(D, u, Val(0)) == u[begin]
+u = randn(size(grid(D))); derivative_right(D, u, Val(0)) == u[end]
 ```
 
 Here, we have introduced some additional features. Firstly, exact rational
