@@ -147,59 +147,20 @@ linear functionals are available as [`derivative_left`](@ref) and
 `M * D == -A + tR * dR' - tL * dL'`, where `A` is symmetric and positive
 semidefinite.
 
-```jldoctest
-julia> using SummationByPartsOperators, LinearAlgebra
+```@repl
+using SummationByPartsOperators, LinearAlgebra
 
-julia> D = derivative_operator(MattssonNordström2004(), derivative_order=2, accuracy_order=2,
-                               xmin=0//1, xmax=1//1, N=9)
-SBP second-derivative operator of order 2 on a grid in [0//1, 1//1] using 9 nodes
-and coefficients of Mattsson, Nordström (2004)
-  Summation by parts operators for finite difference approximations of second
-    derivatives.
-  Journal of Computational Physics 199, pp. 503-540.
+D = derivative_operator(MattssonNordström2004(), derivative_order=2, accuracy_order=2,
+                        xmin=0//1, xmax=1//1, N=9)
 
-julia> M = mass_matrix(D)
-9×9 Diagonal{Rational{Int64}, Vector{Rational{Int64}}}:
- 1//16   ⋅     ⋅     ⋅     ⋅     ⋅     ⋅     ⋅     ⋅
-  ⋅     1//8   ⋅     ⋅     ⋅     ⋅     ⋅     ⋅     ⋅
-  ⋅      ⋅    1//8   ⋅     ⋅     ⋅     ⋅     ⋅     ⋅
-  ⋅      ⋅     ⋅    1//8   ⋅     ⋅     ⋅     ⋅     ⋅
-  ⋅      ⋅     ⋅     ⋅    1//8   ⋅     ⋅     ⋅     ⋅
-  ⋅      ⋅     ⋅     ⋅     ⋅    1//8   ⋅     ⋅     ⋅
-  ⋅      ⋅     ⋅     ⋅     ⋅     ⋅    1//8   ⋅     ⋅
-  ⋅      ⋅     ⋅     ⋅     ⋅     ⋅     ⋅    1//8   ⋅
-  ⋅      ⋅     ⋅     ⋅     ⋅     ⋅     ⋅     ⋅    1//16
+M = mass_matrix(D)
+tL = derivative_left(D, Val(0)); tL'
+tR = derivative_right(D, Val(0)); tR'
+dL = derivative_left(D, Val(1)); dL'
+dR = derivative_right(D, Val(1)); dR'
 
-julia> tL = derivative_left(D, Val(0)); tL'
-1×9 adjoint(::Vector{Bool}) with eltype Bool:
- 1  0  0  0  0  0  0  0  0
-
-julia> tR = derivative_right(D, Val(0)); tR'
-1×9 adjoint(::Vector{Bool}) with eltype Bool:
- 0  0  0  0  0  0  0  0  1
-
-julia> dL = derivative_left(D, Val(1)); dL'
-1×9 adjoint(::Vector{Rational{Int64}}) with eltype Rational{Int64}:
- -12//1  16//1  -4//1  0//1  0//1  0//1  0//1  0//1  0//1
-
-julia> dR = derivative_right(D, Val(1)); dR'
-1×9 adjoint(::Vector{Rational{Int64}}) with eltype Rational{Int64}:
- 0//1  0//1  0//1  0//1  0//1  0//1  4//1  -16//1  12//1
-
-julia> A = -M * Matrix(D) + tR * dR' - tL * dL'
-9×9 Matrix{Rational{Int64}}:
-  8//1  -8//1   0//1   0//1   0//1   0//1   0//1   0//1   0//1
- -8//1  16//1  -8//1   0//1   0//1   0//1   0//1   0//1   0//1
-  0//1  -8//1  16//1  -8//1   0//1   0//1   0//1   0//1   0//1
-  0//1   0//1  -8//1  16//1  -8//1   0//1   0//1   0//1   0//1
-  0//1   0//1   0//1  -8//1  16//1  -8//1   0//1   0//1   0//1
-  0//1   0//1   0//1   0//1  -8//1  16//1  -8//1   0//1   0//1
-  0//1   0//1   0//1   0//1   0//1  -8//1  16//1  -8//1   0//1
-  0//1   0//1   0//1   0//1   0//1   0//1  -8//1  16//1  -8//1
-  0//1   0//1   0//1   0//1   0//1   0//1   0//1  -8//1   8//1
-
-julia> isposdef(A)
-true
+A = -M * Matrix(D) + tR * dR' - tL * dL'
+isposdef(A)
 ```
 Usually, there is no need to form `dL, dR` explicitly. Instead, you can use the
 matrix-free variants [`derivative_left`](@ref) and [`derivative_right`](@ref).
@@ -220,51 +181,17 @@ two derivative operators `Dp` (`:plus`) and `Dm` (`:minus`) such that
 `M * Dp + Dm' * M == tR * tR' - tL * tL'` and `M * (Dp - Dm)` is negative
 semidefinite.
 
-```jldoctest
-julia> using SummationByPartsOperators, LinearAlgebra
+```@repl
+using SummationByPartsOperators, LinearAlgebra
 
-julia> Dp = derivative_operator(Mattsson2017(:plus), derivative_order=1, accuracy_order=2,
-                                xmin=0//1, xmax=1//1, N=9)
-SBP first-derivative operator of order 2 on a grid in [0//1, 1//1] using 9 nodes
-and coefficients of Mattsson (2017)
-  Diagonal-norm upwind SBP operators.
-  Journal of Computational Physics 335, pp. 283-310.
-  (upwind coefficients plus)
+Dp = derivative_operator(Mattsson2017(:plus), derivative_order=1, accuracy_order=2,
+                         xmin=0//1, xmax=1//1, N=9)
+Dm = derivative_operator(Mattsson2017(:minus), derivative_order=1, accuracy_order=2,
+                         xmin=0//1, xmax=1//1, N=9)
 
-julia> Dm = derivative_operator(Mattsson2017(:minus), derivative_order=1, accuracy_order=2,
-                                xmin=0//1, xmax=1//1, N=9)
-SBP first-derivative operator of order 2 on a grid in [0//1, 1//1] using 9 nodes
-and coefficients of Mattsson (2017)
-  Diagonal-norm upwind SBP operators.
-  Journal of Computational Physics 335, pp. 283-310.
-  (upwind coefficients minus)
-
-julia> M = mass_matrix(Dp)
-9×9 Diagonal{Rational{Int64}, Vector{Rational{Int64}}}:
- 1//32   ⋅      ⋅     ⋅     ⋅     ⋅     ⋅     ⋅      ⋅
-  ⋅     5//32   ⋅     ⋅     ⋅     ⋅     ⋅     ⋅      ⋅
-  ⋅      ⋅     1//8   ⋅     ⋅     ⋅     ⋅     ⋅      ⋅
-  ⋅      ⋅      ⋅    1//8   ⋅     ⋅     ⋅     ⋅      ⋅
-  ⋅      ⋅      ⋅     ⋅    1//8   ⋅     ⋅     ⋅      ⋅
-  ⋅      ⋅      ⋅     ⋅     ⋅    1//8   ⋅     ⋅      ⋅
-  ⋅      ⋅      ⋅     ⋅     ⋅     ⋅    1//8   ⋅      ⋅
-  ⋅      ⋅      ⋅     ⋅     ⋅     ⋅     ⋅    5//32   ⋅
-  ⋅      ⋅      ⋅     ⋅     ⋅     ⋅     ⋅     ⋅     1//32
-
-julia> M * Matrix(Dp) + Matrix(Dm)' * M
-9×9 Matrix{Rational{Int64}}:
- -1//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1
-  0//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1
-  0//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1
-  0//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1
-  0//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1
-  0//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1
-  0//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1
-  0//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1
-  0//1  0//1  0//1  0//1  0//1  0//1  0//1  0//1  1//1
-
-julia> minimum(eigvals(-M * (Matrix(Dp) - Matrix(Dm)))) > -100 * eps() # tolerance for zero eigenvalues
-true
+M = mass_matrix(Dp)
+M * Matrix(Dp) + Matrix(Dm)' * M
+minimum(eigvals(-M * (Matrix(Dp) - Matrix(Dm)))) # > 0 up to floating point tolerances
 ```
 
 
@@ -275,34 +202,14 @@ If the underlying SBP operators are [`LegendreDerivativeOperator`](@ref)s,
 these are CG spectral element methods (CGSEM). However, a continuous coupling
 of arbitrary SBP operators is supported.
 
-```jldoctest
-julia> using SummationByPartsOperators, LinearAlgebra
+```@repl
+using SummationByPartsOperators, LinearAlgebra
 
-julia> D = couple_continuously(
-               legendre_derivative_operator(xmin=-1.0, xmax=1.0, N=3),
-               UniformMesh1D(xmin=0.0, xmax=1.0, Nx=3))
-First derivative operator {T=Float64} on 3 Lobatto Legendre nodes in [-1.0, 1.0]
-coupled continuously on UniformMesh1D{Float64} with 3 cells in (0.0, 1.0)
-
-julia> Matrix(D)
-7×7 Matrix{Float64}:
- -9.0  12.0  -3.0   0.0   0.0    0.0   0.0
- -3.0   0.0   3.0   0.0   0.0    0.0   0.0
-  1.5  -6.0   0.0   6.0  -1.5    0.0   0.0
-  0.0   0.0  -3.0   0.0   3.0    0.0   0.0
-  0.0   0.0   1.5  -6.0   0.0    6.0  -1.5
-  0.0   0.0   0.0   0.0  -3.0    0.0   3.0
-  0.0   0.0   0.0   0.0   3.0  -12.0   9.0
-
-julia> mass_matrix(D)
-7×7 Diagonal{Float64, Vector{Float64}}:
- 0.0555556   ⋅         ⋅         ⋅         ⋅         ⋅         ⋅
-  ⋅         0.222222   ⋅         ⋅         ⋅         ⋅         ⋅
-  ⋅          ⋅        0.111111   ⋅         ⋅         ⋅         ⋅
-  ⋅          ⋅         ⋅        0.222222   ⋅         ⋅         ⋅
-  ⋅          ⋅         ⋅         ⋅        0.111111   ⋅         ⋅
-  ⋅          ⋅         ⋅         ⋅         ⋅        0.222222   ⋅
-  ⋅          ⋅         ⋅         ⋅         ⋅         ⋅        0.0555556
+D = couple_continuously(
+        legendre_derivative_operator(xmin=-1.0, xmax=1.0, N=3),
+        UniformMesh1D(xmin=0.0, xmax=1.0, Nx=3))
+Matrix(D)
+mass_matrix(D)
 ```
 
 SBP operators can also be coupled as in discontinuous Galerkin (DG) methods.
@@ -310,20 +217,16 @@ Using a central numerical flux results in central SBP operators; upwind fluxes
 yield upwind SBP operators. If [`LegendreDerivativeOperator`](@ref)s are used,
 the discontinuous coupling yields DG spectral element methods (DGSEM).
 
-```jldoctest
-julia> using SummationByPartsOperators, LinearAlgebra
+```@repl
+using SummationByPartsOperators, LinearAlgebra
 
-julia> D = couple_discontinuously(
-               legendre_derivative_operator(xmin=-1.0, xmax=1.0, N=3),
-               UniformPeriodicMesh1D(xmin=0.0, xmax=1.0, Nx=3),
-               Val(:central))
-First derivative operator {T=Float64} on 3 Lobatto Legendre nodes in [-1.0, 1.0]
-coupled discontinuously (upwind: Val{:central}()) on UniformPeriodicMesh1D{Float64} with 3 cells in (0.0, 1.0)
+D = couple_discontinuously(
+        legendre_derivative_operator(xmin=-1.0, xmax=1.0, N=3),
+        UniformPeriodicMesh1D(xmin=0.0, xmax=1.0, Nx=3),
+        Val(:central))
 
-julia> M = mass_matrix(D);
-
-julia> M * Matrix(D) + Matrix(D)' * M |> iszero
-true
+M = mass_matrix(D);
+M * Matrix(D) + Matrix(D)' * M |> iszero
 ```
 
 Right now, only uniform meshes [`UniformMesh1D`](@ref) and [`UniformPeriodicMesh1D`](@ref)
