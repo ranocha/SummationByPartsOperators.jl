@@ -186,13 +186,37 @@ using SummationByPartsOperators, LinearAlgebra
 
 Dp = derivative_operator(Mattsson2017(:plus), derivative_order=1, accuracy_order=2,
                          xmin=0//1, xmax=1//1, N=9)
+Matrix(Dp)
 Dm = derivative_operator(Mattsson2017(:minus), derivative_order=1, accuracy_order=2,
                          xmin=0//1, xmax=1//1, N=9)
+Matrix(Dm)
 
 M = mass_matrix(Dp)
 M * Matrix(Dp) + Matrix(Dm)' * M
 minimum(eigvals(-M * (Matrix(Dp) - Matrix(Dm)))) # > 0 up to floating point tolerances
 ```
+
+You can also set up fully periodic upwind operators by setting the argument
+`left_offset` of [`periodic_derivative_operator`](@ref) appropriately. For example,
+
+```@repl
+using SummationByPartsOperators, LinearAlgebra
+
+Dp = periodic_derivative_operator(derivative_order=1, accuracy_order=2, left_offset=0,
+                                  xmin=0//1, xmax=1//1, N=8)
+Matrix(Dp)
+Dm = periodic_derivative_operator(derivative_order=1, accuracy_order=2, left_offset=-2,
+                                  xmin=0//1, xmax=1//1, N=8)
+Matrix(Dm)
+
+M = mass_matrix(Dp)
+M * Matrix(Dp) + Matrix(Dm)' * M |> iszero
+minimum(eigvals(-M * (Matrix(Dp) - Matrix(Dm)))) # > 0 up to floating point tolerances
+```
+
+Note that we used `N=8` here, i.e., one node less than for the non-periodic
+example. This is necessary since the additional node at the right boundary is
+identified with the left boundary node for periodic operators.
 
 
 ## Continuous and discontinuous Galerkin methods
