@@ -57,6 +57,17 @@ DiffEqOperators.jl.
 doit(D_DEO, "D_DEO:", du, u)
 ```
 
+These results were obtained using the following versions.
+```@example first-derivative-periodic
+using InteractiveUtils
+versioninfo()
+
+using Pkg
+Pkg.status(["SummationByPartsOperators", "DiffEqOperators"],
+           mode=PKGMODE_MANIFEST)
+nothing # hide
+```
+
 
 #### Bounded domains
 
@@ -104,6 +115,17 @@ this is still much slower than the optimized implementation from
 SummationByPartsOperators.jl.
 ```@example first-derivative-bounded
 doit(D_banded, "D_banded:", du, u)
+```
+
+These results were obtained using the following versions.
+```@example first-derivative-bounded
+using InteractiveUtils
+versioninfo()
+
+using Pkg
+Pkg.status(["SummationByPartsOperators", "BandedMatrices"],
+           mode=PKGMODE_MANIFEST)
+nothing # hide
 ```
 
 
@@ -160,6 +182,17 @@ to represent the derivative operator. This is obviously a bad idea but 🤷
 doit(Di_full, "Di_full:", du, u)
 ```
 
+These results were obtained using the following versions.
+```@example dissipation
+using InteractiveUtils
+versioninfo()
+
+using Pkg
+Pkg.status(["SummationByPartsOperators", "BandedMatrices"],
+           mode=PKGMODE_MANIFEST)
+nothing # hide
+```
+
 
 ## Structure-of-Arrays (SoA) and Array-of-Structures (AoS)
 
@@ -175,7 +208,7 @@ To demonstrate this, let us set up some benchmark code.
 using BenchmarkTools
 using StaticArrays, StructArrays
 using LinearAlgebra, SparseArrays
-using SummationByPartsOperators, BandedMatrices
+using SummationByPartsOperators
 
 BLAS.set_num_threads(1) # make sure that BLAS is serial to be fair
 
@@ -284,4 +317,15 @@ println("\nD_sparse")
 show(stdout, MIME"text/plain"(), @benchmark mul!($du_soa, $D_sparse, $u_soa))
 println("\nD_full")
 show(stdout, MIME"text/plain"(), @benchmark mul!($du_soa, $D_full, $u_soa))
+```
+
+These results were obtained using the following versions.
+```@example soa-aos
+using InteractiveUtils
+versioninfo()
+
+using Pkg
+Pkg.status(["SummationByPartsOperators", "StaticArrays", "StructArrays"],
+           mode=PKGMODE_MANIFEST)
+nothing # hide
 ```
