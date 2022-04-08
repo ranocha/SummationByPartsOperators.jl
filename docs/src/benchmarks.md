@@ -320,7 +320,7 @@ show(stdout, MIME"text/plain"(), @benchmark mul!($du_soa, $D_full, $u_soa))
 ```
 
 These results were obtained using the following versions.
-```@example dissipation
+```@example soa-aos
 using InteractiveUtils
 versioninfo()
 
