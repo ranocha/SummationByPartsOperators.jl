@@ -137,7 +137,7 @@ export integrate, left_boundary_weight, right_boundary_weight,
        compute_coefficients, compute_coefficients!
 export periodic_central_derivative_operator, periodic_derivative_operator, derivative_operator,
        dissipation_operator, var_coef_derivative_operator,
-       fourier_derivative_operator, spectral_viscosity_operator, super_spectral_viscosity_operator,
+       fourier_derivative_operator,
        legendre_derivative_operator, legendre_second_derivative_operator
 export UniformMesh1D, UniformPeriodicMesh1D
 export couple_continuously, couple_discontinuously
