@@ -230,7 +230,7 @@ end
     else
         quote
             Base.@_inline_meta
-            @turbo for i in (left_boundary_width+1):(length(dest)-right_boundary_width)
+            @turbo warn_check_args=false for i in (left_boundary_width+1):(length(dest)-right_boundary_width)
                 dest[i] = β*dest[i] + α*$ex
             end
         end
@@ -268,7 +268,7 @@ end
     else
         quote
             Base.@_inline_meta
-            @turbo for i in (firstindex(dest) + $left_boundary_width):(lastindex(dest) - $right_boundary_width)
+            @turbo warn_check_args=false for i in (firstindex(dest) + $left_boundary_width):(lastindex(dest) - $right_boundary_width)
                 dest[i] = α*$ex
             end
         end
@@ -327,7 +327,7 @@ end
                 Base.@_inline_meta
                 dest = $ex_dest
                 u    = $ex_u
-                @turbo for i in (firstindex(dest, 2) + left_boundary_width):(lastindex(dest, 2) - right_boundary_width)
+                @turbo warn_check_args=false for i in (firstindex(dest, 2) + left_boundary_width):(lastindex(dest, 2) - right_boundary_width)
                     for v in LoopVectorization.indices((dest, u), (1, 1))
                         dest[v, i] = β*dest[v, i] + α*$ex
                     end
@@ -385,7 +385,7 @@ end
                 Base.@_inline_meta
                 dest = $ex_dest
                 u    = $ex_u
-                @turbo for i in (firstindex(dest, 2) + left_boundary_width):(lastindex(dest, 2) - right_boundary_width)
+                @turbo warn_check_args=false for i in (firstindex(dest, 2) + left_boundary_width):(lastindex(dest, 2) - right_boundary_width)
                     for v in LoopVectorization.indices((dest, u), (1, 1))
                         dest[v, i] = α*$ex
                     end
