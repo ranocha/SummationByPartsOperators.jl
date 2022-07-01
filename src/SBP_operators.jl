@@ -216,7 +216,7 @@ end
     if mode <: ThreadedMode
         quote
             Base.@_inline_meta
-            @tturbo for i in (left_boundary_width+1):(length(dest)-right_boundary_width)
+            @tturbo warn_check_args=false for i in (left_boundary_width+1):(length(dest)-right_boundary_width)
                 dest[i] = β*dest[i] + α*$ex
             end
         end
@@ -230,7 +230,7 @@ end
     else
         quote
             Base.@_inline_meta
-            @turbo for i in (left_boundary_width+1):(length(dest)-right_boundary_width)
+            @turbo warn_check_args=false for i in (left_boundary_width+1):(length(dest)-right_boundary_width)
                 dest[i] = β*dest[i] + α*$ex
             end
         end
@@ -254,7 +254,7 @@ end
     if mode <: ThreadedMode
         quote
             Base.@_inline_meta
-            @tturbo for i in (firstindex(dest) + $left_boundary_width):(lastindex(dest) - $right_boundary_width)
+            @tturbo warn_check_args=false for i in (firstindex(dest) + $left_boundary_width):(lastindex(dest) - $right_boundary_width)
                 dest[i] = α*$ex
             end
         end
@@ -268,7 +268,7 @@ end
     else
         quote
             Base.@_inline_meta
-            @turbo for i in (firstindex(dest) + $left_boundary_width):(lastindex(dest) - $right_boundary_width)
+            @turbo warn_check_args=false for i in (firstindex(dest) + $left_boundary_width):(lastindex(dest) - $right_boundary_width)
                 dest[i] = α*$ex
             end
         end
@@ -307,7 +307,7 @@ end
                 u    = $ex_u
                 fi = firstindex(dest, 2) + left_boundary_width
                 la = lastindex(dest, 2) - right_boundary_width
-                @tturbo for i in fi:la
+                @tturbo warn_check_args=false for i in fi:la
                     for v in LoopVectorization.indices((dest, u), (1, 1))
                         dest[v, i] = β*dest[v, i] + α*$ex
                     end
@@ -333,7 +333,7 @@ end
                 u    = $ex_u
                 fi = firstindex(dest, 2) + left_boundary_width
                 la = lastindex(dest, 2) - right_boundary_width
-                @turbo for i in fi:la
+                @turbo warn_check_args=false for i in fi:la
                     for v in LoopVectorization.indices((dest, u), (1, 1))
                         dest[v, i] = β*dest[v, i] + α*$ex
                     end
@@ -371,7 +371,7 @@ end
                 u    = $ex_u
                 fi = firstindex(dest, 2) + left_boundary_width
                 la = lastindex(dest, 2) - right_boundary_width
-                @tturbo for i in fi:la
+                @tturbo warn_check_args=false for i in fi:la
                     for v in LoopVectorization.indices((dest, u), (1, 1))
                         dest[v, i] = α*$ex
                     end
@@ -397,7 +397,7 @@ end
                 u    = $ex_u
                 fi = firstindex(dest, 2) + left_boundary_width
                 la = lastindex(dest, 2) - right_boundary_width
-                @turbo for i in fi:la
+                @turbo warn_check_args=false for i in fi:la
                     for v in LoopVectorization.indices((dest, u), (1, 1))
                         dest[v, i] = α*$ex
                     end

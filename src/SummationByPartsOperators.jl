@@ -53,7 +53,7 @@ using Reexport: @reexport
 using Requires: @require
 using StaticArrays
 using UnPack: @unpack
-using Unrolled
+using Unrolled: @unroll
 
 @reexport using SciMLBase: DiscreteCallback, ODEProblem, SecondOrderODEProblem
 
