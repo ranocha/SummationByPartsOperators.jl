@@ -1,5 +1,7 @@
 
 """
+    SummationByPartsOperators
+
 [SummationByPartsOperators.jl](https://github.com/ranocha/SummationByPartsOperators.jl)
 is a Julia library of summation-by-parts (SBP) operators, which are discrete
 derivative operators developed to get provably stable semidiscretizations,
@@ -46,12 +48,12 @@ using SparseArrays
 
 using ArgCheck: @argcheck
 using ArrayInterface: StaticInt, static_length
-using FFTW
+using FFTW: FFTW, plan_rfft, plan_brfft, plan_irfft
 using LoopVectorization: LoopVectorization, @turbo, @tturbo
 using RecursiveArrayTools: recursive_bottom_eltype
 using Reexport: @reexport
 using Requires: @require
-using StaticArrays
+using StaticArrays: SVector, StaticVector, FieldVector
 using UnPack: @unpack
 using Unrolled: @unroll
 
