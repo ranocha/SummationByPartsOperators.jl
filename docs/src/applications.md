@@ -3,10 +3,20 @@
 Here is a (non-exhaustive) list of research using
 [SummationByPartsOperators.jl](https://github.com/ranocha/SummationByPartsOperators.jl).
 
+- Jesse Chan, Hendrik Ranocha, Andrés M. Rueda-Ramírez, Gregor Gassner,
+  Tim Warburton (2022).
+  On the Entropy Projection and the Robustness of High Order Entropy Stable 
+  Discontinuous Galerkin Schemes for Under-Resolved Flows.
+  [arXiv: 2203.10238 [math.NA]](http://arxiv.org/abs/2203.10238)
+  [DOI: 10.3389/fphy.2022.898028](https://doi.org/10.3389/fphy.2022.898028)
+  A reproducibility repository containing source code for all numerical
+  experiments is available at
+  [DOI: 10.5281/zenodo.6364108](https://doi.org/10.5281/zenodo.6364108)
 - Hendrik Ranocha, Manuel Quezada de Luna, and David I Ketcheson (2021).
   On the Rate of Error Growth in Time for Numerical Solutions of
   Nonlinear Dispersive Wave Equations.
   [arXiv: 2102.07376 [math.NA]](https://arxiv.org/abs/2102.07376)
+  [DOI: 10.1007/s42985-021-00126-3](https://doi.org/10.1007/s42985-021-00126-3)
   A reproducibility repository containing source code for all numerical
   experiments is available at
   [DOI: 10.5281/zenodo.4540467](https://doi.org/10.5281/zenodo.4540467)
