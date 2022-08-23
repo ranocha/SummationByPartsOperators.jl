@@ -81,7 +81,8 @@ in implicit time integration methods.
 
 ```@example kdv
 function kdv(u, parameters, t)
-    (; D1, D3) = parameters
+    D1 = parameters.D1
+    D3 = parameters.D3
 
     # conservative semidiscretization using a split form
     return (-1 / 3) * (u .* (D1 * u) + D1 * (u.^2)) - D3 * u
