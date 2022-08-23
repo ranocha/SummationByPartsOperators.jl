@@ -140,7 +140,7 @@ let anim = Animation()
 end
 ```
 
-![example_kdv_animation]()
+![example_kdv_animation](https://user-images.githubusercontent.com/12693098/186075685-a4f12cf0-df6d-486a-ba5c-04d7a7466743.gif)
 
 
 ## Package versions
