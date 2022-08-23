@@ -146,3 +146,17 @@ savefig("example_linear_advection_Galerkin.png");
 ```
 
 ![](example_linear_advection_Galerkin.png)
+
+
+## Package versions
+
+These results were obtained using the following versions.
+
+```@example linear_advection
+using InteractiveUtils
+versioninfo()
+
+using Pkg
+Pkg.status(["SummationByPartsOperators", "OrdinaryDiffEq"],
+           mode=PKGMODE_MANIFEST)
+```

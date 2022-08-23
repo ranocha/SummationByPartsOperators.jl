@@ -61,3 +61,17 @@ savefig("example_linear_advection.png");
 ```
 
 ![](example_linear_advection.png)
+
+
+## Package versions
+
+These results were obtained using the following versions.
+
+```@example variable_linear_advection
+using InteractiveUtils
+versioninfo()
+
+using Pkg
+Pkg.status(["SummationByPartsOperators", "OrdinaryDiffEq"],
+           mode=PKGMODE_MANIFEST)
+```
