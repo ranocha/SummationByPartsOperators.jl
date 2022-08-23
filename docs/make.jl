@@ -57,6 +57,7 @@ makedocs(
       "tutorials/advection_diffusion.md",
       "tutorials/variable_linear_advection.md",
       "tutorials/wave_equation.md",
+      "tutorials/kdv.md",
     ],
     "Applications & references" => "applications.md",
     "Benchmarks" => "benchmarks.md",

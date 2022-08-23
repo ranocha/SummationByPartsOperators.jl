@@ -96,3 +96,16 @@ end
 
 ![example_advection_diffusion_animation](https://user-images.githubusercontent.com/12693098/119226459-7b242c00-bb09-11eb-848b-d09590aa1c31.gif)
 
+
+## Package versions
+
+These results were obtained using the following versions.
+
+```@example advection_diffusion
+using InteractiveUtils
+versioninfo()
+
+using Pkg
+Pkg.status(["SummationByPartsOperators", "OrdinaryDiffEq"],
+           mode=PKGMODE_MANIFEST)
+```

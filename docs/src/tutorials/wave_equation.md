@@ -105,3 +105,17 @@ create_gif(Val(:HomogeneousNeumann), Val(:NonReflecting))
 ```
 
 ![wave_equation_HomogeneousNeumann_NonReflecting](https://user-images.githubusercontent.com/12693098/119228041-5633b700-bb11-11eb-9c17-bc56c906dae3.gif)
+
+
+## Package versions
+
+These results were obtained using the following versions.
+
+```@example wave_equation
+using InteractiveUtils
+versioninfo()
+
+using Pkg
+Pkg.status(["SummationByPartsOperators", "OrdinaryDiffEq"],
+           mode=PKGMODE_MANIFEST)
+```
