@@ -1,4 +1,4 @@
-# Linear advection diffusion equation with periodic boundary conditions
+# Kortewev-de Vries equation
 
 Let's consider the Korteweg-de Vries (KdV) equation
 
