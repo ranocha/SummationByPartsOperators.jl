@@ -16,7 +16,7 @@ for T in (Float32, Float64), split_form in (Val{true}(), Val{false}())
             du = similar(ode.u0)
             semi(du, ode.u0, nothing, first(tspan))
         end
-       end
+    end
 
     @testset "Periodic FD" begin
         for acc_order in 2:2:8
@@ -41,7 +41,7 @@ for T in (Float32, Float64), split_form in (Val{true}(), Val{false}())
         end
     end
 
-    @testset "SBP FD"
+    @testset "SBP FD" begin
         for acc_order in 2:2:8
             D = derivative_operator(MattssonSvärdNordström2004(), 1, acc_order, xmin, xmax, N)
             Di = dissipation_operator(D)
