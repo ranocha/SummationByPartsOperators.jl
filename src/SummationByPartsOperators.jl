@@ -57,7 +57,8 @@ using StaticArrays: SVector, StaticVector, FieldVector
 using UnPack: @unpack
 using Unrolled: @unroll
 
-@reexport using SciMLBase: DiscreteCallback, ODEProblem, SecondOrderODEProblem
+@reexport using SciMLBase: SciMLBase, DiscreteCallback, ODEProblem,
+                           SecondOrderODEProblem
 
 import LinearAlgebra: mul!
 @reexport using PolynomialBases
