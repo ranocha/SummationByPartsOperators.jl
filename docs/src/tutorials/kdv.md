@@ -1,4 +1,4 @@
-# Kortewev-de Vries equation
+# Korteweg-de Vries equation
 
 Let's consider the Korteweg-de Vries (KdV) equation
 
