@@ -138,6 +138,7 @@ jobs:
           for cov in coverage
             cov.filename = replace(cov.filename, "\\" => "/")
           end
+          filter!(c -> basename(c.filename) != "precompile.jl", coverage)
           coverage = merge_coverage_counts(coverage)
           @show covered_lines, total_lines = get_summary(coverage)
           LCOV.writefile("./lcov.info", coverage)
