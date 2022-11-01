@@ -55,6 +55,20 @@ function construct_grid(::MattssonAlmquistVanDerWeide2018Accurate, accuracy_orde
       T(6.3192851303204e+00),
       T(7.3192851303204e+00),
     )
+  elseif accuracy_order == 10
+    xstart = SVector(
+      T(0.0000000000000e+00),
+      T(3.5902433622052e-01),
+      T(1.1436659188355e+00),
+      T(2.2144895894456e+00),
+      T(3.3682742337736e+00),
+      T(4.4309689056870e+00),
+      T(5.4309689056870e+00),
+      T(6.4309689056870e+00),
+      T(7.4309689056870e+00),
+      T(8.4309689056870e+00),
+      T(9.4309689056870e+00),
+    )
   else
     throw(ArgumentError("Accuracy order $accuracy_order not implemented/derived."))
   end
@@ -354,6 +368,10 @@ function first_derivative_coefficients(source::MattssonAlmquistVanDerWeide2018Ac
   #                           left_boundary_derivatives, right_boundary_derivatives,
   #                           lower_coef, central_coef, upper_coef,
   #                           left_weights, right_weights, mode, 1, order, source)
+  elseif order == 10
+    upper_coef = SVector(T(5//6), T(-5//21), T(5//84), T(-5//504), T(1//1260))
+    central_coef = zero(T)
+    lower_coef = -upper_coef
   else
     throw(ArgumentError("Order $order not implemented/derived."))
   end
