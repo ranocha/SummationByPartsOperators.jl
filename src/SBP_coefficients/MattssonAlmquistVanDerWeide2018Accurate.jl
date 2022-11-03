@@ -524,7 +524,7 @@ function first_derivative_coefficients(source::MattssonAlmquistVanDerWeide2018Ac
                                                 T(-0.00697800416318577),
                                                 T(0.000710837895660168) )),
         # d7
-        DerivativeCoefficientRow{T,1,12}(SVector(T(0.002170341739577727),
+        DerivativeCoefficientRow{T,1,13}(SVector(T(0.002170341739577727),
                                                 T(-0.00839572473429305),
                                                 T(0.023843018046744612),
                                                 T(-0.06813788549696756),
@@ -538,7 +538,7 @@ function first_derivative_coefficients(source::MattssonAlmquistVanDerWeide2018Ac
                                                 T(0.001083633560299047),
                                                 T(-0.00017620800905157678) )),
         # d8
-        DerivativeCoefficientRow{T,1,12}(SVector(T(0.015960267582207317),
+        DerivativeCoefficientRow{T,1,14}(SVector(T(0.015960267582207317),
                                                 T(-0.04041763512118102),
                                                 T(0.05591326108740171),
                                                 T(-0.0653671036511215),
@@ -553,7 +553,7 @@ function first_derivative_coefficients(source::MattssonAlmquistVanDerWeide2018Ac
                                                 T(0.002605603502272154),
                                                 T(-0.00018094468765779322) )),
         # d9
-        DerivativeCoefficientRow{T,1,12}(SVector(T(-0.011291324294686406),
+        DerivativeCoefficientRow{T,1,15}(SVector(T(-0.011291324294686406),
                                                 T(0.02938237841605001),
                                                 T(-0.043751484213130194),
                                                 T(0.060296961351895356),
@@ -569,7 +569,7 @@ function first_derivative_coefficients(source::MattssonAlmquistVanDerWeide2018Ac
                                                 T(0.0025961651187038034),
                                                 T(-0.00018028924435443554) )),
         # d10
-        DerivativeCoefficientRow{T,1,12}(SVector(T(0.003182570944036913),
+        DerivativeCoefficientRow{T,1,16}(SVector(T(0.003182570944036913),
                                                 T(-0.008560729139505266),
                                                 T(0.013728531302185184),
                                                 T(-0.021190266010048045),
@@ -586,7 +586,7 @@ function first_derivative_coefficients(source::MattssonAlmquistVanDerWeide2018Ac
                                                 T(0.002597568377356208),
                                                 T(-0.00018038669287196362) )),
         # d11
-        DerivativeCoefficientRow{T,1,12}(SVector(T(-0.00024843437244633735),
+        DerivativeCoefficientRow{T,1,13}(SVector(T(-0.00024843437244633735),
                                                 T(0.0007812759969814333),
                                                 T(0.004317509501591903),
                                                 T(-0.06937270590083615),
@@ -600,7 +600,7 @@ function first_derivative_coefficients(source::MattssonAlmquistVanDerWeide2018Ac
                                                 T(0.002597386201944515),
                                                 T(-0.00018037404180170716) )),
         # d12
-        DerivativeCoefficientRow{T,1,12}(SVector(T(-3.150111604262639e-5),
+        DerivativeCoefficientRow{T,1,18}(SVector(T(-3.150111604262639e-5),
                                                 T(6.0444201580289515e-5),
                                                 T(-1.7066990112005393e-5),
                                                 T(-0.00013097942213909975),
