@@ -443,6 +443,24 @@ function first_derivative_coefficients(source::MattssonAlmquistVanDerWeide2018Ac
     upper_coef = SVector(T(5//6), T(-5//21), T(5//84), T(-5//504), T(1//1260))
     central_coef = zero(T)
     lower_coef = -upper_coef
+    left_weights = SVector( T(0.1),
+                            T(0.58980851260667),
+                            T(0.95666820955973),
+                            T(1.1500297411596),
+                            T(1.1232986993248),
+                            T(1.0123020150951),
+                            T(0.99877122702527),
+                            T(1.0000873322761),
+                            T(1.0000045540888),
+                            T(0.99999861455083) )
+    right_weights = left_weights
+    left_boundary_derivatives = Tuple{}()
+    right_boundary_derivatives = left_boundary_derivatives
+
+    DerivativeCoefficients(left_boundary, right_boundary,
+                            left_boundary_derivatives, right_boundary_derivatives,
+                            lower_coef, central_coef, upper_coef,
+                            left_weights, right_weights, mode, 1, order, source)
   elseif order == 12
     left_boundary = (
         # d1
@@ -623,6 +641,26 @@ function first_derivative_coefficients(source::MattssonAlmquistVanDerWeide2018Ac
     upper_coef = SVector(T(6//7), T(-15//56), T(5//63), T(-1//56), T(1//385), T(-1//5544))
     central_coef = zero(T)
     lower_coef = -upper_coef
+    left_weights = SVector( T(0.10000000000011),
+                            T(0.59616216757547),
+                            T(0.99065699844442),
+                            T(1.2512548713913),
+                            T(1.3316678989403),
+                            T(1.2093375037721),
+                            T(1.0236491595704),
+                            T(0.99685258909811),
+                            T(1.0004766563923),
+                            T(0.99993617879146),
+                            T(1.0000063122914),
+                            T(0.9999996637326) )
+    right_weights = left_weights
+    left_boundary_derivatives = Tuple{}()
+    right_boundary_derivatives = left_boundary_derivatives
+
+    DerivativeCoefficients(left_boundary, right_boundary,
+                            left_boundary_derivatives, right_boundary_derivatives,
+                            lower_coef, central_coef, upper_coef,
+                            left_weights, right_weights, mode, 1, order, source)
   else
     throw(ArgumentError("Order $order not implemented/derived."))
   end
