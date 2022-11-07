@@ -389,6 +389,22 @@ function first_derivative_coefficients(source::MattssonAlmquistVanDerWeide2018Mi
     upper_coef = SVector(T(5//6), T(-5//21), T(5//84), T(-5//504), T(1//1260))
     central_coef = zero(T)
     lower_coef = -upper_coef
+    left_weights = SVector( T(0.16717213975289),
+                            T(0.93675739171278),
+                            T(1.3035532379753),
+                            T(1.1188461804303),
+                            T(0.9666434592266),
+                            T(1.0083235564392),
+                            T(0.99858767377362),
+                            T(1.0001163606893) )
+    right_weights = left_weights
+    left_boundary_derivatives = Tuple{}()
+    right_boundary_derivatives = left_boundary_derivatives
+
+    DerivativeCoefficients(left_boundary, right_boundary,
+                            left_boundary_derivatives, right_boundary_derivatives,
+                            lower_coef, central_coef, upper_coef,
+                            left_weights, right_weights, mode, 1, order, source)
   elseif order == 12
     left_boundary = (
         # d1
@@ -527,6 +543,24 @@ function first_derivative_coefficients(source::MattssonAlmquistVanDerWeide2018Mi
     upper_coef = SVector(T(6//7), T(-15//56), T(5//63), T(-1//56), T(1//385), T(-1//5544))
     central_coef = zero(T)
     lower_coef = -upper_coef
+    left_weights = SVector( T(0.1301359711175),
+                            T(0.7614604507902),
+                            T(1.1984222247012),
+                            T(1.3340123109301),
+                            T(1.0951811473364),
+                            T(0.9756909637713),
+                            T(1.0061945410831),
+                            T(0.99874339446564),
+                            T(1.0001702615573),
+                            T(0.99998873424721) )
+    right_weights = left_weights
+    left_boundary_derivatives = Tuple{}()
+    right_boundary_derivatives = left_boundary_derivatives
+
+    DerivativeCoefficients(left_boundary, right_boundary,
+                            left_boundary_derivatives, right_boundary_derivatives,
+                            lower_coef, central_coef, upper_coef,
+                            left_weights, right_weights, mode, 1, order, source)
   else
     throw(ArgumentError("Order $order not implemented/derived."))
   end
