@@ -1,6 +1,6 @@
 using Test, SummationByPartsOperators
 
-for T in (Float32, Float64), split_form in (Val{true}(), Val{false}())
+@testset "Burgers" for T in (Float32, Float64), split_form in (Val{true}(), Val{false}())
     xmin = T(-1)
     xmax = T(1)
     N = 2^6
