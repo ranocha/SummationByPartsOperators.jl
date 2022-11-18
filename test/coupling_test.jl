@@ -46,8 +46,9 @@ using SummationByPartsOperators
           if cD == cD_continuous
             @test_throws ArgumentError mul!(du, cD, u, 2.0, 3.0)
           else
+            du .= u
             mul!(du, cD, u, 2.0, 3.0)
-            @test du ≈ 2 * cD * u + 3 * u
+            @test du ≈ 2 * (cD * u) + 3 * u
           end
         end
         M = mass_matrix(cD_central)
@@ -179,8 +180,9 @@ end
             if cD == cD_continuous
               @test_throws ArgumentError mul!(du, cD, u, 2.0, 3.0)
             else
+              du .= u
               mul!(du, cD, u, 2.0, 3.0)
-              @test du ≈ 2 * cD * u + 3 * u
+              @test du ≈ 2 * (cD * u) + 3 * u
             end
           end
           M = mass_matrix(cD_central)
