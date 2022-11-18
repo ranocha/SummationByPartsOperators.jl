@@ -41,6 +41,15 @@ using SummationByPartsOperators
           @test cD * u ≈ sparse(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
           @test SummationByPartsOperators.xmin(cD) ≈ xmin
           @test SummationByPartsOperators.xmax(cD) ≈ xmax
+
+          du = copy(u)
+          if cD == cD_continuous
+            @test_throws ArgumentError mul!(du, cD, u, 2.0, 3.0)
+          else
+            du .= u
+            mul!(du, cD, u, 2.0, 3.0)
+            @test du ≈ 2 * (cD * u) + 3 * u
+          end
         end
         M = mass_matrix(cD_central)
         @test M ≈ mass_matrix(cD_plus)
@@ -166,6 +175,15 @@ end
             @test cD * u ≈ sparse(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
             @test SummationByPartsOperators.xmin(cD) ≈ xmin
             @test SummationByPartsOperators.xmax(cD) ≈ xmax
+
+            du = copy(u)
+            if cD == cD_continuous
+              @test_throws ArgumentError mul!(du, cD, u, 2.0, 3.0)
+            else
+              du .= u
+              mul!(du, cD, u, 2.0, 3.0)
+              @test du ≈ 2 * (cD * u) + 3 * u
+            end
           end
           M = mass_matrix(cD_central)
           @test M ≈ mass_matrix(cD_plus)

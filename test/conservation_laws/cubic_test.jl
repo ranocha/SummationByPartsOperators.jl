@@ -1,7 +1,7 @@
 using Test, SummationByPartsOperators
 using OrdinaryDiffEq, DiffEqCallbacks
 
-for T in (Float32, Float64), split_form in (Val{true}(), Val{false}())
+@testset "Cubic" for T in (Float32, Float64), split_form in (Val{true}(), Val{false}())
     xmin = T(-1)
     xmax = T(1)
     N = 2^6
@@ -18,7 +18,7 @@ for T in (Float32, Float64), split_form in (Val{true}(), Val{false}())
         semi(du, ode.u0, nothing, first(tspan))
 
         saving = SavingCallback(semi, saveat=range(tspan..., length=10))
-        sol = solve(ode, SSPRK104(), dt=1/5N, save_everystep=false, callback=saving)
+        sol = solve(ode, SSPRK104(), dt=T(1/5N), save_everystep=false, callback=saving)
     end
 
     # Periodic FD
@@ -32,7 +32,7 @@ for T in (Float32, Float64), split_form in (Val{true}(), Val{false}())
         semi(du, ode.u0, nothing, first(tspan))
 
         saving = SavingCallback(semi, saveat=range(tspan..., length=10))
-        sol = solve(ode, SSPRK104(), dt=1/5N, save_everystep=false, callback=saving)
+        sol = solve(ode, SSPRK104(), dt=T(1/5N), save_everystep=false, callback=saving)
     end
 
     # Legendre
@@ -45,7 +45,7 @@ for T in (Float32, Float64), split_form in (Val{true}(), Val{false}())
         semi(du, ode.u0, nothing, first(tspan))
 
         saving = SavingCallback(semi, saveat=range(tspan..., length=10))
-        sol = solve(ode, SSPRK104(), dt=1/(1+N^20), save_everystep=false, callback=saving)
+        sol = solve(ode, SSPRK104(), dt=T(1/(1+N^20)), save_everystep=false, callback=saving)
     end
 
     # SBP FD
@@ -59,6 +59,6 @@ for T in (Float32, Float64), split_form in (Val{true}(), Val{false}())
         semi(du, ode.u0, nothing, first(tspan))
 
         saving = SavingCallback(semi, saveat=range(tspan..., length=10))
-        sol = solve(ode, SSPRK104(), dt=1/5N, save_everystep=false, callback=saving)
+        sol = solve(ode, SSPRK104(), dt=T(1/5N), save_everystep=false, callback=saving)
     end
 end
