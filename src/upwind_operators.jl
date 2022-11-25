@@ -67,7 +67,7 @@ function Base.summary(io::IO, D::UpwindOperators)
     acc_string = string(acc)
   end
   print(io, nameof(typeof(D)), "(derivative:", derivative_order(D),
-            ", accuracy:", acc_string)
+            ", accuracy:", acc_string, ")")
 end
 
 derivative_order(D::UpwindOperators) = derivative_order(D.minus)
