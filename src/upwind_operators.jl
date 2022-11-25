@@ -54,12 +54,29 @@ function Base.show(io::IO, D::UpwindOperators)
   print(io, " of ", nameof(typeof(source_of_coefficients(D.minus))))
 end
 
+function Base.summary(io::IO, D::UpwindOperators)
+  acc = accuracy_order(D.minus), accuracy_order(D.central), accuracy_order(D.minus)
+  if allequal(acc)
+    acc_string = string(first(acc))
+  else
+    acc_string = string(acc)
+  end
+  print(io, nameof(typeof(D)), "(derivative:", derivative_order(D),
+            ", accuracy:", acc_string)
+end
+
 derivative_order(D::UpwindOperators) = derivative_order(D.minus)
+
 grid(D::UpwindOperators) = grid(D.minus)
 xmin(D::UpwindOperators) = xmin(D.minus)
 xmax(D::UpwindOperators) = xmax(D.minus)
+
+mass_matrix(D::UpwindOperators) = mass_matrix(D.minus)
 left_boundary_weight(D::UpwindOperators) = left_boundary_weight(D.minus)
 right_boundary_weight(D::UpwindOperators) = right_boundary_weight(D.minus)
+function integrate(func, u::AbstractVector, D::UpwindOperators)
+  integrate(func, u, D.minus)
+end
 
 
 """

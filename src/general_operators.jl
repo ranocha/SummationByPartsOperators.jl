@@ -69,8 +69,8 @@ the derivative operator `D`.
 function right_boundary_weight end
 
 function Base.summary(io::IO, D::AbstractDerivativeOperator)
-    print(io, nameof(typeof(D)), "(derivative_order=", derivative_order(D),
-              ", accuracy_order=", accuracy_order(D), ")")
+    print(io, nameof(typeof(D)), "(derivative:", derivative_order(D),
+              ", accuracy:", accuracy_order(D), ")")
 end
 
 
