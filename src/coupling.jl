@@ -300,7 +300,7 @@ The `coupling` can be
   A Broad Class of Conservative Numerical Methods for Dispersive Wave Equations.
   [DOI: 10.4208/cicp.OA-2020-0119](https://doi.org/10.4208/cicp.OA-2020-0119)
 """
-function couple_continuously end
+function couple_discontinuously end
 
 function couple_discontinuously(D::AbstractNonperiodicDerivativeOperator, mesh::UniformMesh1D, coupling::Union{Val{:plus}, Val{:central}, Val{:minus}}=Val(:central))
   UniformNonperiodicCoupledOperator(D, mesh, coupling)
