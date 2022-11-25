@@ -7,6 +7,11 @@ upwind SBP operators. The individual operators are available as
 `D.minus`, `D.plus` (and optionally `D.central`, if provided), where
 `D::UpwindOperators`.
 
+The combined struct behaves as much as possible as an operator itself as long
+as no ambiguities arise. For example, upwind operators need to use the same
+grid and mass matrix, so [`mass_matrix`](@ref), [`grid`](@ref),
+[`xmin`](@ref), [`xmax`](@ref) etc. are available but `mul!` is not.
+
 See also [`upwind_operators`](@ref).
 """
 struct UpwindOperators{T, Minus   <: AbstractNonperiodicDerivativeOperator{T},
