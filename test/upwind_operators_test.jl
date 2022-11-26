@@ -18,6 +18,9 @@ using SummationByPartsOperators
       show(IOContext(devnull, :compact=>compact), Dp_bounded)
       show(IOContext(devnull, :compact=>compact), Dm_bounded)
       show(IOContext(devnull, :compact=>compact), Dc_bounded)
+      summary(IOContext(devnull, :compact=>compact), Dp_bounded)
+      summary(IOContext(devnull, :compact=>compact), Dm_bounded)
+      summary(IOContext(devnull, :compact=>compact), Dc_bounded)
     end
     M = mass_matrix(Dp_bounded)
     @test M == mass_matrix(Dm_bounded)
