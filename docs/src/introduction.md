@@ -218,6 +218,18 @@ Note that we used `N=8` here, i.e., one node less than for the non-periodic
 example. This is necessary since the additional node at the right boundary is
 identified with the left boundary node for periodic operators.
 
+To create all upwind operators for a single setup, you can use
+[`upwind_operators`](@ref).
+
+```@repl
+using SummationByPartsOperators
+
+D = upwind_operators(Mattsson2017, derivative_order=1, accuracy_order=2,
+                     xmin=0, xmax=1//1, N=9)
+Matrix(D.plus)
+Matrix(D.minus)
+```
+
 You can also couple upwind operators continuously across elements using
 [`couple_continuously`](@ref) to obtain global upwind operators, see
 [below](@ref intro-CGSEM) and Theorem 2.4 of [^RanochaMitsotakisKetcheson2021].

@@ -22,10 +22,10 @@ for T in (Float32, Float64)
     sum_3_12 = D₃ + sum_12
 
     for compact in (true, false)
-        show(IOContext(devnull, :compact=>false), sum_12)
-        show(IOContext(devnull, :compact=>false), sum_123)
-        show(IOContext(devnull, :compact=>false), sum_12_3)
-        show(IOContext(devnull, :compact=>false), sum_3_12)
+        show(IOContext(devnull, :compact=>compact), sum_12)
+        show(IOContext(devnull, :compact=>compact), sum_123)
+        show(IOContext(devnull, :compact=>compact), sum_12_3)
+        show(IOContext(devnull, :compact=>compact), sum_3_12)
     end
 
     # Compare mul! with β=0 and mul! without β.
