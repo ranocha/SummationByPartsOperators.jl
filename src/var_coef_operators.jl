@@ -4,7 +4,7 @@
 
 A dissipation operator on a nonperiodic finite difference grid.
 """
-struct VarCoefDerivativeOperator{T,CoefficientCache,ExecutionMode,SourceOfCoefficients,Grid} <: AbstractVariableCoefficientNonperiodicDerivativeOperator{T}
+@auto_hash_equals struct VarCoefDerivativeOperator{T,CoefficientCache,ExecutionMode,SourceOfCoefficients,Grid} <: AbstractVariableCoefficientNonperiodicDerivativeOperator{T}
     coefficients::VarCoefDerivativeCoefficients{T,CoefficientCache,ExecutionMode,SourceOfCoefficients}
     grid::Grid
     Δx::T

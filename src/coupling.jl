@@ -18,7 +18,7 @@ end
 A uniform periodic mesh in one space dimension of `Nx` cells between
 `xmin` and `xmax`.
 """
-struct UniformPeriodicMesh1D{T<:Real} <: AbstractPeriodicMesh1D
+@auto_hash_equals struct UniformPeriodicMesh1D{T<:Real} <: AbstractPeriodicMesh1D
   xmin::T
   xmax::T
   Nx::Int
@@ -49,7 +49,7 @@ end
 
 A uniform mesh in one space dimension of `Nx` cells between `xmin` and `xmax`.
 """
-struct UniformMesh1D{T<:Real} <: AbstractMesh1D
+@auto_hash_equals struct UniformMesh1D{T<:Real} <: AbstractMesh1D
   xmin::T
   xmax::T
   Nx::Int
@@ -117,7 +117,7 @@ end
 
 
 
-struct UniformMeshGrid1D{T, Mesh<:Union{UniformMesh1D,UniformPeriodicMesh1D}, Grid<:AbstractVector{T}} <: AbstractArray{T,1}
+@auto_hash_equals struct UniformMeshGrid1D{T, Mesh<:Union{UniformMesh1D,UniformPeriodicMesh1D}, Grid<:AbstractVector{T}} <: AbstractArray{T,1}
   mesh::Mesh
   grid::Grid
   continuous::Bool
@@ -175,7 +175,7 @@ Base.size(meshgrid::UniformMeshGrid1D) = (length(meshgrid),)
 
 
 
-struct UniformNonperiodicCoupledOperator{T, Dtype<:AbstractNonperiodicDerivativeOperator{T}, Mesh<:UniformMesh1D{T}, MeshGrid<:UniformMeshGrid1D{T, Mesh}, Coupling<:Union{Val{:continuous}, Val{:plus}, Val{:central}, Val{:minus}}, DerOrder} <: AbstractNonperiodicDerivativeOperator{T}
+@auto_hash_equals struct UniformNonperiodicCoupledOperator{T, Dtype<:AbstractNonperiodicDerivativeOperator{T}, Mesh<:UniformMesh1D{T}, MeshGrid<:UniformMeshGrid1D{T, Mesh}, Coupling<:Union{Val{:continuous}, Val{:plus}, Val{:central}, Val{:minus}}, DerOrder} <: AbstractNonperiodicDerivativeOperator{T}
   D::Dtype
   meshgrid::MeshGrid
   coupling::Coupling
@@ -191,7 +191,7 @@ struct UniformNonperiodicCoupledOperator{T, Dtype<:AbstractNonperiodicDerivative
   end
 end
 
-struct UniformPeriodicCoupledOperator{T, Dtype<:AbstractNonperiodicDerivativeOperator{T}, Mesh<:UniformPeriodicMesh1D{T}, MeshGrid<:UniformMeshGrid1D{T, Mesh}, Coupling<:Union{Val{:continuous}, Val{:plus}, Val{:central}, Val{:minus}}, DerOrder} <: AbstractPeriodicDerivativeOperator{T}
+@auto_hash_equals struct UniformPeriodicCoupledOperator{T, Dtype<:AbstractNonperiodicDerivativeOperator{T}, Mesh<:UniformPeriodicMesh1D{T}, MeshGrid<:UniformMeshGrid1D{T, Mesh}, Coupling<:Union{Val{:continuous}, Val{:plus}, Val{:central}, Val{:minus}}, DerOrder} <: AbstractPeriodicDerivativeOperator{T}
   D::Dtype
   meshgrid::MeshGrid
   coupling::Coupling

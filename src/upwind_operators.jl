@@ -14,9 +14,9 @@ grid and mass matrix, so [`mass_matrix`](@ref), [`grid`](@ref),
 
 See also [`upwind_operators`](@ref).
 """
-struct UpwindOperators{T, Minus   <: AbstractNonperiodicDerivativeOperator{T},
-                          Central <: AbstractNonperiodicDerivativeOperator{T},
-                          Plus    <: AbstractNonperiodicDerivativeOperator{T}} <: AbstractNonperiodicDerivativeOperator{T}
+@auto_hash_equals struct UpwindOperators{T, Minus   <: AbstractNonperiodicDerivativeOperator{T},
+                                            Central <: AbstractNonperiodicDerivativeOperator{T},
+                                            Plus    <: AbstractNonperiodicDerivativeOperator{T}} <: AbstractNonperiodicDerivativeOperator{T}
   minus::Minus
   central::Central
   plus::Plus

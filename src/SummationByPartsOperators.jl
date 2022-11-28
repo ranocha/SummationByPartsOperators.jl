@@ -46,6 +46,7 @@ module SummationByPartsOperators
 using LinearAlgebra
 using SparseArrays
 
+using AutoHashEquals: @auto_hash_equals
 using ArgCheck: @argcheck
 using ArrayInterface: StaticInt, static_length
 using FFTW: FFTW, plan_rfft, plan_brfft, plan_irfft
