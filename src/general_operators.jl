@@ -274,7 +274,7 @@ end
 
 Sum several derivative operators lazily.
 """
-struct SumOfDerivativeOperators{T,N,Operators<:Tuple{Vararg{AbstractDerivativeOperator{T},N}}} <: AbstractDerivativeOperator{T}
+@auto_hash_equals struct SumOfDerivativeOperators{T,N,Operators<:Tuple{Vararg{AbstractDerivativeOperator{T},N}}} <: AbstractDerivativeOperator{T}
     operators::Operators
 
     function SumOfDerivativeOperators(operators::Operators) where {T,N,Operators<:Tuple{Vararg{AbstractDerivativeOperator{T},N}}}

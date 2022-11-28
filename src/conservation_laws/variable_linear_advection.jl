@@ -11,10 +11,10 @@ or `nothing`, `a(x)` the variable coefficient, and `split_form::Union{Val(false)
 determines whether the canonical split form or the conservative form should be
 used.
 """
-struct VariableLinearAdvectionNonperiodicSemidiscretization{T,Derivative<:AbstractDerivativeOperator{T},
-                                                            Dissipation,
-                                                            SplitForm<:Union{Val{false}, Val{true}},
-                                                            LeftBC, RightBC} <: AbstractSemidiscretization
+@auto_hash_equals struct VariableLinearAdvectionNonperiodicSemidiscretization{T, Derivative<:AbstractDerivativeOperator{T},
+                                                                              Dissipation,
+                                                                              SplitForm<:Union{Val{false}, Val{true}},
+                                                                              LeftBC, RightBC} <: AbstractSemidiscretization
     derivative::Derivative
     dissipation::Dissipation
     a::Vector{T}

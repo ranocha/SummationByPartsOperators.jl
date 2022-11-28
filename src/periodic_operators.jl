@@ -4,7 +4,7 @@
 
 The coefficients of a derivative operator on a periodic grid.
 """
-struct PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,ExecutionMode,SourceOfCoefficients} <: AbstractDerivativeCoefficients{T}
+@auto_hash_equals struct PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,ExecutionMode,SourceOfCoefficients} <: AbstractDerivativeCoefficients{T}
     # coefficients defining the operator and its action
     lower_coef::SVector{LowerOffset, T}
     central_coef::T
@@ -531,7 +531,7 @@ A derivative operator on a uniform periodic grid.
 See [`periodic_derivative_operator`](@ref) and
 [`periodic_central_derivative_operator`](@ref).
 """
-struct PeriodicDerivativeOperator{T,LowerOffset,UpperOffset,ExecutionMode,SourceOfCoefficients,Grid} <: AbstractPeriodicDerivativeOperator{T}
+@auto_hash_equals struct PeriodicDerivativeOperator{T,LowerOffset,UpperOffset,ExecutionMode,SourceOfCoefficients,Grid} <: AbstractPeriodicDerivativeOperator{T}
     coefficients::PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,ExecutionMode,SourceOfCoefficients}
     grid_compute::Grid   # N   nodes, including the left and excluding the right boundary
     grid_evaluate::Grid #  N+1 nodes, including both boundaries
@@ -808,7 +808,7 @@ end
 A dissipation operator on a periodic finite difference grid.
 See [`dissipation_operator`](@ref).
 """
-struct PeriodicDissipationOperator{T,LowerOffset,UpperOffset,ExecutionMode,SourceOfCoefficients,Grid} <: AbstractPeriodicDerivativeOperator{T}
+@auto_hash_equals struct PeriodicDissipationOperator{T,LowerOffset,UpperOffset,ExecutionMode,SourceOfCoefficients,Grid} <: AbstractPeriodicDerivativeOperator{T}
     factor::T
     Di::PeriodicDerivativeOperator{T,LowerOffset,UpperOffset,ExecutionMode,SourceOfCoefficients,Grid}
 
@@ -889,7 +889,7 @@ end
 
 
 
-struct PeriodicRationalDerivativeOperator{T<:Real, Dtype<:PeriodicDerivativeOperator{T}, Nnum, Nden, RFFT, IRFFT} <: AbstractPeriodicDerivativeOperator{T}
+@auto_hash_equals struct PeriodicRationalDerivativeOperator{T<:Real, Dtype<:PeriodicDerivativeOperator{T}, Nnum, Nden, RFFT, IRFFT} <: AbstractPeriodicDerivativeOperator{T}
     D::Dtype
     num_coef::NTuple{Nnum,T}
     den_coef::NTuple{Nden,T}

@@ -4,8 +4,8 @@
 
 The coefficients of a derivative operator on a nonperiodic grid.
 """
-struct DerivativeCoefficients{T,LeftBoundary,RightBoundary,LeftBoundaryDerivatives,RightBoundaryDerivatives,
-                              LowerOffset,UpperOffset,LeftWidth,RightWidth,ExecutionMode,SourceOfCoefficients} <: AbstractDerivativeCoefficients{T}
+@auto_hash_equals struct DerivativeCoefficients{T,LeftBoundary,RightBoundary,LeftBoundaryDerivatives,RightBoundaryDerivatives,
+                                                LowerOffset,UpperOffset,LeftWidth,RightWidth,ExecutionMode,SourceOfCoefficients} <: AbstractDerivativeCoefficients{T}
     # coefficients defining the operator and its action
     left_boundary::LeftBoundary
     right_boundary::RightBoundary
@@ -107,7 +107,7 @@ end
 A struct representing a row in the boundary block of an SBP derivative operator
 with scalar type `T`.
 """
-struct DerivativeCoefficientRow{T,Start,Length}
+@auto_hash_equals struct DerivativeCoefficientRow{T,Start,Length}
     coef::SVector{Length, T}
 end
 
@@ -414,8 +414,8 @@ end
 A derivative operator on a nonperiodic finite difference grid.
 See [`derivative_operator`](@ref).
 """
-struct DerivativeOperator{T,LeftBoundary,RightBoundary,LeftBoundaryDerivatives,RightBoundaryDerivatives,
-                          LowerOffset,UpperOffset,LeftWidth,RightWidth,ExecutionMode,SourceOfCoefficients,Grid} <: AbstractNonperiodicDerivativeOperator{T}
+@auto_hash_equals struct DerivativeOperator{T,LeftBoundary,RightBoundary,LeftBoundaryDerivatives,RightBoundaryDerivatives,
+                                            LowerOffset,UpperOffset,LeftWidth,RightWidth,ExecutionMode,SourceOfCoefficients,Grid} <: AbstractNonperiodicDerivativeOperator{T}
     coefficients::DerivativeCoefficients{T,LeftBoundary,RightBoundary,LeftBoundaryDerivatives,RightBoundaryDerivatives,
                                          LowerOffset,UpperOffset,LeftWidth,RightWidth,ExecutionMode,SourceOfCoefficients}
     grid::Grid
@@ -548,7 +548,7 @@ end
 end
 
 
-struct OneHot <: AbstractVector{Bool}
+@auto_hash_equals struct OneHot <: AbstractVector{Bool}
     i::Int
     length::Int
 end

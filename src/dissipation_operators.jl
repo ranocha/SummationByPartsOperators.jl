@@ -10,8 +10,8 @@ end
 
 The coefficients of a variable coefficient derivative operator on a nonperiodic grid.
 """
-struct VarCoefDerivativeCoefficients{T,CoefficientCache<:AbstractCoefficientCache{T},
-                                     LeftWidth,RightWidth,ExecutionMode,SourceOfCoefficients} <: AbstractDerivativeCoefficients{T}
+@auto_hash_equals struct VarCoefDerivativeCoefficients{T,CoefficientCache<:AbstractCoefficientCache{T},
+                                                       LeftWidth,RightWidth,ExecutionMode,SourceOfCoefficients} <: AbstractDerivativeCoefficients{T}
     # coefficients defining the operator and its action
     coefficient_cache::CoefficientCache
     left_weights::SVector{LeftWidth, T}
@@ -147,7 +147,7 @@ end
 A dissipation operator on a nonperiodic finite difference grid.
 See [`dissipation_operator`](@ref).
 """
-struct DissipationOperator{T,Coefficients<:VarCoefDerivativeCoefficients{T},Grid} <: AbstractVariableCoefficientNonperiodicDerivativeOperator{T}
+@auto_hash_equals struct DissipationOperator{T,Coefficients<:VarCoefDerivativeCoefficients{T},Grid} <: AbstractVariableCoefficientNonperiodicDerivativeOperator{T}
     factor::T
     coefficients::Coefficients
     grid::Grid
