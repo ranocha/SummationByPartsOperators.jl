@@ -61,7 +61,7 @@ end
 
 function Base.summary(io::IO, D::UpwindOperators)
   acc = accuracy_order(D.minus), accuracy_order(D.central), accuracy_order(D.minus)
-  if allequal(acc)
+  if all(==(accuracy_order(D.minus)), acc)
     acc_string = string(first(acc))
   else
     acc_string = string(acc)
