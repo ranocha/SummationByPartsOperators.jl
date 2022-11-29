@@ -502,7 +502,7 @@ Compute the `N`-th derivative of the function given by the coefficients `u` at
 the left boundary of the grid.
 """
 @inline function derivative_left(D::DerivativeOperator, u, der_order::Val{N}) where {N}
-    convolve_left_row(D.coefficients.left_boundary_derivatives[N], u) / D.Δx^N
+    convolve_left_row(D.coefficients.left_boundary_derivatives[N], u, D.coefficients.mode) / D.Δx^N
 end
 
 @inline function derivative_left(D::AbstractNonperiodicDerivativeOperator, u, der_order::Val{0})
@@ -519,7 +519,7 @@ Compute the `N`-th derivative of the function given by the coefficients `u` at
 the right boundary of the grid.
 """
 @inline function derivative_right(D::DerivativeOperator, u, der_order::Val{N}) where {N}
-    convolve_right_row(D.coefficients.right_boundary_derivatives[N], u) / D.Δx^N
+    convolve_right_row(D.coefficients.right_boundary_derivatives[N], u, D.coefficients.mode) / D.Δx^N
 end
 
 @inline function derivative_right(D::AbstractNonperiodicDerivativeOperator, u, der_order::Val{0})
