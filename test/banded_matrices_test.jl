@@ -19,7 +19,7 @@ for T in (Float32, Float64), acc_order in (2,4,6,8), diss_order in (2,4,6,8), D_
         !isa(err, ArgumentError) && throw(err)
         nothing
     end
-    D_serial == nothing && continue
+    D_serial === nothing && continue
 
     D_full   = Matrix(D_serial)
     D_sparse = sparse(D_serial)
@@ -48,7 +48,7 @@ for T in (Float32, Float64), acc_order in (2,4,6,8), diss_order in (2,4,6,8), D_
         !isa(err, ArgumentError) && throw(err)
         nothing
     end
-    Di_serial == nothing && continue
+    Di_serial === nothing && continue
 
     Di_full   = Matrix(Di_serial)
     Di_sparse = sparse(Di_serial)
@@ -78,7 +78,7 @@ for T in (Float32, Float64), acc_order in (2,4,6), D2var_source in D2var_test_li
         !isa(err, ArgumentError) && throw(err)
         nothing
     end
-    D2var_serial == nothing && continue
+    D2var_serial === nothing && continue
 
     D2var_full   = Matrix(D2var_serial)
     D2var_sparse = sparse(D2var_serial)

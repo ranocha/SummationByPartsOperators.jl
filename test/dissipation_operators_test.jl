@@ -21,7 +21,7 @@ for source_D in D_test_list, source_Di in Di_test_list, acc_order in 2:2:8, T in
         !isa(err, ArgumentError) && throw(err)
         nothing
     end
-    D == nothing && continue
+    D === nothing && continue
 
     @inferred mass_matrix(D)
     H = mass_matrix(D)
@@ -33,7 +33,7 @@ for source_D in D_test_list, source_Di in Di_test_list, acc_order in 2:2:8, T in
             !isa(err, ArgumentError) && throw(err)
             nothing
         end
-        Di == nothing && continue
+        Di === nothing && continue
 
         println(devnull, Di)
         println(devnull, Di.coefficients)
