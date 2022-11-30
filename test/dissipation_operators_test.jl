@@ -57,15 +57,21 @@ for T in (Float32, Float64), order in (2,4,6,8)
 
     Di_serial = dissipation_operator(D, order=order, mode=FastMode())
     Di_threads= dissipation_operator(D, order=order, mode=ThreadedMode())
+    Di_safe   = dissipation_operator(D, order=order, mode=SafeMode())
     Di_full   = Matrix(Di_serial)
 
     mul!(dest1, Di_serial, u, one(T), zero(T))
     mul!(dest2, Di_serial, u, one(T))
     @test all(i->dest1[i] ≈ dest2[i], eachindex(u))
+    mul!(dest1, Di_safe, u, one(T), zero(T))
+    mul!(dest2, Di_safe, u, one(T))
+    @test all(i->dest1[i] ≈ dest2[i], eachindex(u))
     mul!(dest1, Di_threads, u, one(T), zero(T))
     mul!(dest2, Di_threads, u, one(T))
     @test all(i->dest1[i] ≈ dest2[i], eachindex(u))
     dest3 = Di_serial*u
+    @test all(i->dest1[i] ≈ dest3[i], eachindex(u))
+    dest3 = Di_safe*u
     @test all(i->dest1[i] ≈ dest3[i], eachindex(u))
     dest3 = Di_full*u
     @test all(i->isapprox(dest1[i], dest3[i], atol=800000*eps(T)), eachindex(u))
