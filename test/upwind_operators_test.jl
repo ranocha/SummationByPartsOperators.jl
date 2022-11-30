@@ -68,6 +68,10 @@ end
     show(IOContext(devnull, :compact=>compact), Dp)
     show(IOContext(devnull, :compact=>compact), Dm)
     show(IOContext(devnull, :compact=>compact), Dc)
+    summary(IOContext(devnull, :compact=>compact), D)
+    summary(IOContext(devnull, :compact=>compact), Dp)
+    summary(IOContext(devnull, :compact=>compact), Dm)
+    summary(IOContext(devnull, :compact=>compact), Dc)
   end
   @test D.minus == Dm
   @test D.plus == Dp

@@ -47,9 +47,12 @@ function Base.show(io::IO, D::UpwindOperators)
       print(io, "Upwind SBP ", derivative_order(D),
             "-derivative operators")
   end
-  print(io, " of orders ", accuracy_order(D.minus), ", ",
-                           accuracy_order(D.central), ", ",
-                           accuracy_order(D.minus))
+  acc = accuracy_order(D.minus), accuracy_order(D.central), accuracy_order(D.minus)
+  if all(==(first(acc)), acc)
+    print(io, " of order ", first(acc))
+  else
+    print(io, " of orders ", acc)
+  end
   if get(io, :compact, false) == false
       print(io, " on a grid in [", first(grid(D)), ", ", last(grid(D)),
               "] using ", length(grid(D)), " nodes \n")
@@ -61,7 +64,7 @@ end
 
 function Base.summary(io::IO, D::UpwindOperators)
   acc = accuracy_order(D.minus), accuracy_order(D.central), accuracy_order(D.minus)
-  if all(==(accuracy_order(D.minus)), acc)
+  if all(==(first(acc)), acc)
     acc_string = string(first(acc))
   else
     acc_string = string(acc)
@@ -96,7 +99,7 @@ directly to [`derivative_operator`](@ref).
 ```jldoctest
 julia> D = upwind_operators(Mattsson2017, derivative_order=1, accuracy_order=2,
                             xmin=0//1, xmax=9//1, N=10)
-Upwind SBP first-derivative operators of orders 2, 2, 2 on a grid in [0//1, 9//1] using 10 nodes
+Upwind SBP first-derivative operators of order 2 on a grid in [0//1, 9//1] using 10 nodes
 and coefficients of Mattsson2017
 
 julia> D.minus

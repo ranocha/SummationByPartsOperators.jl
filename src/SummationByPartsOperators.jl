@@ -51,6 +51,7 @@ using ArgCheck: @argcheck
 using ArrayInterface: StaticInt, static_length
 using FFTW: FFTW, plan_rfft, plan_brfft, plan_irfft
 using LoopVectorization: LoopVectorization, @turbo, @tturbo
+using MuladdMacro: @muladd
 using RecursiveArrayTools: recursive_bottom_eltype
 using Reexport: @reexport
 using Requires: @require

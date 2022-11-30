@@ -62,7 +62,7 @@ function mul!(dest::AbstractVector, coefficients::VarCoefDerivativeCoefficients,
         @argcheck checkbounds(Bool, dest, coefficient_cache) DimensionMismatch
     end
 
-    convolve_boundary_coefficients!(dest, coefficient_cache, u, b, α, β)
+    convolve_boundary_coefficients!(dest, coefficient_cache, u, b, α, β, mode)
     convolve_interior_coefficients!(dest, coefficient_cache, u, b, α, β, mode)
 end
 
@@ -77,7 +77,7 @@ function mul!(dest::AbstractVector, coefficients::VarCoefDerivativeCoefficients,
         @argcheck checkbounds(Bool, dest, coefficient_cache) DimensionMismatch
     end
 
-    convolve_boundary_coefficients!(dest, coefficient_cache, u, b, α)
+    convolve_boundary_coefficients!(dest, coefficient_cache, u, b, α, mode)
     convolve_interior_coefficients!(dest, coefficient_cache, u, b, α, mode)
 end
 
