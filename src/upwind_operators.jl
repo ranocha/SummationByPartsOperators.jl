@@ -99,7 +99,7 @@ directly to [`derivative_operator`](@ref).
 ```jldoctest
 julia> D = upwind_operators(Mattsson2017, derivative_order=1, accuracy_order=2,
                             xmin=0//1, xmax=9//1, N=10)
-Upwind SBP first-derivative operators of orders 2, 2, 2 on a grid in [0//1, 9//1] using 10 nodes
+Upwind SBP first-derivative operators of order 2 on a grid in [0//1, 9//1] using 10 nodes
 and coefficients of Mattsson2017
 
 julia> D.minus
