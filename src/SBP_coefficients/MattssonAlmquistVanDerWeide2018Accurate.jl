@@ -314,7 +314,7 @@ function first_derivative_coefficients(source::MattssonAlmquistVanDerWeide2018Ac
   elseif order == 10
     left_boundary = (
         # d1
-        DerivativeCoefficientRow{T,1,10}(SVector(T(-55),
+        DerivativeCoefficientRow{T,1,10}(SVector(T(-5),
                                                 T(6.7548747038001995),
                                                 T(-2.6691978151545994),
                                                 T(1.4438714982129999),
@@ -464,7 +464,7 @@ function first_derivative_coefficients(source::MattssonAlmquistVanDerWeide2018Ac
   elseif order == 12
     left_boundary = (
         # d1
-        DerivativeCoefficientRow{T,1,12}(SVector(T(-54.9999999999395),
+        DerivativeCoefficientRow{T,1,12}(SVector(T(-5),
                                                 T(6.759756072834865),
                                                 T(-2.6859785384386456),
                                                 T(1.4850302678886664),
