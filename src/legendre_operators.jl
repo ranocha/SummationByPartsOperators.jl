@@ -5,7 +5,7 @@
 A derivative operator on a nonperiodic Lobatto-Legendre grid with scalar type
 `T` computing the first derivative using a Legendre expansion.
 """
-struct LegendreDerivativeOperator{T<:Real} <: AbstractNonperiodicDerivativeOperator{T}
+@auto_hash_equals struct LegendreDerivativeOperator{T<:Real} <: AbstractNonperiodicDerivativeOperator{T}
     jac::T
     Δx::T
     grid::Vector{T} # N nodes, including the left and the right boundary
@@ -59,7 +59,7 @@ LinearAlgebra.issymmetric(D::LegendreDerivativeOperator) = false
 A derivative operator on a nonperiodic Lobatto-Legendre grid with scalar type
 `T` computing the second derivative using a Legendre expansion.
 """
-struct LegendreSecondDerivativeOperator{T<:Real} <: AbstractNonperiodicDerivativeOperator{T}
+@auto_hash_equals struct LegendreSecondDerivativeOperator{T<:Real} <: AbstractNonperiodicDerivativeOperator{T}
     D2::Matrix{T}
     jac::T
     Δx::T

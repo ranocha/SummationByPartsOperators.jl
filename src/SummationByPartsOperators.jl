@@ -46,10 +46,12 @@ module SummationByPartsOperators
 using LinearAlgebra
 using SparseArrays
 
+using AutoHashEquals: @auto_hash_equals
 using ArgCheck: @argcheck
 using ArrayInterface: StaticInt, static_length
 using FFTW: FFTW, plan_rfft, plan_brfft, plan_irfft
 using LoopVectorization: LoopVectorization, @turbo, @tturbo
+using MuladdMacro: @muladd
 using RecursiveArrayTools: recursive_bottom_eltype
 using Reexport: @reexport
 using Requires: @require
@@ -101,6 +103,7 @@ include("filter.jl")
 include("fourier_operators.jl")
 include("fourier_operators_2d.jl")
 include("legendre_operators.jl")
+include("upwind_operators.jl")
 include("SBP_coefficients/MattssonNordström2004.jl")
 include("SBP_coefficients/MattssonSvärdNordström2004.jl")
 include("SBP_coefficients/MattssonSvärdShoeybi2008.jl")
@@ -128,7 +131,8 @@ export PeriodicDerivativeOperator, PeriodicDissipationOperator,
        FourierDerivativeOperator, FourierConstantViscosity,
        FourierPolynomialDerivativeOperator, FourierRationalDerivativeOperator,
        FourierDerivativeOperator2D,
-       LegendreDerivativeOperator, LegendreSecondDerivativeOperator
+       LegendreDerivativeOperator, LegendreSecondDerivativeOperator,
+       UpwindOperators
 export FilterCallback, ConstantFilter, ExponentialFilter
 export SafeMode, FastMode, ThreadedMode
 export derivative_order, accuracy_order, source_of_coefficients, grid, semidiscretize
@@ -141,7 +145,8 @@ export integrate, left_boundary_weight, right_boundary_weight,
 export periodic_central_derivative_operator, periodic_derivative_operator, derivative_operator,
        dissipation_operator, var_coef_derivative_operator,
        fourier_derivative_operator,
-       legendre_derivative_operator, legendre_second_derivative_operator
+       legendre_derivative_operator, legendre_second_derivative_operator,
+       upwind_operators
 export UniformMesh1D, UniformPeriodicMesh1D
 export couple_continuously, couple_discontinuously
 export mul!

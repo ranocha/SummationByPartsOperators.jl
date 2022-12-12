@@ -14,6 +14,9 @@ for T in (Float32, Float64), left_bc in BCs, right_bc in BCs
     for acc_order in 2:2:8
         D = derivative_operator(MattssonSvärdNordström2004(), 2, acc_order, xmin, xmax, N)
         semi = WaveEquationNonperiodicSemidiscretization(D, left_bc, right_bc)
+        for compact in (true, false)
+            show(IOContext(devnull, :compact=>compact), semi)
+        end
         ode = semidiscretize(du0func, u0func, semi, tspan)
         ddu = similar(ode.u0.x[1])
         semi(ddu, ode.u0.x..., nothing, first(tspan))

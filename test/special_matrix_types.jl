@@ -23,6 +23,10 @@ end
 for T in (Float32, Float64)
   D = derivative_operator(MattssonNordström2004(), derivative_order=1, accuracy_order=4,
                           xmin=zero(T), xmax=one(T), N=51)
+  D_threaded = derivative_operator(MattssonNordström2004(), derivative_order=1, accuracy_order=4,
+                                   xmin=zero(T), xmax=one(T), N=51, mode=ThreadedMode())
+  D_safe = derivative_operator(MattssonNordström2004(), derivative_order=1, accuracy_order=4,
+                               xmin=zero(T), xmax=one(T), N=51, mode=SafeMode())
   D_sparse = sparse(D)
 
   # 3-arg mul!
@@ -32,7 +36,10 @@ for T in (Float32, Float64)
   u_aos_r = reinterpret(reshape, Vec4{T}, u_aos_plain); du_aos_r = similar(u_aos_r)
   mul!(du_aos_r, D, u_aos_r)
   @test reinterpret(reshape, T, du_aos_r) ≈ du_aos_plain
-  @test D * u_aos_r ≈ D_sparse * u_aos_r
+  u_aos_r_sparse = D_sparse * u_aos_r
+  @test D * u_aos_r ≈ u_aos_r_sparse
+  @test u_aos_r_sparse ≈ D_threaded * u_aos_r
+  @test u_aos_r_sparse ≈ D_safe * u_aos_r
 
   u_aos = Array(u_aos_r); du_aos = similar(u_aos)
   mul!(du_aos, D, u_aos)
@@ -58,8 +65,24 @@ for T in (Float32, Float64)
   mul!(du_aos, D, u_aos, α)
   @test du_aos ≈ du_aos_r
 
+  fill!(du_aos, zero(eltype(du_aos)))
+  mul!(du_aos, D_threaded, u_aos, α)
+  @test du_aos ≈ du_aos_r
+
+  fill!(du_aos, zero(eltype(du_aos)))
+  mul!(du_aos, D_safe, u_aos, α)
+  @test du_aos ≈ du_aos_r
+
   fill!(du_soa, zero(eltype(du_soa)))
   mul!(du_soa, D, u_soa, α)
+  @test du_soa ≈ du_aos
+
+  fill!(du_soa, zero(eltype(du_soa)))
+  mul!(du_soa, D_threaded, u_soa, α)
+  @test du_soa ≈ du_aos
+
+  fill!(du_soa, zero(eltype(du_soa)))
+  mul!(du_soa, D_safe, u_soa, α)
   @test du_soa ≈ du_aos
 
 
@@ -77,8 +100,24 @@ for T in (Float32, Float64)
   mul!(du_aos, D, u_aos, α, β)
   @test du_aos ≈ du_aos_r
 
+  fill!(du_aos, zero(eltype(du_aos)))
+  mul!(du_aos, D_threaded, u_aos, α, β)
+  @test du_aos ≈ du_aos_r
+
+  fill!(du_aos, zero(eltype(du_aos)))
+  mul!(du_aos, D_safe, u_aos, α, β)
+  @test du_aos ≈ du_aos_r
+
   fill!(du_soa, zero(eltype(du_soa)))
   mul!(du_soa, D, u_soa, α, β)
+  @test du_soa ≈ du_aos
+
+  fill!(du_soa, zero(eltype(du_soa)))
+  mul!(du_soa, D_threaded, u_soa, α, β)
+  @test du_soa ≈ du_aos
+
+  fill!(du_soa, zero(eltype(du_soa)))
+  mul!(du_soa, D_safe, u_soa, α, β)
   @test du_soa ≈ du_aos
 
 

@@ -78,7 +78,7 @@ end
 lower_bandwidth(cache::MattssonSvärdNordström2004Cache2) = 1
 upper_bandwidth(cache::MattssonSvärdNordström2004Cache2) = 1
 
-function convolve_boundary_coefficients!(dest::AbstractVector, cache::MattssonSvärdNordström2004Cache2, u::AbstractVector, b::AbstractVector, α)
+function convolve_boundary_coefficients!(dest::AbstractVector, cache::MattssonSvärdNordström2004Cache2, u::AbstractVector, b::AbstractVector, α, ::SafeMode)
     @unpack inv_left_weights, inv_right_weights = cache
     α = -α # negative semidefinite operator
 
@@ -118,8 +118,88 @@ function convolve_boundary_coefficients!(dest::AbstractVector, cache::MattssonSv
         end
     end
 end
+function convolve_boundary_coefficients!(dest::AbstractVector, cache::MattssonSvärdNordström2004Cache2, u::AbstractVector, b::AbstractVector, α, ::Union{FastMode, ThreadedMode})
+    @unpack inv_left_weights, inv_right_weights = cache
+    α = -α # negative semidefinite operator
 
-function convolve_boundary_coefficients!(dest::AbstractVector, cache::MattssonSvärdNordström2004Cache2, u::AbstractVector, b::AbstractVector, α, β)
+    @inbounds @muladd begin
+        dest[1] = α * inv_left_weights[1] * (
+                    (b[1] + b[2]) * u[1]
+                    + (b[1] - b[2]) * u[2]
+                )
+        dest[2] = α * inv_left_weights[2] * (
+                    (b[1] - b[2]) * u[1]
+                    + (b[1] + b[2] + b[3]) * u[2]
+                    - b[3] * u[3]
+                )
+        for i in 3:length(inv_left_weights)
+            dest[i] = α * inv_left_weights[i] * (
+                        -b[i] * u[i-1]
+                        + (b[i] + b[i+1]) * u[i]
+                        - b[i+1] * u[i+1]
+                    )
+        end
+
+        dest[end] = α * inv_right_weights[1] * (
+                        b[end] * u[end]
+                        - b[end] * u[end-1]
+                    )
+        dest[end-1] = α * inv_right_weights[2] * (
+                        -b[end-1] * u[end-2]
+                        + (b[end-1] + b[end]) * u[end-1]
+                        - b[end] * u[end]
+                    )
+        for i in 2:length(inv_right_weights)-1
+            dest[end-i] = α * inv_right_weights[i+1] * (
+                        -b[end-i] * u[end-(i-1)]
+                        + (b[end-i] + b[end-(i+1)]) * u[end-i]
+                        - b[end-(i+1)] * u[end-(i+1)]
+                    )
+        end
+    end
+end
+
+function convolve_boundary_coefficients!(dest::AbstractVector, cache::MattssonSvärdNordström2004Cache2, u::AbstractVector, b::AbstractVector, α, β, ::SafeMode)
+    @unpack inv_left_weights, inv_right_weights = cache
+    α = -α # negative semidefinite operator
+
+    @inbounds begin
+        dest[1] = α * inv_left_weights[1] * (
+                    (b[1] + b[2]) * u[1]
+                    + (b[1] - b[2]) * u[2]
+                ) + β*dest[1]
+        dest[2] = α * inv_left_weights[2] * (
+                    (b[1] - b[2]) * u[1]
+                    + (b[1] + b[2] + b[3]) * u[2]
+                    - b[3] * u[3]
+                ) + β*dest[2]
+        for i in 3:length(inv_left_weights)
+            dest[i] = α * inv_left_weights[i] * (
+                        -b[i] * u[i-1]
+                        + (b[i] + b[i+1]) * u[i]
+                        - b[i+1] * u[i+1]
+                    ) + β*dest[i]
+        end
+
+        dest[end] = α * inv_right_weights[1] * (
+                        b[end] * u[end]
+                        - b[end] * u[end-1]
+                    ) + β*dest[end]
+        dest[end-1] = α * inv_right_weights[2] * (
+                        -b[end-1] * u[end-2]
+                        + (b[end-1] + b[end]) * u[end-1]
+                        - b[end] * u[end]
+                    ) + β*dest[end-1]
+        for i in 2:length(inv_right_weights)-1
+            dest[end-i] = α * inv_right_weights[i+1] * (
+                        -b[end-i] * u[end-(i-1)]
+                        + (b[end-i] + b[end-(i+1)]) * u[end-i]
+                        - b[end-(i+1)] * u[end-(i+1)]
+                    ) + β*dest[end-i]
+        end
+    end
+end
+function convolve_boundary_coefficients!(dest::AbstractVector, cache::MattssonSvärdNordström2004Cache2, u::AbstractVector, b::AbstractVector, α, β, ::Union{FastMode, ThreadedMode})
     @unpack inv_left_weights, inv_right_weights = cache
     α = -α # negative semidefinite operator
 
@@ -194,7 +274,7 @@ end
 lower_bandwidth(cache::MattssonSvärdNordström2004Cache4) = 2
 upper_bandwidth(cache::MattssonSvärdNordström2004Cache4) = 2
 
-function convolve_boundary_coefficients!(dest::AbstractVector, cache::MattssonSvärdNordström2004Cache4, u::AbstractVector, b::AbstractVector, α)
+function convolve_boundary_coefficients!(dest::AbstractVector, cache::MattssonSvärdNordström2004Cache4, u::AbstractVector, b::AbstractVector, α, ::SafeMode)
     @unpack inv_left_weights, inv_right_weights = cache
 
     @inbounds begin
@@ -255,11 +335,133 @@ function convolve_boundary_coefficients!(dest::AbstractVector, cache::MattssonSv
         end
     end
 end
+function convolve_boundary_coefficients!(dest::AbstractVector, cache::MattssonSvärdNordström2004Cache4, u::AbstractVector, b::AbstractVector, α, ::Union{FastMode, ThreadedMode})
+    @unpack inv_left_weights, inv_right_weights = cache
 
-function convolve_boundary_coefficients!(dest::AbstractVector, cache::MattssonSvärdNordström2004Cache4, u::AbstractVector, b::AbstractVector, α, β)
+    @inbounds @muladd begin
+        dest[1] = α * inv_left_weights[1] * (
+                    - (b[1] + b[2]) * u[1]
+                    + 2*(b[1] + b[2]) * u[2]
+                    - (b[1] + b[2]) * u[3]
+                )
+        dest[2] = α * inv_left_weights[2] * (
+                    2*(b[1] + b[2]) * u[1]
+                    - (4*b[1] + 4*b[2] + b[3]) * u[2]
+                    + 2*(b[1] + b[2] + b[3]) * u[3]
+                    - b[3] * u[4]
+                )
+        dest[3] = α * inv_left_weights[3] * (
+                    - (b[1] + b[2]) * u[1]
+                    + 2*(b[1] + b[2] + b[3]) * u[2]
+                    - (b[1] + b[2] + 4*b[3] + b[4]) * u[3]
+                    + 2*(b[3] + b[4]) * u[4]
+                    - b[4] * u[5]
+                )
+        for i in 4:length(inv_left_weights)
+            dest[i] = α * inv_left_weights[i] * (
+                        - b[i-1] * u[i-2]
+                        + 2*(b[i-1] + b[i]) * u[i-1]
+                        - (b[i-1] + 4*b[i] + b[i+1]) * u[i]
+                        + 2*(b[i] + b[i+1]) * u[i+1]
+                        - b[i+1] * u[i+2]
+                    )
+        end
+
+        dest[end] = α * inv_right_weights[1] * (
+                        - (b[end] + b[end-1]) * u[end]
+                        + 2*(b[end] + b[end-1]) * u[end-1]
+                        - (b[end] + b[end-1]) * u[end-2]
+                    )
+        dest[end-1] = α * inv_right_weights[2] * (
+                        2*(b[end] + b[end-1]) * u[end]
+                        - (b[end-2] + 4*b[end-1] + 4*b[end]) * u[end-1]
+                        + 2*(b[end-2] + b[end-1] + b[end]) * u[end-2]
+                        - b[end-2] * u[end-3]
+                    )
+        dest[end-2] = α * inv_right_weights[3] * (
+                        - (b[end-1] + b[end]) * u[end]
+                        + 2*(b[end-2] + b[end-1] + b[end]) * u[end-1]
+                        - (b[end-3] + 4*b[end-2] + b[end-1] + b[end]) * u[end-2]
+                        + 2*(b[end-3] + b[end-2]) * u[end-3]
+                        - b[end-3] * u[end-4]
+                    )
+        for i in 3:length(inv_right_weights)-1
+            dest[end-i] = α * inv_right_weights[i+1] * (
+                        - b[end-(i-1)] * u[end-(i-2)]
+                        + 2*(b[end-(i-1)] + b[i]) * u[end-(i-1)]
+                        - (b[end-(i-1)] + 4*b[end-i] + b[end-(i+1)]) * u[end-i]
+                        + 2*(b[end-i] + b[end-(i+1)]) * u[end-(i+1)]
+                        - b[end-(i+1)] * u[end-(i+2)]
+                    )
+        end
+    end
+end
+
+function convolve_boundary_coefficients!(dest::AbstractVector, cache::MattssonSvärdNordström2004Cache4, u::AbstractVector, b::AbstractVector, α, β, ::SafeMode)
     @unpack inv_left_weights, inv_right_weights = cache
 
     @inbounds begin
+        dest[1] = α * inv_left_weights[1] * (
+                    - (b[1] + b[2]) * u[1]
+                    + 2*(b[1] + b[2]) * u[2]
+                    - (b[1] + b[2]) * u[3]
+                ) + β*dest[1]
+        dest[2] = α * inv_left_weights[2] * (
+                    2*(b[1] + b[2]) * u[1]
+                    - (4*b[1] + 4*b[2] + b[3]) * u[2]
+                    + 2*(b[1] + b[2] + b[3]) * u[3]
+                    - b[3] * u[4]
+                ) + β*dest[2]
+        dest[3] = α * inv_left_weights[3] * (
+                    - (b[1] + b[2]) * u[1]
+                    + 2*(b[1] + b[2] + b[3]) * u[2]
+                    - (b[1] + b[2] + 4*b[3] + b[4]) * u[3]
+                    + 2*(b[3] + b[4]) * u[4]
+                    - b[4] * u[5]
+                ) + β*dest[3]
+        for i in 4:length(inv_left_weights)
+            dest[i] = α * inv_left_weights[i] * (
+                        - b[i-1] * u[i-2]
+                        + 2*(b[i-1] + b[i]) * u[i-1]
+                        - (b[i-1] + 4*b[i] + b[i+1]) * u[i]
+                        + 2*(b[i] + b[i+1]) * u[i+1]
+                        - b[i+1] * u[i+2]
+                    ) + β*dest[i]
+        end
+
+        dest[end] = α * inv_right_weights[1] * (
+                        - (b[end] + b[end-1]) * u[end]
+                        + 2*(b[end] + b[end-1]) * u[end-1]
+                        - (b[end] + b[end-1]) * u[end-2]
+                    ) + β*dest[end]
+        dest[end-1] = α * inv_right_weights[2] * (
+                        + 2*(b[end] + b[end-1]) * u[end]
+                        - (b[end-2] + 4*b[end-1] + 4*b[end]) * u[end-1]
+                        + 2*(b[end-2] + b[end-1] + b[end]) * u[end-2]
+                        - b[end-2] * u[end-3]
+                    ) + β*dest[end-1]
+        dest[end-2] = α * inv_right_weights[3] * (
+                        - (b[end-1] + b[end]) * u[end]
+                        + 2*(b[end-2] + b[end-1] + b[end]) * u[end-1]
+                        - (b[end-3] + 4*b[end-2] + b[end-1] + b[end]) * u[end-2]
+                        + 2*(b[end-3] + b[end-2]) * u[end-3]
+                        - b[end-3] * u[end-4]
+                    ) + β*dest[end-2]
+        for i in 3:length(inv_right_weights)-1
+            dest[end-i] = α * inv_right_weights[i+1] * (
+                        - b[end-(i-1)] * u[end-(i-2)]
+                        + 2*(b[end-(i-1)] + b[i]) * u[end-(i-1)]
+                        - (b[end-(i-1)] + 4*b[end-i] + b[end-(i+1)]) * u[end-i]
+                        + 2*(b[end-i] + b[end-(i+1)]) * u[end-(i+1)]
+                        - b[end-(i+1)] * u[end-(i+2)]
+                    ) + β*dest[end-i]
+        end
+    end
+end
+function convolve_boundary_coefficients!(dest::AbstractVector, cache::MattssonSvärdNordström2004Cache4, u::AbstractVector, b::AbstractVector, α, β, ::Union{FastMode, ThreadedMode})
+    @unpack inv_left_weights, inv_right_weights = cache
+
+    @inbounds @muladd begin
         dest[1] = α * inv_left_weights[1] * (
                     - (b[1] + b[2]) * u[1]
                     + 2*(b[1] + b[2]) * u[2]
@@ -359,7 +561,7 @@ end
 lower_bandwidth(cache::MattssonSvärdNordström2004Cache6) = 3
 upper_bandwidth(cache::MattssonSvärdNordström2004Cache6) = 3
 
-function convolve_boundary_coefficients!(dest::AbstractVector, cache::MattssonSvärdNordström2004Cache6, u::AbstractVector, b::AbstractVector, α)
+function convolve_boundary_coefficients!(dest::AbstractVector, cache::MattssonSvärdNordström2004Cache6, u::AbstractVector, b::AbstractVector, α, ::SafeMode)
     @unpack inv_left_weights, inv_right_weights = cache
 
     @inbounds begin
@@ -448,11 +650,189 @@ function convolve_boundary_coefficients!(dest::AbstractVector, cache::MattssonSv
         end
     end
 end
+function convolve_boundary_coefficients!(dest::AbstractVector, cache::MattssonSvärdNordström2004Cache6, u::AbstractVector, b::AbstractVector, α, ::Union{FastMode, ThreadedMode})
+    @unpack inv_left_weights, inv_right_weights = cache
 
-function convolve_boundary_coefficients!(dest::AbstractVector, cache::MattssonSvärdNordström2004Cache6, u::AbstractVector, b::AbstractVector, α, β)
+    @inbounds @muladd begin
+        dest[1] = α * inv_left_weights[1] * (
+                    - (b[1] + b[2] + b[3]) * u[1]
+                    + 3*(b[1] + b[2] + b[3]) * u[2]
+                    - 3*(b[1] + b[2] + b[3]) * u[3]
+                    + (b[1] + b[2] + b[3]) * u[4]
+                )
+        dest[2] = α * inv_left_weights[2] * (
+                    3*(b[1] + b[2] + b[3]) * u[1]
+                    - (9*b[1] + 9*b[2] + 9*b[3] + b[4]) * u[2]
+                    + 3*(3*b[1] + 3*b[2] + 3*b[3] + b[4]) * u[3]
+                    - 3*(b[1] + b[2] + b[3] + b[4]) * u[4]
+                    + b[4] * u[5]
+                )
+        dest[3] = α * inv_left_weights[3] * (
+                    - 3*(b[1] + b[2] + b[3]) * u[1]
+                    + 3*(3*b[1] + 3*b[2] + 3*b[3] + b[4]) * u[2]
+                    - (9*b[1] + 9*b[2] + 9*b[3] + 9*b[4] + b[5]) * u[3]
+                    + 3*(b[1] + b[2] + b[3] + 3*b[4] + b[5]) * u[4]
+                    - 3*(b[4] + b[5]) * u[5]
+                    + b[5] * u[6]
+                )
+        dest[4] = α * inv_left_weights[4] * (
+                    (b[1] + b[2] + b[3]) * u[1]
+                    - 3*(b[1] + b[2] + b[3] + b[4]) * u[2]
+                    + 3*(b[1] + b[2] + b[3] + 3*b[4] + b[5]) * u[3]
+                    - (b[1] + b[2] + b[3] + 9*b[4] + 9*b[5] + b[6]) * u[4]
+                    + 3*(b[4] + 3*b[5] + b[6]) * u[5]
+                    - 3*(b[5] + b[6]) * u[6]
+                    + b[6] * u[7]
+                )
+        for i in 5:length(inv_left_weights)
+            dest[i] = α * inv_left_weights[i] * (
+                        b[i-1] * u[i-3]
+                        - 3*(b[i-1] + b[i]) * u[i-2]
+                        + 3*(b[i-1] + 3*b[i] + b[i+1]) * u[i-1]
+                        - (b[i-1] + 9*b[i] + 9*b[i+1] + b[i+2]) * u[i]
+                        + 3*(b[i] + 3*b[i+1] + b[i+2]) * u[i+1]
+                        - 3*(b[i+1] + b[i+2]) * u[i+2]
+                        + b[i+2] * u[i+3]
+                    )
+        end
+
+        dest[end] = α * inv_right_weights[1] * (
+                        - (b[end] + b[end-1]) * u[end]
+                        + 3*(b[end] + b[end-1]) * u[end-1]
+                        - 3*(b[end] + b[end-1]) * u[end-2]
+                        + (b[end] + b[end-1]) * u[end-3]
+                    )
+        dest[end-1] = α * inv_right_weights[2] * (
+                        3*(b[end] + b[end-1]) * u[end]
+                        - (b[end-2] + 9*b[end-1] + 9*b[end]) * u[end-1]
+                        + 3*(b[end-2] + 3*b[end-1] + 3*b[end]) * u[end-2]
+                        - 3*(b[end-2] + b[end-1] + b[end]) * u[end-3]
+                        + b[end-2] * u[end-4]
+                    )
+        dest[end-2] = α * inv_right_weights[3] * (
+                        - 3*(b[end] + b[end-1]) * u[end]
+                        + 3*(b[end-2] + 3*b[end-1] + 3*b[end]) * u[end-1]
+                        - (b[end-3] + 9*b[end-2] + 9*b[end-1] + 9*b[end]) * u[end-2]
+                        + 3*(b[end-3] + 3*b[end-2] + b[end-1] + b[end]) * u[end-3]
+                        - 3*(b[end-3] + b[end-2]) * u[end-4]
+                        + b[end-3] * u[end-5]
+                    )
+        dest[end-3] = α * inv_right_weights[4] * (
+                        (b[end] + b[end-1]) * u[end]
+                        - 3*(b[end-2] + b[end-1] + b[end]) * u[end-1]
+                        + 3*(b[end-3] + 3*b[end-2] + b[end-1] + b[end]) * u[end-2]
+                        - (b[end-4] + 9*b[end-3] + 9*b[end-2] + b[end-1] + b[end]) * u[end-3]
+                        + 3*(b[end-4] + 3*b[end-3] + b[end-2]) * u[end-4]
+                        - 3*(b[end-4] + b[end-3]) * u[end-5]
+                        + b[end-4] * u[end-6]
+                    )
+        for i in 4:length(inv_right_weights)-1
+            dest[end-i] = α * inv_right_weights[i+1] * (
+                        b[end-(i+1)] * u[end-(i+3)]
+                        - 3*(b[end-(i+1)] + b[end-i]) * u[end-(i+2)]
+                        + 3*(b[end-(i+1)] + 3*b[end-i] + b[end-(i-1)]) * u[end-(i+1)]
+                        - (b[end-(i+1)] + 9*b[end-i] + 9*b[end-(i-1)] + b[end-(i-2)]) * u[end-i]
+                        + 3*(b[end-i] + 3*b[end-(i-1)] + b[end-(i-2)]) * u[end-(i-1)]
+                        - 3*(b[end-(i-1)] + b[end-(i-2)]) * u[end-(i-2)]
+                        + b[end-(i-2)] * u[end-(i-3)]
+                    )
+        end
+    end
+end
+
+function convolve_boundary_coefficients!(dest::AbstractVector, cache::MattssonSvärdNordström2004Cache6, u::AbstractVector, b::AbstractVector, α, β, ::SafeMode)
     @unpack inv_left_weights, inv_right_weights = cache
 
     @inbounds begin
+        dest[1] = α * inv_left_weights[1] * (
+                    - (b[1] + b[2] + b[3]) * u[1]
+                    + 3*(b[1] + b[2] + b[3]) * u[2]
+                    - 3*(b[1] + b[2] + b[3]) * u[3]
+                    + (b[1] + b[2] + b[3]) * u[4]
+                ) + β*dest[1]
+        dest[2] = α * inv_left_weights[2] * (
+                    3*(b[1] + b[2] + b[3]) * u[1]
+                    - (9*b[1] + 9*b[2] + 9*b[3] + b[4]) * u[2]
+                    + 3*(3*b[1] + 3*b[2] + 3*b[3] + b[4]) * u[3]
+                    - 3*(b[1] + b[2] + b[3] + b[4]) * u[4]
+                    + b[4] * u[5]
+                ) + β*dest[2]
+        dest[3] = α * inv_left_weights[3] * (
+                    - 3*(b[1] + b[2] + b[3]) * u[1]
+                    + 3*(3*b[1] + 3*b[2] + 3*b[3] + b[4]) * u[2]
+                    - (9*b[1] + 9*b[2] + 9*b[3] + 9*b[4] + b[5]) * u[3]
+                    + 3*(b[1] + b[2] + b[3] + 3*b[4] + b[5]) * u[4]
+                    - 3*(b[4] + b[5]) * u[5]
+                    + b[5] * u[6]
+                ) + β*dest[3]
+        dest[4] = α * inv_left_weights[4] * (
+                    (b[1] + b[2] + b[3]) * u[1]
+                    - 3*(b[1] + b[2] + b[3] + b[4]) * u[2]
+                    + 3*(b[1] + b[2] + b[3] + 3*b[4] + b[5]) * u[3]
+                    - (b[1] + b[2] + b[3] + 9*b[4] + 9*b[5] + b[6]) * u[4]
+                    + 3*(b[4] + 3*b[5] + b[6]) * u[5]
+                    - 3*(b[5] + b[6]) * u[6]
+                    + b[6] * u[7]
+                ) + β*dest[4]
+        for i in 5:length(inv_left_weights)
+            dest[i] = α * inv_left_weights[i] * (
+                        b[i-1] * u[i-3]
+                        - 3*(b[i-1] + b[i]) * u[i-2]
+                        + 3*(b[i-1] + 3*b[i] + b[i+1]) * u[i-1]
+                        - (b[i-1] + 9*b[i] + 9*b[i+1] + b[i+2]) * u[i]
+                        + 3*(b[i] + 3*b[i+1] + b[i+2]) * u[i+1]
+                        - 3*(b[i+1] + b[i+2]) * u[i+2]
+                        + b[i+2] * u[i+3]
+                    ) + β*dest[i]
+        end
+
+        dest[end] = α * inv_right_weights[1] * (
+                        - (b[end] + b[end-1]) * u[end]
+                        + 3*(b[end] + b[end-1]) * u[end-1]
+                        - 3*(b[end] + b[end-1]) * u[end-2]
+                        + (b[end] + b[end-1]) * u[end-3]
+                    ) + β*dest[end]
+        dest[end-1] = α * inv_right_weights[2] * (
+                        3*(b[end] + b[end-1]) * u[end]
+                        - (b[end-2] + 9*b[end-1] + 9*b[end]) * u[end-1]
+                        + 3*(b[end-2] + 3*b[end-1] + 3*b[end]) * u[end-2]
+                        - 3*(b[end-2] + b[end-1] + b[end]) * u[end-3]
+                        + b[end-2] * u[end-4]
+                    ) + β*dest[end-1]
+        dest[end-2] = α * inv_right_weights[3] * (
+                        - 3*(b[end] + b[end-1]) * u[end]
+                        + 3*(b[end-2] + 3*b[end-1] + 3*b[end]) * u[end-1]
+                        - (b[end-3] + 9*b[end-2] + 9*b[end-1] + 9*b[end]) * u[end-2]
+                        + 3*(b[end-3] + 3*b[end-2] + b[end-1] + b[end]) * u[end-3]
+                        - 3*(b[end-3] + b[end-2]) * u[end-4]
+                        + b[end-3] * u[end-5]
+                    ) + β*dest[end-2]
+        dest[end-3] = α * inv_right_weights[4] * (
+                        (b[end] + b[end-1]) * u[end]
+                        - 3*(b[end-2] + b[end-1] + b[end]) * u[end-1]
+                        + 3*(b[end-3] + 3*b[end-2] + b[end-1] + b[end]) * u[end-2]
+                        - (b[end-4] + 9*b[end-3] + 9*b[end-2] + b[end-1] + b[end]) * u[end-3]
+                        + 3*(b[end-4] + 3*b[end-3] + b[end-2]) * u[end-4]
+                        - 3*(b[end-4] + b[end-3]) * u[end-5]
+                        + b[end-4] * u[end-6]
+                    ) + β*dest[end-3]
+        for i in 4:length(inv_right_weights)-1
+            dest[end-i] = α * inv_right_weights[i+1] * (
+                        b[end-(i+1)] * u[end-(i+3)]
+                        - 3*(b[end-(i+1)] + b[end-i]) * u[end-(i+2)]
+                        + 3*(b[end-(i+1)] + 3*b[end-i] + b[end-(i-1)]) * u[end-(i+1)]
+                        - (b[end-(i+1)] + 9*b[end-i] + 9*b[end-(i-1)] + b[end-(i-2)]) * u[end-i]
+                        + 3*(b[end-i] + 3*b[end-(i-1)] + b[end-(i-2)]) * u[end-(i-1)]
+                        - 3*(b[end-(i-1)] + b[end-(i-2)]) * u[end-(i-2)]
+                        + b[end-(i-2)] * u[end-(i-3)]
+                    ) + β*dest[end-i]
+        end
+    end
+end
+function convolve_boundary_coefficients!(dest::AbstractVector, cache::MattssonSvärdNordström2004Cache6, u::AbstractVector, b::AbstractVector, α, β, ::Union{FastMode, ThreadedMode})
+    @unpack inv_left_weights, inv_right_weights = cache
+
+    @inbounds @muladd begin
         dest[1] = α * inv_left_weights[1] * (
                     - (b[1] + b[2] + b[3]) * u[1]
                     + 3*(b[1] + b[2] + b[3]) * u[2]
@@ -583,7 +963,7 @@ end
 lower_bandwidth(cache::MattssonSvärdNordström2004Cache8) = 4
 upper_bandwidth(cache::MattssonSvärdNordström2004Cache8) = 4
 
-function convolve_boundary_coefficients!(dest::AbstractVector, cache::MattssonSvärdNordström2004Cache8, u::AbstractVector, b::AbstractVector, α)
+function convolve_boundary_coefficients!(dest::AbstractVector, cache::MattssonSvärdNordström2004Cache8, u::AbstractVector, b::AbstractVector, α, ::SafeMode)
     @unpack inv_left_weights, inv_right_weights = cache
 
     @inbounds begin
@@ -706,11 +1086,257 @@ function convolve_boundary_coefficients!(dest::AbstractVector, cache::MattssonSv
         end
     end
 end
+function convolve_boundary_coefficients!(dest::AbstractVector, cache::MattssonSvärdNordström2004Cache8, u::AbstractVector, b::AbstractVector, α, ::Union{FastMode, ThreadedMode})
+    @unpack inv_left_weights, inv_right_weights = cache
 
-function convolve_boundary_coefficients!(dest::AbstractVector, cache::MattssonSvärdNordström2004Cache8, u::AbstractVector, b::AbstractVector, α, β)
+    @inbounds @muladd begin
+        dest[1] = α * inv_left_weights[1] * (
+                    - (b[1] + b[2] + b[3]) * u[1]
+                    + 4*(b[1] + b[2] + b[3]) * u[2]
+                    - 6*(b[1] + b[2] + b[3]) * u[3]
+                    + 4*(b[1] + b[2] + b[3]) * u[4]
+                    - (b[1] + b[2] + b[3]) * u[5]
+                )
+        dest[2] = α * inv_left_weights[2] * (
+                    4*(b[1] + b[2] + b[3]) * u[1]
+                    - (16*b[1] + 16*b[2] + 16*b[3] + b[4]) * u[2]
+                    + 4*(6*b[1] + 6*b[2] + 6*b[3] + b[4]) * u[3]
+                    - (16*b[1] + 16*b[2] + 16*b[3] + 6*b[4]) * u[4]
+                    + 4*(b[1] + b[2] + b[3] + b[4]) * u[5]
+                    - b[4] * u[6]
+                )
+        dest[3] = α * inv_left_weights[3] * (
+                    - 6*(b[1] + b[2] + b[3]) * u[1]
+                    + 4*(6*b[1] + 6*b[2] + 6*b[3] + b[4]) * u[2]
+                    - (36*b[1] + 36*b[2] + 36*b[3] + 16*b[4] + b[5]) * u[3]
+                    + 4*(6*b[1] + 6*b[2] + 6*b[3] + 6*b[4] + b[5]) * u[4]
+                    - (6*b[1] + 6*b[2] + 6*b[3] + 16*b[4] + 6*b[5]) * u[5]
+                    + 4*(b[4] + b[5]) * u[6]
+                    - b[5] * u[7]
+                )
+        dest[4] = α * inv_left_weights[4] * (
+                    4*(b[1] + b[2] + b[3]) * u[1]
+                    - (16*b[1] + 16*b[2] + 16*b[3] + 6*b[4]) * u[2]
+                    + 4*(6*b[1] + 6*b[2] + 6*b[3] + 6*b[4] + b[5]) * u[3]
+                    - (16*b[1] + 16*b[2] + 16*b[3] + 36*b[4] + 16*b[5] + b[6]) * u[4]
+                    + 4*(b[1] + b[2] + b[3] + 6*b[4] + 6*b[5] + b[6]) * u[5]
+                    - (6*b[4] + 16*b[5] + 6*b[6]) * u[6]
+                    + 4*(b[5] + b[6]) * u[7]
+                    - b[6] * u[8]
+                )
+        dest[5] = α * inv_left_weights[5] * (
+                    - (b[1] + b[2] + b[3]) * u[1]
+                    + 4*(b[1] + b[2] + b[3] + b[4]) * u[2]
+                    - (6*b[1] + 6*b[2] + 6*b[3] + 16*b[4] + 6*b[5]) * u[3]
+                    + 4*(b[1] + b[2] + b[3] + 6*b[4] + 6*b[5] + b[6]) * u[4]
+                    - (b[1] + b[2] + b[3] + 16*b[4] + 36*b[5] + 16*b[6] + b[7]) * u[5]
+                    + 4*(b[4] + 6*b[5] + 6*b[6] + b[7]) * u[6]
+                    - (6*b[5] + 16*b[6] + 6*b[7]) * u[7]
+                    + 4*(b[6] + b[7]) * u[8]
+                    - b[7] * u[9]
+                )
+        for i in 6:length(inv_left_weights)
+            dest[i] = α * inv_left_weights[i] * (
+                        - b[i-2] * u[i-4]
+                        + 4*(b[i-2] + b[i-1]) * u[i-3]
+                        - (6*b[i-2] + 16*b[i-1] + 6*b[i]) * u[i-2]
+                        + 4*(b[i-2] + 6*b[i-1] + 6*b[i] + b[i+1]) * u[i-1]
+                        - (b[i-2] + 16*b[i-1] + 36*b[i] + 16*b[i+1] + b[i+2]) * u[i]
+                        + 4*(b[i-1] + 6*b[i] + 6*b[i+1] + b[i+2]) * u[i+1]
+                        - (6*b[i] + 16*b[i+1] + 6*b[i+2]) * u[i+2]
+                        + 4*(b[i+1] + b[i+2]) * u[i+3]
+                        - b[i+2] * u[i+4]
+                    )
+        end
+
+        dest[end] = α * inv_right_weights[1] * (
+                        - (b[end-2] + b[end-1] + b[end]) * u[end]
+                        + 4*(b[end-2] + b[end-1] + b[end]) * u[end-1]
+                        - 6*(b[end-2] + b[end-1] + b[end]) * u[end-2]
+                        + 4*(b[end-2] + b[end-1] + b[end]) * u[end-3]
+                        - (b[end-2] + b[end-1] + b[end]) * u[end-4]
+                    )
+        dest[end-1] = α * inv_right_weights[2] * (
+                        4*(b[end-2] + b[end-1] + b[end]) * u[end]
+                        - (b[end-3] + 16*b[end-2] + 16*b[end-1] + 16*b[end]) * u[end-1]
+                        + 4*(b[end-3] + 6*b[end-2] + 6*b[end-1] + 6*b[end]) * u[end-2]
+                        - (6*b[end-3] + 16*b[end-2] + 16*b[end-1] + 16*b[end]) * u[end-3]
+                        + 4*(b[end-3] + b[end-2] + b[end-1] + b[end]) * u[end-4]
+                        - b[end-3] * u[end-5]
+                    )
+        dest[end-2] = α * inv_right_weights[3] * (
+                        - 6*(b[end-2] + b[end-1] + b[end]) * u[end]
+                        + 4*(b[end-3] + 6*b[end-2] + 6*b[end-1] + 6*b[end]) * u[end-1]
+                        - (b[end-4] + 16*b[end-3] + 36*b[end-2] + 36*b[end-1] + 36*b[end]) * u[end-2]
+                        + 4*(b[end-4] + 6*b[end-3] + 6*b[end-2] + 6*b[end-1] + 6*b[end]) * u[end-3]
+                        - (6*b[end-4] + 16*b[end-3] + 6*b[end-2] + 6*b[end-1] + 6*b[end]) * u[end-4]
+                        + 4*(b[end-4] + b[end-3]) * u[end-5]
+                        - b[end-4] * u[end-6]
+                    )
+        dest[end-3] = α * inv_right_weights[4] * (
+                        4*(b[end-2] + b[end-1] + b[end]) * u[end]
+                        - (6*b[end-3] + 16*b[end-2] + 16*b[end-1] + 16*b[end]) * u[end-1]
+                        + 4*(b[end-4] + 6*b[end-3] + 6*b[end-2] + 6*b[end-1] + 6*b[end]) * u[end-2]
+                        - (b[end-5] + 16*b[end-4] + 36*b[end-3] + 16*b[end-2] + 16*b[end-1] + 16*b[end]) * u[end-3]
+                        + 4*(b[end-5] + 6*b[end-4] + 6*b[end-3] + b[end-2] + b[end-1] + b[end]) * u[end-4]
+                        - (6*b[end-5] + 16*b[end-4] + 6*b[end-3]) * u[end-5]
+                        + 4*(b[end-5] + b[end-4]) * u[end-6]
+                        - b[end-5] * u[end-7]
+                    )
+        dest[end-4] = α * inv_right_weights[5] * (
+                        - (b[end-2] + b[end-1] + b[end]) * u[end]
+                        + 4*(b[end-3] + b[end-2] + b[end-1] + b[end]) * u[end-1]
+                        - (6*b[end-4] + 16*b[end-3] + 6*b[end-2] + 6*b[end-1] + 6*b[end]) * u[end-2]
+                        + 4*(b[end-5] + 6*b[end-4] + 6*b[end-3] + b[end-2] + b[end-1] + b[end]) * u[end-3]
+                        - (b[end-6] + 16*b[end-5] + 36*b[end-4] + 16*b[end-3] + b[end-2] + b[end-1] + b[end]) * u[end-4]
+                        + 4*(b[end-6] + 6*b[end-5] + 6*b[end-4] + b[end-3]) * u[end-5]
+                        - (6*b[end-6] + 16*b[end-5] + 6*b[end-4]) * u[end-6]
+                        + 4*(b[end-6] + b[end-5]) * u[end-7]
+                        - b[end-6] * u[end-8]
+                    )
+        for i in 5:length(inv_right_weights)-1
+            dest[end-i] = α * inv_right_weights[i+1] * (
+                        - b[end-(i+2)] * u[end-(i+4)]
+                        + 4*(b[end-(i+2)] + b[end-(i+1)]) * u[end-(i+3)]
+                        - (6*b[end-(i+2)] + 16*b[end-(i+1)] + 6*b[end-i]) * u[end-(i+2)]
+                        + 4*(b[end-(i+2)] + 6*b[end-(i+1)] + 6*b[end-i] + b[end-(i-1)]) * u[end-(i+1)]
+                        - (b[end-(i+2)] + 16*b[end-(i+1)] + 36*b[end-i] + 16*b[end-(i-1)] + b[end-(i-2)]) * u[end-i]
+                        + 4*(b[end-(i+1)] + 6*b[end-i] + 6*b[end-(i-1)] + b[end-(i-2)]) * u[end-(i-1)]
+                        - (6*b[end-i] + 16*b[end-(i-1)] + 6*b[end-(i-2)]) * u[end-(i-2)]
+                        + 4*(b[end-(i-1)] + b[end-(i-2)]) * u[end-(i-3)]
+                        - b[end-(i-2)] * u[end-(i-4)]
+                    )
+        end
+    end
+end
+
+function convolve_boundary_coefficients!(dest::AbstractVector, cache::MattssonSvärdNordström2004Cache8, u::AbstractVector, b::AbstractVector, α, β, ::SafeMode)
     @unpack inv_left_weights, inv_right_weights = cache
 
     @inbounds begin
+        dest[1] = α * inv_left_weights[1] * (
+                    - (b[1] + b[2] + b[3]) * u[1]
+                    + 4*(b[1] + b[2] + b[3]) * u[2]
+                    - 6*(b[1] + b[2] + b[3]) * u[3]
+                    + 4*(b[1] + b[2] + b[3]) * u[4]
+                    - (b[1] + b[2] + b[3]) * u[5]
+                ) + β*dest[1]
+        dest[2] = α * inv_left_weights[2] * (
+                    + 4*(b[1] + b[2] + b[3]) * u[1]
+                    - (16*b[1] + 16*b[2] + 16*b[3] + b[4]) * u[2]
+                    + 4*(6*b[1] + 6*b[2] + 6*b[3] + b[4]) * u[3]
+                    - (16*b[1] + 16*b[2] + 16*b[3] + 6*b[4]) * u[4]
+                    + 4*(b[1] + b[2] + b[3] + b[4]) * u[5]
+                    - b[4] * u[6]
+                ) + β*dest[2]
+        dest[3] = α * inv_left_weights[3] * (
+                    - 6*(b[1] + b[2] + b[3]) * u[1]
+                    + 4*(6*b[1] + 6*b[2] + 6*b[3] + b[4]) * u[2]
+                    - (36*b[1] + 36*b[2] + 36*b[3] + 16*b[4] + b[5]) * u[3]
+                    + 4*(6*b[1] + 6*b[2] + 6*b[3] + 6*b[4] + b[5]) * u[4]
+                    - (6*b[1] + 6*b[2] + 6*b[3] + 16*b[4] + 6*b[5]) * u[5]
+                    + 4*(b[4] + b[5]) * u[6]
+                    - b[5] * u[7]
+                ) + β*dest[3]
+        dest[4] = α * inv_left_weights[4] * (
+                    4*(b[1] + b[2] + b[3]) * u[1]
+                    - (16*b[1] + 16*b[2] + 16*b[3] + 6*b[4]) * u[2]
+                    + 4*(6*b[1] + 6*b[2] + 6*b[3] + 6*b[4] + b[5]) * u[3]
+                    - (16*b[1] + 16*b[2] + 16*b[3] + 36*b[4] + 16*b[5] + b[6]) * u[4]
+                    + 4*(b[1] + b[2] + b[3] + 6*b[4] + 6*b[5] + b[6]) * u[5]
+                    - (6*b[4] + 16*b[5] + 6*b[6]) * u[6]
+                    + 4*(b[5] + b[6]) * u[7]
+                    - b[6] * u[8]
+                ) + β*dest[4]
+        dest[5] = α * inv_left_weights[5] * (
+                    - (b[1] + b[2] + b[3]) * u[1]
+                    + 4*(b[1] + b[2] + b[3] + b[4]) * u[2]
+                    - (6*b[1] + 6*b[2] + 6*b[3] + 16*b[4] + 6*b[5]) * u[3]
+                    + 4*(b[1] + b[2] + b[3] + 6*b[4] + 6*b[5] + b[6]) * u[4]
+                    - (b[1] + b[2] + b[3] + 16*b[4] + 36*b[5] + 16*b[6] + b[7]) * u[5]
+                    + 4*(b[4] + 6*b[5] + 6*b[6] + b[7]) * u[6]
+                    - (6*b[5] + 16*b[6] + 6*b[7]) * u[7]
+                    + 4*(b[6] + b[7]) * u[8]
+                    - b[7] * u[9]
+                ) + β*dest[5]
+        for i in 6:length(inv_left_weights)
+            dest[i] = α * inv_left_weights[i] * (
+                        - b[i-2] * u[i-4]
+                        + 4*(b[i-2] + b[i-1]) * u[i-3]
+                        - (6*b[i-2] + 16*b[i-1] + 6*b[i]) * u[i-2]
+                        + 4*(b[i-2] + 6*b[i-1] + 6*b[i] + b[i+1]) * u[i-1]
+                        - (b[i-2] + 16*b[i-1] + 36*b[i] + 16*b[i+1] + b[i+2]) * u[i]
+                        + 4*(b[i-1] + 6*b[i] + 6*b[i+1] + b[i+2]) * u[i+1]
+                        - (6*b[i] + 16*b[i+1] + 6*b[i+2]) * u[i+2]
+                        + 4*(b[i+1] + b[i+2]) * u[i+3]
+                        - b[i+2] * u[i+4]
+                    ) + β*dest[i]
+        end
+
+        dest[end] = α * inv_right_weights[1] * (
+                        - (b[end-2] + b[end-1] + b[end]) * u[end]
+                        + 4*(b[end-2] + b[end-1] + b[end]) * u[end-1]
+                        - 6*(b[end-2] + b[end-1] + b[end]) * u[end-2]
+                        + 4*(b[end-2] + b[end-1] + b[end]) * u[end-3]
+                        - (b[end-2] + b[end-1] + b[end]) * u[end-4]
+                    ) + β*dest[end]
+        dest[end-1] = α * inv_right_weights[2] * (
+                        4*(b[end-2] + b[end-1] + b[end]) * u[end]
+                        - (b[end-3] + 16*b[end-2] + 16*b[end-1] + 16*b[end]) * u[end-1]
+                        + 4*(b[end-3] + 6*b[end-2] + 6*b[end-1] + 6*b[end]) * u[end-2]
+                        - (6*b[end-3] + 16*b[end-2] + 16*b[end-1] + 16*b[end]) * u[end-3]
+                        + 4*(b[end-3] + b[end-2] + b[end-1] + b[end]) * u[end-4]
+                        - b[end-3] * u[end-5]
+                    ) + β*dest[end-1]
+        dest[end-2] = α * inv_right_weights[3] * (
+                        - 6*(b[end-2] + b[end-1] + b[end]) * u[end]
+                        + 4*(b[end-3] + 6*b[end-2] + 6*b[end-1] + 6*b[end]) * u[end-1]
+                        - (b[end-4] + 16*b[end-3] + 36*b[end-2] + 36*b[end-1] + 36*b[end]) * u[end-2]
+                        + 4*(b[end-4] + 6*b[end-3] + 6*b[end-2] + 6*b[end-1] + 6*b[end]) * u[end-3]
+                        - (6*b[end-4] + 16*b[end-3] + 6*b[end-2] + 6*b[end-1] + 6*b[end]) * u[end-4]
+                        + 4*(b[end-4] + b[end-3]) * u[end-5]
+                        - b[end-4] * u[end-6]
+                    ) + β*dest[end-2]
+        dest[end-3] = α * inv_right_weights[4] * (
+                        4*(b[end-2] + b[end-1] + b[end]) * u[end]
+                        - (6*b[end-3] + 16*b[end-2] + 16*b[end-1] + 16*b[end]) * u[end-1]
+                        + 4*(b[end-4] + 6*b[end-3] + 6*b[end-2] + 6*b[end-1] + 6*b[end]) * u[end-2]
+                        - (b[end-5] + 16*b[end-4] + 36*b[end-3] + 16*b[end-2] + 16*b[end-1] + 16*b[end]) * u[end-3]
+                        + 4*(b[end-5] + 6*b[end-4] + 6*b[end-3] + b[end-2] + b[end-1] + b[end]) * u[end-4]
+                        - (6*b[end-5] + 16*b[end-4] + 6*b[end-3]) * u[end-5]
+                        + 4*(b[end-5] + b[end-4]) * u[end-6]
+                        - b[end-5] * u[end-7]
+                    ) + β*dest[end-3]
+        dest[end-4] = α * inv_right_weights[5] * (
+                        - (b[end-2] + b[end-1] + b[end]) * u[end]
+                        + 4*(b[end-3] + b[end-2] + b[end-1] + b[end]) * u[end-1]
+                        - (6*b[end-4] + 16*b[end-3] + 6*b[end-2] + 6*b[end-1] + 6*b[end]) * u[end-2]
+                        + 4*(b[end-5] + 6*b[end-4] + 6*b[end-3] + b[end-2] + b[end-1] + b[end]) * u[end-3]
+                        - (b[end-6] + 16*b[end-5] + 36*b[end-4] + 16*b[end-3] + b[end-2] + b[end-1] + b[end]) * u[end-4]
+                        + 4*(b[end-6] + 6*b[end-5] + 6*b[end-4] + b[end-3]) * u[end-5]
+                        - (6*b[end-6] + 16*b[end-5] + 6*b[end-4]) * u[end-6]
+                        + 4*(b[end-6] + b[end-5]) * u[end-7]
+                        - b[end-6] * u[end-8]
+                    ) + β*dest[end-4]
+        for i in 5:length(inv_right_weights)-1
+            dest[end-i] = α * inv_right_weights[i+1] * (
+                        - b[end-(i+2)] * u[end-(i+4)]
+                        + 4*(b[end-(i+2)] + b[end-(i+1)]) * u[end-(i+3)]
+                        - (6*b[end-(i+2)] + 16*b[end-(i+1)] + 6*b[end-i]) * u[end-(i+2)]
+                        + 4*(b[end-(i+2)] + 6*b[end-(i+1)] + 6*b[end-i] + b[end-(i-1)]) * u[end-(i+1)]
+                        - (b[end-(i+2)] + 16*b[end-(i+1)] + 36*b[end-i] + 16*b[end-(i-1)] + b[end-(i-2)]) * u[end-i]
+                        + 4*(b[end-(i+1)] + 6*b[end-i] + 6*b[end-(i-1)] + b[end-(i-2)]) * u[end-(i-1)]
+                        - (6*b[end-i] + 16*b[end-(i-1)] + 6*b[end-(i-2)]) * u[end-(i-2)]
+                        + 4*(b[end-(i-1)] + b[end-(i-2)]) * u[end-(i-3)]
+                        - b[end-(i-2)] * u[end-(i-4)]
+                    ) + β*dest[end-i]
+        end
+    end
+end
+function convolve_boundary_coefficients!(dest::AbstractVector, cache::MattssonSvärdNordström2004Cache8, u::AbstractVector, b::AbstractVector, α, β, ::Union{FastMode, ThreadedMode})
+    @unpack inv_left_weights, inv_right_weights = cache
+
+    @inbounds @muladd begin
         dest[1] = α * inv_left_weights[1] * (
                     - (b[1] + b[2] + b[3]) * u[1]
                     + 4*(b[1] + b[2] + b[3]) * u[2]
