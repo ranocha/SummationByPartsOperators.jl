@@ -25,6 +25,9 @@ using SummationByPartsOperators
     M = mass_matrix(Dp_bounded)
     @test M == mass_matrix(Dm_bounded)
     @test M == mass_matrix(Dc_bounded)
+    for i in 1:size(Dp_bounded, 1)
+      @test @inferred(weight(Dp_bounded, i)) ≈ @inferred(weight(Dm_bounded, i)) ≈ @inferred(weight(Dc_bounded, i))
+    end
     Dp_periodic = periodic_derivative_operator(1, acc_order, xmin, xmax, N-1, -(acc_order - 1) ÷ 2)
     Dm_periodic = periodic_derivative_operator(1, acc_order, xmin, xmax, N-1, -acc_order + (acc_order - 1) ÷ 2)
     Dp = Matrix(Dp_bounded)
@@ -83,6 +86,9 @@ end
   @test SummationByPartsOperators.xmax(D) == SummationByPartsOperators.xmax(Dp)
 
   @test mass_matrix(D) == mass_matrix(Dp)
+  for i in 1:size(D, 1)
+    @test @inferred(weight(D, i)) ≈ @inferred(weight(Dp, i))
+  end
   @test left_boundary_weight(D) == left_boundary_weight(Dp)
   @test right_boundary_weight(D) == right_boundary_weight(Dp)
 

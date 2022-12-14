@@ -208,6 +208,7 @@ let T=Float32
 
     @test integrate(x7, D) ≈ sum(mass_matrix(D) * x7)
     @test integrate(u->u^2, x7, D) ≈ dot(x7, mass_matrix(D), x7)
+    @test mass_matrix(D) ≈ Diagonal([weight(D, i) for i in 1:size(D, 1)])
 end
 
 # Accuracy tests with Float64.
@@ -393,6 +394,7 @@ let T = Float64
 
     @test integrate(x7, D) ≈ sum(mass_matrix(D) * x7)
     @test integrate(u->u^2, x7, D) ≈ dot(x7, mass_matrix(D), x7)
+    @test mass_matrix(D) ≈ Diagonal([weight(D, i) for i in 1:size(D, 1)])
 end
 
 # Compare Fornberg algorithm with exact representation of central derivative coefficients.
@@ -868,6 +870,7 @@ for T in (Float32, Float64)
 
         @test integrate(u, D) ≈ sum(mass_matrix(D) * u)
         @test integrate(u->u^2, u, D) ≈ dot(u, mass_matrix(D), u)
+        @test mass_matrix(D) ≈ Diagonal([weight(D, i) for i in 1:size(D, 1)])
     end
 
     for N in (8, 9), acc_order in (2, 3, 4)
