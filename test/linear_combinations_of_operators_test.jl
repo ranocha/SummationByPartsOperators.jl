@@ -28,6 +28,8 @@ for T in (Float32, Float64)
         show(IOContext(devnull, :compact=>compact), sum_3_12)
     end
 
+    @test grid(sum_12) == x
+
     # Compare mul! with β=0 and mul! without β
     mul!(dest1, sum_12, u, one(T), zero(T))
     mul!(dest2, sum_12, u, one(T))
@@ -53,17 +55,32 @@ for T in (Float32, Float64)
         combi = (D₁ + D₂) - D₂
         @test combi * u ≈ D₁ * u
 
+        combi = D₂ - (D₁ + D₂)
+        @test combi * u ≈ -(D₁ * u)
+
         combi = +D₁
         @test combi * u ≈ D₁ * u
 
         combi = -D₁
         @test combi * u ≈ -(D₁ * u)
 
+        combi = 2 * D₁
+        @test combi * u ≈ 2 * (D₁ * u)
+
+        combi = D₁ * 2
+        @test combi * u ≈ 2 * (D₁ * u)
+
         combi = +(D₁ - D₂)
         @test combi * u ≈ D₁ * u - D₂ * u
 
         combi = -(D₁ - D₂)
         @test combi * u ≈ -(D₁ * u) + D₂ * u
+
+        combi = (D₁ - D₂) + (-D₁ + D₂)
+        @test norm(combi * u) < N * eps(T)
+
+        combi = (D₁ - D₂) - (D₁ - D₂)
+        @test norm(combi * u) < N * eps(T)
     end
 
     @testset "Products and quotients" begin

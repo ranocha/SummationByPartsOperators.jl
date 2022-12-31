@@ -329,7 +329,8 @@ function Base.:+(D::AbstractDerivativeOperator, combi::LinearlyCombinedDerivativ
 end
 
 function Base.:+(combi1::LinearlyCombinedDerivativeOperators, combi2::LinearlyCombinedDerivativeOperators)
-    LinearlyCombinedDerivativeOperators(combi1.operators..., combi2.operators...)
+    LinearlyCombinedDerivativeOperators((combi1.operators..., combi2.operators...),
+                                        (combi1.coefficients..., combi2.coefficients...))
 end
 
 
