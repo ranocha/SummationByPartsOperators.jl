@@ -270,85 +270,185 @@ end
 
 
 """
-    SumOfDerivativeOperators
+    LinearlyCombinedDerivativeOperators
 
-Sum several derivative operators lazily.
+Form linear combinations of several derivative operators lazily.
 """
-@auto_hash_equals struct SumOfDerivativeOperators{T,N,Operators<:Tuple{Vararg{AbstractDerivativeOperator{T},N}}} <: AbstractDerivativeOperator{T}
+@auto_hash_equals struct LinearlyCombinedDerivativeOperators{T, N, Operators <: Tuple{Vararg{AbstractDerivativeOperator{T}, N}}, Coefficients <: Tuple{Vararg{T, N}}} <: AbstractDerivativeOperator{T}
     operators::Operators
+    coefficients::Coefficients
 
-    function SumOfDerivativeOperators(operators::Operators) where {T,N,Operators<:Tuple{Vararg{AbstractDerivativeOperator{T},N}}}
+    function LinearlyCombinedDerivativeOperators{T, N, Operators, Coefficients}(operators::Operators, coefficients::Coefficients) where {T, N, Operators <: Tuple{Vararg{AbstractDerivativeOperator{T}, N}}, Coefficients <: Tuple{Vararg{T, N}}}
         @argcheck all(i->size(operators[i]) == size(first(operators)), eachindex(operators)) DimensionMismatch
         @argcheck all(i->grid(operators[i]) ≈ grid(first(operators)), eachindex(operators)) ArgumentError
-        new{T,N,Operators}(operators)
+        new{T, N, Operators, Coefficients}(operators, coefficients)
     end
 end
 
-SumOfDerivativeOperators(ops...) = SumOfDerivativeOperators(ops)
+function LinearlyCombinedDerivativeOperators(ops::NTuple{N, AbstractDerivativeOperator{T}}, coefficients::NTuple{N, Number}) where {T, N}
+    coefficients = map(c -> convert(T, c), coefficients)
+    return LinearlyCombinedDerivativeOperators{T, N, typeof(ops), typeof(coefficients)}(ops, coefficients)
+end
 
-Base.size(sum::SumOfDerivativeOperators) = size(first(sum.operators))
-Base.size(sum::SumOfDerivativeOperators, i::Int) = size(first(sum.operators), i)
-function Base.length(::Type{SumOfDerivativeOperators{T,N,Operators}}) where {T,N,Operators}
+LinearlyCombinedDerivativeOperators(ops...) = LinearlyCombinedDerivativeOperators(ops, ntuple(_ -> true, length(ops)))
+
+# TODO: deprecated in v0.5.28
+Base.@deprecate_binding SumOfDerivativeOperators LinearlyCombinedDerivativeOperators false
+
+Base.size(combi::LinearlyCombinedDerivativeOperators) = size(first(combi.operators))
+Base.size(combi::LinearlyCombinedDerivativeOperators, i::Int) = size(first(combi.operators), i)
+function Base.length(::Type{LinearlyCombinedDerivativeOperators{T, N, Operators, Coefficients}}) where {T, N, Operators, Coefficients}
     N
 end
-grid(sum::SumOfDerivativeOperators) = grid(first(sum.operators))
+grid(combi::LinearlyCombinedDerivativeOperators) = grid(first(combi.operators))
 
-function Base.:+(D1::AbstractDerivativeOperator, D2::AbstractDerivativeOperator)
-    SumOfDerivativeOperators(D1, D2)
-end
-
-function Base.:+(sum::SumOfDerivativeOperators, D::AbstractDerivativeOperator)
-    SumOfDerivativeOperators(sum.operators..., D)
-end
-
-function Base.:+(D::AbstractDerivativeOperator, sum::SumOfDerivativeOperators)
-    SumOfDerivativeOperators(D, sum.operators...)
-end
-
-function Base.:+(sum1::SumOfDerivativeOperators, sum2::SumOfDerivativeOperators)
-    SumOfDerivativeOperators(sum1.operators..., sum2.operators...)
-end
-
-function Base.show(io::IO, sum::SumOfDerivativeOperators)
-    print(io, "Sum of ", length(sum.operators), " operators")
+function Base.show(io::IO, combi::LinearlyCombinedDerivativeOperators)
+    print(io, "Linear combination of ", length(combi.operators), " operators")
     if get(io, :compact, false) == false
         print(io, ":")
-        for D in sum.operators
+        for (D, c) in zip(combi.operators, combi.coefficients)
             print(io, "\n", D)
+            print(io, "\nwith coefficient ", c)
         end
     end
 end
 
-@unroll function mul!(dest::AbstractVector, sum::SumOfDerivativeOperators, u::AbstractVector,
+
+function Base.:+(D1::AbstractDerivativeOperator, D2::AbstractDerivativeOperator)
+    LinearlyCombinedDerivativeOperators(D1, D2)
+end
+
+function Base.:+(combi::LinearlyCombinedDerivativeOperators, D::AbstractDerivativeOperator)
+    coefficients = (combi.coefficients..., one(eltype(D)))
+    LinearlyCombinedDerivativeOperators((combi.operators..., D), coefficients)
+end
+
+function Base.:+(D::AbstractDerivativeOperator, combi::LinearlyCombinedDerivativeOperators)
+    coefficients = (one(eltype(D)), combi.coefficients...)
+    LinearlyCombinedDerivativeOperators((combi.operators..., D), coefficients)
+end
+
+function Base.:+(combi1::LinearlyCombinedDerivativeOperators, combi2::LinearlyCombinedDerivativeOperators)
+    LinearlyCombinedDerivativeOperators((combi1.operators..., combi2.operators...),
+                                        (combi1.coefficients..., combi2.coefficients...))
+end
+
+
+function Base.:-(D1::AbstractDerivativeOperator, D2::AbstractDerivativeOperator)
+    T = eltype(D1)
+    LinearlyCombinedDerivativeOperators((D1, D2), (one(T), -one(T)))
+end
+
+function Base.:-(combi::LinearlyCombinedDerivativeOperators, D::AbstractDerivativeOperator)
+    coefficients = (combi.coefficients..., -one(eltype(D)))
+    LinearlyCombinedDerivativeOperators((combi.operators..., D), coefficients)
+end
+
+function Base.:-(D::AbstractDerivativeOperator, combi::LinearlyCombinedDerivativeOperators)
+    coefficients = (one(eltype(D)), map(c -> -c, combi.coefficients)...)
+    LinearlyCombinedDerivativeOperators((D, combi.operators...), coefficients)
+end
+
+function Base.:-(combi1::LinearlyCombinedDerivativeOperators, combi2::LinearlyCombinedDerivativeOperators)
+    coefficients = (combi1.coefficients..., map(c -> -c, combi2.coefficients)...)
+    LinearlyCombinedDerivativeOperators((combi1.operators..., combi2.operators...), coefficients)
+end
+
+
+function Base.:+(D::AbstractDerivativeOperator)
+    D
+end
+
+function Base.:+(combi::LinearlyCombinedDerivativeOperators)
+    combi
+end
+
+
+function Base.:-(D::AbstractDerivativeOperator)
+    LinearlyCombinedDerivativeOperators((D,), (-one(eltype(D)),))
+end
+
+function Base.:-(combi::LinearlyCombinedDerivativeOperators)
+    coefficients = map(c -> -c, combi.coefficients)
+    LinearlyCombinedDerivativeOperators(combi.operators, coefficients)
+end
+
+
+function Base.:*(c::Number, D::AbstractDerivativeOperator)
+    LinearlyCombinedDerivativeOperators((D,), (c,))
+end
+
+function Base.:*(D::AbstractDerivativeOperator, c::Number)
+    # TODO: Assume associativity
+    c * D
+end
+
+function Base.:*(c::Number, combi::LinearlyCombinedDerivativeOperators)
+    coefficients = map(ci -> c * ci, combi.coefficients)
+    LinearlyCombinedDerivativeOperators(combi.operators, coefficients)
+end
+
+function Base.:*(combi::LinearlyCombinedDerivativeOperators, c::Number)
+    # TODO: Assume associativity
+    c * combi
+end
+
+
+function Base.:\(c::Number, D::AbstractDerivativeOperator)
+    if eltype(D) <: AbstractFloat
+        factor = inv(c)
+    else
+        factor = 1 // c
+    end
+    LinearlyCombinedDerivativeOperators((D,), (factor,))
+end
+
+function Base.:/(D::AbstractDerivativeOperator, c::Number)
+    # TODO: Assume associativity
+    c \ D
+end
+
+function Base.:\(c::Number, combi::LinearlyCombinedDerivativeOperators)
+    coefficients = map(ci -> c \ ci, combi.coefficients)
+    LinearlyCombinedDerivativeOperators(combi.operators, coefficients)
+end
+
+function Base.:/(combi::LinearlyCombinedDerivativeOperators, c::Number)
+    # TODO: Assume associativity
+    c \ combi
+end
+
+
+@unroll function mul!(dest::AbstractVector, combi::LinearlyCombinedDerivativeOperators, u::AbstractVector,
                       α, β)
-    @unpack operators = sum
+    @unpack operators, coefficients = combi
     @boundscheck begin
         @argcheck size(first(operators), 2) == length(u) DimensionMismatch
         @argcheck size(first(operators), 1) == length(dest) DimensionMismatch
     end
 
-    @inbounds mul!(dest, operators[1], u, α, β)
-    @unroll for i in 1:length(sum)
+    @inbounds mul!(dest, operators[1], u, α * coefficients[1], β)
+    @unroll for i in 1:length(combi)
         if i != 1
-            @inbounds mul!(dest, operators[i], u, α, one(β))
+            @inbounds mul!(dest, operators[i], u, α * coefficients[i], one(β))
         end
     end
 
     nothing
 end
 
-@unroll function mul!(dest::AbstractVector, sum::SumOfDerivativeOperators, u::AbstractVector,
+@unroll function mul!(dest::AbstractVector, combi::LinearlyCombinedDerivativeOperators, u::AbstractVector,
                       α)
-    @unpack operators = sum
+    @unpack operators, coefficients = combi
     @boundscheck begin
         @argcheck size(first(operators), 2) == length(u) DimensionMismatch
         @argcheck size(first(operators), 1) == length(dest) DimensionMismatch
     end
 
-    @inbounds mul!(dest, operators[1], u, α)
-    @unroll for i in 1:length(sum)
+    @inbounds mul!(dest, operators[1], u, α * coefficients[1])
+    @unroll for i in 1:length(combi)
         if i != 1
-            @inbounds mul!(dest, operators[i], u, α, one(α))
+            @inbounds mul!(dest, operators[i], u, α * coefficients[i], one(α))
         end
     end
 
