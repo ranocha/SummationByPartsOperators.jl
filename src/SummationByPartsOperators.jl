@@ -48,7 +48,7 @@ using SparseArrays
 
 using AutoHashEquals: @auto_hash_equals
 using ArgCheck: @argcheck
-using StaticArrayInterface: StaticInt, static_length
+using StaticArrayInterface: StaticArrayInterface, StaticInt, static_length
 using FFTW: FFTW, plan_rfft, plan_brfft, plan_irfft
 using LoopVectorization: LoopVectorization, @turbo, @tturbo
 using MuladdMacro: @muladd
