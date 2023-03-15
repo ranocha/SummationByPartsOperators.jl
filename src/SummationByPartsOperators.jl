@@ -56,7 +56,7 @@ using RecursiveArrayTools: recursive_bottom_eltype
 using Reexport: @reexport
 using Requires: @require
 using StaticArrays: SVector, StaticVector, FieldVector
-using UnPack: @unpack
+using SimpleUnPack: @unpack
 using Unrolled: @unroll
 
 @reexport using SciMLBase: SciMLBase, DiscreteCallback, ODEProblem,

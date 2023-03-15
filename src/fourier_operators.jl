@@ -1087,7 +1087,7 @@ function get_parameters(source_of_coefficients::FourierSpectralViscosityCoeffici
                         kwargs...)
     @argcheck cutoff >= 1
 
-    Dict(:strength=>strength, :cutoff=>cutoff)
+    (; strength = strength, cutoff = cutoff)
 end
 
 
@@ -1137,5 +1137,5 @@ function get_parameters(source::FourierSuperSpectralViscosityCoefficients,
     @argcheck order >= 1
     @argcheck cutoff >= 1
 
-    Dict(:order=>order, :strength=>strength, :cutoff=>cutoff)
+    (; order = order, strength = strength, cutoff = cutoff)
 end
