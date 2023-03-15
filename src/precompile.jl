@@ -1,4 +1,3 @@
-
 using SnoopPrecompile: @precompile_all_calls
 
 @precompile_all_calls begin
