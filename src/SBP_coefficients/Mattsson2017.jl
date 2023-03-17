@@ -37,8 +37,8 @@ function first_derivative_coefficients(source::Mattsson2017, order::Int,
                                        T=Float64, mode=FastMode())
     if order == 1
         left_boundary_plus = (
-            DerivativeCoefficientRow{T,1,2}(SVector(T(-1),    # -2 for continuously coupled = same
-                                                    T(1), )), #  2 for continuously coupled = same
+            DerivativeCoefficientRow{T,1,2}(SVector(T(-2),    # -2 for continuously coupled = same
+                                                    T(2), )), #  2 for continuously coupled = same
         )
         right_boundary_plus = (
             DerivativeCoefficientRow{T,1,2}(SVector(T(0),
@@ -47,7 +47,7 @@ function first_derivative_coefficients(source::Mattsson2017, order::Int,
         upper_coef_plus = SVector( T(1), )
         central_coef_plus = T(-1)
         lower_coef_plus = SVector{0,T}()
-        left_weights = SVector( T(1), ) # 1//2 for continuously coupled = same
+        left_weights = SVector( T(1//2), ) # 1//2 for continuously coupled = same
         right_weights = left_weights
         left_boundary_derivatives = Tuple{}()
         right_boundary_derivatives = left_boundary_derivatives
@@ -57,8 +57,8 @@ function first_derivative_coefficients(source::Mattsson2017, order::Int,
                                                     T(0), )),
         )
         right_boundary_minus = (
-            DerivativeCoefficientRow{T,1,2}(SVector(T(1),      #  2 for continuously coupled = same
-                                                    T(-1), )), # -2 for continuously coupled = same
+            DerivativeCoefficientRow{T,1,2}(SVector(T(2),      #  2 for continuously coupled = same
+                                                    T(-2), )), # -2 for continuously coupled = same
         )
         upper_coef_minus     = .- lower_coef_plus
         central_coef_minus   = .- central_coef_plus
