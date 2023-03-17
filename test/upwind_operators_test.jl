@@ -2,7 +2,7 @@ using Test
 using LinearAlgebra
 using SummationByPartsOperators
 
-source_list = (Mattsson2017, WIP,)
+source_list = (Mattsson2017,)
 
 # check construction of interior part of upwind operators
 @testset "Check interior parts" begin
@@ -12,7 +12,7 @@ source_list = (Mattsson2017, WIP,)
   interior = 10:N-10
 
   for Source in source_list
-    for acc_order in 1:7
+    for acc_order in 1:9
       Dp_bounded, Dm_bounded, Dc_bounded = try
         Dp_bounded = derivative_operator(Source(:plus   ), 1, acc_order, xmin, xmax, N)
         Dm_bounded = derivative_operator(Source(:minus  ), 1, acc_order, xmin, xmax, N)
