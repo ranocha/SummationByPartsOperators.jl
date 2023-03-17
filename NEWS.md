@@ -13,6 +13,8 @@ for human readability.
 - The (keyword) argument `parallel::Union{Val{:serial}, Val{:threads}}`
   is deprecated in favor of `mode` with possible values
   `FastMode()` (default), `SafeMode()`, and `ThreadedMode()`
+- The non-exported struct `SumOfDerivativeOperators` is deprecated in favor of
+  `LinearlyCombinedDerivativeOperators`.
 
 
 ## Breaking changes from v0.4.x to v0.5

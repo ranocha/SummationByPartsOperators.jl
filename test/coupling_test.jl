@@ -15,6 +15,7 @@ using SummationByPartsOperators
         xmin = T(-1)
         xmax = T(2)
         mesh = UniformMesh1D(xmin, xmax, N)
+        @test mesh == UniformMesh1D(xmin=xmin, xmax=xmax, Nx=N)
         cD_continuous = couple_continuously(D, mesh)
         cD_central    = couple_discontinuously(D, mesh)
         cD_plus       = couple_discontinuously(D, mesh, Val(:plus))
@@ -89,6 +90,7 @@ using SummationByPartsOperators
         xmin = T(-1)
         xmax = T(2)
         mesh = UniformPeriodicMesh1D(xmin, xmax, N)
+        @test mesh == UniformPeriodicMesh1D(xmin=xmin, xmax=xmax, Nx=N)
         cD_continuous = couple_continuously(D, mesh)
         cD_central    = couple_discontinuously(D, mesh)
         cD_plus       = couple_discontinuously(D, mesh, Val(:plus))
@@ -399,8 +401,20 @@ end
     xmin = zero(T)
     xmax = one(T)
     D2op1 = legendre_second_derivative_operator(xmin, xmax, 5)
+    @test D2op1 == legendre_second_derivative_operator(xmin=xmin, xmax=xmax, N=5)
+    for compact in (true, false)
+        show(IOContext(devnull, :compact=>compact), D2op1)
+    end
+
+    D1op1 = legendre_derivative_operator(xmin, xmax, 5)
+    u = sin.(grid(D1op1))
+    D1u = D1op1 * u
+    @test derivative_left( D2op1, u, Val{1}()) ≈ D1u[begin]
+    @test derivative_right(D2op1, u, Val{1}()) ≈ D1u[end]
+
     D2op2 = couple_continuously(D2op1, UniformMesh1D(xmin, xmax, 1))
     @test Matrix(D2op1) ≈ Matrix(D2op2)
+
 
     D2op2 = couple_continuously(D2op1, UniformPeriodicMesh1D(xmin, xmax, 1))
     @test SummationByPartsOperators.xmin(D2op2) ≈ xmin

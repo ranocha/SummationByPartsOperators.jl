@@ -6,7 +6,7 @@ A derivative operator on a two-dimensional periodic grid with scalar type `T`
 computing the first derivatives using a spectral Fourier expansion via
 real discrete Fourier transforms.
 """
-struct FourierDerivativeOperator2D{T<:Real, Grid, RFFTx, BRFFTx, RFFTy, BRFFTy} <: AbstractPeriodicDerivativeOperator{T}
+@auto_hash_equals struct FourierDerivativeOperator2D{T<:Real, Grid, RFFTx, BRFFTx, RFFTy, BRFFTy} <: AbstractPeriodicDerivativeOperator{T}
     jac_x::T
     jac_y::T
     Δx::T

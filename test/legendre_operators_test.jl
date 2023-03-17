@@ -17,6 +17,7 @@ for T in (Float32, Float64)
 
     for N in 2 .^ (1:4)
         D = legendre_derivative_operator(xmin, xmax, N)
+        @test D == legendre_derivative_operator(xmin=xmin, xmax=xmax, N=N)
         println(devnull, D)
         @test SummationByPartsOperators.derivative_order(D) == 1
         @test issymmetric(D) == false

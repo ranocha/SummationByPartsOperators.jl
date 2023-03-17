@@ -8,8 +8,8 @@ A semidiscretization of the linear wave equation
 can be `Val(:HomogeneousNeumann)`, `Val(:HomogeneousDirichlet)`, or
 `Val(:NonReflecting)`.
 """
-struct WaveEquationNonperiodicSemidiscretization{Derivative<:AbstractDerivativeOperator,
-                                                 LeftBC, RightBC} <: AbstractSemidiscretization
+@auto_hash_equals struct WaveEquationNonperiodicSemidiscretization{Derivative<:AbstractDerivativeOperator,
+                                                                   LeftBC, RightBC} <: AbstractSemidiscretization
     derivative::Derivative
     left_bc::LeftBC
     right_bc::RightBC

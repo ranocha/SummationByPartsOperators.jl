@@ -26,7 +26,7 @@ mul!(dest, fact::FactorisationWrapper, u) = ldiv!(dest, fact.fact, u)
 Represents the action of a modal filter on values in a nodal basis with fixed
 strength.
 """
-struct ConstantFilter{T<:Real,Nodal2Modal,Modal2Nodal,Tmp,FilterFunction} <: AbstractFilter{T}
+@auto_hash_equals struct ConstantFilter{T<:Real,Nodal2Modal,Modal2Nodal,Tmp,FilterFunction} <: AbstractFilter{T}
     coefficients::Vector{T}
     nodal2modal::Nodal2Modal
     modal2nodal::Modal2Nodal
@@ -88,7 +88,7 @@ end
 
 Represents the exponential filter function `σ(η) = exp(-α*η^p)`.
 """
-struct ExponentialFilter{T<:Real} <: AbstractFilterFunction
+@auto_hash_equals struct ExponentialFilter{T<:Real} <: AbstractFilterFunction
     α::T
     p::Int
 

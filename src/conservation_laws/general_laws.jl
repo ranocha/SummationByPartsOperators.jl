@@ -22,7 +22,7 @@ end
 
 
 
-struct ScalarIntegralQuantities{T} <: FieldVector{2,T}
+@auto_hash_equals struct ScalarIntegralQuantities{T} <: FieldVector{2,T}
     mass::T
     energy::T
 end

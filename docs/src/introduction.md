@@ -174,7 +174,7 @@ A special case of second-derivative SBP operators are polynomial derivative oper
 on Lobatto-Legendre nodes, implemented in [`legendre_second_derivative_operator`](@ref).
 
 
-## Upwind operators
+## [Upwind operators](@id intro-upwind-operators)
 
 Upwind SBP operators were introduced by [`Mattsson2017`](@ref). They combine
 two derivative operators `Dp` (`:plus`) and `Dm` (`:minus`) such that
@@ -218,8 +218,28 @@ Note that we used `N=8` here, i.e., one node less than for the non-periodic
 example. This is necessary since the additional node at the right boundary is
 identified with the left boundary node for periodic operators.
 
+To create all upwind operators for a single setup, you can use
+[`upwind_operators`](@ref).
 
-## Continuous and discontinuous Galerkin methods
+```@repl
+using SummationByPartsOperators
+
+D = upwind_operators(Mattsson2017, derivative_order=1, accuracy_order=2,
+                     xmin=0, xmax=1//1, N=9)
+Matrix(D.plus)
+Matrix(D.minus)
+```
+
+You can also couple upwind operators continuously across elements using
+[`couple_continuously`](@ref) to obtain global upwind operators, see
+[below](@ref intro-CGSEM) and Theorem 2.4 of [^RanochaMitsotakisKetcheson2021].
+
+Similarly, you can couple classical and upwind operators discontinuously across
+elements using [`couple_discontinuously`](@ref) to obtain global upwind operators,
+see [below](@ref intro-DGSEM) and Theorem 2.2 of [^RanochaMitsotakisKetcheson2021].
+
+
+## [Continuous Galerkin methods](@id intro-CGSEM)
 
 SBP operators can be coupled to obtain (nodal) continuous Galerkin (CG) methods.
 If the underlying SBP operators are [`LegendreDerivativeOperator`](@ref)s,
@@ -235,6 +255,9 @@ D = couple_continuously(
 Matrix(D)
 mass_matrix(D)
 ```
+
+
+## [Discontinuous Galerkin methods](@id intro-DGSEM)
 
 SBP operators can also be coupled as in discontinuous Galerkin (DG) methods.
 Using a central numerical flux results in central SBP operators; upwind fluxes
@@ -255,6 +278,27 @@ M * Matrix(D) + Matrix(D)' * M |> iszero
 
 Right now, only uniform meshes [`UniformMesh1D`](@ref) and [`UniformPeriodicMesh1D`](@ref)
 are implemented.
+
+You can also specify a different coupling than `Val(:central)` to obtain
+[upwind operators](@ref intro-upwind-operators).
+
+```@repl
+using SummationByPartsOperators, LinearAlgebra
+
+Dp = couple_discontinuously(
+        legendre_derivative_operator(xmin=-1.0, xmax=1.0, N=3),
+        UniformPeriodicMesh1D(xmin=0.0, xmax=1.0, Nx=3),
+        Val(:plus))
+
+Matrix(Dp)
+
+Dm = couple_discontinuously(
+        legendre_derivative_operator(xmin=-1.0, xmax=1.0, N=3),
+        UniformPeriodicMesh1D(xmin=0.0, xmax=1.0, Nx=3),
+        Val(:minus))
+
+Matrix(Dm)
+```
 
 
 ## Basic interfaces and additional features

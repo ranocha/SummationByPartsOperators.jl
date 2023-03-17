@@ -10,9 +10,9 @@ with periodic boundary conditions.
 or `nothing`, and `split_form::Union{Val(true), Val(false)}` determines whether
 the canonical split form or the conservative form is used.
 """
-struct BurgersPeriodicSemidiscretization{T,Derivative<:AbstractDerivativeOperator{T},
-                                            Dissipation,
-                                            SplitForm<:Union{Val{false}, Val{true}}} <: AbstractSemidiscretization
+@auto_hash_equals struct BurgersPeriodicSemidiscretization{T, Derivative<:AbstractDerivativeOperator{T},
+                                                              Dissipation,
+                                                              SplitForm<:Union{Val{false}, Val{true}}} <: AbstractSemidiscretization
     derivative::Derivative
     dissipation::Dissipation
     tmp1::Vector{T}
@@ -99,10 +99,10 @@ with boundary conditions `left_bc(t)`, `right_bc(t)`.
 or `nothing`, and `split_form::Union{Val(true), Val(false)}` determines whether
 the canonical split form or the conservative form is used.
 """
-struct BurgersNonperiodicSemidiscretization{T,Derivative<:AbstractDerivativeOperator{T},
-                                            Dissipation,
-                                            SplitForm<:Union{Val{false}, Val{true}},
-                                            LeftBC, RightBC} <: AbstractSemidiscretization
+@auto_hash_equals struct BurgersNonperiodicSemidiscretization{T, Derivative<:AbstractDerivativeOperator{T},
+                                                              Dissipation,
+                                                              SplitForm<:Union{Val{false}, Val{true}},
+                                                              LeftBC, RightBC} <: AbstractSemidiscretization
     derivative::Derivative
     dissipation::Dissipation
     tmp1::Vector{T}

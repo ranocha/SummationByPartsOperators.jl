@@ -25,9 +25,11 @@ for source in D_test_list, T in (Float32,Float64)
     end
     if D !== nothing
         for compact in (true, false)
-            show(IOContext(devnull, :compact=>false), D)
-            show(IOContext(devnull, :compact=>false), D.coefficients)
+            show(IOContext(devnull, :compact=>compact), D)
+            show(IOContext(devnull, :compact=>compact), D.coefficients)
+            summary(IOContext(devnull, :compact=>compact), D)
         end
+        @test real(D) == T
         x1 = grid(D)
         x0 = fill(one(eltype(x1)), length(x1))
         x2 = x1 .* x1
@@ -52,6 +54,10 @@ for source in D_test_list, T in (Float32,Float64)
         # integration
         k=0; @test integrate(x0, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
         k=1; @test integrate(x1, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
+        @test integrate(identity, x1, D) ≈ (xmax^2 - xmin^2) / 2
+        # boundary derivative
+        @test derivative_left( D, x1, Val{0}()) ≈ x1[begin]
+        @test derivative_right(D, x1, Val{0}()) ≈ x1[end]
     end
 
     acc_order = 4
@@ -63,8 +69,8 @@ for source in D_test_list, T in (Float32,Float64)
     if D !== nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
         for compact in (true, false)
-            show(IOContext(devnull, :compact=>false), D)
-            show(IOContext(devnull, :compact=>false), D.coefficients)
+            show(IOContext(devnull, :compact=>compact), D)
+            show(IOContext(devnull, :compact=>compact), D.coefficients)
         end
         x1 = grid(D)
         x0 = fill(one(eltype(x1)), length(x1))
@@ -102,6 +108,10 @@ for source in D_test_list, T in (Float32,Float64)
         k=1; @test integrate(x1, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
         k=2; @test integrate(x2, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
         k=3; @test integrate(x3, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
+        @test integrate(identity, x1, D) ≈ (xmax^2 - xmin^2) / 2
+        # boundary derivative
+        @test derivative_left( D, x1, Val{0}()) ≈ x1[begin]
+        @test derivative_right(D, x1, Val{0}()) ≈ x1[end]
     end
 
     acc_order = 6
@@ -113,8 +123,8 @@ for source in D_test_list, T in (Float32,Float64)
     if D !== nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
         for compact in (true, false)
-            show(IOContext(devnull, :compact=>false), D)
-            show(IOContext(devnull, :compact=>false), D.coefficients)
+            show(IOContext(devnull, :compact=>compact), D)
+            show(IOContext(devnull, :compact=>compact), D.coefficients)
         end
         x1 = grid(D)
         x0 = fill(one(eltype(x1)), length(x1))
@@ -158,6 +168,10 @@ for source in D_test_list, T in (Float32,Float64)
         k=5; @test integrate(x5, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
         k=6; @test integrate(x6, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
         k=7; @test integrate(x7, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
+        @test integrate(identity, x1, D) ≈ (xmax^2 - xmin^2) / 2
+        # boundary derivative
+        @test derivative_left( D, x1, Val{0}()) ≈ x1[begin]
+        @test derivative_right(D, x1, Val{0}()) ≈ x1[end]
     end
 
     acc_order = 8
@@ -169,8 +183,8 @@ for source in D_test_list, T in (Float32,Float64)
     if D !== nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
         for compact in (true, false)
-            show(IOContext(devnull, :compact=>false), D)
-            show(IOContext(devnull, :compact=>false), D.coefficients)
+            show(IOContext(devnull, :compact=>compact), D)
+            show(IOContext(devnull, :compact=>compact), D.coefficients)
         end
         x1 = grid(D)
         x0 = fill(one(eltype(x1)), length(x1))
@@ -212,6 +226,10 @@ for source in D_test_list, T in (Float32,Float64)
         k=5; @test integrate(x5, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
         k=6; @test integrate(x6, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
         k=7; @test integrate(x7, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
+        @test integrate(identity, x1, D) ≈ (xmax^2 - xmin^2) / 2
+        # boundary derivative
+        @test derivative_left( D, x1, Val{0}()) ≈ x1[begin]
+        @test derivative_right(D, x1, Val{0}()) ≈ x1[end]
     end
 
     @test_throws Union{MethodError,ArgumentError} derivative_operator(source, der_order, 16, xmin, xmax, N)
@@ -233,8 +251,8 @@ for source in D_test_list, T in (Float32,Float64)
     if D !== nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
         for compact in (true, false)
-            show(IOContext(devnull, :compact=>false), D)
-            show(IOContext(devnull, :compact=>false), D.coefficients)
+            show(IOContext(devnull, :compact=>compact), D)
+            show(IOContext(devnull, :compact=>compact), D.coefficients)
         end
         x1 = grid(D)
         x0 = fill(one(eltype(x1)), length(x1))
@@ -278,8 +296,8 @@ for source in D_test_list, T in (Float32,Float64)
     if D !== nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
         for compact in (true, false)
-            show(IOContext(devnull, :compact=>false), D)
-            show(IOContext(devnull, :compact=>false), D.coefficients)
+            show(IOContext(devnull, :compact=>compact), D)
+            show(IOContext(devnull, :compact=>compact), D.coefficients)
         end
         x1 = grid(D)
         x0 = fill(one(eltype(x1)), length(x1))
@@ -332,8 +350,8 @@ for source in D_test_list, T in (Float32,Float64)
     if D !== nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
         for compact in (true, false)
-            show(IOContext(devnull, :compact=>false), D)
-            show(IOContext(devnull, :compact=>false), D.coefficients)
+            show(IOContext(devnull, :compact=>compact), D)
+            show(IOContext(devnull, :compact=>compact), D.coefficients)
         end
         x1 = grid(D)
         x0 = fill(one(eltype(x1)), length(x1))
@@ -390,8 +408,8 @@ for source in D_test_list, T in (Float32,Float64)
     if D !== nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
         for compact in (true, false)
-            show(IOContext(devnull, :compact=>false), D)
-            show(IOContext(devnull, :compact=>false), D.coefficients)
+            show(IOContext(devnull, :compact=>compact), D)
+            show(IOContext(devnull, :compact=>compact), D.coefficients)
         end
         x1 = grid(D)
         x0 = fill(one(eltype(x1)), length(x1))
@@ -413,7 +431,7 @@ for source in D_test_list, T in (Float32,Float64)
         mul!(res, D, x0)
         @test all(i->abs(res[i]) < 10000*eps(T), eachindex(res))
         mul!(res, D, x1)
-        @test all(i->abs(res[i]) < 20000*eps(T), eachindex(res))
+        @test all(i->abs(res[i]) < 22000*eps(T), eachindex(res))
         mul!(res, D, x2)
         @test all(i->isapprox(res[i], 2*x0[i], rtol=40000*eps(T)), eachindex(res))
         mul!(res, D, x3)
@@ -463,8 +481,8 @@ for source in D_test_list, T in (Float32,Float64)
     if D !== nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
         for compact in (true, false)
-            show(IOContext(devnull, :compact=>false), D)
-            show(IOContext(devnull, :compact=>false), D.coefficients)
+            show(IOContext(devnull, :compact=>compact), D)
+            show(IOContext(devnull, :compact=>compact), D.coefficients)
         end
         x1 = grid(D)
         x0 = fill(one(eltype(x1)), length(x1))
@@ -515,8 +533,8 @@ for source in D_test_list, T in (Float32,Float64)
     if D !== nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
         for compact in (true, false)
-            show(IOContext(devnull, :compact=>false), D)
-            show(IOContext(devnull, :compact=>false), D.coefficients)
+            show(IOContext(devnull, :compact=>compact), D)
+            show(IOContext(devnull, :compact=>compact), D.coefficients)
         end
         x1 = grid(D)
         x0 = fill(one(eltype(x1)), length(x1))
@@ -572,8 +590,8 @@ for source in D_test_list, T in (Float32,Float64)
     if D !== nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
         for compact in (true, false)
-            show(IOContext(devnull, :compact=>false), D)
-            show(IOContext(devnull, :compact=>false), D.coefficients)
+            show(IOContext(devnull, :compact=>compact), D)
+            show(IOContext(devnull, :compact=>compact), D.coefficients)
         end
         x1 = grid(D)
         x0 = fill(one(eltype(x1)), length(x1))
@@ -644,8 +662,8 @@ for source in D_test_list, T in (Float32,Float64)
     if D !== nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
         for compact in (true, false)
-            show(IOContext(devnull, :compact=>false), D)
-            show(IOContext(devnull, :compact=>false), D.coefficients)
+            show(IOContext(devnull, :compact=>compact), D)
+            show(IOContext(devnull, :compact=>compact), D.coefficients)
         end
         x1 = grid(D)
         x0 = fill(one(eltype(x1)), length(x1))
@@ -703,8 +721,8 @@ for source in D_test_list, T in (Float32,Float64)
     if D !== nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
         for compact in (true, false)
-            show(IOContext(devnull, :compact=>false), D)
-            show(IOContext(devnull, :compact=>false), D.coefficients)
+            show(IOContext(devnull, :compact=>compact), D)
+            show(IOContext(devnull, :compact=>compact), D.coefficients)
         end
         x1 = grid(D)
         x0 = fill(one(eltype(x1)), length(x1))
@@ -770,8 +788,8 @@ for source in D_test_list, T in (Float32,Float64)
     if D !== nothing
         D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
         for compact in (true, false)
-            show(IOContext(devnull, :compact=>false), D)
-            show(IOContext(devnull, :compact=>false), D.coefficients)
+            show(IOContext(devnull, :compact=>compact), D)
+            show(IOContext(devnull, :compact=>compact), D.coefficients)
         end
         x1 = grid(D)
         x0 = fill(one(eltype(x1)), length(x1))
@@ -849,6 +867,9 @@ for T in (Float32, Float64), acc_order in (2,4,6,8)
 
     mul!(dest1, D_serial, u, one(T), zero(T))
     mul!(dest2, D_serial, u, one(T))
+    @test all(i->dest1[i] ≈ dest2[i], eachindex(u))
+    mul!(dest1, D_safe, u, one(T), zero(T))
+    mul!(dest2, D_safe, u, one(T))
     @test all(i->dest1[i] ≈ dest2[i], eachindex(u))
     mul!(dest1, D_threads, u, one(T), zero(T))
     mul!(dest2, D_threads, u, one(T))

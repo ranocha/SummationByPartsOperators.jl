@@ -4,8 +4,8 @@
 
 The coefficients of a derivative operator on a nonperiodic grid.
 """
-struct DerivativeCoefficients{T,LeftBoundary,RightBoundary,LeftBoundaryDerivatives,RightBoundaryDerivatives,
-                              LowerOffset,UpperOffset,LeftWidth,RightWidth,ExecutionMode,SourceOfCoefficients} <: AbstractDerivativeCoefficients{T}
+@auto_hash_equals struct DerivativeCoefficients{T,LeftBoundary,RightBoundary,LeftBoundaryDerivatives,RightBoundaryDerivatives,
+                                                LowerOffset,UpperOffset,LeftWidth,RightWidth,ExecutionMode,SourceOfCoefficients} <: AbstractDerivativeCoefficients{T}
     # coefficients defining the operator and its action
     left_boundary::LeftBoundary
     right_boundary::RightBoundary
@@ -82,7 +82,7 @@ function mul!(dest::AbstractVector, coefficients::DerivativeCoefficients, u::Abs
         @argcheck length(u) > length(left_boundary) + length(right_boundary) DimensionMismatch
     end
 
-    convolve_boundary_coefficients!(dest, left_boundary, right_boundary, u, α, β)
+    convolve_boundary_coefficients!(dest, left_boundary, right_boundary, u, α, β, mode)
     convolve_interior_coefficients!(dest, lower_coef, central_coef, upper_coef, u, α, β, static_length(left_boundary), static_length(right_boundary), mode)
 end
 
@@ -96,7 +96,7 @@ function mul!(dest::AbstractVector, coefficients::DerivativeCoefficients, u::Abs
         @argcheck length(u) > length(coefficients.left_boundary) + length(coefficients.right_boundary) DimensionMismatch
     end
 
-    convolve_boundary_coefficients!(dest, left_boundary, right_boundary, u, α)
+    convolve_boundary_coefficients!(dest, left_boundary, right_boundary, u, α, mode)
     convolve_interior_coefficients!(dest, lower_coef, central_coef, upper_coef, u, α, static_length(left_boundary), static_length(right_boundary), mode)
 end
 
@@ -107,7 +107,7 @@ end
 A struct representing a row in the boundary block of an SBP derivative operator
 with scalar type `T`.
 """
-struct DerivativeCoefficientRow{T,Start,Length}
+@auto_hash_equals struct DerivativeCoefficientRow{T,Start,Length}
     coef::SVector{Length, T}
 end
 
@@ -155,42 +155,76 @@ function Base.:/(coef_row::DerivativeCoefficientRow{T,Start,Length}, α::Number)
     DerivativeCoefficientRow{T,Start,Length}(coef_row.coef / α)
 end
 
-@inline function convolve_left_row(coef_row::DerivativeCoefficientRow{T,Start,Length}, u) where {T,Start,Length}
-    @inbounds tmp = coef_row.coef[1]*u[Start]
+@inline function convolve_left_row(coef_row::DerivativeCoefficientRow{T,Start,Length}, u, ::SafeMode) where {T,Start,Length}
+    @inbounds tmp = coef_row.coef[1] * u[Start]
     @inbounds for i in 2:Length
-        tmp += coef_row.coef[i]*u[Start+i-1]
+        tmp += coef_row.coef[i] * u[Start+i-1]
+    end
+    tmp
+end
+@inline function convolve_left_row(coef_row::DerivativeCoefficientRow{T,Start,Length}, u, ::Union{FastMode, ThreadedMode}) where {T,Start,Length}
+    @inbounds tmp = coef_row.coef[1] * u[Start]
+    @inbounds for i in 2:Length
+        @muladd tmp = tmp + coef_row.coef[i] * u[Start+i-1]
     end
     tmp
 end
 
-@inline function convolve_right_row(coef_row::DerivativeCoefficientRow{T,Start,Length}, u) where {T,Start,Length}
-    @inbounds tmp = coef_row.coef[1]*u[end-Start+1]
+@inline function convolve_right_row(coef_row::DerivativeCoefficientRow{T,Start,Length}, u, ::SafeMode) where {T,Start,Length}
+    @inbounds tmp = coef_row.coef[1] * u[end-Start+1]
     @inbounds for i in 2:Length
-        tmp += coef_row.coef[i]*u[end-(Start+i-2)]
+        tmp += coef_row.coef[i] * u[end-(Start+i-2)]
+    end
+    tmp
+end
+@inline function convolve_right_row(coef_row::DerivativeCoefficientRow{T,Start,Length}, u, ::Union{FastMode, ThreadedMode}) where {T,Start,Length}
+    @inbounds tmp = coef_row.coef[1] * u[end-Start+1]
+    @inbounds for i in 2:Length
+        @muladd tmp = tmp + coef_row.coef[i] * u[end-(Start+i-2)]
     end
     tmp
 end
 
 
-@unroll function convolve_boundary_coefficients!(dest::AbstractVector, left_boundary, right_boundary, u::AbstractVector, α, β)
+@unroll function convolve_boundary_coefficients!(dest::AbstractVector, left_boundary, right_boundary, u::AbstractVector, α, β, mode::SafeMode)
     @unroll for i in 1:length(left_boundary)
-        tmp = convolve_left_row(left_boundary[i], u)
+        tmp = convolve_left_row(left_boundary[i], u, mode)
         @inbounds dest[i] = β*dest[i] + α*tmp
     end
     @unroll for i in 1:length(right_boundary)
-        tmp = convolve_right_row(right_boundary[i], u)
+        tmp = convolve_right_row(right_boundary[i], u, mode)
         @inbounds dest[end-i+1] = β*dest[end-i+1] + α*tmp
     end
 end
-
-@unroll function convolve_boundary_coefficients!(dest::AbstractVector, left_boundary, right_boundary, u::AbstractVector, α)
+@unroll function convolve_boundary_coefficients!(dest::AbstractVector, left_boundary, right_boundary, u::AbstractVector, α, β, mode::Union{FastMode, ThreadedMode})
     @unroll for i in 1:length(left_boundary)
-        tmp = convolve_left_row(left_boundary[i], u)
+        tmp = convolve_left_row(left_boundary[i], u, mode)
+        @inbounds @muladd dest[i] = β*dest[i] + α*tmp
+    end
+    @unroll for i in 1:length(right_boundary)
+        tmp = convolve_right_row(right_boundary[i], u, mode)
+        @inbounds @muladd dest[end-i+1] = β*dest[end-i+1] + α*tmp
+    end
+end
+
+@unroll function convolve_boundary_coefficients!(dest::AbstractVector, left_boundary, right_boundary, u::AbstractVector, α, mode::SafeMode)
+    @unroll for i in 1:length(left_boundary)
+        tmp = convolve_left_row(left_boundary[i], u, mode)
         @inbounds dest[i] = α*tmp
     end
     @unroll for i in 1:length(right_boundary)
-        tmp = convolve_right_row(right_boundary[i], u)
+        tmp = convolve_right_row(right_boundary[i], u, mode)
         @inbounds dest[end-i+1] = α*tmp
+    end
+end
+@unroll function convolve_boundary_coefficients!(dest::AbstractVector, left_boundary, right_boundary, u::AbstractVector, α, mode ::Union{FastMode, ThreadedMode})
+    @unroll for i in 1:length(left_boundary)
+        tmp = convolve_left_row(left_boundary[i], u, mode)
+        @inbounds @muladd dest[i] = α*tmp
+    end
+    @unroll for i in 1:length(right_boundary)
+        tmp = convolve_right_row(right_boundary[i], u, mode)
+        @inbounds @muladd dest[end-i+1] = α*tmp
     end
 end
 
@@ -414,8 +448,8 @@ end
 A derivative operator on a nonperiodic finite difference grid.
 See [`derivative_operator`](@ref).
 """
-struct DerivativeOperator{T,LeftBoundary,RightBoundary,LeftBoundaryDerivatives,RightBoundaryDerivatives,
-                          LowerOffset,UpperOffset,LeftWidth,RightWidth,ExecutionMode,SourceOfCoefficients,Grid} <: AbstractNonperiodicDerivativeOperator{T}
+@auto_hash_equals struct DerivativeOperator{T,LeftBoundary,RightBoundary,LeftBoundaryDerivatives,RightBoundaryDerivatives,
+                                            LowerOffset,UpperOffset,LeftWidth,RightWidth,ExecutionMode,SourceOfCoefficients,Grid} <: AbstractNonperiodicDerivativeOperator{T}
     coefficients::DerivativeCoefficients{T,LeftBoundary,RightBoundary,LeftBoundaryDerivatives,RightBoundaryDerivatives,
                                          LowerOffset,UpperOffset,LeftWidth,RightWidth,ExecutionMode,SourceOfCoefficients}
     grid::Grid
@@ -468,7 +502,7 @@ Compute the `N`-th derivative of the function given by the coefficients `u` at
 the left boundary of the grid.
 """
 @inline function derivative_left(D::DerivativeOperator, u, der_order::Val{N}) where {N}
-    convolve_left_row(D.coefficients.left_boundary_derivatives[N], u) / D.Δx^N
+    convolve_left_row(D.coefficients.left_boundary_derivatives[N], u, D.coefficients.mode) / D.Δx^N
 end
 
 @inline function derivative_left(D::AbstractNonperiodicDerivativeOperator, u, der_order::Val{0})
@@ -485,7 +519,7 @@ Compute the `N`-th derivative of the function given by the coefficients `u` at
 the right boundary of the grid.
 """
 @inline function derivative_right(D::DerivativeOperator, u, der_order::Val{N}) where {N}
-    convolve_right_row(D.coefficients.right_boundary_derivatives[N], u) / D.Δx^N
+    convolve_right_row(D.coefficients.right_boundary_derivatives[N], u, D.coefficients.mode) / D.Δx^N
 end
 
 @inline function derivative_right(D::AbstractNonperiodicDerivativeOperator, u, der_order::Val{0})
@@ -548,7 +582,7 @@ end
 end
 
 
-struct OneHot <: AbstractVector{Bool}
+@auto_hash_equals struct OneHot <: AbstractVector{Bool}
     i::Int
     length::Int
 end

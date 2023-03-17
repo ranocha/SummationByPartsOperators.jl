@@ -257,7 +257,7 @@ open("test.txt", "w") do io
         parts = split(replace(replace(filter(!isspace, s), "+", " + "), "-", " + -"), " + ")
         for part in parts
             m = match(reg, part)
-            m == nothing && continue
+            m === nothing && continue
             k = parse(Int, m.match[4:end-1])
             term = replace(part, m.match, "//")
             @printf(io, "        d%02i%02i%02i = T(%s)\n", i, j, k, term)
@@ -272,7 +272,7 @@ open("test.txt", "w") do io
         parts = split(replace(replace(filter(!isspace, s), "+", " + "), "-", " + -"), " + ")
         for part in parts
             m = match(reg, part)
-            m == nothing && continue
+            m === nothing && continue
             k = parse(Int, m.match[4:end-1])
             @printf(io, "    d%02i%02i%02i::T\n", i, j, k)
         end
@@ -286,7 +286,7 @@ open("test.txt", "w") do io
         parts = split(replace(replace(filter(!isspace, s), "+", " + "), "-", " + -"), " + ")
         for part in parts
             m = match(reg, part)
-            m == nothing && continue
+            m === nothing && continue
             k = parse(Int, m.match[4:end-1])
             @printf(io, "d%02i%02i%02i, ", i, j, k)
         end
@@ -303,7 +303,7 @@ open("test.txt", "w") do io
         for j in 1:size(D2, 2)
             s = string(D2[i,j])
             parts = split(replace(replace(filter(!isspace, s), "+", " + "), "-", " + -"), " + ")
-            
+
             print(io, "    "^6)
             if j == 1
                 print(io, "  ")
@@ -311,7 +311,7 @@ open("test.txt", "w") do io
             part_idx = 0
             for part in parts
                 m = match(reg, part)
-                m == nothing && continue
+                m === nothing && continue
                 part_idx = part_idx + 1
                 k = parse(Int, m.match[4:end-1])
                 if part_idx == 1 && j == 1

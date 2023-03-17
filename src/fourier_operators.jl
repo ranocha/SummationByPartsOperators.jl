@@ -6,7 +6,7 @@ A derivative operator on a periodic grid with real scalar type `T` computing the
 first derivative using a spectral Fourier expansion via real discrete Fourier
 transforms.
 """
-struct FourierDerivativeOperator{T<:Real, Grid, RFFT, BRFFT} <: AbstractPeriodicDerivativeOperator{T}
+@auto_hash_equals struct FourierDerivativeOperator{T<:Real, Grid, RFFT, BRFFT} <: AbstractPeriodicDerivativeOperator{T}
     jac::T
     Δx::T
     grid_compute::Grid   # N-1 nodes, including the left and excluding the right boundary
@@ -174,7 +174,7 @@ end
 # fallback for periodic FD operators etc.
 _coef_end(coef, D1) = coef
 
-struct FourierPolynomialDerivativeOperator{T<:Real, Grid, RFFT, BRFFT, N} <: AbstractPeriodicDerivativeOperator{T}
+@auto_hash_equals struct FourierPolynomialDerivativeOperator{T<:Real, Grid, RFFT, BRFFT, N} <: AbstractPeriodicDerivativeOperator{T}
     D1::FourierDerivativeOperator{T,Grid,RFFT,BRFFT}
     coef::NTuple{N,T}
     coef_end::NTuple{N,T}
@@ -410,7 +410,7 @@ end
 
 
 
-struct FourierRationalDerivativeOperator{T<:Real, Grid, RFFT, BRFFT, Nnum, Nden} <: AbstractPeriodicDerivativeOperator{T}
+@auto_hash_equals struct FourierRationalDerivativeOperator{T<:Real, Grid, RFFT, BRFFT, Nnum, Nden} <: AbstractPeriodicDerivativeOperator{T}
     D1::FourierDerivativeOperator{T,Grid,RFFT,BRFFT}
     num_coef::NTuple{Nnum,T}
     num_coef_end::NTuple{Nnum,T}
@@ -615,7 +615,7 @@ end
 
 
 
-struct PeriodicDerivativeOperatorQuotient{T<:Real, numDtype<:Union{PeriodicDerivativeOperator{T},FourierDerivativeOperator{T}}, denDtype<:Union{PeriodicDerivativeOperator{T},FourierDerivativeOperator{T}}, Nnum, Nden, RFFT, IRFFT} <: AbstractPeriodicDerivativeOperator{T}
+@auto_hash_equals struct PeriodicDerivativeOperatorQuotient{T<:Real, numDtype<:Union{PeriodicDerivativeOperator{T},FourierDerivativeOperator{T}}, denDtype<:Union{PeriodicDerivativeOperator{T},FourierDerivativeOperator{T}}, Nnum, Nden, RFFT, IRFFT} <: AbstractPeriodicDerivativeOperator{T}
     num_D::numDtype
     den_D::denDtype
     num_coef::NTuple{Nnum,T}
@@ -891,7 +891,7 @@ end
 Fourier viscosity operator with constant coefficients for the periodic 1st
 derivative Fourier operator.
 """
-struct FourierConstantViscosity{T<:Real, Grid, RFFT, BRFFT} <: AbstractFourierViscosity{T}
+@auto_hash_equals struct FourierConstantViscosity{T<:Real, Grid, RFFT, BRFFT} <: AbstractFourierViscosity{T}
     coefficients::Vector{T}
     D::FourierDerivativeOperator{T,Grid,RFFT,BRFFT}
     parameters
@@ -1087,7 +1087,7 @@ function get_parameters(source_of_coefficients::FourierSpectralViscosityCoeffici
                         kwargs...)
     @argcheck cutoff >= 1
 
-    Dict(:strength=>strength, :cutoff=>cutoff)
+    (; strength = strength, cutoff = cutoff)
 end
 
 
@@ -1137,5 +1137,5 @@ function get_parameters(source::FourierSuperSpectralViscosityCoefficients,
     @argcheck order >= 1
     @argcheck cutoff >= 1
 
-    Dict(:order=>order, :strength=>strength, :cutoff=>cutoff)
+    (; order = order, strength = strength, cutoff = cutoff)
 end

@@ -12,7 +12,7 @@ const SBP_TEST = get(ENV, "SBP_TEST", "all")
         @time @testset "Fourier Operators" begin include("fourier_operators_test.jl") end
         @time @testset "Fourier Operators 2D" begin include("fourier_operators_2d_test.jl") end
         @time @testset "Legendre Operators" begin include("legendre_operators_test.jl") end
-        @time @testset "Sum of Operators" begin include("sum_of_operators_test.jl") end
+        @time @testset "Linear Combinations of Operators" begin include("linear_combinations_of_operators_test.jl") end
         @time @testset "Upwind Operators" begin include("upwind_operators_test.jl") end
         @time @testset "Special Matrix Types" begin include("special_matrix_types.jl") end
         @time @testset "Aqua" begin include("aqua.jl") end
