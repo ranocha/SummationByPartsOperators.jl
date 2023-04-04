@@ -188,7 +188,7 @@ end
 
 Create the `PeriodicDerivativeCoefficients` approximating the `derivative_order`-th
 derivative with an order of accuracy `accuracy_order` and scalar type `T`.
-The evaluation of the derivative can be parallized using threads by chosing
+The evaluation of the derivative can be parallelized using threads by choosing
 `mode=ThreadedMode())`.
 """
 function periodic_central_derivative_coefficients(derivative_order, accuracy_order, T=Float64, mode=FastMode())
@@ -351,7 +351,7 @@ end
 Create the `PeriodicDerivativeCoefficients` approximating the `derivative_order`-th
 derivative with an order of accuracy `accuracy_order` and scalar type `T` where
 the leftmost grid point used is determined by `left_offset`.
-The evaluation of the derivative can be parallized using threads by chosing
+The evaluation of the derivative can be parallelized using threads by choosing
 mode=ThreadedMode()`.
 """
 function periodic_derivative_coefficients(derivative_order, accuracy_order,
@@ -410,7 +410,7 @@ end
 Create the `PeriodicDerivativeCoefficients` approximating the `derivative_order`-th
 derivative with an order of accuracy `accuracy_order` and scalar type `T` given
 by [`Holoborodko2008`](@ref).
-The evaluation of the derivative can be parallized using threads by chosing
+The evaluation of the derivative can be parallelized using threads by choosing
 mode=ThreadedMode()`.
 """
 function periodic_derivative_coefficients(source::Holoborodko2008, derivative_order, accuracy_order;
@@ -628,7 +628,7 @@ end
 Create a [`PeriodicDerivativeOperator`](@ref) approximating the `derivative_order`-th
 derivative on a uniform grid between `xmin` and `xmax` with `N` grid points up
 to order of accuracy `accuracy_order`.
-The evaluation of the derivative can be parallized using threads by chosing
+The evaluation of the derivative can be parallelized using threads by choosing
 `mode=ThreadedMode()`.
 """
 function periodic_central_derivative_operator(derivative_order, accuracy_order,
@@ -658,7 +658,7 @@ Create a [`PeriodicDerivativeOperator`](@ref) approximating the `derivative_orde
 derivative on a uniform grid between `xmin` and `xmax` with `N` grid points up
 to order of accuracy `accuracy_order` where the leftmost grid point used is
 determined by `left_offset`.
-The evaluation of the derivative can be parallized using threads by chosing
+The evaluation of the derivative can be parallelized using threads by choosing
 `mode=ThreadedMode())`.
 
 ## Examples
@@ -722,7 +722,7 @@ Create a `PeriodicDerivativeOperator` approximating the `derivative_order`-th
 derivative on a uniform grid between `xmin` and `xmax` with `N` grid points up
 to order of accuracy `accuracy_order` where the leftmost grid point used is
 determined by `left_offset`.
-The evaluation of the derivative can be parallized using threads by chosing
+The evaluation of the derivative can be parallelized using threads by choosing
 `mode=ThreadedMode()`.
 
 ## Examples
@@ -769,7 +769,7 @@ end
 Create a `PeriodicDerivativeOperator` approximating the `derivative_order`-th
 derivative on thr uniform `grid` up to order of accuracy `accuracy_order` where
 the leftmost grid point used is determined by `left_offset`.
-The evaluation of the derivative can be parallized using threads by chosing
+The evaluation of the derivative can be parallelized using threads by choosing
 `mode=ThreadedMode())`.
 """
 function periodic_derivative_operator(derivative_order, accuracy_order,
@@ -864,7 +864,7 @@ end
 Create a negative semidefinite `DissipationOperator` using undivided differences
 approximating a `order`-th derivative with strength `strength` adapted to the
 derivative operator `D`.
-The evaluation of the derivative can be parallized using threads by chosing
+The evaluation of the derivative can be parallelized using threads by choosing
 `mode=ThreadedMode()`.
 """
 function dissipation_operator(D::PeriodicDerivativeOperator;
