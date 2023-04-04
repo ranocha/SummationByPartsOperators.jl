@@ -15,7 +15,7 @@ At the same time, the implementation is optimized to achieve good performance
 without sacrificing flexibility.
 
 Check out the [documentation](https://ranocha.github.io/SummationByPartsOperators.jl/stable)
-for further information. Some noticable functions to start with are
+for further information. Some noticeable functions to start with are
 [`derivative_operator`](@ref),
 [`legendre_derivative_operator`](@ref),
 [`periodic_derivative_operator`](@ref),
