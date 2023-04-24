@@ -7,7 +7,8 @@ else
 end
 
 using SummationByPartsOperators: DerivativeOperator, DissipationOperator,
-                                 VarCoefDerivativeOperator, UniformNonperiodicCoupledOperator
+                                 VarCoefDerivativeOperator, UniformNonperiodicCoupledOperator,
+                                 lower_bandwidth, upper_bandwidth
 
 const BandedDerivativeOperator = Union{DerivativeOperator, DissipationOperator, VarCoefDerivativeOperator, UniformNonperiodicCoupledOperator}
 
