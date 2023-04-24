@@ -97,9 +97,9 @@ include("coupling.jl")
 
 function __init__()
   @static if !isdefined(Base, :get_extension)
-    @require BandedMatrices="aae01518-5342-5314-be14-df237901396f" include("banded_matrices.jl")
-    @require DiffEqCallbacks="459566f4-90b8-5000-8ac3-15dfb0a30def" include("diffeq_callbacks.jl")
-    @require StructArrays="09ab397b-f2b6-538f-b94a-2f83cf4a842a" include("struct_arrays.jl")
+    @require BandedMatrices="aae01518-5342-5314-be14-df237901396f" include("../ext/banded_matrices.jl")
+    @require DiffEqCallbacks="459566f4-90b8-5000-8ac3-15dfb0a30def" include("../ext/diffeq_callbacks.jl")
+    @require StructArrays="09ab397b-f2b6-538f-b94a-2f83cf4a842a" include("../ext/struct_arrays.jl")
   end
 end
 
