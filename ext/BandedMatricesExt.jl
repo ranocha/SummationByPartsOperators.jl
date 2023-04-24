@@ -1,4 +1,13 @@
-import .BandedMatrices: BandedMatrix, isbanded, bandwidth
+module BandedMatricesExt
+
+if isdefined(Base, :get_extension)
+    import BandedMatrices: BandedMatrix, isbanded, bandwidth
+else
+    import ..BandedMatrices: BandedMatrix, isbanded, bandwidth
+end
+
+using SummationByPartsOperators: DerivativeOperator, DissipationOperator,
+                                 VarCoefDerivativeOperator, UniformNonperiodicCoupledOperator
 
 const BandedDerivativeOperator = Union{DerivativeOperator, DissipationOperator, VarCoefDerivativeOperator, UniformNonperiodicCoupledOperator}
 
@@ -50,3 +59,5 @@ function BandedMatrix(D::BandedDerivativeOperator)
 
     B
 end
+
+end # module

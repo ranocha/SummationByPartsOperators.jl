@@ -54,7 +54,9 @@ using LoopVectorization: LoopVectorization, @turbo, @tturbo
 using MuladdMacro: @muladd
 using RecursiveArrayTools: recursive_bottom_eltype
 using Reexport: @reexport
-using Requires: @require
+if !isdefined(Base, :get_extension)
+  using Requires: @require
+end
 using StaticArrays: SVector, StaticVector, FieldVector
 using SimpleUnPack: @unpack
 using Unrolled: @unroll
@@ -94,9 +96,11 @@ include("var_coef_operators.jl")
 include("coupling.jl")
 
 function __init__()
-  @require BandedMatrices="aae01518-5342-5314-be14-df237901396f" include("banded_matrices.jl")
-  @require StructArrays="09ab397b-f2b6-538f-b94a-2f83cf4a842a" include("struct_arrays.jl")
-  @require DiffEqCallbacks="459566f4-90b8-5000-8ac3-15dfb0a30def" include("diffeq_callbacks.jl")
+  @static if !isdefined(Base, :get_extension)
+    @require BandedMatrices="aae01518-5342-5314-be14-df237901396f" include("banded_matrices.jl")
+    @require DiffEqCallbacks="459566f4-90b8-5000-8ac3-15dfb0a30def" include("diffeq_callbacks.jl")
+    @require StructArrays="09ab397b-f2b6-538f-b94a-2f83cf4a842a" include("struct_arrays.jl")
+  end
 end
 
 include("filter.jl")

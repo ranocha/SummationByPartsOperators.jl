@@ -1,5 +1,15 @@
+module StructArraysExt
+
+if isdefined(Base, :get_extension)
+  using StructArrays: StructArray, components
+else
+  using ..StructArrays: StructArray, components
+end
+
+using SummationByPartsOperators: AbstractDerivativeOperator
+import SummationByPartsOperators: mul!
+
 using InteractiveUtils: subtypes
-using .StructArrays: StructArray, components
 
 function _subtypes(type::Type)
   out = Any[]
@@ -38,3 +48,5 @@ Base.@propagate_inbounds function iterate_mul!(dest::NTuple{N}, D::AbstractDeriv
 end
 
 iterate_mul!(::Tuple{}, D::AbstractDerivativeOperator, ::Tuple{}, args...) = nothing
+
+end # module
