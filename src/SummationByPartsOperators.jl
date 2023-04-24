@@ -164,6 +164,7 @@ export Tadmor1989, MadayTadmor1989, Tadmor1993,
 export BurgersPeriodicSemidiscretization, BurgersNonperiodicSemidiscretization,
        CubicPeriodicSemidiscretization, CubicNonperiodicSemidiscretization,
        VariableLinearAdvectionNonperiodicSemidiscretization,
+       VariableLinearAdvectionPeriodicSemidiscretization,
        WaveEquationNonperiodicSemidiscretization,
        QuarticNonconvexPeriodicSemidiscretization
 

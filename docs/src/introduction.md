@@ -336,7 +336,7 @@ equations (PDEs). These are shipped with this package and you are encouraged to
 look at their source code to learn more about it.
 
 - Linear scalar advection with variable coefficient:
-  [`VariableLinearAdvectionNonperiodicSemidiscretization`](@ref)
+  [`VariableLinearAdvectionPeriodicSemidiscretization`](@ref), [`VariableLinearAdvectionNonperiodicSemidiscretization`](@ref)
 - Burgers' equation (inviscid):
   [`BurgersPeriodicSemidiscretization`](@ref), [`BurgersNonperiodicSemidiscretization`](@ref)
 - Scalar conservation law with cubic flux:
