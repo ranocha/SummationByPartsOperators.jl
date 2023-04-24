@@ -1,9 +1,9 @@
 module BandedMatricesExt
 
 if isdefined(Base, :get_extension)
-    import BandedMatrices: BandedMatrix, isbanded, bandwidth
+    import BandedMatrices: BandedMatrices, BandedMatrix, isbanded, bandwidth
 else
-    import ..BandedMatrices: BandedMatrix, isbanded, bandwidth
+    import ..BandedMatrices: BandedMatrices, BandedMatrix, isbanded, bandwidth
 end
 
 using SummationByPartsOperators: DerivativeOperator, DissipationOperator,
