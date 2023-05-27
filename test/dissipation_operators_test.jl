@@ -114,12 +114,10 @@ for T in (Float32, Float64), order in (2,4,6,8)
 
     mul!(dest1, Di_serial, u, one(T), zero(T))
     mul!(dest2, Di_serial, u, one(T))
-    @warn "debug" dest1 dest2 dest1-dest2 extrema(dest1-dest2) @__LINE__
-    @test all(i->dest1[i] ≈ dest2[i], eachindex(u))
+    @test maximum(abs, dest1 - dest2) < u[end] * N * eps(T)
     mul!(dest1, Di_threads, u, one(T), zero(T))
     mul!(dest2, Di_threads, u, one(T))
-    @warn "debug" dest1 dest2 dest1-dest2 extrema(dest1-dest2) @__LINE__
-    @test all(i->dest1[i] ≈ dest2[i], eachindex(u))
+    @test maximum(abs, dest1 - dest2) < u[end] * N * eps(T)
     dest3 = Di_serial*u
     @test maximum(abs, dest1 - dest3) < u[end]*N*eps(T)
     dest3 = Di_full*u
