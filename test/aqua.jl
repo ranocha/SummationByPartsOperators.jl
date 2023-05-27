@@ -12,5 +12,5 @@ Aqua.test_all(SummationByPartsOperators;
 
 # Project.toml formatting only on newer versions of Julia
 if VERSION >= v"1.9"
-    Aqua.test_project_toml_formatting(BSeries)
+    Aqua.test_project_toml_formatting(SummationByPartsOperators)
 end
