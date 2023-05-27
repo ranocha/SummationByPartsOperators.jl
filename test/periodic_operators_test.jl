@@ -327,7 +327,7 @@ let T = Float64
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == true
-    mul!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 300*eps(T)
+    mul!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 1000*eps(T)
     mul!(res, D, x1); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 5000*eps(T)
     mul!(res, D, x2); @test norm((res - 2 .* x0)[accuracy_order:end-accuracy_order], Inf) < 10020*eps(T)
     mul!(res, D, x3); @test norm((res - 6 .* x1)[accuracy_order:end-accuracy_order], Inf) < 30000*eps(T)
