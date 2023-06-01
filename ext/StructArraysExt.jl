@@ -29,17 +29,17 @@ end
 # Use lispy tuple programming to iterate over all fields of a `StructArray`.
 # Use ugly `@eval` to resolve ambiguities arising from existing `mul!` definitions.
 for Dtype in _subtypes(AbstractDerivativeOperator)
-  @eval Base.@propagate_inbounds function mul!(dest::A, D::$Dtype, u::A) where {A<:StructArray}
+  @eval Base.@propagate_inbounds function mul!(dest::StructArray, D::$Dtype, u::StructArray)
     iterate_mul!(Tuple(components(dest)), D, Tuple(components(u)))
     return dest
   end
 
-  @eval Base.@propagate_inbounds function mul!(dest::A, D::$Dtype, u::A, α) where {A<:StructArray}
+  @eval Base.@propagate_inbounds function mul!(dest::StructArray, D::$Dtype, u::StructArray, α)
     iterate_mul!(Tuple(components(dest)), D, Tuple(components(u)), α)
     return dest
   end
 
-  @eval Base.@propagate_inbounds function mul!(dest::A, D::$Dtype, u::A, α, β) where {A<:StructArray}
+  @eval Base.@propagate_inbounds function mul!(dest::StructArray, D::$Dtype, u::StructArray, α, β)
     iterate_mul!(Tuple(components(dest)), D, Tuple(components(u)), α, β)
     return dest
   end
