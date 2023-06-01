@@ -5,6 +5,8 @@
 A derivative operator on a periodic grid with real scalar type `T` computing the
 first derivative using a spectral Fourier expansion via real discrete Fourier
 transforms.
+
+See also [`fourier_derivative_operator`](@ref).
 """
 @auto_hash_equals struct FourierDerivativeOperator{T<:Real, Grid, RFFT, BRFFT} <: AbstractPeriodicDerivativeOperator{T}
     jac::T
@@ -34,6 +36,8 @@ end
 
 Construct the `FourierDerivativeOperator` on a uniform grid between `xmin` and
 `xmax` using `N` nodes and `N÷2+1` complex Fourier modes.
+
+See also [`fourier_derivative_operator`](@ref).
 """
 function FourierDerivativeOperator(xmin::T, xmax::T, N::Integer) where {T<:Real}
     @argcheck N >= 1
@@ -54,8 +58,8 @@ end
     fourier_derivative_operator(xmin::Real, xmax::Real, N::Integer)
     fourier_derivative_operator(; xmin::Real, xmax::Real, N::Integer)
 
-Construct the `FourierDerivativeOperator` on a uniform grid between `xmin` and
-`xmax` using `N` nodes and `N÷2+1` complex Fourier modes.
+Construct the [`FourierDerivativeOperator`](@ref) on a uniform grid between
+`xmin` and `xmax` using `N` nodes and `N÷2+1` complex Fourier modes.
 """
 function fourier_derivative_operator(xmin::Real, xmax::Real, N::Integer)
     FourierDerivativeOperator(promote(xmin, xmax)..., N)
