@@ -18,3 +18,13 @@ OrdinaryDiffEq = "5, 6"
 SpecialFunctions = "1, 2"
 StaticArrays = "1.0"
 StructArrays = "0.5, 0.6"
+
+[preferences.OrdinaryDiffEq]
+PrecompileAutoSpecialize = false
+PrecompileAutoSwitch = false
+PrecompileDefaultSpecialize = false
+PrecompileFunctionWrapperSpecialize = false
+PrecompileLowStorage = false
+PrecompileNoSpecialize = false
+PrecompileNonStiff = false
+PrecompileStiff = false
