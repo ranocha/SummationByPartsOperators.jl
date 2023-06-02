@@ -16,6 +16,7 @@ const SBP_TEST = get(ENV, "SBP_TEST", "all")
         @time @testset "Upwind Operators" begin include("upwind_operators_test.jl") end
         @time @testset "Special Matrix Types" begin include("special_matrix_types.jl") end
         @time @testset "Aqua" begin include("aqua.jl") end
+        @time @testset "AD" begin include("ad_test.jl") end
     end
 
     @time if SBP_TEST == "all" || SBP_TEST == "part2"
