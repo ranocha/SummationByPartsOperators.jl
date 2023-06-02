@@ -116,6 +116,48 @@ end
     @test ForwardDiff.value(f_df) ≈ f(u)
     @test ForwardDiff.partials(f_df, 1) ≈ J * v
   end
+
+  @testset "PeriodicRationalDerivativeOperator, 1" begin
+    D = periodic_derivative_operator(derivative_order = 1, accuracy_order = 4,
+                                     xmin = 0.0, xmax = 2.0, N = 20)
+    D = I - D^2
+
+    u = randn(size(D, 2))
+    v = randn(size(D, 2))
+    u_v = StructDual(u, v)
+    f_df = @inferred(D * u_v)
+    @test ForwardDiff.value(f_df) ≈ @inferred(D * u)
+    @test ForwardDiff.partials(f_df, 1) ≈ @inferred(D * v)
+
+    f = let D = D
+      f(u) = u .* (D * (u.^2))
+    end
+    f_df = f(u_v)
+    J = Diagonal(D * u.^2) + 2 .* u .* Matrix(D) * Diagonal(u)
+    @test ForwardDiff.value(f_df) ≈ f(u)
+    @test ForwardDiff.partials(f_df, 1) ≈ J * v
+  end
+
+  @testset "PeriodicRationalDerivativeOperator, 2" begin
+    D = periodic_derivative_operator(derivative_order = 1, accuracy_order = 4,
+                                     xmin = 0.0, xmax = 2.0, N = 20)
+    D = inv(I - D^2)
+
+    u = randn(size(D, 2))
+    v = randn(size(D, 2))
+    u_v = StructDual(u, v)
+    f_df = @inferred(D * u_v)
+    @test ForwardDiff.value(f_df) ≈ @inferred(D * u)
+    @test ForwardDiff.partials(f_df, 1) ≈ @inferred(D * v)
+
+    f = let D = D
+      f(u) = u .* (D * (u.^2))
+    end
+    f_df = f(u_v)
+    J = Diagonal(D * u.^2) + 2 .* u .* Matrix(D) * Diagonal(u)
+    @test ForwardDiff.value(f_df) ≈ f(u)
+    @test ForwardDiff.partials(f_df, 1) ≈ J * v
+  end
 end
 
 end # module
