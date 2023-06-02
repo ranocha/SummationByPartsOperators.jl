@@ -305,6 +305,7 @@ Matrix(Dm)
 
 To actually compute and plot the discrete grid functions, a few additional ingredients
 are necessary.
+
 - The discrete coefficients of a function on the [`grid`](@ref) of an SBP
   operator can usually be computed as `x = grid(D); u = u_function.(x)`,
   at least for nodal bases. In general, [`compute_coefficients`](@ref)

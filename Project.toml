@@ -1,7 +1,7 @@
 name = "SummationByPartsOperators"
 uuid = "9f78cca6-572e-554e-b819-917d2f1cf240"
 author = ["Hendrik Ranocha"]
-version = "0.5.35"
+version = "0.5.36"
 
 [deps]
 ArgCheck = "dce04be8-c92d-5529-be00-80e4d2c0e197"
@@ -26,11 +26,13 @@ Unrolled = "9602ed7d-8fef-5bc8-8597-8f21381861e8"
 [weakdeps]
 BandedMatrices = "aae01518-5342-5314-be14-df237901396f"
 DiffEqCallbacks = "459566f4-90b8-5000-8ac3-15dfb0a30def"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 StructArrays = "09ab397b-f2b6-538f-b94a-2f83cf4a842a"
 
 [extensions]
 BandedMatricesExt = "BandedMatrices"
 DiffEqCallbacksExt = "DiffEqCallbacks"
+ForwardDiffExt = "ForwardDiff"
 StructArraysExt = "StructArrays"
 
 [compat]
@@ -39,6 +41,7 @@ AutoHashEquals = "0.2"
 BandedMatrices = "0.17"
 DiffEqCallbacks = "2"
 FFTW = "1"
+ForwardDiff = "0.10"
 LoopVectorization = "0.12.22"
 MuladdMacro = "0.2"
 PolynomialBases = "0.4.15"
@@ -57,4 +60,5 @@ julia = "1.6"
 [extras]
 BandedMatrices = "aae01518-5342-5314-be14-df237901396f"
 DiffEqCallbacks = "459566f4-90b8-5000-8ac3-15dfb0a30def"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 StructArrays = "09ab397b-f2b6-538f-b94a-2f83cf4a842a"

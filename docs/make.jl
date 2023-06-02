@@ -59,6 +59,7 @@ makedocs(
       "tutorials/wave_equation.md",
       "tutorials/kdv.md",
     ],
+    "Automatic differentiation (AD)" => "ad.md",
     "Applications & references" => "applications.md",
     "Benchmarks" => "benchmarks.md",
     "API reference" => "api_reference.md",
