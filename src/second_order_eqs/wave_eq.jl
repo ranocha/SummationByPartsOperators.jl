@@ -18,7 +18,8 @@ end
 function semidiscretize(du0func, u0func, semi::WaveEquationNonperiodicSemidiscretization, tspan)
   du0 = compute_coefficients(du0func, semi.derivative)
   u0 = compute_coefficients(u0func, semi.derivative)
-  ode = SecondOrderODEProblem(semi, du0, u0, tspan)
+  iip = true # is in-place
+  return SecondOrderODEProblem{iip}(semi, du0, u0, tspan)
 end
 
 
