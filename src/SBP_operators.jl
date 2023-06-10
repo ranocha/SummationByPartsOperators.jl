@@ -43,7 +43,7 @@ The coefficients of a derivative operator on a nonperiodic grid.
         symmetric = symmetric && length(left_boundary[end]) == length(left_boundary)
         #TODO: check boundary coefficients
         if derivative_order-1 != length(left_boundary_derivatives)
-            warn("Derivative coefficients of degree $derivative_order should provide $(derivative_order-1) boundary derivatives.")
+            @warn("Derivative coefficients of degree $derivative_order should provide $(derivative_order-1) boundary derivatives.")
         end
         new{T,LeftBoundary,RightBoundary,LeftBoundaryDerivatives,RightBoundaryDerivatives,LowerOffset,UpperOffset,LeftWidth,RightWidth,ExecutionMode,SourceOfCoefficients}(
             left_boundary, right_boundary, left_boundary_derivatives, right_boundary_derivatives,

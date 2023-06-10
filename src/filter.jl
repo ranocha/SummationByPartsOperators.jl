@@ -93,8 +93,8 @@ Represents the exponential filter function `σ(η) = exp(-α*η^p)`.
     p::Int
 
     function ExponentialFilter(α::T, p::Int=2) where {T<:Real}
-        α < 0 && warn("α should be nonnegative [α = $α].")
-        p < 0 && warn("p should be nonnegative [p = $p].")
+        α < 0 && @warn("α should be nonnegative [α = $α].")
+        p < 0 && @warn("p should be nonnegative [p = $p].")
         new{T}(α, p)
     end
 end
