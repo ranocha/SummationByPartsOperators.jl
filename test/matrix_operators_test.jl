@@ -59,5 +59,31 @@ using SummationByPartsOperators
     @test D.minus * u ≈ D_reference.minus * u
     @test D.plus * u ≈ D_reference.plus * u
     @test D.central * u ≈ D_reference.central * u
+
+    du = copy(u)
+    du_reference = copy(u)
+    α = 1.23
+    mul!(du, D.minus, u, α)
+    mul!(du_reference, D_reference.minus, u, α)
+    @test du ≈ du_reference
+    mul!(du, D.plus, u, α)
+    mul!(du_reference, D_reference.plus, u, α)
+    @test du ≈ du_reference
+    mul!(du, D.central, u, α)
+    mul!(du_reference, D_reference.central, u, α)
+    @test du ≈ du_reference
+
+    du = copy(u)
+    du_reference = copy(u)
+    β = 4.56
+    mul!(du, D.minus, u, α, β)
+    mul!(du_reference, D_reference.minus, u, α, β)
+    @test du ≈ du_reference
+    mul!(du, D.plus, u, α, β)
+    mul!(du_reference, D_reference.plus, u, α, β)
+    @test du ≈ du_reference
+    mul!(du, D.central, u, α, β)
+    mul!(du_reference, D_reference.central, u, α, β)
+    @test du ≈ du_reference
   end
 end
