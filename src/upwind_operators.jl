@@ -1,6 +1,7 @@
 
 """
     UpwindOperators
+    UpwindOperators(D_minus, D_central, D_plus)
 
 A struct bundling the individual operators available for non-periodic
 upwind SBP operators. The individual operators are available as
@@ -12,7 +13,9 @@ as no ambiguities arise. For example, upwind operators need to use the same
 grid and mass matrix, so [`mass_matrix`](@ref), [`grid`](@ref),
 [`xmin`](@ref), [`xmax`](@ref) etc. are available but `mul!` is not.
 
-See also [`upwind_operators`](@ref).
+It is recommended to construct an instance of `UpwindOperators` using
+[`upwind_operators`](@ref). An instance can also be constructed manually
+by passing the operators in the order `D_minus, D_central, D_plus`.
 """
 @auto_hash_equals struct UpwindOperators{T, Minus   <: AbstractNonperiodicDerivativeOperator{T},
                                             Central <: AbstractNonperiodicDerivativeOperator{T},
@@ -58,7 +61,7 @@ function Base.show(io::IO, D::UpwindOperators)
               "] using ", length(grid(D)), " nodes \n")
       print(io, "and coefficients")
   end
-  # TODO: Assumes that the same source is used for all coefficients
+  # Assumes that the same source is used for all coefficients
   print(io, " of ", nameof(typeof(source_of_coefficients(D.minus))))
 end
 

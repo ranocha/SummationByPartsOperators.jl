@@ -14,6 +14,7 @@ const SBP_TEST = get(ENV, "SBP_TEST", "all")
         @time @testset "Legendre Operators" begin include("legendre_operators_test.jl") end
         @time @testset "Linear Combinations of Operators" begin include("linear_combinations_of_operators_test.jl") end
         @time @testset "Upwind Operators" begin include("upwind_operators_test.jl") end
+        @time @testset "Matrix Operators" begin include("matrix_operators_test.jl") end
         @time @testset "Special Matrix Types" begin include("special_matrix_types.jl") end
         @time @testset "Aqua" begin include("aqua.jl") end
         @time @testset "AD" begin include("ad_test.jl") end

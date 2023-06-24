@@ -108,6 +108,7 @@ include("filter.jl")
 include("fourier_operators.jl")
 include("fourier_operators_2d.jl")
 include("legendre_operators.jl")
+include("matrix_operators.jl")
 include("upwind_operators.jl")
 include("SBP_coefficients/MattssonNordström2004.jl")
 include("SBP_coefficients/MattssonSvärdNordström2004.jl")
@@ -137,6 +138,7 @@ export PeriodicDerivativeOperator, PeriodicDissipationOperator,
        FourierPolynomialDerivativeOperator, FourierRationalDerivativeOperator,
        FourierDerivativeOperator2D,
        LegendreDerivativeOperator, LegendreSecondDerivativeOperator,
+       MatrixDerivativeOperator,
        UpwindOperators
 export FilterCallback, ConstantFilter, ExponentialFilter
 export SafeMode, FastMode, ThreadedMode
