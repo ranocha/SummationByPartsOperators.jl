@@ -21,11 +21,14 @@ using SummationByPartsOperators
     nodes = collect(grid(Dc_bounded))
     weights = diag(mass_matrix(Dc_bounded))
     Dm = MatrixDerivativeOperator(xmin_application, xmax_application,
-                                  nodes, weights, Matrix(Dm_bounded), acc_order)
+                                  nodes, weights, Matrix(Dm_bounded), acc_order,
+                                  source_of_coefficients(Dm_bounded))
     Dp = MatrixDerivativeOperator(xmin_application, xmax_application,
-                                  nodes, weights, Matrix(Dp_bounded), acc_order)
+                                  nodes, weights, Matrix(Dp_bounded), acc_order,
+                                  source_of_coefficients(Dp_bounded))
     Dc = MatrixDerivativeOperator(xmin_application, xmax_application,
-                                  nodes, weights, Matrix(Dc_bounded), acc_order)
+                                  nodes, weights, Matrix(Dc_bounded), acc_order,
+                                  source_of_coefficients(Dc_bounded))
     D = UpwindOperators(Dm, Dc, Dp)
 
     for compact in (true, false)
@@ -47,6 +50,10 @@ using SummationByPartsOperators
     @test x == grid(Dm)
     @test x == grid(Dp)
     @test x == grid(Dc)
+
+    @test issymmetric(Dm) == false
+    @test issymmetric(Dp) == false
+    @test issymmetric(Dc) == false
 
     D_reference = upwind_operators(Mattsson2017;
                                    derivative_order = 1, accuracy_order = acc_order,
@@ -85,5 +92,24 @@ using SummationByPartsOperators
     mul!(du, D.central, u, α, β)
     mul!(du_reference, D_reference.central, u, α, β)
     @test du ≈ du_reference
+
+    @test integrate(abs2, u, Dm) ≈ integrate(abs2, u, D_reference.minus)
+    @test integrate(abs2, u, Dp) ≈ integrate(abs2, u, D_reference.plus)
+    @test integrate(abs2, u, Dc) ≈ integrate(abs2, u, D_reference.central)
+
+    u = sinpi.(x)
+    u_reference = copy(u)
+    SummationByPartsOperators.scale_by_mass_matrix!(u, Dm)
+    SummationByPartsOperators.scale_by_mass_matrix!(u_reference, D_reference.minus)
+    @test u ≈ u_reference
+    SummationByPartsOperators.scale_by_inverse_mass_matrix!(u, Dm)
+    SummationByPartsOperators.scale_by_inverse_mass_matrix!(u_reference, D_reference.minus)
+    @test u ≈ u_reference
+
+    @test SummationByPartsOperators.get_weight(Dm, 1) == left_boundary_weight(D)
+    @test SummationByPartsOperators.get_weight(Dm, N) == right_boundary_weight(D)
+
+    @test SummationByPartsOperators.lower_bandwidth(Dm) == size(Dm, 1) - 1
+    @test SummationByPartsOperators.upper_bandwidth(Dm) == size(Dm, 1) - 1
   end
 end
