@@ -61,7 +61,7 @@ function Base.show(io::IO, D::UpwindOperators)
               "] using ", length(grid(D)), " nodes \n")
       print(io, "and coefficients")
   end
-  # TODO: Assumes that the same source is used for all coefficients
+  # Assumes that the same source is used for all coefficients
   print(io, " of ", nameof(typeof(source_of_coefficients(D.minus))))
 end
 

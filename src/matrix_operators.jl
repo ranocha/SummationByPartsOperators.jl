@@ -1,7 +1,7 @@
 
 """
     MatrixDerivativeOperator{T <: Real}
-    MatrixDerivativeOperator(xmin, xmax, nodes, weights, D, accuracy_order)
+    MatrixDerivativeOperator(xmin, xmax, nodes, weights, D, accuracy_order, source)
 
 A derivative operator on a nonperiodic grid with scalar type `T` computing a
 derivative as matrix vector product. This type is designed to make it easy to
@@ -10,19 +10,22 @@ experiment with new operators given in matrix form.
 An instance of this type can be constructed by passing the endpoints
 `xmin`, `xmax` of the desired grid as well as the `nodes`, `weights`, and the
 derivative operator `D::Matrix` on a reference interval, assuming that the
-`nodes` contain the bounary points of the reference interval.
+`nodes` contain the boundary points of the reference interval. `source` is
+the source of coefficients and can be `nothing` for experimentation.
 """
-@auto_hash_equals struct MatrixDerivativeOperator{T} <: AbstractNonperiodicDerivativeOperator{T}
+@auto_hash_equals struct MatrixDerivativeOperator{T, SourceOfCoefficients} <: AbstractNonperiodicDerivativeOperator{T}
   grid::Vector{T}
   weights::Vector{T}
   D::Matrix{T}
   accuracy_order::Int
+  source::SourceOfCoefficients
 
   function MatrixDerivativeOperator(xmin::T, xmax::T,
                                     nodes::Vector{T},
                                     weights::Vector{T},
                                     D::Matrix{T},
-                                    accuracy_order::Int) where {T <: Real}
+                                    accuracy_order::Int,
+                                    source::SourceOfCoefficients) where {T <: Real, SourceOfCoefficients}
       # The `nodes`, `weights`, and `D` are given on a reference interval.
       # We need to scale them by the Jacobian to get their values on the
       # given interval.
@@ -30,12 +33,14 @@ derivative operator `D::Matrix` on a reference interval, assuming that the
       grid = (nodes .- first(nodes)) ./ jac .+ xmin
       Δx = inv(jac)
 
-      new{T}(grid, Δx * weights, jac * D, accuracy_order)
+      new{T, SourceOfCoefficients}(grid, Δx * weights, jac * D, accuracy_order, source)
   end
 end
 
 derivative_order(D::MatrixDerivativeOperator) = 1
 LinearAlgebra.issymmetric(D::MatrixDerivativeOperator) = false
+
+source_of_coefficients(D::MatrixDerivativeOperator) = D.source
 
 function integrate(func, u, D::MatrixDerivativeOperator)
   return integrate(func, u, D.weights)
@@ -124,6 +129,6 @@ function left_boundary_weight(D::MatrixDerivativeOperator)
 end
 
 function right_boundary_weight(D::MatrixDerivativeOperator)
-    @inbounds retval = D.basis.weights[end]
+    @inbounds retval = D.weights[end]
     retval
 end
