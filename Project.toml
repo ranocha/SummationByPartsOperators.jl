@@ -1,7 +1,7 @@
 name = "SummationByPartsOperators"
 uuid = "9f78cca6-572e-554e-b819-917d2f1cf240"
 author = ["Hendrik Ranocha"]
-version = "0.5.39"
+version = "0.5.40"
 
 [deps]
 ArgCheck = "dce04be8-c92d-5529-be00-80e4d2c0e197"
@@ -30,10 +30,10 @@ ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 StructArrays = "09ab397b-f2b6-538f-b94a-2f83cf4a842a"
 
 [extensions]
-BandedMatricesExt = "BandedMatrices"
-DiffEqCallbacksExt = "DiffEqCallbacks"
-ForwardDiffExt = "ForwardDiff"
-StructArraysExt = "StructArrays"
+SummationByPartsOperatorsBandedMatricesExt = "BandedMatrices"
+SummationByPartsOperatorsDiffEqCallbacksExt = "DiffEqCallbacks"
+SummationByPartsOperatorsForwardDiffExt = "ForwardDiff"
+SummationByPartsOperatorsStructArraysExt = "StructArrays"
 
 [compat]
 ArgCheck = "1, 2.0"

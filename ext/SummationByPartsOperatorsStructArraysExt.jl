@@ -1,4 +1,4 @@
-module StructArraysExt
+module SummationByPartsOperatorsStructArraysExt
 
 if isdefined(Base, :get_extension)
   using StructArrays: StructArray, components

@@ -1,4 +1,4 @@
-module BandedMatricesExt
+module SummationByPartsOperatorsBandedMatricesExt
 
 if isdefined(Base, :get_extension)
     import BandedMatrices: BandedMatrices, BandedMatrix, isbanded, bandwidth
