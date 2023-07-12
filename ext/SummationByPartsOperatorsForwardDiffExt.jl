@@ -1,4 +1,4 @@
-module ForwardDiffExt
+module SummationByPartsOperatorsForwardDiffExt
 
 if isdefined(Base, :get_extension)
   using ForwardDiff: Partials

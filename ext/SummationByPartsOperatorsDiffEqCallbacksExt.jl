@@ -1,4 +1,4 @@
-module DiffEqCallbacksExt
+module SummationByPartsOperatorsDiffEqCallbacksExt
 
 if isdefined(Base, :get_extension)
   import DiffEqCallbacks: SavingCallback, SavedValues
