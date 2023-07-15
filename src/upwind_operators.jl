@@ -16,6 +16,8 @@ grid and mass matrix, so [`mass_matrix`](@ref), [`grid`](@ref),
 It is recommended to construct an instance of `UpwindOperators` using
 [`upwind_operators`](@ref). An instance can also be constructed manually
 by passing the operators in the order `D_minus, D_central, D_plus`.
+
+See also [`upwind_operators`](@ref), [`PeriodicUpwindOperators`](@ref)
 """
 @auto_hash_equals struct UpwindOperators{T, Minus   <: AbstractNonperiodicDerivativeOperator{T},
                                             Central <: AbstractNonperiodicDerivativeOperator{T},
@@ -39,7 +41,49 @@ by passing the operators in the order `D_minus, D_central, D_plus`.
   end
 end
 
-function Base.show(io::IO, D::UpwindOperators)
+"""
+    PeriodicUpwindOperators
+    PeriodicUpwindOperators(D_minus, D_central, D_plus)
+
+A struct bundling the individual operators available for periodic
+upwind SBP operators. The individual operators are available as
+`D.minus`, `D.plus` (and optionally `D.central`, if provided), where
+`D::PeriodicUpwindOperators`.
+
+The combined struct behaves as much as possible as an operator itself as long
+as no ambiguities arise. For example, upwind operators need to use the same
+grid and mass matrix, so [`mass_matrix`](@ref), [`grid`](@ref),
+[`xmin`](@ref), [`xmax`](@ref) etc. are available but `mul!` is not.
+
+It is recommended to construct an instance of `PeriodicUpwindOperators` using
+[`upwind_operators`](@ref). An instance can also be constructed manually
+by passing the operators in the order `D_minus, D_central, D_plus`.
+
+See also [`upwind_operators`](@ref), [`UpwindOperators`](@ref)
+"""
+@auto_hash_equals struct PeriodicUpwindOperators{T, Minus   <: AbstractPeriodicDerivativeOperator{T},
+                                                    Central <: AbstractPeriodicDerivativeOperator{T},
+                                                    Plus    <: AbstractPeriodicDerivativeOperator{T}} <: AbstractPeriodicDerivativeOperator{T}
+  minus::Minus
+  central::Central
+  plus::Plus
+
+  function PeriodicUpwindOperators(
+      minus::Minus, central::Central, plus::Plus) where {T, Minus   <: AbstractPeriodicDerivativeOperator{T},
+                                                            Central <: AbstractPeriodicDerivativeOperator{T},
+                                                            Plus    <: AbstractPeriodicDerivativeOperator{T}}
+    @argcheck grid(minus) == grid(central) == grid(plus)
+    @argcheck size(minus) == size(central) == size(plus)
+    @argcheck derivative_order(minus) == derivative_order(central) == derivative_order(plus)
+    # Note: We do not check more expensive properties such as
+    #       mass_matrix(minus) == mass_matrix(central) == mass_matrix(plus)
+    #       central == (minus + plus) / 2
+    #       M * (plus - minus) is negative semidefinite
+    new{T, Minus, Central, Plus}(minus, central, plus)
+  end
+end
+
+function Base.show(io::IO, D::Union{UpwindOperators,PeriodicUpwindOperators})
   if derivative_order(D) == 1
       print(io, "Upwind SBP first-derivative operators")
   elseif  derivative_order(D) == 2
@@ -65,7 +109,7 @@ function Base.show(io::IO, D::UpwindOperators)
   print(io, " of ", nameof(typeof(source_of_coefficients(D.minus))))
 end
 
-function Base.summary(io::IO, D::UpwindOperators)
+function Base.summary(io::IO, D::Union{UpwindOperators,PeriodicUpwindOperators})
   acc = accuracy_order(D.minus), accuracy_order(D.central), accuracy_order(D.minus)
   if all(==(first(acc)), acc)
     acc_string = string(first(acc))
@@ -76,22 +120,22 @@ function Base.summary(io::IO, D::UpwindOperators)
             ", accuracy:", acc_string, ")")
 end
 
-derivative_order(D::UpwindOperators) = derivative_order(D.minus)
+derivative_order(D::Union{UpwindOperators,PeriodicUpwindOperators}) = derivative_order(D.minus)
 
-grid(D::UpwindOperators) = grid(D.minus)
-xmin(D::UpwindOperators) = xmin(D.minus)
-xmax(D::UpwindOperators) = xmax(D.minus)
+grid(D::Union{UpwindOperators,PeriodicUpwindOperators}) = grid(D.minus)
+xmin(D::Union{UpwindOperators,PeriodicUpwindOperators}) = xmin(D.minus)
+xmax(D::Union{UpwindOperators,PeriodicUpwindOperators}) = xmax(D.minus)
 
-mass_matrix(D::UpwindOperators) = mass_matrix(D.minus)
+mass_matrix(D::Union{UpwindOperators,PeriodicUpwindOperators}) = mass_matrix(D.minus)
 left_boundary_weight(D::UpwindOperators) = left_boundary_weight(D.minus)
 right_boundary_weight(D::UpwindOperators) = right_boundary_weight(D.minus)
-function integrate(func, u::AbstractVector, D::UpwindOperators)
+function integrate(func, u::AbstractVector, D::Union{UpwindOperators,PeriodicUpwindOperators})
   integrate(func, u, D.minus)
 end
 
 
 """
-    upwind_operators(source_type, args...; kwargs...)
+    upwind_operators(source_type, args...; derivative_order = 1, kwargs...)
 
 Create [`UpwindOperators`](@ref) from the given source type.
 The positional arguments `args...` and keyword arguments `kwargs...` are passed
@@ -100,8 +144,8 @@ directly to [`derivative_operator`](@ref).
 ## Examples
 
 ```jldoctest
-julia> D = upwind_operators(Mattsson2017, derivative_order=1, accuracy_order=2,
-                            xmin=0//1, xmax=9//1, N=10)
+julia> D = upwind_operators(Mattsson2017, accuracy_order = 2,
+                            xmin = 0//1, xmax = 9//1, N = 10)
 Upwind SBP first-derivative operators of order 2 on a grid in [0//1, 9//1] using 10 nodes
 and coefficients of Mattsson2017
 
@@ -133,10 +177,74 @@ julia> Matrix(D.central)
   0//1   0//1   0//1   0//1   0//1   0//1   0//1   1//1  -3//1   2//1
 ```
 """
-function upwind_operators(source_type, args...; kwargs...)
-  Dm = derivative_operator(source_type(:minus),   args...; kwargs...)
-  Dc = derivative_operator(source_type(:central), args...; kwargs...)
-  Dp = derivative_operator(source_type(:plus),    args...; kwargs...)
+function upwind_operators(source_type, args...; derivative_order = 1, kwargs...)
+  Dm = derivative_operator(source_type(:minus),   args...; derivative_order, kwargs...)
+  Dc = derivative_operator(source_type(:central), args...; derivative_order, kwargs...)
+  Dp = derivative_operator(source_type(:plus),    args...; derivative_order, kwargs...)
   return UpwindOperators(Dm, Dc, Dp)
 end
 
+"""
+    upwind_operators(periodic_derivative_operator;
+                     derivative_order = 1, accuracy_order,
+                     xmin, xmax, N,
+                     mode = FastMode()))
+
+Create [`PeriodicUpwindOperators`](@ref) from operators constructed by
+[`periodic_derivative_operator`](@ref). The keyword arguments are passed
+directly to [`periodic_derivative_operator`](@ref).
+
+## Examples
+
+```jldoctest
+julia> D = upwind_operators(periodic_derivative_operator, accuracy_order = 2,
+                            xmin = 0//1, xmax = 8//1, N = 8)
+Upwind SBP first-derivative operators of order 2 on a grid in [0//1, 7//1] using 8 nodes
+and coefficients of Fornberg1998
+
+julia> D.minus
+Periodic first-derivative operator of order 2 on a grid in [0//1, 8//1] using 8 nodes,
+stencils with 2 nodes to the left, 0 nodes to the right, and coefficients of Fornberg (1998)
+  Calculation of Weights in Finite Difference Formulas.
+  SIAM Rev. 40.3, pp. 685-691.
+
+julia> D.plus
+Periodic first-derivative operator of order 2 on a grid in [0//1, 8//1] using 8 nodes,
+stencils with 0 nodes to the left, 2 nodes to the right, and coefficients of Fornberg (1998)
+  Calculation of Weights in Finite Difference Formulas.
+  SIAM Rev. 40.3, pp. 685-691.
+
+julia> Matrix(D.central)
+8×8 Matrix{Rational{Int64}}:
+  0//1   1//1  -1//4   0//1   0//1   0//1   1//4  -1//1
+ -1//1   0//1   1//1  -1//4   0//1   0//1   0//1   1//4
+  1//4  -1//1   0//1   1//1  -1//4   0//1   0//1   0//1
+  0//1   1//4  -1//1   0//1   1//1  -1//4   0//1   0//1
+  0//1   0//1   1//4  -1//1   0//1   1//1  -1//4   0//1
+  0//1   0//1   0//1   1//4  -1//1   0//1   1//1  -1//4
+ -1//4   0//1   0//1   0//1   1//4  -1//1   0//1   1//1
+  1//1  -1//4   0//1   0//1   0//1   1//4  -1//1   0//1
+```
+"""
+function upwind_operators(::typeof(periodic_derivative_operator);
+                          derivative_order = 1, accuracy_order,
+                          xmin, xmax, N,
+                          mode = FastMode())
+  Dm = periodic_derivative_operator(; derivative_order, accuracy_order,
+                                      left_offset = -(accuracy_order ÷ 2 + 1),
+                                      xmin, xmax, N, mode)
+  Dp = periodic_derivative_operator(; derivative_order, accuracy_order,
+                                      left_offset = -(accuracy_order - 1) ÷ 2,
+                                      xmin, xmax, N, mode)
+  # central coefficients obtained by averaging
+  upper_coef_central   = widening_plus(Dm.coefficients.upper_coef,
+                                       Dp.coefficients.upper_coef) / 2
+  central_coef_central = (Dm.coefficients.central_coef + Dp.coefficients.central_coef) / 2
+  lower_coef_central   = widening_plus(Dm.coefficients.lower_coef,
+                                       Dp.coefficients.lower_coef) / 2
+  coef_central = PeriodicDerivativeCoefficients(
+    lower_coef_central, central_coef_central, upper_coef_central,
+    mode, derivative_order, accuracy_order, source_of_coefficients(Dm))
+  Dc = PeriodicDerivativeOperator(coef_central, Dm.grid_evaluate)
+  return PeriodicUpwindOperators(Dm, Dc, Dp)
+end

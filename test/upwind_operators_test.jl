@@ -5,7 +5,7 @@ using SummationByPartsOperators
 # check construction of interior part of upwind operators
 @testset "Check interior parts" begin
   N = 21
-  xmin = 0.
+  xmin = 0.0
   xmax = Float64(N + 1)
   interior = 10:N-10
 
@@ -31,6 +31,14 @@ using SummationByPartsOperators
     Dm = Matrix(Dm_bounded)
     @test Dp[interior,interior] ≈ Matrix(Dp_periodic)[interior,interior]
     @test Dm[interior,interior] ≈ Matrix(Dm_periodic)[interior,interior]
+
+    D_periodic = upwind_operators(periodic_derivative_operator;
+                                  accuracy_order = acc_order,
+                                  xmin, xmax, N = N - 1)
+    @test D_periodic.minus == Dm_periodic
+    @test D_periodic.plus == Dp_periodic
+    @test Matrix(D_periodic.central) ≈ (Matrix(Dm_periodic) + Matrix(Dp_periodic)) / 2
+
     res = M * Dp + Dm' * M
     res[1,1] += 1
     res[end,end] -= 1
