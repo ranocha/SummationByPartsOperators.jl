@@ -230,6 +230,17 @@ Matrix(D.plus)
 Matrix(D.minus)
 ```
 
+This also works with periodic upwind operators.
+
+```@repl
+using SummationByPartsOperators
+
+D = upwind_operators(periodic_derivative_operator, accuracy_order = 2,
+                     xmin = 0, xmax = 1//1, N = 10)
+Matrix(D.plus)
+Matrix(D.minus)
+```
+
 You can also couple upwind operators continuously across elements using
 [`couple_continuously`](@ref) to obtain global upwind operators, see
 [below](@ref intro-CGSEM) and Theorem 2.4 of [^RanochaMitsotakisKetcheson2021].
