@@ -184,7 +184,48 @@ function upwind_operators(source_type, args...; derivative_order = 1, kwargs...)
   return UpwindOperators(Dm, Dc, Dp)
 end
 
-# TODO: docstring
+"""
+    upwind_operators(periodic_derivative_operator;
+                     derivative_order = 1, accuracy_order,
+                     xmin, xmax, N,
+                     mode = FastMode()))
+
+Create [`PeriodicUpwindOperators`](@ref) from operators constructed by
+[`periodic_derivative_operator`](@ref). The keyword arguments are passed
+directly to [`periodic_derivative_operator`](@ref).
+
+## Examples
+
+```jldoctest
+julia> D = upwind_operators(periodic_derivative_operator, accuracy_order = 2,
+                            xmin = 0//1, xmax = 8//1, N = 8)
+Upwind SBP first-derivative operators of order 2 on a grid in [0//1, 7//1] using 8 nodes
+and coefficients of Fornberg1998
+
+julia> D.minus
+Periodic first-derivative operator of order 2 on a grid in [0//1, 8//1] using 8 nodes,
+stencils with 2 nodes to the left, 0 nodes to the right, and coefficients of Fornberg (1998)
+  Calculation of Weights in Finite Difference Formulas.
+  SIAM Rev. 40.3, pp. 685-691.
+
+julia> D.plus
+Periodic first-derivative operator of order 2 on a grid in [0//1, 8//1] using 8 nodes,
+stencils with 0 nodes to the left, 2 nodes to the right, and coefficients of Fornberg (1998)
+  Calculation of Weights in Finite Difference Formulas.
+  SIAM Rev. 40.3, pp. 685-691.
+
+julia> Matrix(D.central)
+8×8 Matrix{Rational{Int64}}:
+  0//1   1//1  -1//4   0//1   0//1   0//1   1//4  -1//1
+ -1//1   0//1   1//1  -1//4   0//1   0//1   0//1   1//4
+  1//4  -1//1   0//1   1//1  -1//4   0//1   0//1   0//1
+  0//1   1//4  -1//1   0//1   1//1  -1//4   0//1   0//1
+  0//1   0//1   1//4  -1//1   0//1   1//1  -1//4   0//1
+  0//1   0//1   0//1   1//4  -1//1   0//1   1//1  -1//4
+ -1//4   0//1   0//1   0//1   1//4  -1//1   0//1   1//1
+  1//1  -1//4   0//1   0//1   0//1   1//4  -1//1   0//1
+```
+"""
 function upwind_operators(::typeof(periodic_derivative_operator);
                           derivative_order = 1, accuracy_order,
                           xmin, xmax, N,
@@ -192,10 +233,18 @@ function upwind_operators(::typeof(periodic_derivative_operator);
   Dm = periodic_derivative_operator(; derivative_order, accuracy_order,
                                       left_offset = -(accuracy_order ÷ 2 + 1),
                                       xmin, xmax, N, mode)
-  # TODO: Dc
-  Dc = Dm
   Dp = periodic_derivative_operator(; derivative_order, accuracy_order,
                                       left_offset = -(accuracy_order - 1) ÷ 2,
                                       xmin, xmax, N, mode)
+  # central coefficients obtained by averaging
+  upper_coef_central   = widening_plus(Dm.coefficients.upper_coef,
+                                       Dp.coefficients.upper_coef) / 2
+  central_coef_central = (Dm.coefficients.central_coef + Dp.coefficients.central_coef) / 2
+  lower_coef_central   = widening_plus(Dm.coefficients.lower_coef,
+                                       Dp.coefficients.lower_coef) / 2
+  coef_central = PeriodicDerivativeCoefficients(
+    lower_coef_central, central_coef_central, upper_coef_central,
+    mode, derivative_order, accuracy_order, source_of_coefficients(Dm))
+  Dc = PeriodicDerivativeOperator(coef_central, Dm.grid_evaluate)
   return PeriodicUpwindOperators(Dm, Dc, Dp)
 end
