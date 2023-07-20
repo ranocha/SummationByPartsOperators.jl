@@ -9,7 +9,7 @@ D_test_list = (MattssonNordström2004(), MattssonSvärdNordström2004(),
                 MattssonAlmquistVanDerWeide2018Minimal(),
                 MattssonAlmquistVanDerWeide2018Accurate(),
                 DienerDorbandSchnetterTiglio2007(), 
-                SharanBradyLivescu2022(0.1, 0.2))
+                SharanBradyLivescu2022(1.0, 1.0))
 
 # Accuracy tests of first derivative operators.
 for source in D_test_list, T in (Float32,Float64)
