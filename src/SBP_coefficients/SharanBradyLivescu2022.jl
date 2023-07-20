@@ -78,19 +78,19 @@ function boundary_coefficients_weights_order_2(alpha, T=Float64; sign=true)
                                                       (1 + alpha) / (-4 - alpha + alpha^2), 
                                                       0, 2 / (4 + alpha - alpha^2))),
            )
-    weights = SVector((1 + alpha) / 4, (1 / 4) * (1 + alpha)^2, (1 / 4) * (4 + alpha - alpha^2))
+    weights = SVector((1 + alpha) / 4, (1 // 4) * (1 + alpha)^2, (1 // 4) * (4 + alpha - alpha^2))
     return coeffs, weights
 end
     
 
 function boundary_coefficients_weights_order_4(alpha, T=Float64; sign=true)
     b1 = (-59 + 72 * alpha^2 + 40 * alpha^3 + 6 * alpha^4) /
-        (144 * alpha + 120 * alpha^2 + 24 * alpha^3)
+            (144 * alpha + 120 * alpha^2 + 24 * alpha^3)
     b2 = (43 + 36 * alpha^2 + 32 * alpha^3 + 6 * alpha^4) /
-        (72 * alpha + 96 * alpha^2 + 24 * alpha^3)
+            (72 * alpha + 96 * alpha^2 + 24 * alpha^3)
     b3 = (17 + 48 * alpha + 44 * alpha^2 + 16 * alpha^3 + 2 * alpha^4) /
-        (48 + 88 * alpha + 48 * alpha^2 + 8 * alpha^3)
-    s = 147 / 233
+            (48 + 88 * alpha + 48 * alpha^2 + 8 * alpha^3)
+    s = 147 // 233
 
     h11 = s * max(zero(T), b1) + (1 - s) * min(b2, b3)
 
@@ -119,10 +119,10 @@ function boundary_coefficients_weights_order_4(alpha, T=Float64; sign=true)
        )
 
     weights = SVector(h11,
-                     (1 / 48) * (17 + 2 * alpha^4 + alpha * (48 - 88 * h11) + alpha^2 * (44 - 48 * h11) - 8 * alpha^3 * (-2 + h11) - 48 * h11),
-                     (1 / 48) * (59 - 6 * alpha^4 + 144 * alpha * h11 + 8 * alpha^3 * (-5 + 3 * h11) + 24 * alpha^2 * (-3 + 5 * h11)),
-                     (1 / 48) * (43 + 6 * alpha^4 + alpha^2 * (36 - 96 * h11) - 72 * alpha * h11 - 8 * alpha^3 * (-4 + 3 * h11)),
-                     (1 / 48) * (49 - 2 * alpha^4 + 8 * alpha^3 * (-1 + h11) + 16 * alpha * h11 + 8 * alpha^2 * (-1 + 3 * h11))
+                     (1 // 48) * (17 + 2 * alpha^4 + alpha * (48 - 88 * h11) + alpha^2 * (44 - 48 * h11) - 8 * alpha^3 * (-2 + h11) - 48 * h11),
+                     (1 // 48) * (59 - 6 * alpha^4 + 144 * alpha * h11 + 8 * alpha^3 * (-5 + 3 * h11) + 24 * alpha^2 * (-3 + 5 * h11)),
+                     (1 // 48) * (43 + 6 * alpha^4 + alpha^2 * (36 - 96 * h11) - 72 * alpha * h11 - 8 * alpha^3 * (-4 + 3 * h11)),
+                     (1 // 48) * (49 - 2 * alpha^4 + 8 * alpha^3 * (-1 + h11) + 16 * alpha * h11 + 8 * alpha^2 * (-1 + 3 * h11))
                     )
 
     return coeffs, weights
@@ -151,10 +151,10 @@ function boundary_coefficients_weights_order_6(alpha, T=Float64; sign=true)
           1080 * alpha^5 +
           60 * alpha^6) /
          (360 * (120 + 274 * alpha + 225 * alpha^2 + 85 * alpha^3 + 15 * alpha^4 + alpha^5))
-    s = 16077 / 26921 
+    s = 16077 // 26921 
 
     h11 = s * max(0, b1) + (1 - s) * min(b2, b3)
-    d61 = 15025 / 525612
+    d61 = 15025 // 525612
 
     coeffs = (
         DerivativeCoefficientRow{T, 1, 6}(sign * SVector(-1/(2h11), (21600 + 720alpha * (55 + 3h11 * (25d61 - 40)) + 600(alpha^3) * (6 + d61 * (123h11 - 61)) + 360(alpha^2) * (5d61 * (61h11 - 15) - 60(h11 - 1)) + 450d61 * (alpha^4) * (44h11 - 41) + 360d61 * (alpha^5) * (5h11 - 11) - 39385d61 - 79200h11 - 300d61 * (alpha^6))/(43200h11),
@@ -204,12 +204,12 @@ function boundary_coefficients_weights_order_6(alpha, T=Float64; sign=true)
 
     weights = SVector(
                         h11,
-                        13649 / 43200 +
+                        13649 // 43200 +
                         alpha +
                         alpha^6 / 720 +
-                        alpha^2 * (137 / 120 - (15 * h11) / 8) +
-                        alpha^3 * (5 / 8 - (17 * h11) / 24) +
-                        alpha^4 * (17 / 96 - h11 / 8) - (1 / 120) * alpha^5 * (-3 + h11) - h11 -
+                        alpha^2 * (137 // 120 - (15 * h11) / 8) +
+                        alpha^3 * (5 // 8 - (17 * h11) / 24) +
+                        alpha^4 * (17 // 96 - h11 / 8) - (1 // 120) * alpha^5 * (-3 + h11) - h11 -
                         (137 / 60) * alpha * h11,
                         (12013 - 60 * alpha^6 +
                         43200 * alpha * h11 +
@@ -220,12 +220,12 @@ function boundary_coefficients_weights_order_6(alpha, T=Float64; sign=true)
                         (2711 + 60 * alpha^6 - 21600 * alpha * h11 - 72 * alpha^5 * (-13 + 5 * h11) -
                         90 * alpha^4 * (-59 + 52 * h11) - 360 * alpha^2 * (-30 + 107 * h11) -
                         120 * alpha^3 * (-107 + 177 * h11)) / 4320,
-                        5359 / 4320 - alpha^6 / 72 +
-                        alpha^4 * (-(49 / 48) + h11) +
-                        (10 / 3) * alpha * h11 +
-                        (1 / 60) * alpha^5 * (-12 + 5 * h11) +
-                        (1 / 6) * alpha^2 * (-10 + 39 * h11) +
-                        (1 / 12) * alpha^3 * (-26 + 49 * h11),
+                        5359 // 4320 - alpha^6 / 72 +
+                        alpha^4 * (-(49 // 48) + h11) +
+                        (10 // 3) * alpha * h11 +
+                        (1 // 60) * alpha^5 * (-12 + 5 * h11) +
+                        (1 // 6) * alpha^2 * (-10 + 39 * h11) +
+                        (1 // 12) * alpha^3 * (-26 + 49 * h11),
                         (7877 + 60 * alpha^6 - 10800 * alpha * h11 - 72 * alpha^5 * (-11 + 5 * h11) -
                         90 * alpha^4 * (-41 + 44 * h11) - 360 * alpha^2 * (-15 + 61 * h11) -
                         120 * alpha^3 * (-61 + 123 * h11)) / 8640,
