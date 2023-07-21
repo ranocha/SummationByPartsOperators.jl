@@ -165,8 +165,8 @@ export MattssonNordström2004, MattssonSvärdNordström2004, MattssonSvärdShoey
        MattssonAlmquistCarpenter2014Extended, MattssonAlmquistCarpenter2014Optimal,
        Mattsson2017,
        MattssonAlmquistVanDerWeide2018Minimal, MattssonAlmquistVanDerWeide2018Accurate,
-       DienerDorbandSchnetterTiglio2007
-export SharanBradyLivescu2022
+       DienerDorbandSchnetterTiglio2007,
+       SharanBradyLivescu2022
 export Tadmor1989, MadayTadmor1989, Tadmor1993,
        TadmorWaagan2012Standard, TadmorWaagan2012Convergent
 
