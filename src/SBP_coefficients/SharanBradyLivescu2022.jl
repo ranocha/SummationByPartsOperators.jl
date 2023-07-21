@@ -70,6 +70,17 @@ end
 Base.size(grid::CutCellGrid) = (length(grid),)
 Base.step(grid::CutCellGrid) = step(grid.uniform_interior_grid)
 
+function construct_grid(source::SharanBradyLivescu2022, accuracy_order, xmin, xmax, N)
+    if accuracy_order == 2
+        @argcheck N > 5
+    elseif accuracy_order == 4
+        @argcheck N > 9
+    elseif accuracy_order == 6
+        @argcheck N > 13
+    end
+    return CutCellGrid(xmin, xmax, source.alpha_left, source.alpha_right, N)
+end
+
 function boundary_coefficients_weights_order_2(alpha, T=Float64; sign=true)
     coeffs = (
             DerivativeCoefficientRow{T, 1, 3}(sign * SVector(-(2 / (1 + alpha)), 1, (1 - alpha) / (1 + alpha))),
