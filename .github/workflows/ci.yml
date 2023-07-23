@@ -71,6 +71,14 @@ jobs:
             os: ubuntu-latest
             arch: x64
             sbp_test: part2
+          - version: '~1.10.0-0'
+            os: ubuntu-latest
+            arch: x64
+            sbp_test: part1
+          - version: '~1.10.0-0'
+            os: ubuntu-latest
+            arch: x64
+            sbp_test: part2
     steps:
       - uses: actions/checkout@v3
       - uses: julia-actions/setup-julia@v1
