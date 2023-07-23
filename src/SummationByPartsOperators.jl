@@ -121,6 +121,7 @@ include("SBP_coefficients/Mattsson2017.jl")
 include("SBP_coefficients/MattssonAlmquistVanDerWeide2018Minimal.jl")
 include("SBP_coefficients/MattssonAlmquistVanDerWeide2018Accurate.jl")
 include("SBP_coefficients/DienerDorbandSchnetterTiglio2007.jl")
+include("SBP_coefficients/SharanBradyLivescu2022.jl")
 
 include("conservation_laws/general_laws.jl")
 include("conservation_laws/burgers.jl")
@@ -164,7 +165,8 @@ export MattssonNordström2004, MattssonSvärdNordström2004, MattssonSvärdShoey
        MattssonAlmquistCarpenter2014Extended, MattssonAlmquistCarpenter2014Optimal,
        Mattsson2017,
        MattssonAlmquistVanDerWeide2018Minimal, MattssonAlmquistVanDerWeide2018Accurate,
-       DienerDorbandSchnetterTiglio2007
+       DienerDorbandSchnetterTiglio2007,
+       SharanBradyLivescu2022
 export Tadmor1989, MadayTadmor1989, Tadmor1993,
        TadmorWaagan2012Standard, TadmorWaagan2012Convergent
 

@@ -8,7 +8,8 @@ D_test_list = (MattssonNordström2004(), MattssonSvärdNordström2004(),
                 MattssonAlmquistCarpenter2014Optimal(),
                 MattssonAlmquistVanDerWeide2018Minimal(),
                 MattssonAlmquistVanDerWeide2018Accurate(),
-                DienerDorbandSchnetterTiglio2007())
+                DienerDorbandSchnetterTiglio2007(), 
+                SharanBradyLivescu2022(1//2, 2//3))
 
 # Accuracy tests of first derivative operators.
 for source in D_test_list, T in (Float32,Float64)
