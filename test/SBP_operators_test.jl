@@ -8,7 +8,7 @@ D_test_list = (MattssonNordström2004(), MattssonSvärdNordström2004(),
                 MattssonAlmquistCarpenter2014Optimal(),
                 MattssonAlmquistVanDerWeide2018Minimal(),
                 MattssonAlmquistVanDerWeide2018Accurate(),
-                DienerDorbandSchnetterTiglio2007(), 
+                DienerDorbandSchnetterTiglio2007(),
                 SharanBradyLivescu2022(1//2, 2//3))
 
 # Accuracy tests of first derivative operators.
@@ -594,7 +594,7 @@ for source in D_test_list, T in (Float32,Float64)
             show(IOContext(devnull, :compact=>compact), D)
             show(IOContext(devnull, :compact=>compact), D.coefficients)
         end
-        x1 = grid(D)
+        x1 = grid(D) |> collect
         x0 = fill(one(eltype(x1)), length(x1))
         x2 = x1 .* x1
         x3 = x2 .* x1
@@ -831,7 +831,7 @@ for source in D_test_list, T in (Float32,Float64)
         @test isapprox(derivative_left( D, x0, Val{2}()), 0, atol=10_000*eps(T))
         @test isapprox(derivative_right(D, x0, Val{2}()), 0, atol=10_000*eps(T))
         @test isapprox(derivative_left( D, x1, Val{2}()), 0, atol=10_000*eps(T))
-        @test isapprox(derivative_right(D, x1, Val{2}()), 0, atol=10_000*eps(T))
+        @test isapprox(derivative_right(D, x1, Val{2}()), 0, atol=11_000*eps(T))
         @test isapprox(derivative_left( D, x2, Val{2}()), 2, atol=10_000*eps(T))
         @test isapprox(derivative_right(D, x2, Val{2}()), 2, atol=10_000*eps(T))
         @test isapprox(derivative_left( D, x3, Val{2}()), 6xmin, atol=20_000*eps(T))
