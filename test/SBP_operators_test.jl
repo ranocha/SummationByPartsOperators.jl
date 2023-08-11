@@ -882,3 +882,15 @@ for T in (Float32, Float64), acc_order in (2,4,6,8)
     dest3 = D_safe*u
     @test all(i->dest1[i] ≈ dest3[i], eachindex(u))
 end
+
+
+# https://github.com/ranocha/SummationByPartsOperators.jl/issues/208
+@testset "issue #208" begin
+    for acc_order in (2, 4, 6), der_order in 1:4
+        @test_nowarn derivative_operator(Mattsson2014(),
+                                         derivative_order = der_order,
+                                         accuracy_order = acc_order,
+                                         xmin = -1.0, xmax = 1.0,
+                                         N = 20)
+    end
+end

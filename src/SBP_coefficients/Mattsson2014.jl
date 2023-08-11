@@ -4,7 +4,7 @@
 
 Coefficients of the SBP operators given in
 - Mattsson (2014)
-  Diagonal-norm summation by parts operators for fiite difference approximations
+  Diagonal-norm summation by parts operators for finite difference approximations
     of third and fourth derivatives.
   Journal of Computational Physics 274, pp. 432-454.
 """
@@ -16,7 +16,7 @@ function Base.show(io::IO, source::Mattsson2014)
     else
         print(io,
             "Mattsson (2014) \n",
-            "  Diagonal-norm summation by parts operators for fiite difference approximations\n",
+            "  Diagonal-norm summation by parts operators for finite difference approximations\n",
             "    of third and fourth derivatives. \n",
             "  Journal of Computational Physics 274, pp. 432-454.")
     end
@@ -458,7 +458,8 @@ function third_derivative_coefficients(source::Mattsson2014, order::Int, T=Float
         upper_coef = SVector(T(-1), T(1//2))
         central_coef = T(0)
         lower_coef = -upper_coef
-        left_weights = SVector(T(1//2))
+        # left_weights = SVector(T(1//2))
+        left_weights = SVector(T(1//2), T(1), T(1))
         right_weights = left_weights
         left_boundary_derivatives = (
             # first derivative
@@ -720,7 +721,7 @@ function fourth_derivative_coefficients(source::Mattsson2014, order::Int, T=Floa
         upper_coef = SVector(T(-4), T(1))
         central_coef = T(6)
         lower_coef = upper_coef
-        left_weights = SVector(T(1//2))
+        left_weights = SVector(T(1//2), T(1), T(1), T(1))
         right_weights = left_weights
         left_boundary_derivatives = (
             # first derivative
