@@ -713,7 +713,7 @@ function fourth_derivative_coefficients(source::Mattsson2014, order::Int, T=Floa
             DerivativeCoefficientRow{T,1,6}(SVector(T(1//5),
                                                     T(2//5),
                                                     T(-17//5),
-                                                    T(-29//5),
+                                                    T(29//5),
                                                     T(-4),
                                                     T(1) )),
         )
