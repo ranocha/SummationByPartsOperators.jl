@@ -103,3 +103,26 @@ end
     derivative_operator(Mattsson2017(:plus   ), 1, acc_order, xmin, xmax, N)
   )
 end
+
+@testset "Empty lower/upper coefficients" begin
+  D = upwind_operators(periodic_derivative_operator, accuracy_order = 2,
+                       xmin = 0.0, xmax = 1.0, N = 10)
+  x = grid(D)
+  u = @. sinpi(2 * x)
+
+  du = zero(u)
+  @test_nowarn mul!(du, D.minus, u)
+  @test du ≈ D.minus * u
+  @test_nowarn mul!(du, D.minus, u, 2.0)
+  @test du ≈ 2 * D.minus * u
+  @test_nowarn mul!(du, D.minus, u, 2.0, 3.0)
+  @test du ≈ 8 * D.minus * u # 5 = 2 + 3 * 2
+
+  du = zero(u)
+  @test_nowarn mul!(du, D.plus, u)
+  @test du ≈ D.plus * u
+  @test_nowarn mul!(du, D.plus, u, 2.0)
+  @test du ≈ 2 * D.plus * u
+  @test_nowarn mul!(du, D.plus, u, 2.0, 3.0)
+  @test du ≈ 8 * D.plus * u # 5 = 2 + 3 * 2
+end
