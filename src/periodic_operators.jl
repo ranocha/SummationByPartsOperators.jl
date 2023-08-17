@@ -82,11 +82,15 @@ end
 
     ex_upper = :( nothing )
     for i in (UpperOffset-1):-1:0
-        ex = :( lower_coef[$LowerOffset]*u[end-$(i+LowerOffset)] )
-        for j in LowerOffset-1:-1:1
-            ex = :( $ex + lower_coef[$j]*u[end-$(j+i)] )
+        if LowerOffset > 0
+            ex = :( lower_coef[$LowerOffset]*u[end-$(i+LowerOffset)] )
+            for j in LowerOffset-1:-1:1
+                ex = :( $ex + lower_coef[$j]*u[end-$(j+i)] )
+            end
+            ex = :( $ex + central_coef*u[end-$i] )
+        else
+            ex = :( central_coef*u[end-$i] )
         end
-        ex = :( $ex + central_coef*u[end-$i] )
         for j in 1:UpperOffset
             if i-j < 0
                 ex = :( $ex + upper_coef[$j]*u[$(j-i)] )
