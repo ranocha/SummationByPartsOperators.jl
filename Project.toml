@@ -37,7 +37,7 @@ SummationByPartsOperatorsStructArraysExt = "StructArrays"
 
 [compat]
 ArgCheck = "1, 2.0"
-AutoHashEquals = "0.2"
+AutoHashEquals = "0.2, 1"
 BandedMatrices = "0.17"
 DiffEqCallbacks = "2"
 FFTW = "1"
