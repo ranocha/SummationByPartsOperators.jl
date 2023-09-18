@@ -65,8 +65,7 @@ makedocs(
     "API reference" => "api_reference.md",
     "Contributing" => "contributing.md",
     "License" => "license.md"
-  ],
-  strict = true # to make the GitHub action fail when doctests fail
+  ]
 )
 
 deploydocs(
