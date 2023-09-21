@@ -18,7 +18,7 @@ with periodic boundary conditions. The KdV equation has the quadratic invariant
 A classical trick to conserve this invariant is to use following split form
 
 ```math
-    u_t + \frac{1}{3} (u^2)_x + \frac{1}{3} u u_x = 0.
+    u_t + \frac{1}{3} (u^2)_x + \frac{1}{3} u u_x + \partial_x^3 u = 0.
 ```
 
 Indeed, integration by parts with periodic boundary conditions yields
@@ -29,10 +29,10 @@ Indeed, integration by parts with periodic boundary conditions yields
     &=
     \int u u_t
     =
-    -\frac{1}{3} \int u (u^2)_x - \frac{1}{3} \int u^2 u_x
+    -\frac{1}{3} \int u (u^2)_x - \frac{1}{3} \int u^2 u_x - \int u \partial_x^3 u
     \\
     &=
-    0 + \frac{1}{3} \int u_x u^2 - \frac{1}{3} \int u^2 u_x
+    0 + \frac{1}{3} \int u_x u^2 - \frac{1}{3} \int u^2 u_x + 0
     =
     0.
 \end{aligned}
