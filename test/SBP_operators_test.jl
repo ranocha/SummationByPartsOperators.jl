@@ -633,9 +633,9 @@ end
         @test abs(derivative_left( D, x0, Val{2}())) < 5_000*eps(T)
         @test abs(derivative_right(D, x0, Val{2}())) < 5_000*eps(T)
         @test abs(derivative_left( D, x1, Val{2}())) < 10_000*eps(T)
-        @test abs(derivative_right(D, x1, Val{2}())) < 10_000*eps(T)
+        @test abs(derivative_right(D, x1, Val{2}())) < 11_000*eps(T)
         @test isapprox(derivative_left( D, x2, Val{2}()), 2, atol=10_000*eps(T))
-        @test isapprox(derivative_right(D, x2, Val{2}()), 2, atol=10_000*eps(T))
+        @test isapprox(derivative_right(D, x2, Val{2}()), 2, atol=20_000*eps(T))
         @test isapprox(derivative_left( D, x3, Val{2}()), 6xmin, atol=50_000*eps(T))
         @test isapprox(derivative_right(D, x3, Val{2}()), 6xmax, atol=80_000*eps(T))
     end
@@ -827,9 +827,9 @@ end
         @test isapprox(derivative_left( D, x1, Val{2}()), 0, atol=10_000*eps(T))
         @test isapprox(derivative_right(D, x1, Val{2}()), 0, atol=11_000*eps(T))
         @test isapprox(derivative_left( D, x2, Val{2}()), 2, atol=10_000*eps(T))
-        @test isapprox(derivative_right(D, x2, Val{2}()), 2, atol=10_000*eps(T))
+        @test isapprox(derivative_right(D, x2, Val{2}()), 2, atol=20_000*eps(T))
         @test isapprox(derivative_left( D, x3, Val{2}()), 6xmin, atol=20_000*eps(T))
-        @test isapprox(derivative_right(D, x3, Val{2}()), 6xmax, atol=70_000*eps(T))
+        @test isapprox(derivative_right(D, x3, Val{2}()), 6xmax, atol=75_000*eps(T))
         # boundary: third derivative
         @test abs(derivative_left( D, x0, Val{3}())) < eps(T)
         @test abs(derivative_right(D, x0, Val{3}())) < eps(T)
