@@ -83,6 +83,7 @@ for T in (Float32, Float64)
 
         @test integrate(u, D) ≈ sum(mass_matrix(D) * u)
         @test integrate(u->u^2, u, D) ≈ dot(u, mass_matrix(D), u)
+        @test mass_matrix(D) ≈ Diagonal([weight(D, i) for i in 1:size(D, 1)])
     end
 end
 

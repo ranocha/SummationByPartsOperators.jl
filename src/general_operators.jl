@@ -56,7 +56,10 @@ source_of_coefficients(D) = SummationByPartsOperators
     left_boundary_weight(D)
 
 Return the left-boundary weight of the (diagonal) mass matrix `M` associated to
-the derivative operator `D`.
+the SBP derivative operator `D`.
+
+See also [`right_boundary_weight`](@ref), [`weight`](@ref), and
+[`mass_matrix`](@ref).
 """
 function left_boundary_weight end
 
@@ -64,9 +67,34 @@ function left_boundary_weight end
     right_boundary_weight(D)
 
 Return the left-boundary weight of the (diagonal) mass matrix `M` associated to
-the derivative operator `D`.
+the SBP derivative operator `D`.
+
+See also [`left_boundary_weight`](@ref), [`weight`](@ref), and
+[`mass_matrix`](@ref).
 """
 function right_boundary_weight end
+
+"""
+    weight(D, i::Int)
+
+Return the `i`th weight of the (diagonal) mass matrix `M` associated to
+the SBP derivative operator `D` (starting to count at `1`).
+
+See also [`left_boundary_weight`](@ref), [`right_boundary_weight`](@ref), and
+[`mass_matrix`](@ref).
+"""
+function weight end
+
+"""
+    mass_matrix(D)
+
+Return the (diagonal) mass matrix `M` associated to the SBP derivative operator
+`D`.
+
+See also [`left_boundary_weight`](@ref), [`right_boundary_weight`](@ref), and
+[`weight`](@ref).
+"""
+function mass_matrix end
 
 function Base.summary(io::IO, D::AbstractDerivativeOperator)
     print(io, nameof(typeof(D)), "(derivative:", derivative_order(D),

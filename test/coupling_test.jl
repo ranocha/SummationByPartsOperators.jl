@@ -35,8 +35,8 @@ using SummationByPartsOperators
           SummationByPartsOperators.scale_by_mass_matrix!(u, cD)
           SummationByPartsOperators.scale_by_inverse_mass_matrix!(u, cD)
           @test u ≈ v
-          @test integrate(u, cD) ≈ sum(mass_matrix(cD) * u)
-          @test integrate(u->u^2, u, cD) ≈ sum(u' * mass_matrix(cD) * u)
+          @test integrate(u, cD) ≈ sum(mass_matrix(cD) * u) ≈ sum(weight(cD, i) * u[i] for i in eachindex(u))
+          @test integrate(u->u^2, u, cD) ≈ sum(u' * mass_matrix(cD) * u) ≈ sum(weight(cD, i) * u[i]^2 for i in eachindex(u))
           @test cD * u ≈ BandedMatrix(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
           @test cD * u ≈ Matrix(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
           @test cD * u ≈ sparse(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
@@ -55,6 +55,9 @@ using SummationByPartsOperators
         M = mass_matrix(cD_central)
         @test M ≈ mass_matrix(cD_plus)
         @test M ≈ mass_matrix(cD_minus)
+        for i in 1:size(cD_central, 1)
+          @test @inferred(weight(cD_central, i)) ≈ @inferred(weight(cD_plus, i)) ≈ @inferred(weight(cD_minus, i))
+        end
         @test sum(M) ≈ xmax - xmin
         Dp = Matrix(cD_plus)
         Dm = Matrix(cD_minus)
@@ -75,9 +78,13 @@ using SummationByPartsOperators
         cD2 = couple_discontinuously(D, UniformMesh1D(xmin, xmax, N^2))
         @test grid(cD1) ≈ grid(cD2)
         @test mass_matrix(cD1) ≈ mass_matrix(cD2)
+        for i in 1:size(cD1, 1)
+          @test @inferred(weight(cD1, i)) ≈ @inferred(weight(cD2, i))
+        end
         @test Matrix(cD1) ≈ Matrix(cD2)
 
         Mcont = mass_matrix(cD_continuous)
+        @test Mcont ≈ Diagonal([weight(cD_continuous, i) for i in 1:size(cD_continuous, 1)])
         @test sum(Mcont) ≈ xmax - xmin
         Dcont = Matrix(cD_continuous)
         res = Mcont * Dcont + Dcont' * Mcont
@@ -109,6 +116,7 @@ using SummationByPartsOperators
           @test u ≈ v
           @test integrate(u, cD) ≈ sum(mass_matrix(cD) * u)
           @test integrate(u->u^2, u, cD) ≈ sum(u' * mass_matrix(cD) * u)
+          @test mass_matrix(cD) ≈ Diagonal([weight(cD, i) for i in 1:size(cD, 1)])
           @test cD * u ≈ Matrix(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
           @test cD * u ≈ sparse(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
           @test SummationByPartsOperators.xmin(cD) ≈ xmin
@@ -117,6 +125,9 @@ using SummationByPartsOperators
         M = mass_matrix(cD_central)
         @test M ≈ mass_matrix(cD_plus)
         @test M ≈ mass_matrix(cD_minus)
+        for i in 1:size(cD_central, 1)
+          @test @inferred(weight(cD_central, i)) ≈ @inferred(weight(cD_plus, i)) ≈ @inferred(weight(cD_minus, i))
+        end
         @test sum(M) ≈ xmax - xmin
         Dp = Matrix(cD_plus)
         Dm = Matrix(cD_minus)
@@ -130,6 +141,7 @@ using SummationByPartsOperators
         @test norm(res) < 100N * eps(float(T))
 
         Mcont = mass_matrix(cD_continuous)
+        @test Mcont ≈ Diagonal([weight(cD_continuous, i) for i in 1:size(cD_continuous, 1)])
         @test sum(Mcont) ≈ xmax - xmin
         Dcont = Matrix(cD_continuous)
         res = Mcont * Dcont + Dcont' * Mcont
@@ -172,6 +184,7 @@ end
             @test u ≈ v
             @test integrate(u, cD) ≈ sum(mass_matrix(cD) * u)
             @test integrate(u->u^2, u, cD) ≈ sum(u' * mass_matrix(cD) * u)
+            @test mass_matrix(cD) ≈ Diagonal([weight(cD, i) for i in 1:size(cD, 1)])
             @test cD * u ≈ BandedMatrix(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
             @test cD * u ≈ Matrix(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
             @test cD * u ≈ sparse(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
@@ -190,6 +203,9 @@ end
           M = mass_matrix(cD_central)
           @test M ≈ mass_matrix(cD_plus)
           @test M ≈ mass_matrix(cD_minus)
+          for i in 1:size(cD_central, 1)
+            @test @inferred(weight(cD_central, i)) ≈ @inferred(weight(cD_plus, i)) ≈ @inferred(weight(cD_minus, i))
+          end
           @test sum(M) ≈ xmax - xmin
           Dp = Matrix(cD_plus)
           Dm = Matrix(cD_minus)
@@ -213,6 +229,7 @@ end
           @test Matrix(cD1) ≈ Matrix(cD2)
 
           Mcont = mass_matrix(cD_continuous)
+          @test Mcont ≈ Diagonal([weight(cD_continuous, i) for i in 1:size(cD_continuous, 1)])
           @test sum(Mcont) ≈ xmax - xmin
           Dcont = Matrix(cD_continuous)
           res = Mcont * Dcont + Dcont' * Mcont
@@ -242,6 +259,7 @@ end
             @test u ≈ v
             @test integrate(u, cD) ≈ sum(mass_matrix(cD) * u)
             @test integrate(u->u^2, u, cD) ≈ sum(u' * mass_matrix(cD) * u)
+            @test mass_matrix(cD) ≈ Diagonal([weight(cD, i) for i in 1:size(cD, 1)])
             @test cD * u ≈ Matrix(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
             @test cD * u ≈ sparse(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
             @test SummationByPartsOperators.xmin(cD) ≈ xmin
@@ -250,6 +268,9 @@ end
           M = mass_matrix(cD_central)
           @test M ≈ mass_matrix(cD_plus)
           @test M ≈ mass_matrix(cD_minus)
+          for i in 1:size(cD_central, 1)
+            @test @inferred(weight(cD_central, i)) ≈ @inferred(weight(cD_plus, i)) ≈ @inferred(weight(cD_minus, i))
+          end
           @test sum(M) ≈ xmax - xmin
           Dp = Matrix(cD_plus)
           Dm = Matrix(cD_minus)
@@ -263,6 +284,7 @@ end
           @test norm(res) < 100N * eps(float(T))
 
           Mcont = mass_matrix(cD_continuous)
+          @test Mcont ≈ Diagonal([weight(cD_continuous, i) for i in 1:size(cD_continuous, 1)])
           @test sum(Mcont) ≈ xmax - xmin
           Dcont = Matrix(cD_continuous)
           res = Mcont * Dcont + Dcont' * Mcont
@@ -306,6 +328,7 @@ end
           @test u ≈ v
           @test integrate(u, cD) ≈ sum(mass_matrix(cD) * u)
           @test integrate(u->u^2, u, cD) ≈ sum(u' * mass_matrix(cD) * u)
+          @test mass_matrix(cD) ≈ Diagonal([weight(cD, i) for i in 1:size(cD, 1)])
           @test cD * u ≈ BandedMatrix(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
           @test cD * u ≈ Matrix(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
           @test cD * u ≈ sparse(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
@@ -317,6 +340,9 @@ end
           cDm_dense = Matrix(cDm)
           M = mass_matrix(cDp)
           @test M ≈ mass_matrix(cDm)
+          for i in 1:size(cD_central, 1)
+            @test @inferred(weight(cDp, i)) ≈ @inferred(weight(cDm, i))
+          end
           @test sum(M) ≈ xmax - xmin
 
           diss = M * (cDp_dense - cDm_dense)
@@ -353,6 +379,7 @@ end
           @test u ≈ v
           @test integrate(u, cD) ≈ sum(mass_matrix(cD) * u)
           @test integrate(u->u^2, u, cD) ≈ sum(u' * mass_matrix(cD) * u)
+          @test mass_matrix(cD) ≈ Diagonal([weight(cD, i) for i in 1:size(cD, 1)])
           @test cD * u ≈ Matrix(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
           @test cD * u ≈ sparse(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
           @test SummationByPartsOperators.xmin(cD) ≈ xmin
@@ -363,6 +390,9 @@ end
           cDm_dense = Matrix(cDm)
           M = mass_matrix(cDp)
           @test M ≈ mass_matrix(cDm)
+          for i in 1:size(cD_central, 1)
+            @test @inferred(weight(cDp, i)) ≈ @inferred(weight(cDm, i))
+          end
           @test sum(M) ≈ xmax - xmin
 
           diss = M * (cDp_dense - cDm_dense)
