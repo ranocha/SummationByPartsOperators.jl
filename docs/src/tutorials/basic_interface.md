@@ -81,9 +81,93 @@ mul!(du, D, u, 2) # equivalent to du .= 2 * D * u
 
 du ≈ 2 * D * u
 
+@allocated mul!(du, D, u, 2)
+
 du_background = rand(length(du)); du .= du_background
 
 mul!(du, D, u, 2, 3) # equivalent to du .= 2 * D * u + 3 * du
 
 du ≈ 2 * D * u + 3 * du_background
+
+@allocated mul!(du, D, u, 2, 3)
 ```
+
+
+## Integration and the mass/norm matrix
+
+SBP operators come with a mass matrix yielding a quadrature rule. In
+[SummationByPartsOperators.jl](https://github.com/ranocha/SummationByPartsOperators.jl),
+all operators typically have diagonal mass/norm matrices.
+You can access them via [`mass_matrix`](@ref), e.g.,
+
+```@repl
+using SummationByPartsOperators
+
+D = derivative_operator(MattssonNordström2004(),
+                        derivative_order = 1, accuracy_order = 2,
+                        xmin = 0.0, xmax = 1.0, N = 9)
+
+mass_matrix(D)
+
+D = periodic_derivative_operator(derivative_order = 1,
+                                 accuracy_order = 2,
+                                 xmin = 0.0, xmax = 1.0,
+                                 N = 8)
+
+mass_matrix(D)
+```
+
+If you want to use the quadrature associated with a mass matrix,
+you do not need to form it explicitly. Instead, it is recommended
+to use the function [`integrate`](@ref), e.g.,
+
+```@repl
+using SummationByPartsOperators
+
+D = derivative_operator(MattssonNordström2004(),
+                        derivative_order = 1, accuracy_order = 2,
+                        xmin = 0.0, xmax = 1.0, N = 9)
+
+M = mass_matrix(D)
+
+x = grid(D)
+
+u = x.^2
+
+integrate(u, D)
+
+integrate(u, D) ≈ sum(M * u)
+
+integrate(u, D) ≈ integrate(x -> x^2, x, D)
+```
+
+For example, you can proceed as follows to compute the error of the
+SBP operator when computing a derivative as follows.
+
+
+
+```@repl
+using SummationByPartsOperators
+
+D = derivative_operator(MattssonNordström2004(),
+                        derivative_order = 1, accuracy_order = 2,
+                        xmin = 0.0, xmax = 1.0, N = 9)
+
+M = mass_matrix(D)
+
+x = grid(D)
+
+difference = D * x.^3 - 3 * x.^2
+
+error_l2 = sqrt(integrate(abs2, difference, D))
+```
+
+
+## Handling boundary terms
+
+TODO
+
+
+## Going to multiple space dimensions
+
+TODO
