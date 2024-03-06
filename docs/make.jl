@@ -54,18 +54,18 @@ makedocs(
     "Introduction" => "introduction.md",
     "Tutorials" => [
       "tutorials/basic_interface.md",
-      # "tutorials/constant_linear_advection.md",
-      # "tutorials/advection_diffusion.md",
-      # "tutorials/variable_linear_advection.md",
-      # "tutorials/wave_equation.md",
-      # "tutorials/kdv.md",
+      "tutorials/constant_linear_advection.md",
+      "tutorials/advection_diffusion.md",
+      "tutorials/variable_linear_advection.md",
+      "tutorials/wave_equation.md",
+      "tutorials/kdv.md",
     ],
-    # "Automatic differentiation (AD)" => "ad.md",
-    # "Applications & references" => "applications.md",
-    # "Benchmarks" => "benchmarks.md",
-    # "API reference" => "api_reference.md",
-    # "Contributing" => "contributing.md",
-    # "License" => "license.md"
+    "Automatic differentiation (AD)" => "ad.md",
+    "Applications & references" => "applications.md",
+    "Benchmarks" => "benchmarks.md",
+    "API reference" => "api_reference.md",
+    "Contributing" => "contributing.md",
+    "License" => "license.md"
   ]
 )
 

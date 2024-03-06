@@ -161,13 +161,3 @@ difference = D * x.^3 - 3 * x.^2
 
 error_l2 = sqrt(integrate(abs2, difference, D))
 ```
-
-
-## Handling boundary terms
-
-TODO
-
-
-## Going to multiple space dimensions
-
-TODO
