@@ -3,8 +3,8 @@
 Here, we discuss the basic interface of
 [SummationByPartsOperators.jl](https://github.com/ranocha/SummationByPartsOperators.jl).
 We assume you are already familiar with the concept of SBP operators
-in general and the [introduction](@ref introduction) describing how to
-construct specific operators.
+in general and the [introduction](@ref intro-introduction) describing
+how to construct specific operators.
 
 
 ## Applying SBP operators
@@ -39,4 +39,29 @@ using LinearAlgebra, InteractiveUtils
 
 @doc mul!
 ```
+
+To improve the performance, you can pre-allocate an output vector
+and call the non-allocating function `mul!`.
+
+```@repl
+using SummationByPartsOperators
+
+D = derivative_operator(MattssonNordström2004(),
+                        derivative_order = 1, accuracy_order = 2,
+                        xmin = 0.0, xmax = 1.0, N = 9)
+
+x = grid(D)
+
+u = @. sin(pi * x)
+
+du = similar(u); mul!(du, D, u)
+
+du ≈ D * u
+
+@allocated mul!(du, D, u)
+```
+
+All operators provided by
+[SummationByPartsOperators.jl](https://github.com/ranocha/SummationByPartsOperators.jl)
+implement this 3-argument version of `mul!`.
 

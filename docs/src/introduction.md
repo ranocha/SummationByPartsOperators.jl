@@ -1,4 +1,4 @@
-# Introduction
+# [Introduction](@id intro-introduction)
 
 Summation-by-parts (SBP) operators are discrete derivative operators designed to
 enable (semi-) discrete stability proofs mimicking the energy method from the
