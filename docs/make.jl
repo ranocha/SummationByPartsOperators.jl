@@ -53,6 +53,7 @@ makedocs(
     "Home" => "index.md",
     "Introduction" => "introduction.md",
     "Tutorials" => [
+      "tutorials/basic_interface.md",
       "tutorials/constant_linear_advection.md",
       "tutorials/advection_diffusion.md",
       "tutorials/variable_linear_advection.md",

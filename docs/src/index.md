@@ -46,8 +46,10 @@ julia> using SummationByPartsOperators
 
 julia> using Plots: plot, plot!
 
-julia> D = periodic_derivative_operator(derivative_order=1, accuracy_order=2,
-                                        xmin=0.0, xmax=2.0, N=20)
+julia> D = periodic_derivative_operator(derivative_order = 1,
+                                        accuracy_order = 2,
+                                        xmin = 0.0, xmax = 2.0,
+                                        N = 20)
 Periodic first-derivative operator of order 2 on a grid in [0.0, 2.0] using 20 nodes,
 stencils with 1 nodes to the left, 1 nodes to the right, and coefficients of Fornberg (1998)
   Calculation of Weights in Finite Difference Formulas.
@@ -55,9 +57,9 @@ stencils with 1 nodes to the left, 1 nodes to the right, and coefficients of For
 
 julia> x = grid(D); u = sinpi.(x);
 
-julia> plot(x, D * u, label="numerical")
+julia> plot(x, D * u, label = "numerical")
 
-julia> plot!(x, π .* cospi.(x), label="analytical")
+julia> plot!(x, π .* cospi.(x), label = "analytical")
 ```
 You should see a plot like the following.
 
@@ -70,8 +72,9 @@ julia> using SummationByPartsOperators
 
 julia> using Plots: plot, plot!
 
-julia> D = derivative_operator(MattssonNordström2004(), derivative_order=1, accuracy_order=2,
-                               xmin=0.0, xmax=1.0, N=21)
+julia> D = derivative_operator(MattssonNordström2004(),
+                               derivative_order = 1, accuracy_order = 2,
+                               xmin = 0.0, xmax = 1.0, N = 21)
 SBP first-derivative operator of order 2 on a grid in [0.0, 1.0] using 21 nodes
 and coefficients of Mattsson, Nordström (2004)
   Summation by parts operators for finite difference approximations of second
@@ -80,9 +83,9 @@ and coefficients of Mattsson, Nordström (2004)
 
 julia> x = grid(D); u = exp.(x);
 
-julia> plot(x, D * u, label="numerical")
+julia> plot(x, D * u, label = "numerical")
 
-julia> plot!(x, exp.(x), label="analytical")
+julia> plot!(x, exp.(x), label = "analytical")
 ```
 You should see a plot like the following.
 

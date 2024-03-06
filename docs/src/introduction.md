@@ -1,4 +1,4 @@
-# Introduction
+# [Introduction](@id intro-introduction)
 
 Summation-by-parts (SBP) operators are discrete derivative operators designed to
 enable (semi-) discrete stability proofs mimicking the energy method from the
@@ -105,8 +105,9 @@ derivatives.
 ```@repl
 using SummationByPartsOperators, LinearAlgebra
 
-D = derivative_operator(MattssonNordström2004(), derivative_order=1, accuracy_order=2,
-                        xmin=0//1, xmax=1//1, N=9)
+D = derivative_operator(MattssonNordström2004(),
+                        derivative_order = 1, accuracy_order = 2,
+                        xmin = 0//1, xmax = 1//1, N = 9)
 tL = zeros(eltype(D), size(D, 1)); tL[1] = 1; tL'
 tR = zeros(eltype(D), size(D, 1)); tR[end] = 1; tR'
 M = mass_matrix(D)
