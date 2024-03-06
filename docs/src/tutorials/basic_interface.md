@@ -173,6 +173,8 @@ the 1D operators provided by
 if you apply them in a tensor product fashion along each space dimension.
 
 ```@repl
+using SummationByPartsOperators
+
 D = derivative_operator(MattssonNordström2004(),
                         derivative_order = 1, accuracy_order = 4,
                         xmin = 0.0, xmax = 1.0, N = 9)
