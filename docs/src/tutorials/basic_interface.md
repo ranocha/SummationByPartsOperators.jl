@@ -64,4 +64,26 @@ du ≈ D * u
 All operators provided by
 [SummationByPartsOperators.jl](https://github.com/ranocha/SummationByPartsOperators.jl)
 implement this 3-argument version of `mul!`.
+Most operators also implement the 5-argument version of `mul!` that
+can be used to scale the output and add it to some multiple of the
+result vector.
 
+```@repl
+using SummationByPartsOperators
+
+D = derivative_operator(MattssonNordström2004(),
+                        derivative_order = 1, accuracy_order = 2,
+                        xmin = 0.0, xmax = 1.0, N = 9)
+
+x = grid(D); u = @. sin(pi * x); du = similar(u); mul!(du, D, u);
+
+mul!(du, D, u, 2) # equivalent to du .= 2 * D * u
+
+du ≈ 2 * D * u
+
+du_background = rand(length(du)); du .= du_background
+
+mul!(du, D, u, 2, 3) # equivalent to du .= 2 * D * u + 3 * du
+
+du ≈ 2 * D * u + 3 * du_background
+```
