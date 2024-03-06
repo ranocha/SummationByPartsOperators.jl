@@ -33,7 +33,7 @@ As you can see above, calling `D * u` allocates a new vector for the
 result. If you want to apply an SBP operator multiple times and need
 good performance, you should consider using pre-allocating the output
 and using in-place update instead. This strategy is also described in
-the[performance tips in the Julia manual](https://docs.julialang.org/en/v1/manual/performance-tips/#Pre-allocating-outputs).
+the [performance tips in the Julia manual](https://docs.julialang.org/en/v1/manual/performance-tips/#Pre-allocating-outputs).
 Julia provides the function `mul!` for this purpose.
 
 ```@repl
@@ -190,7 +190,7 @@ let du_dx = zero(u)
     # The derivative of x*y^2 with respect to x is just y^2.
     # Thus, the result is constant in each column and varies
     # in the rows.
-    display(du_dx)
+    du_dx
 end
 
 let du_dy = zero(u)
@@ -198,7 +198,7 @@ let du_dy = zero(u)
         mul!(view(du_dy, i, :), D, view(u, i, :))
     end
     # The derivative of x*y^2 with respect to y is 2*x*y.
-    display(du_dy)
+    du_dy
 end
 
 2 .* x .* y'
