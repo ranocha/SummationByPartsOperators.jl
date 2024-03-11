@@ -21,6 +21,8 @@ for T in (Float32, Float64)
         println(devnull, D)
         @test SummationByPartsOperators.derivative_order(D) == 1
         @test issymmetric(D) == false
+        @test SummationByPartsOperators.xmin(D) ≈ xmin
+        @test SummationByPartsOperators.xmax(D) ≈ xmax
         u = compute_coefficients(zero, D)
         res = D*u
         for k in 1:N-1
