@@ -19,6 +19,8 @@ for T in (Float32, Float64)
         println(devnull, D)
         @test SummationByPartsOperators.derivative_order(D) == 1
         @test issymmetric(D) == false
+        @test SummationByPartsOperators.xmin(D) ≈ xmin
+        @test SummationByPartsOperators.xmax(D) ≈ xmax
         u = compute_coefficients(zero, D)
         res = D*u
         for k in 0:(N÷2)-1
@@ -58,6 +60,9 @@ for T in (Float32, Float64)
         @test !issymmetric(I + D)
         @test !issymmetric(D - I)
 
+        @test SummationByPartsOperators.xmin(D^2) ≈ xmin
+        @test SummationByPartsOperators.xmax(D^2) ≈ xmax
+
         poly = (I + 2D + 5*D^2) * (2I * D - D^3 * 5I) * (D*2 - D^2 * 5)
         @test poly.coef == (0.0, 0.0, 4.0, -2.0, -10.0, -45.0, 0.0, 125.0)
         println(devnull, poly)
@@ -66,6 +71,9 @@ for T in (Float32, Float64)
 
         v = (I - D^2) * u
         @test inv(I - D^2) * v ≈ u
+
+        @test SummationByPartsOperators.xmin(inv(I - D^2)) ≈ xmin
+        @test SummationByPartsOperators.xmax(inv(I - D^2)) ≈ xmax
 
         v = (I - D^2) \ u
         @test D * v ≈ (D / (I - D^2)) * u

@@ -11,8 +11,8 @@ See also [`fourier_derivative_operator`](@ref).
 @auto_hash_equals struct FourierDerivativeOperator{T<:Real, Grid, RFFT, BRFFT} <: AbstractPeriodicDerivativeOperator{T}
     jac::T
     Δx::T
-    grid_compute::Grid   # N-1 nodes, including the left and excluding the right boundary
-    grid_evaluate::Grid #  N  nodes, including both boundaries
+    grid_compute::Grid   # N nodes, including the left and excluding the right boundary
+    grid_evaluate::Grid #  N+1 nodes, including both boundaries
     tmp::Vector{Complex{T}}
     rfft_plan::RFFT
     brfft_plan::BRFFT
@@ -83,6 +83,9 @@ function Base.show(io::IO, D::FourierDerivativeOperator)
                     length(D.brfft_plan), " modes")
     end
 end
+
+xmin(D::FourierDerivativeOperator) = first(D.grid_evaluate)
+xmax(D::FourierDerivativeOperator) = last(D.grid_evaluate)
 
 
 function mul!(dest::AbstractVector{T}, D::FourierDerivativeOperator, u::AbstractVector{T}) where {T}
@@ -211,6 +214,9 @@ function Base.show(io::IO, poly::FourierPolynomialDerivativeOperator)
         print(io, poly.D1)
     end
 end
+
+xmin(poly::FourierPolynomialDerivativeOperator) = xmin(poly.D1)
+xmax(poly::FourierPolynomialDerivativeOperator) = xmax(poly.D1)
 
 
 function Base.:*(D1::FourierDerivativeOperator, D2::FourierDerivativeOperator)
@@ -430,6 +436,9 @@ end
 
 Base.size(rat::FourierRationalDerivativeOperator) = size(rat.D1)
 grid(rat::FourierRationalDerivativeOperator) = grid(rat.D1)
+
+xmin(rat::FourierRationalDerivativeOperator) = xmin(rat.D1)
+xmax(rat::FourierRationalDerivativeOperator) = xmax(rat.D1)
 
 function Base.show(io::IO, rat::FourierRationalDerivativeOperator)
     if get(io, :compact, false)
