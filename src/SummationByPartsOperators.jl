@@ -140,7 +140,7 @@ export PeriodicDerivativeOperator, PeriodicDissipationOperator,
        FourierDerivativeOperator2D,
        LegendreDerivativeOperator, LegendreSecondDerivativeOperator,
        MatrixDerivativeOperator,
-       UpwindOperators
+       UpwindOperators, PeriodicUpwindOperators
 export FilterCallback, ConstantFilter, ExponentialFilter
 export SafeMode, FastMode, ThreadedMode
 export derivative_order, accuracy_order, source_of_coefficients, grid, semidiscretize
