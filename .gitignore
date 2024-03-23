@@ -6,5 +6,6 @@
 **/*.gif
 **/Manifest.toml
 docs/build
+docs/src/code_of_conduct.md
 docs/src/contributing.md
 docs/src/license.md
