@@ -82,6 +82,7 @@ makedocs(
     "Benchmarks" => "benchmarks.md",
     "API reference" => "api_reference.md",
     "Contributing" => "contributing.md",
+    "Code of conduct" => "code_of_conduct.md",
     "License" => "license.md"
   ]
 )
