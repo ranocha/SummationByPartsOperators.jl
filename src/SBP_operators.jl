@@ -141,11 +141,11 @@ function Base.:+(coef_row1::DerivativeCoefficientRow{T,Start1,Length1}, coef_row
     Length = End - Start
     row = SVector{Length,T}(ntuple(i -> zero(T), Length))
     for i in 1:Length1
-        j = i-Start1+Start
+        j = i+Start1-Start
         row = Base.setindex(row, row[j] + coef_row1.coef[i], j)
     end
     for i in 1:Length2
-        j = i-Start2+Start
+        j = i+Start2-Start
         row = Base.setindex(row, row[j] + coef_row2.coef[i], j)
     end
     DerivativeCoefficientRow{T,Start,Length}(row)
