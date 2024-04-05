@@ -4,6 +4,7 @@ const SBP_TEST = get(ENV, "SBP_TEST", "all")
 
 @time @testset "SummationByPartsOperators.jl tests" begin
     @time if SBP_TEST == "all" || SBP_TEST == "part1"
+        @time @testset "Unit Tests" begin include("unit_tests.jl") end
         @time @testset "Periodic Operators" begin include("periodic_operators_test.jl") end
         @time @testset "Non-Periodic Operators" begin include("SBP_operators_test.jl") end
         @time @testset "Dissipation Operators" begin include("dissipation_operators_test.jl") end
