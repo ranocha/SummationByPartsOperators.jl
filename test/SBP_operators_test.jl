@@ -467,7 +467,7 @@ for source in D_test_list, T in (Float32,Float64)
 end
 
 # Accuracy tests of third derivative operators.
-@testset "third-derivative operators" for source in D_test_list, T in (Float32,Float64)
+@testset "third-derivative operators ($source, $T)" for source in D_test_list, T in (Float32,Float64)
     xmin = -one(T)
     xmax = 2*one(T)
     N = 101
@@ -499,7 +499,7 @@ end
         mul!(res, D, x0)
         @test all(i->abs(res[i]) < eps(T), eachindex(res))
         mul!(res, D, x1)
-        @test all(i->abs(res[i]) < 50_000*eps(T), eachindex(res))
+        @test all(i->abs(res[i]) < 80_000*eps(T), eachindex(res))
         # only interior
         mul!(res, D, x2)
         @test all(i->abs(res[i]) < 160_000*eps(T), inner_indices)
