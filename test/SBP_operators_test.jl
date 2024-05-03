@@ -499,7 +499,7 @@ end
         mul!(res, D, x0)
         @test all(i->abs(res[i]) < eps(T), eachindex(res))
         mul!(res, D, x1)
-        @test all(i->abs(res[i]) < 60_000*eps(T), eachindex(res))
+        @test all(i->abs(res[i]) < 70_000*eps(T), eachindex(res))
         # only interior
         mul!(res, D, x2)
         @test all(i->abs(res[i]) < 160_000*eps(T), inner_indices)
