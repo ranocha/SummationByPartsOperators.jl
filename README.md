@@ -8,7 +8,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-success.svg)](https://opensource.org/licenses/MIT)
 [![JOSS](https://joss.theoj.org/papers/c1bc6f211c4cce38bfdd0d312816bc69/status.svg)](https://joss.theoj.org/papers/c1bc6f211c4cce38bfdd0d312816bc69)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4773575.svg)](https://doi.org/10.5281/zenodo.4773575)
-[![Downloads](https://shields.io/endpoint?url=https://pkgs.genieframework.com/api/v1/badge/SummationByPartsOperators)](https://pkgs.genieframework.com?packages=SummationByPartsOperators)
+<!-- [![Downloads](https://shields.io/endpoint?url=https://pkgs.genieframework.com/api/v1/badge/SummationByPartsOperators)](https://pkgs.genieframework.com?packages=SummationByPartsOperators) -->
 <!-- [![GitHub commits since tagged version](https://img.shields.io/github/commits-since/ranocha/SummationByPartsOperators.jl/v0.5.5.svg?style=social&logo=github)](https://github.com/ranocha/SummationByPartsOperators.jl) -->
 <!-- [![PkgEval](https://juliaci.github.io/NanosoldierReports/pkgeval_badges/S/SummationByPartsOperators.svg)](https://juliaci.github.io/NanosoldierReports/pkgeval_badges/report.html) -->
 
