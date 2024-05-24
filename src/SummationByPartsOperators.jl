@@ -101,6 +101,7 @@ function __init__()
     @require DiffEqCallbacks="459566f4-90b8-5000-8ac3-15dfb0a30def" include("../ext/SummationByPartsOperatorsDiffEqCallbacksExt.jl")
     @require ForwardDiff="f6369f11-7733-5829-9624-2563aa707210" include("../ext/SummationByPartsOperatorsForwardDiffExt.jl")
     @require StructArrays="09ab397b-f2b6-538f-b94a-2f83cf4a842a" include("../ext/SummationByPartsOperatorsStructArraysExt.jl")
+    @require Optim="429524aa-4258-5aef-a3af-852621145aeb" include("../ext/SummationByPartsOperatorsOptimExt.jl")
   end
 end
 
@@ -109,6 +110,7 @@ include("fourier_operators.jl")
 include("fourier_operators_2d.jl")
 include("legendre_operators.jl")
 include("matrix_operators.jl")
+include("function_space_operators.jl")
 include("upwind_operators.jl")
 include("SBP_coefficients/MattssonNordström2004.jl")
 include("SBP_coefficients/MattssonSvärdNordström2004.jl")
@@ -139,7 +141,7 @@ export PeriodicDerivativeOperator, PeriodicDissipationOperator,
        FourierPolynomialDerivativeOperator, FourierRationalDerivativeOperator,
        FourierDerivativeOperator2D,
        LegendreDerivativeOperator, LegendreSecondDerivativeOperator,
-       MatrixDerivativeOperator,
+       MatrixDerivativeOperator, FunctionSpaceOperator,
        UpwindOperators, PeriodicUpwindOperators
 export FilterCallback, ConstantFilter, ExponentialFilter
 export SafeMode, FastMode, ThreadedMode
@@ -169,6 +171,7 @@ export MattssonNordström2004, MattssonSvärdNordström2004, MattssonSvärdShoey
        SharanBradyLivescu2022
 export Tadmor1989, MadayTadmor1989, Tadmor1993,
        TadmorWaagan2012Standard, TadmorWaagan2012Convergent
+export GlaubitzNordströmÖffner2023
 
 export BurgersPeriodicSemidiscretization, BurgersNonperiodicSemidiscretization,
        CubicPeriodicSemidiscretization, CubicNonperiodicSemidiscretization,
