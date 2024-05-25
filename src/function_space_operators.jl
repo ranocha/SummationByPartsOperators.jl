@@ -32,16 +32,16 @@ function Base.show(io::IO, source::GlaubitzNordströmÖffner2023)
 end
 
 """
-    FunctionSpaceOperator(basis_functions, x_min, x_max, nodes, source)
+    FunctionSpaceOperator(basis_functions, x_min, x_max, nodes, source; accuracy_order = 0)
 
 Construct a `MatrixDerivativeOperator` that represents a derivative operator in a function space.
 """
 function FunctionSpaceOperator(basis_functions,
                                x_min::T, x_max::T, nodes::Vector{T},
-                               source::SourceOfCoefficients) where {T, SourceOfCoefficients}
+                               source::SourceOfCoefficients;
+                               accuracy_order = 0) where {T, SourceOfCoefficients}
 
   weights, D = construct_function_space_operator(basis_functions, x_min, x_max, nodes, source)
-  accuracy_order = length(basis_functions) # TODO: this might needs to be adjusted
   return MatrixDerivativeOperator(x_min, x_max, nodes, weights, D, accuracy_order, source)
 end
 
