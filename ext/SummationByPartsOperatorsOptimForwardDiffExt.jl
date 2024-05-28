@@ -4,7 +4,7 @@ if isdefined(Base, :get_extension)
     using Optim: Options, LBFGS, optimize, minimizer
     using ForwardDiff: ForwardDiff
 else
-    using ..Optim: LOptions, BFGS, optimize, minimizer
+    using ..Optim: Options, LBFGS, optimize, minimizer
     using ..ForwardDiff: ForwardDiff
 end
 
