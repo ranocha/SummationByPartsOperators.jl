@@ -34,8 +34,8 @@ function orthonormalize_gram_schmidt(basis_functions, basis_functions_derivative
     for k = 1:K
         A[k, k] = 1
         for j = 1:k-1
-            g = x -> call_orthonormal_basis_function(A, basis_functions, j, x)
-            g_derivative = x -> call_orthonormal_basis_function(A, basis_functions_derivatives, j, x)
+            g(x) = call_orthonormal_basis_function(A, basis_functions, j, x)
+            g_derivative(x) =  call_orthonormal_basis_function(A, basis_functions_derivatives, j, x)
             inner_product = inner_H1(basis_functions[k], g, basis_functions_derivatives[k], g_derivative, nodes)
             norm_squared = inner_H1(g, g, g_derivative, g_derivative, nodes)
             A[k, :] = A[k, :] - inner_product/norm_squared * A[j, :]
