@@ -43,6 +43,7 @@ accuracy of the operator, which can optionally be passed, but does not have any 
 operator.
 The operator that is returned follows the general interface. Currently, it is wrapped in a
 [`MatrixDerivativeOperator`](@ref), but this might change in the future.
+In order to use this function, the packages `Optim` and `ForwardDiff` must be loaded.
 
 See also [`GlaubitzNordströmÖffner2023`](@ref).
 """
