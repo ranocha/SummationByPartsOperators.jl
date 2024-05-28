@@ -4,8 +4,8 @@ if isdefined(Base, :get_extension)
     using Optim: Options, LBFGS, optimize, minimizer
     using ForwardDiff: ForwardDiff
 else
-    using ..Optim: LBFGS, optimize, minimizer
-    using ..ForwardDiff: Options, ForwardDiff
+    using ..Optim: LOptions, BFGS, optimize, minimizer
+    using ..ForwardDiff: ForwardDiff
 end
 
 using SummationByPartsOperators: SummationByPartsOperators, GlaubitzNordströmÖffner2023
