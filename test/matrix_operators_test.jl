@@ -129,7 +129,7 @@ end
   B[1, 1] = -1.0
   B[N, N] = 1.0
   let basis_functions = [x -> x^i for i in 0:3]
-    D = FunctionSpaceOperator(basis_functions, x_min, x_max, nodes, source)
+    D = function_space_operator(basis_functions, x_min, x_max, nodes, source)
 
     @test ≈(D * ones(N), zeros(N); atol = 1e-13)
     @test D * x ≈ ones(N)
@@ -140,7 +140,7 @@ end
   end
 
   let basis_functions = [one, identity, exp]
-    D = FunctionSpaceOperator(basis_functions, x_min, x_max, nodes, source)
+    D = function_space_operator(basis_functions, x_min, x_max, nodes, source)
 
     @test ≈(D * ones(N), zeros(N); atol = 1e-13)
     @test D * x ≈ ones(N)
