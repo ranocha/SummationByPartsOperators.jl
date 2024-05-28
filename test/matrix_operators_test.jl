@@ -1,6 +1,7 @@
 using Test
 using LinearAlgebra
 using SummationByPartsOperators
+using Optim
 
 # check construction of interior part of upwind operators
 @testset "Check against some upwind operators" begin
@@ -111,5 +112,40 @@ using SummationByPartsOperators
 
     @test SummationByPartsOperators.lower_bandwidth(Dm) == size(Dm, 1) - 1
     @test SummationByPartsOperators.upper_bandwidth(Dm) == size(Dm, 1) - 1
+  end
+end
+
+@testset "Function space operators" begin
+  N = 5
+  nodes = collect(range(-1, 1, length=N))
+  x_min = -1.0
+  x_max = 1.0
+  x = [x_min, -0.5, 0.0, 0.5, x_max]
+  source = GlaubitzNordströmÖffner2023()
+  for compact in (true, false)
+    show(IOContext(devnull, :compact=>compact), source)
+  end
+  B = zeros(N, N)
+  B[1, 1] = -1.0
+  B[N, N] = 1.0
+  let basis_functions = [x -> x^i for i in 0:3]
+    D = FunctionSpaceOperator(basis_functions, x_min, x_max, nodes, source)
+
+    @test ≈(D * ones(N), zeros(N); atol = 1e-13)
+    @test D * x ≈ ones(N)
+    @test D * (x .^ 2) ≈ 2 * x
+    @test D * (x .^ 3) ≈ 3 * (x .^ 2)
+    M = mass_matrix(D)
+    @test M * D.D + D.D' * M ≈ B
+  end
+
+  let basis_functions = [one, identity, exp]
+    D = FunctionSpaceOperator(basis_functions, x_min, x_max, nodes, source)
+
+    @test ≈(D * ones(N), zeros(N); atol = 1e-13)
+    @test D * x ≈ ones(N)
+    @test D * exp.(x) ≈ exp.(x)
+    M = mass_matrix(D)
+    @test M * D.D + D.D' * M ≈ B
   end
 end

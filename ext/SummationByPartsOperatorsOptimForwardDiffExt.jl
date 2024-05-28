@@ -27,8 +27,8 @@ function orthonormalize_gram_schmidt(basis_functions, basis_functions_derivative
 
     A = LowerTriangular(zeros(eltype(nodes), K, K))
 
-    basis_functions_orthonormalized = Vector{eltype(basis_functions)}(undef, K)
-    basis_functions_orthonormalized_derivatives = Vector{eltype(basis_functions)}(undef, K)
+    basis_functions_orthonormalized = Vector{Function}(undef, K)
+    basis_functions_orthonormalized_derivatives = Vector{Function}(undef, K)
 
     for k = 1:K
         A[k, k] = 1.0
