@@ -15,9 +15,10 @@ using SparseArrays: spzeros
 function SummationByPartsOperators.function_space_operator(basis_functions,
                                                            x_min::T, x_max::T, nodes::Vector{T},
                                                            source::SourceOfCoefficients;
-                                                           accuracy_order = 0) where {T, SourceOfCoefficients}
+                                                           accuracy_order = 0,
+                                                           options = Options(g_tol = 1e-14, iterations = 10000)) where {T, SourceOfCoefficients}
 
-    weights, D = construct_function_space_operator(basis_functions, x_min, x_max, nodes, source)
+    weights, D = construct_function_space_operator(basis_functions, x_min, x_max, nodes, source; options = options)
     return MatrixDerivativeOperator(x_min, x_max, nodes, weights, D, accuracy_order, source)
 end
 
@@ -92,7 +93,8 @@ function create_P(rho, x_length)
 end
 
 function construct_function_space_operator(basis_functions, x_min, x_max, nodes,
-                                           ::GlaubitzNordströmÖffner2023)
+                                           ::GlaubitzNordströmÖffner2023;
+                                           options = Options(g_tol = 1e-14, iterations = 10000))
     K = length(basis_functions)
     N = length(nodes)
     basis_functions_derivatives = [x -> ForwardDiff.derivative(basis_functions[i], x) for i in 1:K]
@@ -125,7 +127,7 @@ function construct_function_space_operator(basis_functions, x_min, x_max, nodes,
     end
     L = Integer(N*(N - 1)/2)
     x0 = zeros(L + N)
-    result = optimize(x -> optimization_function(x, p), x0, LBFGS(), Options(g_tol = 1e-14, iterations = 10000),
+    result = optimize(x -> optimization_function(x, p), x0, LBFGS(), options,
                       autodiff = :forward)
     x = minimizer(result)
     sigma = x[1:L]
