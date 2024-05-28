@@ -33,6 +33,7 @@ function Base.show(io::IO, source::GlaubitzNordströmÖffner2023)
   end
 end
 
+# This function is extended in the package extension SummationByPartsOperatorsOptimExt
 """
     function_space_operator(basis_functions, x_min, x_max, nodes, source; accuracy_order = 0)
 
@@ -47,14 +48,5 @@ In order to use this function, the packages `Optim` and `ForwardDiff` must be lo
 
 See also [`GlaubitzNordströmÖffner2023`](@ref).
 """
-function function_space_operator(basis_functions,
-                                 x_min::T, x_max::T, nodes::Vector{T},
-                                 source::SourceOfCoefficients;
-                                 accuracy_order = 0) where {T, SourceOfCoefficients}
+function function_space_operator end
 
-  weights, D = construct_function_space_operator(basis_functions, x_min, x_max, nodes, source)
-  return MatrixDerivativeOperator(x_min, x_max, nodes, weights, D, accuracy_order, source)
-end
-
-# This function is extended in the package extension SummationByPartsOperatorsOptimExt
-function construct_function_space_operator end

@@ -8,9 +8,18 @@ else
     using ..ForwardDiff: ForwardDiff
 end
 
-using SummationByPartsOperators: SummationByPartsOperators, GlaubitzNordströmÖffner2023
+using SummationByPartsOperators: SummationByPartsOperators, GlaubitzNordströmÖffner2023, MatrixDerivativeOperator
 using LinearAlgebra: Diagonal, LowerTriangular, diag, norm, cond
 using SparseArrays: spzeros
+
+function SummationByPartsOperators.function_space_operator(basis_functions,
+                                                           x_min::T, x_max::T, nodes::Vector{T},
+                                                           source::SourceOfCoefficients;
+                                                           accuracy_order = 0) where {T, SourceOfCoefficients}
+
+    weights, D = construct_function_space_operator(basis_functions, x_min, x_max, nodes, source)
+    return MatrixDerivativeOperator(x_min, x_max, nodes, weights, D, accuracy_order, source)
+end
 
 function inner_H1(f, g, f_derivative, g_derivative, nodes)
     return sum(f.(nodes) .* g.(nodes) + f_derivative.(nodes) .* g_derivative.(nodes))
@@ -82,8 +91,8 @@ function create_P(rho, x_length)
     return P
 end
 
-function SummationByPartsOperators.construct_function_space_operator(basis_functions, x_min, x_max, nodes,
-                                                                     ::GlaubitzNordströmÖffner2023)
+function construct_function_space_operator(basis_functions, x_min, x_max, nodes,
+                                           ::GlaubitzNordströmÖffner2023)
     K = length(basis_functions)
     N = length(nodes)
     basis_functions_derivatives = [x -> ForwardDiff.derivative(basis_functions[i], x) for i in 1:K]
