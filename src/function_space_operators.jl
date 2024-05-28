@@ -12,6 +12,8 @@ See also
   An optimization-based construction procedure for function space based
   summation-by-parts operators on arbitrary grids.
   arXiv, arXiv:2405.08770v1.
+
+See [`function_space_operator`](@ref).
 """
 struct GlaubitzNordströmÖffner2023 <: SourceOfCoefficients end
 
@@ -34,7 +36,15 @@ end
 """
     function_space_operator(basis_functions, x_min, x_max, nodes, source; accuracy_order = 0)
 
-Construct a `MatrixDerivativeOperator` that represents a derivative operator in a function space.
+Construct an operator that represents a derivative operator in a function space spanned by
+the `basis_functions`, which is an iterable of functions. The operator is constructed on the
+interval `[x_min, x_max]` with the nodes `nodes`. The `accuracy_order` is the order of the
+accuracy of the operator, which can optionally be passed, but does not have any effect on the
+operator.
+The operator that is returned follows the general interface. Currently, it is wrapped in a
+[`MatrixDerivativeOperator`](@ref), but this might change in the future.
+
+See also [`GlaubitzNordströmÖffner2023`](@ref).
 """
 function function_space_operator(basis_functions,
                                  x_min::T, x_max::T, nodes::Vector{T},
