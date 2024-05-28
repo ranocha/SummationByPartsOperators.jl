@@ -38,7 +38,7 @@ end
     function_space_operator(basis_functions, x_min, x_max, nodes, source;
                             accuracy_order = 0, options = Optim.Options(g_tol = 1e-14, iterations = 10000))
 
-Construct an operator that represents a derivative operator in a function space spanned by
+Construct an operator that represents a first-derivative operator in a function space spanned by
 the `basis_functions`, which is an iterable of functions. The operator is constructed on the
 interval `[x_min, x_max]` with the nodes `nodes`. The `accuracy_order` is the order of the
 accuracy of the operator, which can optionally be passed, but does not have any effect on the
