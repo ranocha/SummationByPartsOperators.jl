@@ -10,6 +10,7 @@ end
 
 using SummationByPartsOperators: SummationByPartsOperators, GlaubitzNordströmÖffner2023
 using LinearAlgebra: Diagonal, LowerTriangular, diag, norm, cond
+using SparseArrays: spzeros
 
 function inner_H1(f, g, f_derivative, g_derivative, nodes)
     return sum(f.(nodes) .* g.(nodes) + f_derivative.(nodes) .* g_derivative.(nodes))
@@ -31,7 +32,7 @@ function orthonormalize_gram_schmidt(basis_functions, basis_functions_derivative
     basis_functions_orthonormalized_derivatives = Vector{Function}(undef, K)
 
     for k = 1:K
-        A[k, k] = 1.0
+        A[k, k] = 1
         for j = 1:k-1
             g = x -> call_orthonormal_basis_function(A, basis_functions, j, x)
             g_derivative = x -> call_orthonormal_basis_function(A, basis_functions_derivatives, j, x)
@@ -94,14 +95,14 @@ function SummationByPartsOperators.construct_function_space_operator(basis_funct
     # Here, W satisfies W'*W = I
     W = [V; -V_x]
 
-    B = zeros((N, N))
-    B[1, 1] = -1.0
-    B[N, N] = 1.0
+    B = spzeros(eltype(nodes), (N, N))
+    B[1, 1] = -1
+    B[N, N] = 1
 
     R = B * V / 2
     x_length = x_max - x_min
     p = (W, R, x_length)
-    function optimization_function(x, p)
+    @views function optimization_function(x, p)
         W, R, x_length = p
         (N, _) = size(R)
         L = Integer(N*(N - 1)/2)
