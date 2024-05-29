@@ -122,13 +122,14 @@ function construct_function_space_operator(basis_functions, x_min, x_max, nodes,
         S = create_S(sigma, N)
         P = create_P(rho, x_length)
         X = [S P]
-        # TODO: Which norm to use? XW + R is a NxK matrix. This uses the Frobenius norm.
+        # Use the Frobenius norm since it is strictly convex and cheap to compute
         return norm(X * W + R)^2
     end
     L = Integer(N*(N - 1)/2)
     x0 = zeros(L + N)
     result = optimize(x -> optimization_function(x, p), x0, LBFGS(), options,
                       autodiff = :forward)
+    display(result)
     x = minimizer(result)
     sigma = x[1:L]
     rho = x[(L + 1):end]
