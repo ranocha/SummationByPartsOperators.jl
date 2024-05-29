@@ -1,12 +1,7 @@
 module SummationByPartsOperatorsOptimForwardDiffExt
 
-if isdefined(Base, :get_extension)
-    using Optim: Options, LBFGS, optimize, minimizer
-    using ForwardDiff: ForwardDiff
-else
-    using ..Optim: Options, LBFGS, optimize, minimizer
-    using ..ForwardDiff: ForwardDiff
-end
+using Optim: Options, LBFGS, optimize, minimizer
+using ForwardDiff: ForwardDiff
 
 using SummationByPartsOperators: SummationByPartsOperators, GlaubitzNordströmÖffner2023, MatrixDerivativeOperator
 using LinearAlgebra: Diagonal, LowerTriangular, diag, norm, cond
@@ -129,7 +124,7 @@ function construct_function_space_operator(basis_functions, x_min, x_max, nodes,
     x0 = zeros(L + N)
     result = optimize(x -> optimization_function(x, p), x0, LBFGS(), options,
                       autodiff = :forward)
-    display(result)
+
     x = minimizer(result)
     sigma = x[1:L]
     rho = x[(L + 1):end]
