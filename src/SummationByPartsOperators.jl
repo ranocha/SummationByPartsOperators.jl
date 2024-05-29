@@ -100,9 +100,6 @@ function __init__()
     @require BandedMatrices="aae01518-5342-5314-be14-df237901396f" include("../ext/SummationByPartsOperatorsBandedMatricesExt.jl")
     @require DiffEqCallbacks="459566f4-90b8-5000-8ac3-15dfb0a30def" include("../ext/SummationByPartsOperatorsDiffEqCallbacksExt.jl")
     @require ForwardDiff="f6369f11-7733-5829-9624-2563aa707210" include("../ext/SummationByPartsOperatorsForwardDiffExt.jl")
-    @require Optim="429524aa-4258-5aef-a3af-852621145aeb" begin
-      @require ForwardDiff="f6369f11-7733-5829-9624-2563aa707210" include("../ext/SummationByPartsOperatorsOptimForwardDiffExt.jl")
-    end
     @require StructArrays="09ab397b-f2b6-538f-b94a-2f83cf4a842a" include("../ext/SummationByPartsOperatorsStructArraysExt.jl")
   end
 end

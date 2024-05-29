@@ -51,6 +51,9 @@ The operator that is returned follows the general interface. Currently, it is wr
 In order to use this function, the package `Optim` must be loaded.
 
 See also [`GlaubitzNordströmÖffner2023`](@ref).
+
+!!! compat "Julia 1.9"
+    This function requires at least Julia 1.9.
 """
 function function_space_operator end
 
