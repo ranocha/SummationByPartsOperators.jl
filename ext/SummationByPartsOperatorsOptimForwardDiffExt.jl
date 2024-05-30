@@ -5,6 +5,7 @@ using ForwardDiff: ForwardDiff
 
 using SummationByPartsOperators: SummationByPartsOperators, GlaubitzNordströmÖffner2023, MatrixDerivativeOperator
 using LinearAlgebra: Diagonal, LowerTriangular, diag, norm, cond
+using PreallocationTools: DiffCache, get_tmp
 using SparseArrays: spzeros
 
 function SummationByPartsOperators.function_space_operator(basis_functions,
@@ -69,6 +70,10 @@ end
 
 function create_S(sigma, N)
     S = zeros(eltype(sigma), N, N)
+    set_S!(S, sigma, N)
+end
+
+function set_S!(S, sigma, N)
     k = 1
     for i in 1:N
         for j in (i + 1):N
@@ -107,14 +112,17 @@ function construct_function_space_operator(basis_functions, x_min, x_max, nodes,
 
     R = B * V / 2
     x_length = x_max - x_min
-    p = (W, R, x_length)
+    S = zeros(eltype(nodes), N, N)
+    S_cache = DiffCache(S)
+    p = (W, R, x_length, S_cache)
     @views function optimization_function(x, p)
-        W, R, x_length = p
+        W, R, x_length, S_cache = p
+        S = get_tmp(S_cache, x)
         (N, _) = size(R)
         L = Integer(N*(N - 1)/2)
         sigma = x[1:L]
         rho = x[(L + 1):end]
-        S = create_S(sigma, N)
+        S = set_S!(S, sigma, N)
         P = create_P(rho, x_length)
         X = [S P]
         # Use the Frobenius norm since it is strictly convex and cheap to compute
@@ -124,7 +132,7 @@ function construct_function_space_operator(basis_functions, x_min, x_max, nodes,
     x0 = zeros(L + N)
     result = optimize(x -> optimization_function(x, p), x0, LBFGS(), options,
                       autodiff = :forward)
-
+    display(result)
     x = minimizer(result)
     sigma = x[1:L]
     rho = x[(L + 1):end]
