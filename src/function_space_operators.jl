@@ -36,7 +36,8 @@ end
 # This function is extended in the package extension SummationByPartsOperatorsOptimExt
 """
     function_space_operator(basis_functions, x_min, x_max, nodes, source;
-                            accuracy_order = 0, options = Optim.Options(g_tol = 1e-14, iterations = 10000))
+                            derivative_order = 1, accuracy_order = 0,
+                            options = Optim.Options(g_tol = 1e-14, iterations = 10000))
 
 Construct an operator that represents a first-derivative operator in a function space spanned by
 the `basis_functions`, which is an iterable of functions. The operator is constructed on the

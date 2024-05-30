@@ -11,9 +11,10 @@ using SparseArrays: spzeros
 function SummationByPartsOperators.function_space_operator(basis_functions,
                                                            x_min::T, x_max::T, nodes::Vector{T},
                                                            source::SourceOfCoefficients;
-                                                           accuracy_order = 0,
+                                                           derivative_order = 1, accuracy_order = 0,
                                                            options = Options(g_tol = 1e-14, iterations = 10000)) where {T, SourceOfCoefficients}
 
+    @assert derivative_order == 1 "Only first derivative operators are supported"
     weights, D = construct_function_space_operator(basis_functions, x_min, x_max, nodes, source; options = options)
     return MatrixDerivativeOperator(x_min, x_max, nodes, weights, D, accuracy_order, source)
 end
