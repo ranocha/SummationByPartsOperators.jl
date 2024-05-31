@@ -162,9 +162,9 @@ function construct_function_space_operator(basis_functions, x_min, x_max, nodes,
         @. A = SV - PV_x + R
         if !isnothing(G)
             fill!(daij_dsigmak, zero(eltype(daij_dsigmak)))
-            for i in 1:N
+            for k in 1:L
                 for j in 1:K
-                    for k in 1:L
+                    for i in 1:N
                         l_tilde = k + i - N * (i - 1) + div(i * (i - 1), 2)
                         # same as above, but needs more type conversions
                         # l_tilde = Int(k + i - (i - 1) * (N - i/2))
@@ -192,10 +192,10 @@ function construct_function_space_operator(basis_functions, x_min, x_max, nodes,
             sig_rho = sig.(rho)
             sig_deriv_rho = sig_deriv.(rho)
             sum_sig_rho = sum(sig_rho)
-            for i in 1:N
+            for k in 1:N
                 for j in 1:K
-                    factor1 = x_length * V_x[i, j] / sum_sig_rho^2
-                    for k in 1:N
+                    for i in 1:N
+                        factor1 = x_length * V_x[i, j] / sum_sig_rho^2
                         factor =  factor1 * sig_deriv_rho[k]
                         if k == i
                             daij_drhok[i, j, k] = -factor * (sum_sig_rho - sig_rho[k])
