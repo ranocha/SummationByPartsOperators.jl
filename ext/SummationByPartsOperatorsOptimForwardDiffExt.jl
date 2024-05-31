@@ -195,9 +195,12 @@ end
                         C = N^2 - 3*N + 2*i - 2*k + 1/4
                         if C >= 0
                             D = sqrt(C)
-                            if isinteger(1/2 + D)
-                                l_hat1 = Int(N - 1/2 + D)
-                                l_hat2 = Int(N - 1/2 - D)
+                            D_plus_one_half = D + 0.5
+                            D_plus_one_half_trunc = trunc(D_plus_one_half)
+                            if D_plus_one_half == D_plus_one_half_trunc
+                                int_D_plus_one_half = trunc(Int, D_plus_one_half_trunc)
+                                l_hat1 = N + int_D_plus_one_half - 1
+                                l_hat2 = N - int_D_plus_one_half
                                 if 1 <= l_hat1 <= i - 1
                                     daij_dsigmak[i, j, k] -= V[l_hat1, j]
                                 end
