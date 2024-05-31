@@ -129,12 +129,8 @@ function construct_function_space_operator(basis_functions, x_min, x_max, nodes,
     p = (V, V_x, R, x_length, S_cache, A_cache, SV_cache, PV_x_cache, daij_dsigmak, daij_drhok)
 
     x0 = zeros(L + N)
-    # opti(x) = optimization_function(x, p)
-    # opti_grad!(G, x) = optimization_function_grad!(G, x, p)
     fg!(F, G, x) = optimization_function_and_grad!(F, G, x, p)
     result = optimize(Optim.only_fg!(fg!), x0, LBFGS(), options)
-    # result = optimize(opti, opti_grad!, x0, LBFGS(), options)
-    # result = optimize(opti, x0, LBFGS(), options; autodiff = :forward)
     display(result)
     x = minimizer(result)
     sigma = x[1:L]
@@ -146,25 +142,6 @@ function construct_function_space_operator(basis_functions, x_min, x_max, nodes,
     D = inv(P) * Q
     return weights, D
 end
-
-# @views function optimization_function(x, p)
-#     V, V_x, R, x_length, S_cache, A_cache, SV_cache, PV_x_cache = p
-#     S = get_tmp(S_cache, x)
-#     A = get_tmp(A_cache, x)
-#     SV = get_tmp(SV_cache, x)
-#     PV_x = get_tmp(PV_x_cache, x)
-#     (N, _) = size(R)
-#     L = Integer(N*(N - 1)/2)
-#     sigma = x[1:L]
-#     rho = x[(L + 1):end]
-#     set_S!(S, sigma, N)
-#     P = create_P(rho, x_length)
-#     mul!(SV, S, V)
-#     mul!(PV_x, P, V_x)
-#     @. A = SV - PV_x + R
-#     # Use the Frobenius norm since it is strictly convex and cheap to compute
-#     return norm(A)^2
-# end
 
 @views function optimization_function_and_grad!(F, G, x, p)
     V, V_x, R, x_length, S_cache, A_cache, SV_cache, PV_x_cache, daij_dsigmak, daij_drhok = p
