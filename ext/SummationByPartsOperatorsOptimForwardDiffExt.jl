@@ -100,7 +100,7 @@ function construct_function_space_operator(basis_functions, x_min, x_max, nodes,
                                            options = Options(g_tol = 1e-14, iterations = 10000))
     K = length(basis_functions)
     N = length(nodes)
-    L = Integer(N*(N - 1)/2)
+    L = div(N * (N - 1), 2)
     basis_functions_derivatives = [x -> ForwardDiff.derivative(basis_functions[i], x) for i in 1:K]
     basis_functions_orthonormalized, basis_functions_orthonormalized_derivatives = orthonormalize_gram_schmidt(basis_functions,
                                                                                                                basis_functions_derivatives,
@@ -152,7 +152,7 @@ function construct_function_space_operator(basis_functions, x_min, x_max, nodes,
         SV = get_tmp(SV_cache, x)
         PV_x = get_tmp(PV_x_cache, x)
         (N, _) = size(R)
-        L = Integer(N*(N - 1)/2)
+        L = div(N * (N - 1), 2)
         sigma = x[1:L]
         rho = x[(L + 1):end]
         set_S!(S, sigma, N)
