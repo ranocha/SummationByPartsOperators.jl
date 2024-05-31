@@ -145,78 +145,6 @@ function construct_function_space_operator(basis_functions, x_min, x_max, nodes,
     #     # Use the Frobenius norm since it is strictly convex and cheap to compute
     #     return norm(A)^2
     # end
-    @views function optimization_function_and_grad!(F, G, x, p)
-        V, V_x, R, x_length, S_cache, A_cache, SV_cache, PV_x_cache, daij_dsigmak, daij_drhok = p
-        S = get_tmp(S_cache, x)
-        A = get_tmp(A_cache, x)
-        SV = get_tmp(SV_cache, x)
-        PV_x = get_tmp(PV_x_cache, x)
-        (N, _) = size(R)
-        L = div(N * (N - 1), 2)
-        sigma = x[1:L]
-        rho = x[(L + 1):end]
-        set_S!(S, sigma, N)
-        P = create_P(rho, x_length)
-        mul!(SV, S, V)
-        mul!(PV_x, P, V_x)
-        @. A = SV - PV_x + R
-        if !isnothing(G)
-            fill!(daij_dsigmak, zero(eltype(daij_dsigmak)))
-            for k in 1:L
-                for j in 1:K
-                    for i in 1:N
-                        l_tilde = k + i - N * (i - 1) + div(i * (i - 1), 2)
-                        # same as above, but needs more type conversions
-                        # l_tilde = Int(k + i - (i - 1) * (N - i/2))
-                        if i + 1 <= l_tilde <= N
-                            daij_dsigmak[i, j, k] += V[l_tilde, j]
-                        else
-                            C = N^2 - 3*N + 2*i - 2*k + 1/4
-                            if C >= 0
-                                D = sqrt(C)
-                                if isinteger(1/2 + D)
-                                    l_hat1 = Int(N - 1/2 + D)
-                                    l_hat2 = Int(N - 1/2 - D)
-                                    if 1 <= l_hat1 <= i - 1
-                                        daij_dsigmak[i, j, k] -= V[l_hat1, j]
-                                    end
-                                    if 1 <= l_hat2 <= i - 1
-                                        daij_dsigmak[i, j, k] -= V[l_hat2, j]
-                                    end
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-            sig_rho = sig.(rho)
-            sig_deriv_rho = sig_deriv.(rho)
-            sum_sig_rho = sum(sig_rho)
-            for k in 1:N
-                for j in 1:K
-                    for i in 1:N
-                        factor1 = x_length * V_x[i, j] / sum_sig_rho^2
-                        factor =  factor1 * sig_deriv_rho[k]
-                        if k == i
-                            daij_drhok[i, j, k] = -factor * (sum_sig_rho - sig_rho[k])
-                        else
-                            daij_drhok[i, j, k] = factor * sig_rho[i]
-                        end
-                    end
-                end
-            end
-            for k in 1:L
-                G[k] = 2 * dot(daij_dsigmak[:, :, k], A)
-            end
-            for k in 1:N
-                G[L + k] = 2 * dot(daij_drhok[:, :, k], A)
-            end
-        end
-        if !isnothing(F)
-            return norm(A)^2
-        end
-    end
-
     x0 = zeros(L + N)
     # opti(x) = optimization_function(x, p)
     # opti_grad!(G, x) = optimization_function_grad!(G, x, p)
@@ -234,6 +162,78 @@ function construct_function_space_operator(basis_functions, x_min, x_max, nodes,
     Q = S + B/2
     D = inv(P) * Q
     return weights, D
+end
+
+@views function optimization_function_and_grad!(F, G, x, p)
+    V, V_x, R, x_length, S_cache, A_cache, SV_cache, PV_x_cache, daij_dsigmak, daij_drhok = p
+    S = get_tmp(S_cache, x)
+    A = get_tmp(A_cache, x)
+    SV = get_tmp(SV_cache, x)
+    PV_x = get_tmp(PV_x_cache, x)
+    (N, _) = size(R)
+    L = div(N * (N - 1), 2)
+    sigma = x[1:L]
+    rho = x[(L + 1):end]
+    set_S!(S, sigma, N)
+    P = create_P(rho, x_length)
+    mul!(SV, S, V)
+    mul!(PV_x, P, V_x)
+    @. A = SV - PV_x + R
+    if !isnothing(G)
+        fill!(daij_dsigmak, zero(eltype(daij_dsigmak)))
+        for k in axes(daij_dsigmak, 3)
+            for j in axes(daij_dsigmak, 2)
+                for i in axes(daij_dsigmak, 1)
+                    l_tilde = k + i - N * (i - 1) + div(i * (i - 1), 2)
+                    # same as above, but needs more type conversions
+                    # l_tilde = Int(k + i - (i - 1) * (N - i/2))
+                    if i + 1 <= l_tilde <= N
+                        daij_dsigmak[i, j, k] += V[l_tilde, j]
+                    else
+                        C = N^2 - 3*N + 2*i - 2*k + 1/4
+                        if C >= 0
+                            D = sqrt(C)
+                            if isinteger(1/2 + D)
+                                l_hat1 = Int(N - 1/2 + D)
+                                l_hat2 = Int(N - 1/2 - D)
+                                if 1 <= l_hat1 <= i - 1
+                                    daij_dsigmak[i, j, k] -= V[l_hat1, j]
+                                end
+                                if 1 <= l_hat2 <= i - 1
+                                    daij_dsigmak[i, j, k] -= V[l_hat2, j]
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        sig_rho = sig.(rho)
+        sig_deriv_rho = sig_deriv.(rho)
+        sum_sig_rho = sum(sig_rho)
+        for k in axes(daij_drhok, 3)
+            for j in axes(daij_drhok, 2)
+                for i in axes(daij_drhok, 1)
+                    factor1 = x_length * V_x[i, j] / sum_sig_rho^2
+                    factor =  factor1 * sig_deriv_rho[k]
+                    if k == i
+                        daij_drhok[i, j, k] = -factor * (sum_sig_rho - sig_rho[k])
+                    else
+                        daij_drhok[i, j, k] = factor * sig_rho[i]
+                    end
+                end
+            end
+        end
+        for k in axes(daij_dsigmak, 3)
+            G[k] = 2 * dot(daij_dsigmak[:, :, k], A)
+        end
+        for k in axes(daij_drhok, 3)
+            G[L + k] = 2 * dot(daij_drhok[:, :, k], A)
+        end
+    end
+    if !isnothing(F)
+        return norm(A)^2
+    end
 end
 
 end # module
