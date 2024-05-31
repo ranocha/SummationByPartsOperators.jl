@@ -206,10 +206,10 @@ function construct_function_space_operator(basis_functions, x_min, x_max, nodes,
                 end
             end
             for k in 1:L
-                G[k] = 2 * sum(daij_dsigmak[:, :, k] .* A)
+                G[k] = 2 * dot(daij_dsigmak[:, :, k], A)
             end
             for k in 1:N
-                G[L + k] = 2 * sum(daij_drhok[:, :, k] .* A)
+                G[L + k] = 2 * dot(daij_drhok[:, :, k], A)
             end
         end
         if !isnothing(F)
