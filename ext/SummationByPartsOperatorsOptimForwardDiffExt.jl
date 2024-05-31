@@ -4,7 +4,7 @@ using Optim: Optim, Options, LBFGS, optimize, minimizer
 using ForwardDiff: ForwardDiff
 
 using SummationByPartsOperators: SummationByPartsOperators, GlaubitzNordströmÖffner2023, MatrixDerivativeOperator
-using LinearAlgebra: Diagonal, LowerTriangular, diag, norm, mul!
+using LinearAlgebra: Diagonal, LowerTriangular, dot, diag, norm, mul!
 using PreallocationTools: DiffCache, get_tmp
 using SparseArrays: spzeros
 
