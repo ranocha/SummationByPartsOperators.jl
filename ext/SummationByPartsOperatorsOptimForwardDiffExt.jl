@@ -4,7 +4,7 @@ using Optim: Options, LBFGS, optimize, minimizer
 using ForwardDiff: ForwardDiff
 
 using SummationByPartsOperators: SummationByPartsOperators, GlaubitzNordströmÖffner2023, MatrixDerivativeOperator
-using LinearAlgebra: Diagonal, LowerTriangular, diag, norm, cond
+using LinearAlgebra: Diagonal, LowerTriangular, diag, norm, mul!
 using PreallocationTools: DiffCache, get_tmp
 using SparseArrays: spzeros
 
@@ -72,6 +72,7 @@ end
 function create_S(sigma, N)
     S = zeros(eltype(sigma), N, N)
     set_S!(S, sigma, N)
+    return S
 end
 
 function set_S!(S, sigma, N)
@@ -79,13 +80,14 @@ function set_S!(S, sigma, N)
     for i in 1:N
         for j in (i + 1):N
             S[i, j] = sigma[k]
+            S[j, i] = -sigma[k]
             k += 1
         end
     end
-    return S - S'
 end
 
 sig(x) = 1 / (1 + exp(-x))
+sig_deriv(x) = sig(x) * (1 - sig(x))
 
 function create_P(rho, x_length)
     P = Diagonal(sig.(rho))
@@ -98,6 +100,7 @@ function construct_function_space_operator(basis_functions, x_min, x_max, nodes,
                                            options = Options(g_tol = 1e-14, iterations = 10000))
     K = length(basis_functions)
     N = length(nodes)
+    L = Integer(N*(N - 1)/2)
     basis_functions_derivatives = [x -> ForwardDiff.derivative(basis_functions[i], x) for i in 1:K]
     basis_functions_orthonormalized, basis_functions_orthonormalized_derivatives = orthonormalize_gram_schmidt(basis_functions,
                                                                                                                basis_functions_derivatives,
@@ -105,7 +108,7 @@ function construct_function_space_operator(basis_functions, x_min, x_max, nodes,
     V = vandermonde_matrix(basis_functions_orthonormalized, nodes)
     V_x = vandermonde_matrix(basis_functions_orthonormalized_derivatives, nodes)
     # Here, W satisfies W'*W = I
-    W = [V; -V_x]
+    # W = [V; -V_x]
 
     B = spzeros(eltype(nodes), N, N)
     B[1, 1] = -1
@@ -114,25 +117,101 @@ function construct_function_space_operator(basis_functions, x_min, x_max, nodes,
     R = B * V / 2
     x_length = x_max - x_min
     S = zeros(eltype(nodes), N, N)
+    A = zeros(eltype(nodes), N, K)
+    SV = zeros(eltype(nodes), N, K)
+    PV_x = zeros(eltype(nodes), N, K)
     S_cache = DiffCache(S)
-    p = (W, R, x_length, S_cache)
+    A_cache = DiffCache(A)
+    SV_cache = DiffCache(SV)
+    PV_x_cache = DiffCache(PV_x)
+    daij_dsigmak = zeros(eltype(nodes), N, K, L)
+    daij_drhok = zeros(eltype(nodes), N, K, N)
+    p = (V, V_x, R, x_length, S_cache, A_cache, SV_cache, PV_x_cache, daij_dsigmak, daij_drhok)
     @views function optimization_function(x, p)
-        W, R, x_length, S_cache = p
+        V, V_x, R, x_length, S_cache, A_cache, SV_cache, PV_x_cache = p
         S = get_tmp(S_cache, x)
+        A = get_tmp(A_cache, x)
+        SV = get_tmp(SV_cache, x)
+        PV_x = get_tmp(PV_x_cache, x)
         (N, _) = size(R)
         L = Integer(N*(N - 1)/2)
         sigma = x[1:L]
         rho = x[(L + 1):end]
-        S = set_S!(S, sigma, N)
+        set_S!(S, sigma, N)
         P = create_P(rho, x_length)
-        X = [S P]
+        mul!(SV, S, V)
+        mul!(PV_x, P, V_x)
+        A .= SV .- PV_x .+ R
         # Use the Frobenius norm since it is strictly convex and cheap to compute
-        return norm(X * W + R)^2
+        return norm(A)^2
     end
-    L = Integer(N*(N - 1)/2)
+    @views function optimization_function_grad!(G, x, p)
+        V, V_x, R, x_length, S_cache, A_cache, SV_cache, PV_x_cache, daij_dsigmak, daij_drhok = p
+        S = get_tmp(S_cache, x)
+        A = get_tmp(A_cache, x)
+        SV = get_tmp(SV_cache, x)
+        PV_x = get_tmp(PV_x_cache, x)
+        sigma = x[1:L]
+        rho = x[(L + 1):end]
+        set_S!(S, sigma, N)
+        P = create_P(rho, x_length)
+        mul!(SV, S, V)
+        mul!(PV_x, P, V_x)
+        @. A = SV - PV_x + R
+        fill!(daij_dsigmak, zero(eltype(daij_dsigmak)))
+        for i in 1:N
+            for j in 1:K
+                for k in 1:L
+                    l_tilde = Integer(k + i - (i - 1) * (N - i/2))
+                    C = N^2 - 3*N + 2*i - 2*k + 1/4
+                    if C >= 0
+                        D = sqrt(C)
+                        if isinteger(1/2 + D)
+                            l_hat1 = Integer(N - 1/2 + D)
+                            l_hat2 = Integer(N - 1/2 - D)
+                            if 1 <= l_hat1 <= i - 1
+                                daij_dsigmak[i, j, k] -= V[l_hat1, j]
+                            end
+                            if 1 <= l_hat2 <= i - 1
+                                daij_dsigmak[i, j, k] -= V[l_hat2, j]
+                            end
+                        end
+                    end
+                    if i + 1 <= l_tilde <= N
+                        daij_dsigmak[i, j, k] += V[l_tilde, j]
+                    end
+                end
+            end
+        end
+        sig_rho = sig.(rho)
+        sig_deriv_rho = sig_deriv.(rho)
+        sum_sig_rho = sum(sig_rho)
+        for i in 1:N
+            for j in 1:K
+                factor1 = x_length * V_x[i, j] / sum_sig_rho^2
+                for k in 1:N
+                    factor =  factor1 * sig_deriv_rho[k]
+                    if k == i
+                        daij_drhok[i, j, k] = -factor * (sum_sig_rho - sig_rho[k])
+                    else
+                        daij_drhok[i, j, k] = factor * sig_rho[i]
+                    end
+                end
+            end
+        end
+        for k in 1:L
+            G[k] = 2 * sum(daij_dsigmak[:, :, k] .* A)
+        end
+        for k in 1:N
+            G[L + k] = 2 * sum(daij_drhok[:, :, k] .* A)
+        end
+    end
+
     x0 = zeros(L + N)
-    result = optimize(x -> optimization_function(x, p), x0, LBFGS(), options,
-                      autodiff = :forward)
+    opti(x) = optimization_function(x, p)
+    opti_grad!(G, x) = optimization_function_grad!(G, x, p)
+    result = optimize(opti, opti_grad!, x0, LBFGS(), options; inplace = true)
+    # result = optimize(opti, x0, LBFGS(), options; autodiff = :forward)
     display(result)
     x = minimizer(result)
     sigma = x[1:L]
