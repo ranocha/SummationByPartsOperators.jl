@@ -1,6 +1,6 @@
 module SummationByPartsOperatorsOptimForwardDiffExt
 
-using Optim: Options, LBFGS, optimize, minimizer
+using Optim: Optim, Options, LBFGS, optimize, minimizer
 using ForwardDiff: ForwardDiff
 
 using SummationByPartsOperators: SummationByPartsOperators, GlaubitzNordströmÖffner2023, MatrixDerivativeOperator
@@ -127,8 +127,26 @@ function construct_function_space_operator(basis_functions, x_min, x_max, nodes,
     daij_dsigmak = zeros(eltype(nodes), N, K, L)
     daij_drhok = zeros(eltype(nodes), N, K, N)
     p = (V, V_x, R, x_length, S_cache, A_cache, SV_cache, PV_x_cache, daij_dsigmak, daij_drhok)
-    @views function optimization_function(x, p)
-        V, V_x, R, x_length, S_cache, A_cache, SV_cache, PV_x_cache = p
+    # @views function optimization_function(x, p)
+    #     V, V_x, R, x_length, S_cache, A_cache, SV_cache, PV_x_cache = p
+    #     S = get_tmp(S_cache, x)
+    #     A = get_tmp(A_cache, x)
+    #     SV = get_tmp(SV_cache, x)
+    #     PV_x = get_tmp(PV_x_cache, x)
+    #     (N, _) = size(R)
+    #     L = Integer(N*(N - 1)/2)
+    #     sigma = x[1:L]
+    #     rho = x[(L + 1):end]
+    #     set_S!(S, sigma, N)
+    #     P = create_P(rho, x_length)
+    #     mul!(SV, S, V)
+    #     mul!(PV_x, P, V_x)
+    #     @. A = SV - PV_x + R
+    #     # Use the Frobenius norm since it is strictly convex and cheap to compute
+    #     return norm(A)^2
+    # end
+    @views function optimization_function_and_grad!(F, G, x, p)
+        V, V_x, R, x_length, S_cache, A_cache, SV_cache, PV_x_cache, daij_dsigmak, daij_drhok = p
         S = get_tmp(S_cache, x)
         A = get_tmp(A_cache, x)
         SV = get_tmp(SV_cache, x)
@@ -141,76 +159,68 @@ function construct_function_space_operator(basis_functions, x_min, x_max, nodes,
         P = create_P(rho, x_length)
         mul!(SV, S, V)
         mul!(PV_x, P, V_x)
-        A .= SV .- PV_x .+ R
-        # Use the Frobenius norm since it is strictly convex and cheap to compute
-        return norm(A)^2
-    end
-    @views function optimization_function_grad!(G, x, p)
-        V, V_x, R, x_length, S_cache, A_cache, SV_cache, PV_x_cache, daij_dsigmak, daij_drhok = p
-        S = get_tmp(S_cache, x)
-        A = get_tmp(A_cache, x)
-        SV = get_tmp(SV_cache, x)
-        PV_x = get_tmp(PV_x_cache, x)
-        sigma = x[1:L]
-        rho = x[(L + 1):end]
-        set_S!(S, sigma, N)
-        P = create_P(rho, x_length)
-        mul!(SV, S, V)
-        mul!(PV_x, P, V_x)
         @. A = SV - PV_x + R
-        fill!(daij_dsigmak, zero(eltype(daij_dsigmak)))
-        for i in 1:N
-            for j in 1:K
-                for k in 1:L
-                    l_tilde = Integer(k + i - (i - 1) * (N - i/2))
-                    C = N^2 - 3*N + 2*i - 2*k + 1/4
-                    if C >= 0
-                        D = sqrt(C)
-                        if isinteger(1/2 + D)
-                            l_hat1 = Integer(N - 1/2 + D)
-                            l_hat2 = Integer(N - 1/2 - D)
-                            if 1 <= l_hat1 <= i - 1
-                                daij_dsigmak[i, j, k] -= V[l_hat1, j]
-                            end
-                            if 1 <= l_hat2 <= i - 1
-                                daij_dsigmak[i, j, k] -= V[l_hat2, j]
+        if !isnothing(G)
+            fill!(daij_dsigmak, zero(eltype(daij_dsigmak)))
+            for i in 1:N
+                for j in 1:K
+                    for k in 1:L
+                        l_tilde = Integer(k + i - (i - 1) * (N - i/2))
+                        if i + 1 <= l_tilde <= N
+                            daij_dsigmak[i, j, k] += V[l_tilde, j]
+                        else
+                            C = N^2 - 3*N + 2*i - 2*k + 1/4
+                            if C >= 0
+                                D = sqrt(C)
+                                if isinteger(1/2 + D)
+                                    l_hat1 = Integer(N - 1/2 + D)
+                                    l_hat2 = Integer(N - 1/2 - D)
+                                    if 1 <= l_hat1 <= i - 1
+                                        daij_dsigmak[i, j, k] -= V[l_hat1, j]
+                                    end
+                                    if 1 <= l_hat2 <= i - 1
+                                        daij_dsigmak[i, j, k] -= V[l_hat2, j]
+                                    end
+                                end
                             end
                         end
                     end
-                    if i + 1 <= l_tilde <= N
-                        daij_dsigmak[i, j, k] += V[l_tilde, j]
+                end
+            end
+            sig_rho = sig.(rho)
+            sig_deriv_rho = sig_deriv.(rho)
+            sum_sig_rho = sum(sig_rho)
+            for i in 1:N
+                for j in 1:K
+                    factor1 = x_length * V_x[i, j] / sum_sig_rho^2
+                    for k in 1:N
+                        factor =  factor1 * sig_deriv_rho[k]
+                        if k == i
+                            daij_drhok[i, j, k] = -factor * (sum_sig_rho - sig_rho[k])
+                        else
+                            daij_drhok[i, j, k] = factor * sig_rho[i]
+                        end
                     end
                 end
             end
-        end
-        sig_rho = sig.(rho)
-        sig_deriv_rho = sig_deriv.(rho)
-        sum_sig_rho = sum(sig_rho)
-        for i in 1:N
-            for j in 1:K
-                factor1 = x_length * V_x[i, j] / sum_sig_rho^2
-                for k in 1:N
-                    factor =  factor1 * sig_deriv_rho[k]
-                    if k == i
-                        daij_drhok[i, j, k] = -factor * (sum_sig_rho - sig_rho[k])
-                    else
-                        daij_drhok[i, j, k] = factor * sig_rho[i]
-                    end
-                end
+            for k in 1:L
+                G[k] = 2 * sum(daij_dsigmak[:, :, k] .* A)
+            end
+            for k in 1:N
+                G[L + k] = 2 * sum(daij_drhok[:, :, k] .* A)
             end
         end
-        for k in 1:L
-            G[k] = 2 * sum(daij_dsigmak[:, :, k] .* A)
-        end
-        for k in 1:N
-            G[L + k] = 2 * sum(daij_drhok[:, :, k] .* A)
+        if !isnothing(F)
+            return norm(A)^2
         end
     end
 
     x0 = zeros(L + N)
-    opti(x) = optimization_function(x, p)
-    opti_grad!(G, x) = optimization_function_grad!(G, x, p)
-    result = optimize(opti, opti_grad!, x0, LBFGS(), options; inplace = true)
+    # opti(x) = optimization_function(x, p)
+    # opti_grad!(G, x) = optimization_function_grad!(G, x, p)
+    fg!(F, G, x) = optimization_function_and_grad!(F, G, x, p)
+    result = optimize(Optim.only_fg!(fg!), x0, LBFGS(), options)
+    # result = optimize(opti, opti_grad!, x0, LBFGS(), options)
     # result = optimize(opti, x0, LBFGS(), options; autodiff = :forward)
     display(result)
     x = minimizer(result)
