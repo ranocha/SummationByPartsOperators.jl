@@ -165,8 +165,8 @@ function construct_function_space_operator(basis_functions, x_min, x_max, nodes,
             for i in 1:N
                 for j in 1:K
                     for k in 1:L
-                        ll = (i - 1)*(N - i) + sum(1:(i - 1)) # =(i - 1) * (N - i/2)
-                        l_tilde = k + i - ll
+                        l_tilde = k + i - N * (i - 1) + div(i * (i - 1), 2)
+                        # same as above, but needs more type conversions
                         # l_tilde = Int(k + i - (i - 1) * (N - i/2))
                         if i + 1 <= l_tilde <= N
                             daij_dsigmak[i, j, k] += V[l_tilde, j]
