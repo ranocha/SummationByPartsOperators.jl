@@ -23,8 +23,11 @@ for source_D in D_test_list, source_Di in Di_test_list, acc_order in 2:2:8, T in
     end
     D === nothing && continue
 
-    @inferred mass_matrix(D)
-    H = mass_matrix(D)
+    M = @inferred mass_matrix(D)
+    for i in 1:size(D, 2)
+        @inferred weight(D, i)
+    end
+    @test M ≈ Diagonal([weight(D, i) for i in 1:size(D, 1)])
 
     for order in 2:2:8
         Di = try
@@ -37,9 +40,9 @@ for source_D in D_test_list, source_Di in Di_test_list, acc_order in 2:2:8, T in
 
         println(devnull, Di)
         println(devnull, Di.coefficients)
-        HDi = H*Matrix(Di)
-        @test norm(HDi - HDi') < 10*eps(T)
-        @test minimum(real, eigvals(HDi)) < 10*eps(T)
+        MDi = M * Matrix(Di)
+        @test norm(MDi - MDi') < 10*eps(T)
+        @test minimum(real, eigvals(MDi)) < 10*eps(T)
     end
 end
 
