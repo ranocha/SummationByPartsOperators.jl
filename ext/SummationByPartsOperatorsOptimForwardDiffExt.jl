@@ -176,13 +176,9 @@ end
                             D_plus_one_half_trunc = trunc(D_plus_one_half)
                             if D_plus_one_half == D_plus_one_half_trunc
                                 int_D_plus_one_half = trunc(Int, D_plus_one_half_trunc)
-                                l_hat1 = N + int_D_plus_one_half - 1
-                                l_hat2 = N - int_D_plus_one_half
-                                if 1 <= l_hat1 <= i - 1
-                                    daij_dsigmak[i, j, k] -= V[l_hat1, j]
-                                end
-                                if 1 <= l_hat2 <= i - 1
-                                    daij_dsigmak[i, j, k] -= V[l_hat2, j]
+                                l_hat = N - int_D_plus_one_half
+                                if 1 <= l_hat <= i - 1
+                                    daij_dsigmak[i, j, k] -= V[l_hat, j]
                                 end
                             end
                         end
