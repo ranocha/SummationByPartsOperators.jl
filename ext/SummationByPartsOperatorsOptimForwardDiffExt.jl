@@ -5,7 +5,6 @@ using ForwardDiff: ForwardDiff
 
 using SummationByPartsOperators: SummationByPartsOperators, GlaubitzNordströmÖffner2023, MatrixDerivativeOperator
 using LinearAlgebra: Diagonal, LowerTriangular, dot, diag, norm, mul!
-using PreallocationTools: DiffCache, get_tmp
 using SparseArrays: spzeros
 
 function SummationByPartsOperators.function_space_operator(basis_functions, nodes::Vector{T},
@@ -120,13 +119,9 @@ function construct_function_space_operator(basis_functions, nodes,
     A = zeros(eltype(nodes), N, K)
     SV = zeros(eltype(nodes), N, K)
     PV_x = zeros(eltype(nodes), N, K)
-    S_cache = DiffCache(S)
-    A_cache = DiffCache(A)
-    SV_cache = DiffCache(SV)
-    PV_x_cache = DiffCache(PV_x)
     daij_dsigmak = zeros(eltype(nodes), N, K, L)
     daij_drhok = zeros(eltype(nodes), N, K, N)
-    p = (V, V_x, R, x_length, S_cache, A_cache, SV_cache, PV_x_cache, daij_dsigmak, daij_drhok)
+    p = (V, V_x, R, x_length, S, A, SV, PV_x, daij_dsigmak, daij_drhok)
 
     x0 = zeros(L + N)
     fg!(F, G, x) = optimization_function_and_grad!(F, G, x, p)
@@ -144,11 +139,7 @@ function construct_function_space_operator(basis_functions, nodes,
 end
 
 @views function optimization_function_and_grad!(F, G, x, p)
-    V, V_x, R, x_length, S_cache, A_cache, SV_cache, PV_x_cache, daij_dsigmak, daij_drhok = p
-    S = get_tmp(S_cache, x)
-    A = get_tmp(A_cache, x)
-    SV = get_tmp(SV_cache, x)
-    PV_x = get_tmp(PV_x_cache, x)
+    V, V_x, R, x_length, S, A, SV, PV_x, daij_dsigmak, daij_drhok = p
     (N, _) = size(R)
     L = div(N * (N - 1), 2)
     sigma = x[1:L]
