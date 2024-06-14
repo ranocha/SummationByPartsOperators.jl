@@ -1,7 +1,7 @@
 using Test
 using LinearAlgebra
 using SummationByPartsOperators
-using Optim
+using Optim: Optim # to enable loading the function space operator optimization code
 
 # check construction of interior part of upwind operators
 @testset "Check against some upwind operators" begin
