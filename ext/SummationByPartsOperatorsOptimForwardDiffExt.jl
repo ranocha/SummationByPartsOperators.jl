@@ -15,6 +15,7 @@ function SummationByPartsOperators.function_space_operator(basis_functions,
                                                            options = Options(g_tol = 1e-14, iterations = 10000)) where {T, SourceOfCoefficients}
 
     @assert derivative_order == 1 "Only first derivative operators are supported"
+    sort!(nodes)
     weights, D = construct_function_space_operator(basis_functions, x_min, x_max, nodes, source; options = options)
     return MatrixDerivativeOperator(x_min, x_max, nodes, weights, D, accuracy_order, source)
 end
@@ -131,7 +132,7 @@ function construct_function_space_operator(basis_functions, x_min, x_max, nodes,
     x0 = zeros(L + N)
     fg!(F, G, x) = optimization_function_and_grad!(F, G, x, p)
     result = optimize(Optim.only_fg!(fg!), x0, LBFGS(), options)
-    display(result)
+
     x = minimizer(result)
     sigma = x[1:L]
     rho = x[(L + 1):end]
