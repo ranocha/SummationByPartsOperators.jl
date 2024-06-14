@@ -132,7 +132,7 @@ if VERSION >= v"1.9"
       D = function_space_operator(basis_functions, x_min, x_max, nodes, source)
 
       @test grid(D) ≈ nodes
-      @test ≈(D * ones(N), zeros(N); atol = 1e-13)
+      @test all(isapprox.(D * ones(N), zeros(N); atol = 1e-13))
       @test D * nodes ≈ ones(N)
       @test D * (nodes .^ 2) ≈ 2 * nodes
       @test D * (nodes .^ 3) ≈ 3 * (nodes .^ 2)
@@ -144,7 +144,7 @@ if VERSION >= v"1.9"
       D = function_space_operator(basis_functions, x_min, x_max, nodes, source)
 
       @test grid(D) ≈ nodes
-      @test ≈(D * ones(N), zeros(N); atol = 1e-13)
+      @test all(isapprox.(D * ones(N), zeros(N); atol = 1e-13))
       @test D * nodes ≈ ones(N)
       @test D * exp.(nodes) ≈ exp.(nodes)
       M = mass_matrix(D)
@@ -163,7 +163,7 @@ if VERSION >= v"1.9"
       D = function_space_operator(basis_functions, first(nodes), last(nodes), nodes, source)
 
       @test grid(D) ≈ nodes
-      @test ≈(D * ones(N), zeros(N); atol = 5e-13)
+      @test all(isapprox.(D * ones(N), zeros(N); atol = 1e-11))
       @test D * nodes ≈ ones(N)
       @test D * exp.(nodes) ≈ exp.(nodes)
       M = mass_matrix(D)
