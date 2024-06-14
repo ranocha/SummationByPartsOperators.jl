@@ -56,6 +56,8 @@ See also [`GlaubitzNordströmÖffner2023`](@ref).
 
 !!! compat "Julia 1.9"
     This function requires at least Julia 1.9.
+
+!!! warning "Experimental implementation"
+    This is an experimental feature and may change in future releases.
 """
 function function_space_operator end
-
