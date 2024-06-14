@@ -129,7 +129,7 @@ if VERSION >= v"1.9"
     B[1, 1] = -1.0
     B[N, N] = 1.0
     let basis_functions = [x -> x^i for i in 0:3]
-      D = function_space_operator(basis_functions, x_min, x_max, nodes, source)
+      D = function_space_operator(basis_functions, nodes, source)
 
       @test grid(D) ≈ nodes
       @test all(isapprox.(D * ones(N), zeros(N); atol = 1e-13))
@@ -141,7 +141,7 @@ if VERSION >= v"1.9"
     end
 
     let basis_functions = [one, identity, exp]
-      D = function_space_operator(basis_functions, x_min, x_max, nodes, source)
+      D = function_space_operator(basis_functions, nodes, source)
 
       @test grid(D) ≈ nodes
       @test all(isapprox.(D * ones(N), zeros(N); atol = 1e-13))
@@ -160,7 +160,7 @@ if VERSION >= v"1.9"
     B[1, 1] = -1.0
     B[N, N] = 1.0
     let basis_functions = [one, identity, exp]
-      D = function_space_operator(basis_functions, first(nodes), last(nodes), nodes, source)
+      D = function_space_operator(basis_functions, nodes, source)
 
       @test grid(D) ≈ nodes
       @test all(isapprox.(D * ones(N), zeros(N); atol = 1e-11))

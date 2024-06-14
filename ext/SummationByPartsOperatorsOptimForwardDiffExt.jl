@@ -8,16 +8,15 @@ using LinearAlgebra: Diagonal, LowerTriangular, dot, diag, norm, mul!
 using PreallocationTools: DiffCache, get_tmp
 using SparseArrays: spzeros
 
-function SummationByPartsOperators.function_space_operator(basis_functions,
-                                                           x_min::T, x_max::T, nodes::Vector{T},
+function SummationByPartsOperators.function_space_operator(basis_functions, nodes::Vector{T},
                                                            source::SourceOfCoefficients;
                                                            derivative_order = 1, accuracy_order = 0,
                                                            options = Options(g_tol = 1e-14, iterations = 10000)) where {T, SourceOfCoefficients}
 
     @assert derivative_order == 1 "Only first derivative operators are supported"
     sort!(nodes)
-    weights, D = construct_function_space_operator(basis_functions, x_min, x_max, nodes, source; options = options)
-    return MatrixDerivativeOperator(x_min, x_max, nodes, weights, D, accuracy_order, source)
+    weights, D = construct_function_space_operator(basis_functions, nodes, source; options = options)
+    return MatrixDerivativeOperator(first(nodes), last(nodes), nodes, weights, D, accuracy_order, source)
 end
 
 function inner_H1(f, g, f_derivative, g_derivative, nodes)
@@ -96,7 +95,7 @@ function create_P(rho, x_length)
     return P
 end
 
-function construct_function_space_operator(basis_functions, x_min, x_max, nodes,
+function construct_function_space_operator(basis_functions, nodes,
                                            ::GlaubitzNordströmÖffner2023;
                                            options = Options(g_tol = 1e-14, iterations = 10000))
     K = length(basis_functions)
@@ -116,7 +115,7 @@ function construct_function_space_operator(basis_functions, x_min, x_max, nodes,
     B[N, N] = 1
 
     R = B * V / 2
-    x_length = x_max - x_min
+    x_length = last(nodes) - first(nodes)
     S = zeros(eltype(nodes), N, N)
     A = zeros(eltype(nodes), N, K)
     SV = zeros(eltype(nodes), N, K)
