@@ -130,6 +130,8 @@ if VERSION >= v"1.9"
     B[N, N] = 1.0
     let basis_functions = [x -> x^i for i in 0:3]
       D = function_space_operator(basis_functions, nodes, source)
+      # Only first-derivative operators are implemented yet
+      @test_throws ArgumentError function_space_operator(basis_functions, nodes, source; derivative_order = 2)
 
       @test grid(D) ≈ nodes
       @test all(isapprox.(D * ones(N), zeros(N); atol = 1e-13))

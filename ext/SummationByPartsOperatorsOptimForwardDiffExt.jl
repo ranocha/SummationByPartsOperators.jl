@@ -12,7 +12,9 @@ function SummationByPartsOperators.function_space_operator(basis_functions, node
                                                            derivative_order = 1, accuracy_order = 0,
                                                            options = Options(g_tol = 1e-14, iterations = 10000)) where {T, SourceOfCoefficients}
 
-    @assert derivative_order == 1 "Only first derivative operators are supported"
+    if derivative_order != 1
+        throw(ArgumentError("Derivative order $derivative_order not implemented."))
+    end
     sort!(nodes)
     weights, D = construct_function_space_operator(basis_functions, nodes, source; options = options)
     return MatrixDerivativeOperator(first(nodes), last(nodes), nodes, weights, D, accuracy_order, source)
