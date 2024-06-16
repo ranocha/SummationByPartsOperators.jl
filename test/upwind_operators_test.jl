@@ -63,7 +63,6 @@ end
   N = 21
   xmin = 0.
   xmax = Float64(N + 1)
-  interior = 10:N-10
   acc_order = 2
 
   D = upwind_operators(Mattsson2017, derivative_order=1, accuracy_order=acc_order,
@@ -96,6 +95,12 @@ end
 
   x = grid(D)
   @test integrate(x, D) == integrate(x, Dp)
+
+  B = zeros(N, N)
+  B[1, 1] = -1.0
+  B[end, end] = 1.0
+  M = mass_matrix(D)
+  @test M * Matrix(Dp) + Matrix(Dm)' * M ≈ B
 
   @test_throws ArgumentError UpwindOperators(
     derivative_operator(Mattsson2017(:minus  ), 1, acc_order, xmin, xmax, N),

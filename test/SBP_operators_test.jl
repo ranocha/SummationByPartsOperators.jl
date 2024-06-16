@@ -16,6 +16,9 @@ for source in D_test_list, T in (Float32,Float64)
     xmin = -one(T)
     xmax = 2*one(T)
     N = 101
+    B = zeros(T, N, N)
+    B[1, 1] = convert(T, -1)
+    B[end, end] = convert(T, 1)
     der_order = 1
 
     acc_order = 2
@@ -42,6 +45,9 @@ for source in D_test_list, T in (Float32,Float64)
         @test issymmetric(D) == false
         @test SummationByPartsOperators.xmin(D) ≈ xmin
         @test SummationByPartsOperators.xmax(D) ≈ xmax
+        # SBP property
+        M = mass_matrix(D)
+        @test M * Matrix(D) + Matrix(D)' * M ≈ B
         # interior and boundary
         mul!(res, D, x0)
         @test all(i->abs(res[i]) < 1000*eps(T), eachindex(res))
@@ -88,6 +94,9 @@ for source in D_test_list, T in (Float32,Float64)
         @test issymmetric(D) == false
         @test SummationByPartsOperators.xmin(D) ≈ xmin
         @test SummationByPartsOperators.xmax(D) ≈ xmax
+        # SBP property
+        M = mass_matrix(D)
+        @test M * Matrix(D) + Matrix(D)' * M ≈ B
         # interior and boundary
         mul!(res, D, x0)
         @test all(i->abs(res[i]) < 1000*eps(T), eachindex(res))
@@ -142,6 +151,9 @@ for source in D_test_list, T in (Float32,Float64)
         @test issymmetric(D) == false
         @test SummationByPartsOperators.xmin(D) ≈ xmin
         @test SummationByPartsOperators.xmax(D) ≈ xmax
+        # SBP property
+        M = mass_matrix(D)
+        @test M * Matrix(D) + Matrix(D)' * M ≈ B
         # interior and boundary
         mul!(res, D, x0)
         @test all(i->abs(res[i]) < 1000*eps(T), eachindex(res))
@@ -202,6 +214,9 @@ for source in D_test_list, T in (Float32,Float64)
         @test issymmetric(D) == false
         @test SummationByPartsOperators.xmin(D) ≈ xmin
         @test SummationByPartsOperators.xmax(D) ≈ xmax
+        # SBP property
+        M = mass_matrix(D)
+        @test M * Matrix(D) + Matrix(D)' * M ≈ B
         # interior and boundary
         mul!(res, D, x0)
         @test all(i->abs(res[i]) < 16000*eps(T), eachindex(res))
@@ -241,6 +256,8 @@ for source in D_test_list, T in (Float32,Float64)
     xmin = -one(T)
     xmax = 2*one(T)
     N = 101
+    eL = SummationByPartsOperators.OneHot(1, N)
+    eR = SummationByPartsOperators.OneHot(N, N)
     der_order = 2
 
     acc_order = 2
@@ -267,6 +284,11 @@ for source in D_test_list, T in (Float32,Float64)
         @test issymmetric(D) == false
         @test SummationByPartsOperators.xmin(D) ≈ xmin
         @test SummationByPartsOperators.xmax(D) ≈ xmax
+        # SBP property
+        M = mass_matrix(D)
+        dL = derivative_left(D, Val{1}())
+        dR = derivative_right(D, Val{1}())
+        @test M * Matrix(D) - Matrix(D)' * M ≈ eR * dR' - eL * dL' - dR * eR' + dL * eL'
         # interior and boundary
         mul!(res, D, x0)
         @test all(i->abs(res[i]) < eps(T), eachindex(res))
@@ -315,6 +337,11 @@ for source in D_test_list, T in (Float32,Float64)
         @test issymmetric(D) == false
         @test SummationByPartsOperators.xmin(D) ≈ xmin
         @test SummationByPartsOperators.xmax(D) ≈ xmax
+        # SBP property
+        M = mass_matrix(D)
+        dL = derivative_left(D, Val{1}())
+        dR = derivative_right(D, Val{1}())
+        @test M * Matrix(D) - Matrix(D)' * M ≈ eR * dR' - eL * dL' - dR * eR' + dL * eL'
         # interior and boundary
         mul!(res, D, x0)
         @test all(i->abs(res[i]) < 2000*eps(T), eachindex(res))
@@ -369,6 +396,11 @@ for source in D_test_list, T in (Float32,Float64)
         @test issymmetric(D) == false
         @test SummationByPartsOperators.xmin(D) ≈ xmin
         @test SummationByPartsOperators.xmax(D) ≈ xmax
+        # SBP property
+        M = mass_matrix(D)
+        dL = derivative_left(D, Val{1}())
+        dR = derivative_right(D, Val{1}())
+        @test M * Matrix(D) - Matrix(D)' * M ≈ eR * dR' - eL * dL' - dR * eR' + dL * eL'
         # interior and boundary
         mul!(res, D, x0)
         @test all(i->abs(res[i]) < 10000*eps(T), eachindex(res))
@@ -428,6 +460,11 @@ for source in D_test_list, T in (Float32,Float64)
         @test issymmetric(D) == false
         @test SummationByPartsOperators.xmin(D) ≈ xmin
         @test SummationByPartsOperators.xmax(D) ≈ xmax
+        # SBP property
+        M = mass_matrix(D)
+        dL = derivative_left(D, Val{1}())
+        dR = derivative_right(D, Val{1}())
+        @test M * Matrix(D) - Matrix(D)' * M ≈ eR * dR' - eL * dL' - dR * eR' + dL * eL'
         # interior and boundary
         mul!(res, D, x0)
         @test all(i->abs(res[i]) < 10000*eps(T), eachindex(res))
