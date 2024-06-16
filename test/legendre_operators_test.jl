@@ -16,6 +16,9 @@ for T in (Float32, Float64)
     xmax = one(T)
 
     for N in 2 .^ (1:4)
+        B = zeros(T, N, N)
+        B[1, 1] = convert(T, -1)
+        B[end, end] = convert(T, 1)
         D = legendre_derivative_operator(xmin, xmax, N)
         @test D == legendre_derivative_operator(xmin=xmin, xmax=xmax, N=N)
         println(devnull, D)
@@ -23,6 +26,8 @@ for T in (Float32, Float64)
         @test issymmetric(D) == false
         @test SummationByPartsOperators.xmin(D) ≈ xmin
         @test SummationByPartsOperators.xmax(D) ≈ xmax
+        M = mass_matrix(D)
+        @test M * Matrix(D) + Matrix(D)' * M ≈ B
         u = compute_coefficients(zero, D)
         res = D*u
         for k in 1:N-1
