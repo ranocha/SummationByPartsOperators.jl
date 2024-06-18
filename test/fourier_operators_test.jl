@@ -21,6 +21,8 @@ for T in (Float32, Float64)
         @test issymmetric(D) == false
         @test SummationByPartsOperators.xmin(D) ≈ xmin
         @test SummationByPartsOperators.xmax(D) ≈ xmax
+        M = mass_matrix(D)
+        @test isapprox(M * Matrix(D) + Matrix(D)' * M, zeros(T, N, N), atol = N*eps(T))
         u = compute_coefficients(zero, D)
         res = D*u
         for k in 0:(N÷2)-1

@@ -109,6 +109,7 @@ include("fourier_operators.jl")
 include("fourier_operators_2d.jl")
 include("legendre_operators.jl")
 include("matrix_operators.jl")
+include("function_space_operators.jl")
 include("upwind_operators.jl")
 include("SBP_coefficients/MattssonNordström2004.jl")
 include("SBP_coefficients/MattssonSvärdNordström2004.jl")
@@ -154,7 +155,7 @@ export periodic_central_derivative_operator, periodic_derivative_operator, deriv
        dissipation_operator, var_coef_derivative_operator,
        fourier_derivative_operator,
        legendre_derivative_operator, legendre_second_derivative_operator,
-       upwind_operators
+       upwind_operators, function_space_operator
 export UniformMesh1D, UniformPeriodicMesh1D
 export couple_continuously, couple_discontinuously
 export mul!
@@ -169,6 +170,7 @@ export MattssonNordström2004, MattssonSvärdNordström2004, MattssonSvärdShoey
        SharanBradyLivescu2022
 export Tadmor1989, MadayTadmor1989, Tadmor1993,
        TadmorWaagan2012Standard, TadmorWaagan2012Convergent
+export GlaubitzNordströmÖffner2023
 
 export BurgersPeriodicSemidiscretization, BurgersNonperiodicSemidiscretization,
        CubicPeriodicSemidiscretization, CubicNonperiodicSemidiscretization,
