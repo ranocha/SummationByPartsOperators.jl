@@ -133,6 +133,13 @@ function integrate(func, u::AbstractVector, D::Union{UpwindOperators,PeriodicUpw
   integrate(func, u, D.minus)
 end
 
+function scale_by_mass_matrix!(u::AbstractVector, D::Union{UpwindOperators,PeriodicUpwindOperators})
+  scale_by_mass_matrix!(func, u, D.minus)
+end
+
+function scale_by_inverse_mass_matrix!(u::AbstractVector, D::Union{UpwindOperators,PeriodicUpwindOperators})
+  scale_by_inverse_mass_matrix!(func, u, D.minus)
+end
 
 """
     upwind_operators(source_type, args...; derivative_order = 1, kwargs...)
