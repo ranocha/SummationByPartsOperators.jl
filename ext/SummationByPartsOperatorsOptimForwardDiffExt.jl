@@ -10,13 +10,14 @@ using SparseArrays: spzeros
 function SummationByPartsOperators.function_space_operator(basis_functions, nodes::Vector{T},
                                                            source::SourceOfCoefficients;
                                                            derivative_order = 1, accuracy_order = 0,
-                                                           options = Options(g_tol = 1e-14, iterations = 10000)) where {T, SourceOfCoefficients}
+                                                           opt_alg = LBFGS(), options = Options(g_tol = 1e-14, iterations = 10000),
+                                                           verbose = false) where {T, SourceOfCoefficients}
 
     if derivative_order != 1
         throw(ArgumentError("Derivative order $derivative_order not implemented."))
     end
     sort!(nodes)
-    weights, D = construct_function_space_operator(basis_functions, nodes, source; options = options)
+    weights, D = construct_function_space_operator(basis_functions, nodes, source; opt_alg = opt_alg, options = options, verbose = verbose)
     return MatrixDerivativeOperator(first(nodes), last(nodes), nodes, weights, D, accuracy_order, source)
 end
 
@@ -98,7 +99,8 @@ end
 
 function construct_function_space_operator(basis_functions, nodes,
                                            ::GlaubitzNordströmÖffner2023;
-                                           options = Options(g_tol = 1e-14, iterations = 10000))
+                                           opt_alg = LBFGS(), options = Options(g_tol = 1e-14, iterations = 10000),
+                                           verbose = false)
     K = length(basis_functions)
     N = length(nodes)
     L = div(N * (N - 1), 2)
@@ -127,7 +129,8 @@ function construct_function_space_operator(basis_functions, nodes,
 
     x0 = zeros(L + N)
     fg!(F, G, x) = optimization_function_and_grad!(F, G, x, p)
-    result = optimize(Optim.only_fg!(fg!), x0, LBFGS(), options)
+    result = optimize(Optim.only_fg!(fg!), x0, opt_alg, options)
+    verbose && display(result)
 
     x = minimizer(result)
     sigma = x[1:L]
