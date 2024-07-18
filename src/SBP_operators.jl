@@ -655,6 +655,48 @@ function integrate(func, u::AbstractVector, D::DerivativeOperator)
     Δx * res
 end
 
+function scale_by_mass_matrix!(u::AbstractVector, D::DerivativeOperator)
+    Base.require_one_based_indexing(u)
+    @boundscheck begin
+        length(u) == length(grid(D))
+    end
+    @unpack Δx = D
+    @unpack left_weights, right_weights = D.coefficients
+
+    @inbounds for i in (1 + length(left_weights)):(length(u) - length(right_weights))
+        u[i] *= Δx
+    end
+    @inbounds for i in Base.OneTo(length(left_weights))
+        u[i] *= left_weights[i] * Δx
+    end
+    @inbounds for i in Base.OneTo(length(right_weights))
+        u[end-i+1] *= right_weights[i] * Δx
+    end
+
+    return u
+end
+
+function scale_by_inverse_mass_matrix!(u::AbstractVector, D::DerivativeOperator)
+    Base.require_one_based_indexing(u)
+    @boundscheck begin
+        length(u) == length(grid(D))
+    end
+    @unpack Δx = D
+    @unpack left_weights, right_weights = D.coefficients
+
+    @inbounds for i in (1 + length(left_weights)):(length(u) - length(right_weights))
+        u[i] /= Δx
+    end
+    @inbounds for i in Base.OneTo(length(left_weights))
+        u[i] /= left_weights[i] * Δx
+    end
+    @inbounds for i in Base.OneTo(length(right_weights))
+        u[end-i+1] /= right_weights[i] * Δx
+    end
+
+    return u
+end
+
 
 """
     derivative_operator(source_of_coefficients,

@@ -40,6 +40,16 @@ for T in (Float32, Float64)
             @test maximum(abs, duplot - dufunc.(xplot)) < 5N*eps(T)
             @test abs(integrate(u, D)) < N*eps(T)
         end
+
+        # mass matrix scaling
+        x1 = grid(D)
+        M = @inferred mass_matrix(D)
+        u = sinpi.(x1)
+        v = copy(u)
+        scale_by_mass_matrix!(v, D)
+        @test v ≈ M * u
+        scale_by_inverse_mass_matrix!(v, D)
+        @test v ≈ u
     end
 end
 

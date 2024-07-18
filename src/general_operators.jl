@@ -73,6 +73,22 @@ function Base.summary(io::IO, D::AbstractDerivativeOperator)
               ", accuracy:", accuracy_order(D), ")")
 end
 
+"""
+    scale_by_mass_matrix!(u, D)
+
+Scale the vector `u` by the mass matrix associated to the
+derivative operator `D`.
+"""
+function scale_by_mass_matrix! end
+
+"""
+    scale_by_inverse_mass_matrix!(u, D)
+
+Scale the vector `u` by the inverse of the mass matrix associated to the
+derivative operator `D`.
+"""
+function scale_by_inverse_mass_matrix! end
+
 
 
 abstract type AbstractExecutionMode end
