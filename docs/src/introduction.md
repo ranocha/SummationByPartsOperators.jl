@@ -332,7 +332,9 @@ are necessary.
   are often needed. These can be obtained without forming `M = mass_matrix(D)`
   explicitly via [`left_boundary_weight`](@ref) and [`right_boundary_weight`](@ref).
 - Instead of forming a mass matrix explicitly, discrete integrals can be evaluated
-  efficiently using [`integrate`](@ref).
+  efficiently using [`integrate`](@ref) and vectors can be scaled by the mass matrix
+  or its inverse using [`scale_by_mass_matrix!`](@ref) and
+  [`scale_by_inverse_mass_matrix!`](@ref), respectively.
 - Dissipation operators based on the same discrete inner product as SBP derivative
   operators can be obtained via [`dissipation_operator`](@ref).
 
