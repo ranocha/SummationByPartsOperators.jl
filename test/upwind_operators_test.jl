@@ -56,6 +56,16 @@ using SummationByPartsOperators
     diss = M * (Dp - Dm)
     @test diss ≈ diss'
     @test maximum(eigvals(Symmetric(diss))) < N * eps()
+
+    # mass matrix scaling
+    x1 = grid(D_periodic)
+    M = @inferred mass_matrix(D_periodic)
+    u = sinpi.(x1)
+    v = copy(u)
+    scale_by_mass_matrix!(v, D_periodic)
+    @test v ≈ M * u
+    scale_by_inverse_mass_matrix!(v, D_periodic)
+    @test v ≈ u
   end
 end
 
@@ -107,6 +117,16 @@ end
     derivative_operator(Mattsson2017(:central), 1, acc_order, xmin, xmax, N+1),
     derivative_operator(Mattsson2017(:plus   ), 1, acc_order, xmin, xmax, N)
   )
+
+  # mass matrix scaling
+  x1 = grid(D)
+  M = @inferred mass_matrix(D)
+  u = sinpi.(x1)
+  v = copy(u)
+  scale_by_mass_matrix!(v, D)
+  @test v ≈ M * u
+  scale_by_inverse_mass_matrix!(v, D)
+  @test v ≈ u
 end
 
 @testset "Empty lower/upper coefficients" begin

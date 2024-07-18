@@ -149,6 +149,18 @@ function mass_matrix(D::FourierDerivativeOperator)
     Δx * I
 end
 
+function scale_by_mass_matrix!(u::AbstractVector, D::FourierDerivativeOperator)
+    @unpack Δx = D
+
+    u .*= Δx
+end
+
+function scale_by_inverse_mass_matrix!(u::AbstractVector, D::FourierDerivativeOperator)
+    @unpack Δx = D
+
+    u ./= Δx
+end
+
 
 
 """

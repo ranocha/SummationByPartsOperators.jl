@@ -65,6 +65,14 @@ for source in D_test_list, T in (Float32,Float64)
         # boundary derivative
         @test derivative_left( D, x1, Val{0}()) ≈ x1[begin]
         @test derivative_right(D, x1, Val{0}()) ≈ x1[end]
+        # mass matrix scaling
+        M = @inferred mass_matrix(D)
+        u = sinpi.(x1)
+        v = copy(u)
+        scale_by_mass_matrix!(v, D)
+        @test v ≈ M * u
+        scale_by_inverse_mass_matrix!(v, D)
+        @test v ≈ u
     end
 
     acc_order = 4
@@ -122,6 +130,14 @@ for source in D_test_list, T in (Float32,Float64)
         # boundary derivative
         @test derivative_left( D, x1, Val{0}()) ≈ x1[begin]
         @test derivative_right(D, x1, Val{0}()) ≈ x1[end]
+        # mass matrix scaling
+        M = @inferred mass_matrix(D)
+        u = sinpi.(x1)
+        v = copy(u)
+        scale_by_mass_matrix!(v, D)
+        @test v ≈ M * u
+        scale_by_inverse_mass_matrix!(v, D)
+        @test v ≈ u
     end
 
     acc_order = 6
@@ -185,6 +201,14 @@ for source in D_test_list, T in (Float32,Float64)
         # boundary derivative
         @test derivative_left( D, x1, Val{0}()) ≈ x1[begin]
         @test derivative_right(D, x1, Val{0}()) ≈ x1[end]
+        # mass matrix scaling
+        M = @inferred mass_matrix(D)
+        u = sinpi.(x1)
+        v = copy(u)
+        scale_by_mass_matrix!(v, D)
+        @test v ≈ M * u
+        scale_by_inverse_mass_matrix!(v, D)
+        @test v ≈ u
     end
 
     acc_order = 8
@@ -246,6 +270,14 @@ for source in D_test_list, T in (Float32,Float64)
         # boundary derivative
         @test derivative_left( D, x1, Val{0}()) ≈ x1[begin]
         @test derivative_right(D, x1, Val{0}()) ≈ x1[end]
+        # mass matrix scaling
+        M = @inferred mass_matrix(D)
+        u = sinpi.(x1)
+        v = copy(u)
+        scale_by_mass_matrix!(v, D)
+        @test v ≈ M * u
+        scale_by_inverse_mass_matrix!(v, D)
+        @test v ≈ u
     end
 
     @test_throws Union{MethodError,ArgumentError} derivative_operator(source, der_order, 16, xmin, xmax, N)
@@ -308,6 +340,14 @@ for source in D_test_list, T in (Float32,Float64)
         @test derivative_right(D, x1, Val{1}()) ≈ one(T)
         @test derivative_left( D, x2, Val{1}()) ≈ 2xmin
         @test derivative_right(D, x2, Val{1}()) ≈ 2xmax
+        # mass matrix scaling
+        M = @inferred mass_matrix(D)
+        u = sinpi.(x1)
+        v = copy(u)
+        scale_by_mass_matrix!(v, D)
+        @test v ≈ M * u
+        scale_by_inverse_mass_matrix!(v, D)
+        @test v ≈ u
     end
 
     acc_order = 4
@@ -367,6 +407,14 @@ for source in D_test_list, T in (Float32,Float64)
         @test derivative_right(D, x2, Val{1}()) ≈ 2xmax
         @test derivative_left( D, x3, Val{1}()) ≈ 3xmin^2
         @test derivative_right(D, x3, Val{1}()) ≈ 3xmax^2
+        # mass matrix scaling
+        M = @inferred mass_matrix(D)
+        u = sinpi.(x1)
+        v = copy(u)
+        scale_by_mass_matrix!(v, D)
+        @test v ≈ M * u
+        scale_by_inverse_mass_matrix!(v, D)
+        @test v ≈ u
     end
 
     acc_order = 6
@@ -430,6 +478,14 @@ for source in D_test_list, T in (Float32,Float64)
         @test derivative_right(D, x3, Val{1}()) ≈ 3xmax^2
         @test derivative_left( D, x4, Val{1}()) ≈ 4xmin^3
         @test derivative_right(D, x4, Val{1}()) ≈ 4xmax^3
+        # mass matrix scaling
+        M = @inferred mass_matrix(D)
+        u = sinpi.(x1)
+        v = copy(u)
+        scale_by_mass_matrix!(v, D)
+        @test v ≈ M * u
+        scale_by_inverse_mass_matrix!(v, D)
+        @test v ≈ u
     end
 
     acc_order = 8
@@ -498,6 +554,14 @@ for source in D_test_list, T in (Float32,Float64)
         @test derivative_right(D, x4, Val{1}()) ≈ 4xmax^3
         @test derivative_left( D, x5, Val{1}()) ≈ 5xmin^4
         @test derivative_right(D, x5, Val{1}()) ≈ 5xmax^4
+        # mass matrix scaling
+        M = @inferred mass_matrix(D)
+        u = sinpi.(x1)
+        v = copy(u)
+        scale_by_mass_matrix!(v, D)
+        @test v ≈ M * u
+        scale_by_inverse_mass_matrix!(v, D)
+        @test v ≈ u
     end
 
     @test_throws Union{MethodError,ArgumentError} derivative_operator(source, der_order, 16, xmin, xmax, N)
@@ -556,6 +620,14 @@ end
         @test abs(derivative_right(D, x1, Val{2}())) < 600 * eps(T)
         @test derivative_left( D, x2, Val{2}()) ≈ 2
         @test derivative_right(D, x2, Val{2}()) ≈ 2
+        # mass matrix scaling
+        M = @inferred mass_matrix(D)
+        u = sinpi.(x1)
+        v = copy(u)
+        scale_by_mass_matrix!(v, D)
+        @test v ≈ M * u
+        scale_by_inverse_mass_matrix!(v, D)
+        @test v ≈ u
     end
 
     acc_order = 4
@@ -613,6 +685,14 @@ end
         @test derivative_right(D, x2, Val{2}()) ≈ 2
         @test derivative_left( D, x3, Val{2}()) ≈ 6xmin
         @test derivative_right(D, x3, Val{2}()) ≈ 6xmax
+        # mass matrix scaling
+        M = @inferred mass_matrix(D)
+        u = sinpi.(x1)
+        v = copy(u)
+        scale_by_mass_matrix!(v, D)
+        @test v ≈ M * u
+        scale_by_inverse_mass_matrix!(v, D)
+        @test v ≈ u
     end
 
     acc_order = 6
@@ -675,6 +755,14 @@ end
         @test isapprox(derivative_right(D, x2, Val{2}()), 2, atol=20_000*eps(T))
         @test isapprox(derivative_left( D, x3, Val{2}()), 6xmin, atol=50_000*eps(T))
         @test isapprox(derivative_right(D, x3, Val{2}()), 6xmax, atol=80_000*eps(T))
+        # mass matrix scaling
+        M = @inferred mass_matrix(D)
+        u = sinpi.(x1)
+        v = copy(u)
+        scale_by_mass_matrix!(v, D)
+        @test v ≈ M * u
+        scale_by_inverse_mass_matrix!(v, D)
+        @test v ≈ u
     end
 
     @test_throws Union{MethodError,ArgumentError} derivative_operator(source, der_order, 16, xmin, xmax, N)
@@ -742,6 +830,14 @@ end
         @test abs(derivative_right(D, x1, Val{3}())) < 10 * eps(T) / D.Δx^3
         @test abs(derivative_left( D, x2, Val{3}())) < 10 * eps(T) / D.Δx^3
         @test abs(derivative_right(D, x2, Val{3}())) < 10 * eps(T) / D.Δx^3
+        # mass matrix scaling
+        M = @inferred mass_matrix(D)
+        u = sinpi.(x1)
+        v = copy(u)
+        scale_by_mass_matrix!(v, D)
+        @test v ≈ M * u
+        scale_by_inverse_mass_matrix!(v, D)
+        @test v ≈ u
     end
 
     acc_order = 4
@@ -809,6 +905,14 @@ end
         @test abs(derivative_right(D, x2, Val{3}())) < 100_000*eps(T)
         @test isapprox(derivative_left( D, x3, Val{3}()), 6, atol=150_000*eps(T))
         @test isapprox(derivative_right(D, x3, Val{3}()), 6, atol=1_000_000*eps(T))
+        # mass matrix scaling
+        M = @inferred mass_matrix(D)
+        u = sinpi.(x1)
+        v = copy(u)
+        scale_by_mass_matrix!(v, D)
+        @test v ≈ M * u
+        scale_by_inverse_mass_matrix!(v, D)
+        @test v ≈ u
     end
 
     acc_order = 6
@@ -876,6 +980,14 @@ end
         @test abs(derivative_right(D, x2, Val{3}())) < 1_000_000*eps(T)
         @test isapprox(derivative_left( D, x3, Val{3}()), 6, atol=900_000*eps(T))
         @test isapprox(derivative_right(D, x3, Val{3}()), 6, atol=5_000_000*eps(T))
+        # mass matrix scaling
+        M = @inferred mass_matrix(D)
+        u = sinpi.(x1)
+        v = copy(u)
+        scale_by_mass_matrix!(v, D)
+        @test v ≈ M * u
+        scale_by_inverse_mass_matrix!(v, D)
+        @test v ≈ u
     end
 
     @test_throws Union{MethodError,ArgumentError} derivative_operator(source, der_order, 16, xmin, xmax, N)

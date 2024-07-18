@@ -624,6 +624,18 @@ function mass_matrix(D::PeriodicDerivativeOperator)
     Δx * I
 end
 
+function scale_by_mass_matrix!(u::AbstractVector, D::PeriodicDerivativeOperator)
+    @unpack Δx = D
+
+    u .*= Δx
+end
+
+function scale_by_inverse_mass_matrix!(u::AbstractVector, D::PeriodicDerivativeOperator)
+    @unpack Δx = D
+
+    u ./= Δx
+end
+
 
 """
     periodic_central_derivative_operator(derivative_order, accuracy_order,

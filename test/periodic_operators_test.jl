@@ -39,6 +39,14 @@ let T=Float32
     @test all(i->res[i] ≈ x0[i], accuracy_order:length(res)-accuracy_order)
     mul!(res, D, x2)
     @test all(i->res[i] ≈ 2*x1[i], accuracy_order:length(res)-accuracy_order)
+    # mass matrix scaling
+    M = @inferred mass_matrix(D)
+    u = sinpi.(x1)
+    v = copy(u)
+    scale_by_mass_matrix!(v, D)
+    @test v ≈ M * u
+    scale_by_inverse_mass_matrix!(v, D)
+    @test v ≈ u
 
     accuracy_order = 4
     D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
@@ -62,6 +70,14 @@ let T=Float32
     @test all(i->res[i] ≈ 3*x2[i], accuracy_order:length(res)-accuracy_order)
     mul!(res, D, x4)
     @test all(i->res[i] ≈ 4*x3[i], accuracy_order:length(res)-accuracy_order)
+    # mass matrix scaling
+    M = @inferred mass_matrix(D)
+    u = sinpi.(x1)
+    v = copy(u)
+    scale_by_mass_matrix!(v, D)
+    @test v ≈ M * u
+    scale_by_inverse_mass_matrix!(v, D)
+    @test v ≈ u
 
     accuracy_order = 6
     D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
@@ -89,6 +105,14 @@ let T=Float32
     @test all(i->res[i] ≈ 5*x4[i], accuracy_order:length(res)-accuracy_order)
     mul!(res, D, x6)
     @test all(i->res[i] ≈ 6*x5[i], accuracy_order:length(res)-accuracy_order)
+    # mass matrix scaling
+    M = @inferred mass_matrix(D)
+    u = sinpi.(x1)
+    v = copy(u)
+    scale_by_mass_matrix!(v, D)
+    @test v ≈ M * u
+    scale_by_inverse_mass_matrix!(v, D)
+    @test v ≈ u
 
     # second derivative operators
     derivative_order = 2
@@ -114,6 +138,14 @@ let T=Float32
     @test all(i->isapprox(res[i], 6*x1[i], atol=2000N*eps(T)), accuracy_order:length(res)-accuracy_order)
     mul!(res, D, x4)
     @test any(i->!(res[i] ≈ 12*x2[i]), accuracy_order:length(res)-accuracy_order)
+    # mass matrix scaling
+    M = @inferred mass_matrix(D)
+    u = sinpi.(x1)
+    v = copy(u)
+    scale_by_mass_matrix!(v, D)
+    @test v ≈ M * u
+    scale_by_inverse_mass_matrix!(v, D)
+    @test v ≈ u
 
     accuracy_order = 4
     D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
@@ -137,6 +169,14 @@ let T=Float32
     @test all(i->isapprox(res[i], 12*x2[i], atol=8500N*eps(T)), accuracy_order:length(res)-accuracy_order)
     mul!(res, D, x5)
     @test any(i->!(res[i] ≈ 30*x3[i]), accuracy_order:length(res)-accuracy_order)
+    # mass matrix scaling
+    M = @inferred mass_matrix(D)
+    u = sinpi.(x1)
+    v = copy(u)
+    scale_by_mass_matrix!(v, D)
+    @test v ≈ M * u
+    scale_by_inverse_mass_matrix!(v, D)
+    @test v ≈ u
 
     accuracy_order = 6
     D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
@@ -156,6 +196,14 @@ let T=Float32
     mul!(res, D, x5); @test norm((res - 20 .* x3)[accuracy_order:end-accuracy_order], Inf) < 50000N*eps(T)
     mul!(res, D, x6); @test norm((res - 30 .* x4)[accuracy_order:end-accuracy_order], Inf) < 52000N*eps(T)
     mul!(res, D, x7); @test norm((res - 42 .* x5)[accuracy_order:end-accuracy_order], Inf) < 92000N*eps(T)
+        # mass matrix scaling
+        M = @inferred mass_matrix(D)
+        u = sinpi.(x1)
+        v = copy(u)
+        scale_by_mass_matrix!(v, D)
+        @test v ≈ M * u
+        scale_by_inverse_mass_matrix!(v, D)
+        @test v ≈ u
 
     tmp = D * x7
     @test typeof(tmp) == typeof(res)
@@ -177,6 +225,14 @@ let T=Float32
     mul!(res, D, x1); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 1400*eps(T)
     mul!(res, D, x2); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 7000*eps(T)
     mul!(res, D, x3); @test norm((res - 6 .* x0)[accuracy_order:end-accuracy_order], Inf) > 7000*eps(T)
+    # mass matrix scaling
+    M = @inferred mass_matrix(D)
+    u = sinpi.(x1)
+    v = copy(u)
+    scale_by_mass_matrix!(v, D)
+    @test v ≈ M * u
+    scale_by_inverse_mass_matrix!(v, D)
+    @test v ≈ u
 
     accuracy_order = 4
     D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
@@ -194,6 +250,14 @@ let T=Float32
     mul!(res, D, x3); @test norm((res - 6 .* x0)[accuracy_order:end-accuracy_order], Inf) < 500000N*eps(T)
     mul!(res, D, x4); @test norm((res - 24 .* x1)[accuracy_order:end-accuracy_order], Inf) < 600000N*eps(T)
     mul!(res, D, x5); @test norm((res - 60 .* x2)[accuracy_order:end-accuracy_order], Inf) > 600000*eps(T)
+    # mass matrix scaling
+    M = @inferred mass_matrix(D)
+    u = sinpi.(x1)
+    v = copy(u)
+    scale_by_mass_matrix!(v, D)
+    @test v ≈ M * u
+    scale_by_inverse_mass_matrix!(v, D)
+    @test v ≈ u
 
     accuracy_order = 6
     D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
@@ -265,6 +329,14 @@ let T = Float64
     @test all(i->res[i] ≈ 2*x1[i], accuracy_order:length(res)-accuracy_order)
     mul!(res, D, x3)
     @test any(i->!(res[i] ≈ 3*x2[i]), accuracy_order:length(res)-accuracy_order)
+    # mass matrix scaling
+    M = @inferred mass_matrix(D)
+    u = sinpi.(x1)
+    v = copy(u)
+    scale_by_mass_matrix!(v, D)
+    @test v ≈ M * u
+    scale_by_inverse_mass_matrix!(v, D)
+    @test v ≈ u
 
     accuracy_order = 4
     D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
@@ -286,6 +358,14 @@ let T = Float64
     @test all(i->res[i] ≈ 4*x3[i], accuracy_order:length(res)-accuracy_order)
     mul!(res, D, x5)
     @test any(i->!(res[i] ≈ 5*x4[i]), accuracy_order:length(res)-accuracy_order)
+    # mass matrix scaling
+    M = @inferred mass_matrix(D)
+    u = sinpi.(x1)
+    v = copy(u)
+    scale_by_mass_matrix!(v, D)
+    @test v ≈ M * u
+    scale_by_inverse_mass_matrix!(v, D)
+    @test v ≈ u
 
     accuracy_order = 6
     D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
@@ -330,6 +410,14 @@ let T = Float64
     mul!(res, D, x1); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 1400*eps(T)
     mul!(res, D, x2); @test norm((res - 2 .* x0)[accuracy_order:end-accuracy_order], Inf) < 7000*eps(T)
     mul!(res, D, x3); @test norm((res - 6 .* x1)[accuracy_order:end-accuracy_order], Inf) > 7000*eps(T)
+    # mass matrix scaling
+    M = @inferred mass_matrix(D)
+    u = sinpi.(x1)
+    v = copy(u)
+    scale_by_mass_matrix!(v, D)
+    @test v ≈ M * u
+    scale_by_inverse_mass_matrix!(v, D)
+    @test v ≈ u
 
     accuracy_order = 4
     D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
@@ -345,6 +433,14 @@ let T = Float64
     mul!(res, D, x3); @test norm((res - 6 .* x1)[accuracy_order:end-accuracy_order], Inf) < 23000*eps(T)
     mul!(res, D, x4); @test norm((res - 12 .* x2)[accuracy_order:end-accuracy_order], Inf) < 40000*eps(T)
     mul!(res, D, x5); @test norm((res - 20 .* x3)[accuracy_order:end-accuracy_order], Inf) > 50000*eps(T)
+    # mass matrix scaling
+    M = @inferred mass_matrix(D)
+    u = sinpi.(x1)
+    v = copy(u)
+    scale_by_mass_matrix!(v, D)
+    @test v ≈ M * u
+    scale_by_inverse_mass_matrix!(v, D)
+    @test v ≈ u
 
     accuracy_order = 6
     D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
@@ -381,6 +477,14 @@ let T = Float64
     mul!(res, D, x1); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 1400*eps(T)
     mul!(res, D, x2); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 7000*eps(T)
     mul!(res, D, x3); @test norm((res - 6 .* x0)[accuracy_order:end-accuracy_order], Inf) > 7000*eps(T)
+    # mass matrix scaling
+    M = @inferred mass_matrix(D)
+    u = sinpi.(x1)
+    v = copy(u)
+    scale_by_mass_matrix!(v, D)
+    @test v ≈ M * u
+    scale_by_inverse_mass_matrix!(v, D)
+    @test v ≈ u
 
     accuracy_order = 4
     D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
@@ -396,6 +500,14 @@ let T = Float64
     mul!(res, D, x3); @test norm((res - 6 .* x0)[accuracy_order:end-accuracy_order], Inf) < 300000*eps(T)
     mul!(res, D, x4); @test norm((res - 24 .* x1)[accuracy_order:end-accuracy_order], Inf) < 600000*eps(T)
     mul!(res, D, x5); @test norm((res - 60 .* x2)[accuracy_order:end-accuracy_order], Inf) > 600000*eps(T)
+    # mass matrix scaling
+    M = @inferred mass_matrix(D)
+    u = sinpi.(x1)
+    v = copy(u)
+    scale_by_mass_matrix!(v, D)
+    @test v ≈ M * u
+    scale_by_inverse_mass_matrix!(v, D)
+    @test v ≈ u
 
     accuracy_order = 6
     D = periodic_central_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N)
