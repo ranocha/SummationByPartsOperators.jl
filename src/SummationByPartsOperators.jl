@@ -147,6 +147,7 @@ export SafeMode, FastMode, ThreadedMode
 export derivative_order, accuracy_order, source_of_coefficients, grid, semidiscretize
 export mass_matrix
 export integrate, left_boundary_weight, right_boundary_weight,
+       scale_by_mass_matrix!, scale_by_inverse_mass_matrix!,
        derivative_left, derivative_right,
        mul_transpose_derivative_left!, mul_transpose_derivative_right!,
        evaluate_coefficients, evaluate_coefficients!,
