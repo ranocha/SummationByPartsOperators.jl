@@ -572,6 +572,19 @@ function Base.:*(rat1::Union{FourierDerivativeOperator,FourierPolynomialDerivati
     FourierRationalDerivativeOperator(rat1) * rat2
 end
 
+function Base.:*(factor::Union{Real,Integer}, rat::FourierRationalDerivativeOperator)
+    @unpack num_coef = rat
+    for idx in eachindex(num_coef)
+        num_coef = Base.setindex(num_coef, factor * num_coef[idx], idx)
+    end
+
+    FourierRationalDerivativeOperator(rat.D1, num_coef, rat.den_coef)
+end
+
+function Base.:*(poly::FourierRationalDerivativeOperator, factor::Union{Real,Integer})
+    factor * poly
+end
+
 function Base.:/(rat1::FourierRationalDerivativeOperator, rat2::FourierRationalDerivativeOperator)
     T = eltype(rat1)
     @argcheck T == eltype(rat2) ArgumentError
@@ -591,6 +604,32 @@ end
 
 function Base.:/(rat1::Union{FourierDerivativeOperator,FourierPolynomialDerivativeOperator}, rat2::FourierRationalDerivativeOperator)
     FourierRationalDerivativeOperator(rat1) / rat2
+end
+
+function Base.:/(factor::Union{Real,Integer}, rat::FourierRationalDerivativeOperator)
+    @unpack den_coef = rat
+    for idx in eachindex(den_coef)
+        den_coef = Base.setindex(den_coef, factor * den_coef[idx], idx)
+    end
+
+    FourierRationalDerivativeOperator(rat.D1, den_coef, rat.num_coef)
+end
+
+function Base.:/(rat::FourierRationalDerivativeOperator, factor::Union{Real,Integer})
+    @unpack num_coef = rat
+    for idx in eachindex(num_coef)
+        num_coef = Base.setindex(num_coef, num_coef[idx] / factor, idx)
+    end
+
+    FourierRationalDerivativeOperator(rat.D1, num_coef, rat.den_coef)
+end
+
+function Base.:\(factor::Union{Real,Integer}, rat::FourierRationalDerivativeOperator)
+    rat / factor
+end
+
+function Base.:\(rat::FourierRationalDerivativeOperator, factor::Union{Real,Integer})
+    inv(rat) * factor
 end
 
 
