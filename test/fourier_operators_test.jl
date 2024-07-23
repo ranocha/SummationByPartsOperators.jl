@@ -54,13 +54,13 @@ for T in (Float32, Float64)
 end
 
 
-# Check Fourier polynomial operators
+# Check Fourier polynomial/rational operators
 for T in (Float32, Float64)
     xmin = -one(T)
     xmax = one(T)
     for N in (8, 9)
-        D = fourier_derivative_operator(xmin, xmax, N)
-        x = grid(D)
+        D = @inferred fourier_derivative_operator(xmin, xmax, N)
+        x = @inferred grid(D)
         u = @. sinpi(x) - cospi(x)^2 + exp(sinpi(x))
         println(devnull, D)
 
@@ -72,37 +72,45 @@ for T in (Float32, Float64)
         @test !issymmetric(I + D)
         @test !issymmetric(D - I)
 
-        @test SummationByPartsOperators.xmin(D^2) ≈ xmin
-        @test SummationByPartsOperators.xmax(D^2) ≈ xmax
+        @test @inferred(SummationByPartsOperators.xmin(D^2)) ≈ xmin
+        @test @inferred(SummationByPartsOperators.xmax(D^2)) ≈ xmax
 
-        poly = (I + 2D + 5*D^2) * (2I * D - D^3 * 5I) * (D*2 - D^2 * 5)
+        poly = @inferred (I + 2D + 5*D^2) * (2I * D - D^3 * 5I) * (D*2 - D^2 * 5)
         @test poly.coef == (0.0, 0.0, 4.0, -2.0, -10.0, -45.0, 0.0, 125.0)
         println(devnull, poly)
 
-        @test (I + one(T)/2*D) * u ≈ (u + D*u ./ 2)
+        @test @inferred(I + one(T)/2*D) * u ≈ (u + D*u ./ 2)
 
         v = (I - D^2) * u
         @test inv(I - D^2) * v ≈ u
 
-        @test SummationByPartsOperators.xmin(inv(I - D^2)) ≈ xmin
-        @test SummationByPartsOperators.xmax(inv(I - D^2)) ≈ xmax
+        @test @inferred(SummationByPartsOperators.xmin(inv(I - D^2))) ≈ xmin
+        @test @inferred(SummationByPartsOperators.xmax(inv(I - D^2))) ≈ xmax
 
-        v = (I - D^2) \ u
+        v = @inferred(I - D^2) \ u
         @test D * v ≈ (D / (I - D^2)) * u
 
-        rat = (I - D^2) / (I + D^4)
+        rat = @inferred((I - D^2) / (I + D^4))
         println(devnull, rat)
         v = rat * u
         @test (I - D^2) \ (v + D^4 * v) ≈ u
 
-        rat1 = (I - D^2) / (I + D^4)
-        rat2 = (I + D^4) / (I - D^2)
-        rat3 = (I - D^4) / (I - D^2)
-        @test (rat2 + rat3) * u ≈ 2 * ((I - D^2) \ u)
-        @test (rat1 * rat2) * u ≈ u
+        rat1 = @inferred((I - D^2) / (I + D^4))
+        rat2 = @inferred((I + D^4) / (I - D^2))
+        rat3 = @inferred((I - D^4) / (I - D^2))
+        @test @inferred(rat2 + rat3) * u ≈ 2 * ((I - D^2) \ u)
+        @test @inferred(rat1 * rat2) * u ≈ u
 
         @test integrate(u, D) ≈ sum(mass_matrix(D) * u)
         @test integrate(u->u^2, u, D) ≈ dot(u, mass_matrix(D), u)
+
+        # combine rational operators and scalars
+        @test @inferred(2 * rat1) * u ≈ rat1 * (2 * u)
+        @test @inferred(rat1 * 2) * u ≈ rat1 * (2 * u)
+        @test @inferred(2 / rat1) * u ≈ inv(rat1) * (2 * u)
+        @test @inferred(rat1 / 2) * u ≈ rat1 * (u / 2)
+        @test @inferred(2 \ rat1) * u ≈ rat1 * (u / 2)
+        @test @inferred(rat1 \ 2) * u ≈ inv(rat1) * (2 * u)
     end
 end
 
