@@ -71,7 +71,7 @@ function Base.getindex(grid::BoundaryAdaptedGrid, i::Int)
 end
 
 Base.size(grid::BoundaryAdaptedGrid) = (length(grid),)
-Base.step(grid::BoundaryAdaptedGrid) = grid.uniform_grid[1] - grid.xstart[end]
+Base.step(grid::BoundaryAdaptedGrid) = (grid.xmax - grid.xmin - 2*grid.xstart[end]) / (length(grid) + 1 - 2*length(grid.xstart))
 
 
 function construct_grid(::MattssonAlmquistVanDerWeide2018Minimal, accuracy_order, xmin, xmax, N)
