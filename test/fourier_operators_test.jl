@@ -111,6 +111,21 @@ for T in (Float32, Float64)
         @test @inferred(rat1 / 2) * u ≈ rat1 * (u / 2)
         @test @inferred(2 \ rat1) * u ≈ rat1 * (u / 2)
         @test @inferred(rat1 \ 2) * u ≈ inv(rat1) * (2 * u)
+
+        # combine rational operators and uniform scaling via *, /, \
+        @test @inferred((2 * I) * rat1) == 2 * rat1
+        @test @inferred(rat1 * (2 * I)) == 2 * rat1
+        @test @inferred((2 * I) / rat1) == 2 / rat1
+        @test @inferred(rat1 / (2 * I)) == rat1 / 2
+        @test @inferred((2 * I) \ rat1) == rat1 / 2
+        @test @inferred(rat1 \ (2 * I)) == 2 / rat1
+
+        # combine rational operators and uniform scaling via +, -
+        @test @inferred(I + rat1) == D^0 + rat1
+        @test @inferred(rat1 + I) == D^0 + rat1
+        @test @inferred(I - rat1) == D^0 - rat1
+        @test @inferred(rat1 - I) == rat1 - D^0
+        @test @inferred(-rat1) == @inferred(-1 * rat1)
     end
 end
 

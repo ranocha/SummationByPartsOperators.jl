@@ -530,6 +530,23 @@ function Base.:+(rat1::Union{FourierDerivativeOperator,FourierPolynomialDerivati
     FourierRationalDerivativeOperator(rat1) + rat2
 end
 
+function Base.:+(rat::FourierRationalDerivativeOperator, scaling::UniformScaling)
+    rat + scaling.λ * rat.D1^0
+end
+
+function Base.:+(scaling::UniformScaling, rat::FourierRationalDerivativeOperator)
+    rat + scaling
+end
+
+function Base.:-(rat::FourierRationalDerivativeOperator)
+    @unpack num_coef = rat
+    for idx in eachindex(num_coef)
+        num_coef = Base.setindex(num_coef, -num_coef[idx], idx)
+    end
+
+    FourierRationalDerivativeOperator(rat.D1, num_coef, rat.den_coef)
+end
+
 function Base.:-(rat1::FourierRationalDerivativeOperator, rat2::FourierRationalDerivativeOperator)
     T = eltype(rat1)
     @argcheck T == eltype(rat2) ArgumentError
@@ -549,6 +566,14 @@ end
 
 function Base.:-(rat1::Union{FourierDerivativeOperator,FourierPolynomialDerivativeOperator}, rat2::FourierRationalDerivativeOperator)
     FourierRationalDerivativeOperator(rat1) - rat2
+end
+
+function Base.:-(rat::FourierRationalDerivativeOperator, scaling::UniformScaling)
+    rat - scaling.λ * rat.D1^0
+end
+
+function Base.:-(scaling::UniformScaling, rat::FourierRationalDerivativeOperator)
+    scaling + (-rat)
 end
 
 function Base.:*(rat1::FourierRationalDerivativeOperator, rat2::FourierRationalDerivativeOperator)
@@ -583,6 +608,14 @@ end
 
 function Base.:*(poly::FourierRationalDerivativeOperator, factor::Union{Real,Integer})
     factor * poly
+end
+
+function Base.:*(rat::FourierRationalDerivativeOperator, scaling::UniformScaling)
+    scaling.λ * rat
+end
+
+function Base.:*(scaling::UniformScaling, rat::FourierRationalDerivativeOperator)
+    rat * scaling
 end
 
 function Base.:/(rat1::FourierRationalDerivativeOperator, rat2::FourierRationalDerivativeOperator)
@@ -630,6 +663,22 @@ end
 
 function Base.:\(rat::FourierRationalDerivativeOperator, factor::Union{Real,Integer})
     inv(rat) * factor
+end
+
+function Base.:/(rat::FourierRationalDerivativeOperator, scaling::UniformScaling)
+    rat / scaling.λ
+end
+
+function Base.:/(scaling::UniformScaling, rat::FourierRationalDerivativeOperator)
+    scaling.λ / rat
+end
+
+function Base.:\(rat::FourierRationalDerivativeOperator, scaling::UniformScaling)
+    rat \ scaling.λ
+end
+
+function Base.:\(scaling::UniformScaling, rat::FourierRationalDerivativeOperator)
+    scaling.λ \ rat
 end
 
 
