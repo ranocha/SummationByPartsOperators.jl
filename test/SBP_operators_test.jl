@@ -1039,7 +1039,7 @@ end
 
 # https://github.com/ranocha/SummationByPartsOperators.jl/pull/281
 @testset "PR #281" begin
-    @test_nowarn D = derivative_operator(MattssonAlmquistVanDerWeide2018Minimal(), 1, 4, 0.0, 1.0, 9)
+    D = @test_nowarn derivative_operator(MattssonAlmquistVanDerWeide2018Minimal(), 1, 4, 0.0, 1.0, 9)
     @test all(isfinite.(Matrix(D)))
 end
 end
