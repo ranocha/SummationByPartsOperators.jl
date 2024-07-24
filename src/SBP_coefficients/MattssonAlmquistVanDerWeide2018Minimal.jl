@@ -27,6 +27,7 @@ struct BoundaryAdaptedGrid{T,M,Grid} <: AbstractArray{T,1}
   xmax::T
   xstart::SVector{M,T}
   uniform_grid::Grid
+  Δx::T
 end
 
 function BoundaryAdaptedGrid(xmin::T, xmax::T, _xstart::SVector{M,T}, N::Int) where {M,T}
@@ -40,7 +41,7 @@ function BoundaryAdaptedGrid(xmin::T, xmax::T, _xstart::SVector{M,T}, N::Int) wh
   else
     uniform_grid = range(xmin + xstart[end] + Δx, xmax - xstart[end] - Δx, length=N-2M)
   end
-  BoundaryAdaptedGrid{T,M,typeof(uniform_grid)}(xmin, xmax, xstart, uniform_grid)
+  BoundaryAdaptedGrid{T,M,typeof(uniform_grid)}(xmin, xmax, xstart, uniform_grid, Δx)
 end
 
 function BoundaryAdaptedGrid(xmin, xmax, xstart, N)
@@ -71,7 +72,7 @@ function Base.getindex(grid::BoundaryAdaptedGrid, i::Int)
 end
 
 Base.size(grid::BoundaryAdaptedGrid) = (length(grid),)
-Base.step(grid::BoundaryAdaptedGrid) = (grid.xmax - grid.xmin - 2*grid.xstart[end]) / (length(grid) + 1 - 2*length(grid.xstart))
+Base.step(grid::BoundaryAdaptedGrid) = grid.Δx
 
 
 function construct_grid(::MattssonAlmquistVanDerWeide2018Minimal, accuracy_order, xmin, xmax, N)
