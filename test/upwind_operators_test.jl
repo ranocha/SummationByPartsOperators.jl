@@ -91,6 +91,44 @@ D_test_list = vcat(
   end
 end
 
+@testset "Rational Tests" begin
+  N = 21
+  xmin = big(0 // 1)
+  xmax = big((N + 1) // 1)
+
+  # bounded derivative operators
+  for (source, acc_order) in D_test_list
+    Dp_bounded = derivative_operator(source(:plus   ), 1, acc_order, xmin, xmax, N)
+    Dm_bounded = derivative_operator(source(:minus  ), 1, acc_order, xmin, xmax, N)
+    Dc_bounded = derivative_operator(source(:central), 1, acc_order, xmin, xmax, N)
+
+    M = mass_matrix(Dp_bounded)
+    Dp = Matrix(Dp_bounded)
+    Dm = Matrix(Dm_bounded)
+    Dc = Matrix(Dc_bounded)
+    @test Dc == (Dm + Dp) / 2
+
+    # upwind summation by parts
+    res = M * Dp + Dm' * M
+    res[1,1] += 1
+    res[end,end] -= 1
+    @test all(isequal(0), res)
+
+    # derivative accuracy order
+    for D in (Dp_bounded, Dm_bounded, Dc_bounded)
+      x = grid(D)
+      interior = length(D.coefficients.left_boundary)+1:N-length(D.coefficients.right_boundary)-1
+      @test all(isequal(0), D * x.^0)
+      for k in 1:acc_order÷2
+        @test D * x.^k == k .* x.^(k-1)
+      end
+      for k in acc_order÷2+1:acc_order
+        @test (D * x.^k)[interior] == (k .* x.^(k-1))[interior]
+      end
+    end
+  end
+end
+
 @testset "UpwindOperators" begin
   N = 21
   xmin = 0.
