@@ -9,21 +9,21 @@ experiment with new operators given in matrix form.
 
 An instance of this type can be constructed by passing the endpoints
 `xmin`, `xmax` of the desired grid as well as the `nodes`, `weights`, and the
-derivative operator `D::Matrix` on a reference interval, assuming that the
+derivative operator `D::AbstractMatrix` on a reference interval, assuming that the
 `nodes` contain the boundary points of the reference interval. `source` is
 the source of coefficients and can be `nothing` for experimentation.
 """
-@auto_hash_equals struct MatrixDerivativeOperator{T, SourceOfCoefficients} <: AbstractNonperiodicDerivativeOperator{T}
+@auto_hash_equals struct MatrixDerivativeOperator{T, Dtype <: AbstractMatrix{T}, SourceOfCoefficients} <: AbstractNonperiodicDerivativeOperator{T}
   grid::Vector{T}
   weights::Vector{T}
-  D::Matrix{T}
+  D::Dtype
   accuracy_order::Int
   source::SourceOfCoefficients
 
   function MatrixDerivativeOperator(xmin::T, xmax::T,
                                     nodes::Vector{T},
                                     weights::Vector{T},
-                                    D::Matrix{T},
+                                    D::AbstractMatrix{T},
                                     accuracy_order::Int,
                                     source::SourceOfCoefficients) where {T <: Real, SourceOfCoefficients}
       # The `nodes`, `weights`, and `D` are given on a reference interval.
@@ -33,7 +33,7 @@ the source of coefficients and can be `nothing` for experimentation.
       grid = (nodes .- first(nodes)) ./ jac .+ xmin
       Δx = inv(jac)
 
-      new{T, SourceOfCoefficients}(grid, Δx * weights, jac * D, accuracy_order, source)
+      new{T, typeof(D), SourceOfCoefficients}(grid, Δx * weights, jac * D, accuracy_order, source)
   end
 end
 
