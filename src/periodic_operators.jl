@@ -527,6 +527,150 @@ function periodic_derivative_coefficients(source::Holoborodko2008, derivative_or
     PeriodicDerivativeCoefficients(lower_coef, central_coef, upper_coef, mode, derivative_order, accuracy_order, source)
 end
 
+"""
+    LanczosLowNoice()
+
+Coefficients of the periodic operators given in
+- Holoborodko (2008)
+  Smooth Noise Robust Differentiators.
+  http://www.holoborodko.com/pavel/numerical-methods/numerical-derivative/lanczos-low-noise-differentiators/
+"""
+struct LanczosLowNoice <: SourceOfCoefficients end
+
+function Base.show(io::IO, source::LanczosLowNoice)
+    if get(io, :compact, false)
+        summary(io, source)
+    else
+        print(io,
+            "  LanczosLowNoice",
+            "  Holoborodko (2008) \n",
+            "  Smooth Noise Robust Differentiators. \n",
+            "  http://www.holoborodko.com/pavel/numerical-methods/numerical-derivative/lanczos-low-noice-differentiators/")
+    end
+end
+
+"""
+    periodic_derivative_coefficients(source::LanczosLowNoice, derivative_order, accuracy_order;
+                                     T=Float64, mode=FastMode(),
+                                     stencil_width=accuracy_order+3)
+
+Create the `PeriodicDerivativeCoefficients` approximating the `derivative_order`-th
+derivative with an order of accuracy `accuracy_order` and scalar type `T` given
+by [`Holoborodko2008`](@ref) for Lanczos low noice filters
+The evaluation of the derivative can be parallelized using threads by choosing
+mode=ThreadedMode()`.
+"""
+function periodic_derivative_coefficients(source::LanczosLowNoice, derivative_order, accuracy_order;
+                                          T=Float64, mode=FastMode(),
+                                          stencil_width=accuracy_order+3)
+    method_exists = true
+    if derivative_order == 1
+        if accuracy_order == 2
+            if stencil_width == 5
+                lower_coef = SVector{2, T}([
+                    -1//10, -2//10
+                ])
+                upper_coef = -lower_coef
+                central_coef = T(0)
+            elseif stencil_width == 7
+                lower_coef = SVector{3, T}([
+                    -1//28, -2//28, -3//28
+                ])
+                upper_coef = -lower_coef
+                central_coef = T(0)
+            elseif stencil_width == 9
+                lower_coef = SVector{4, T}([
+                    -1//60, -2//60, -3//60, -4//60
+                ])
+                upper_coef = -lower_coef
+                central_coef = T(0)
+            elseif stencil_width == 11
+                lower_coef = SVector{5, T}([
+                    -1//110, -2//110, -3//110, -4//110, -5//110
+                ])
+                upper_coef = -lower_coef
+                central_coef = T(0)
+            else
+                method_exists = false
+            end
+        elseif accuracy_order == 4
+            if stencil_width == 7
+                lower_coef = SVector{3, T}([
+                    -58//252, -67//252, 22//252
+                ])
+                upper_coef = -lower_coef
+                central_coef = T(0)
+            elseif stencil_width == 9
+                lower_coef = SVector{4, T}([
+                    -126//1188, -193//1188, -142//1188, 86//1188
+                ])
+                upper_coef = -lower_coef
+                central_coef = T(0)
+            elseif stencil_width == 11
+                lower_coef = SVector{5, T}([
+                    296//5148, -503//5148, -532//5148, -294//5148, 300//5148
+                ])
+                upper_coef = -lower_coef
+                central_coef = T(0)
+            else
+                method_exists = false
+            end
+        else
+            method_exists = false
+        end
+    elseif derivative_order == 2
+        #=if accuracy_order == 2
+            if stencil_width == 5
+                lower_coef = SVector{2, T}([
+                    0, 1//4
+                ])
+                upper_coef = lower_coef
+                central_coef = T(-2//4)
+            elseif stencil_width == 7
+                lower_coef = SVector{3, T}([
+                    -1//16, 2//16, 1//16
+                ])
+                upper_coef = lower_coef
+                central_coef = T(-4//16)
+            elseif stencil_width == 9
+                lower_coef = SVector{4, T}([
+                    -4//64, 4//64, 4//64, 1//64
+                ])
+                upper_coef = lower_coef
+                central_coef = T(-10//64)
+            else
+                method_exists = false
+            end
+        elseif accuracy_order == 4
+            if stencil_width == 7
+                lower_coef = SVector{3, T}([
+                    1//12, 5//12, -1//12
+                ])
+                upper_coef = lower_coef
+                central_coef = T(-10//12)
+            elseif stencil_width == 9
+                lower_coef = SVector{4, T}([
+                    -12//192, 52//192, 12//192, -7//192
+                ])
+                upper_coef = lower_coef
+                central_coef = T(-90//192)
+            else
+                method_exists = false
+            end
+        else
+            method_exists = false
+        end
+        =#
+        method_exists = false
+    else
+        method_exists = false
+    end
+    if method_exists == false
+        throw(ArgumentError("Method with derivative_order=$derivative_order, accuracy_order=$accuracy_order, stencil_width=$stencil_width not implemented/derived."))
+    end
+
+    PeriodicDerivativeCoefficients(lower_coef, central_coef, upper_coef, mode, derivative_order, accuracy_order, source)
+end
 
 """
     PeriodicDerivativeOperator
