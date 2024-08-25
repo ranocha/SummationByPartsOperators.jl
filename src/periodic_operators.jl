@@ -528,39 +528,39 @@ function periodic_derivative_coefficients(source::Holoborodko2008, derivative_or
 end
 
 """
-    LanczosLowNoice()
+    LanczosLowNoise()
 
 Coefficients of the periodic operators given in
 - Holoborodko (2008)
   Smooth Noise Robust Differentiators.
   http://www.holoborodko.com/pavel/numerical-methods/numerical-derivative/lanczos-low-noise-differentiators/
 """
-struct LanczosLowNoice <: SourceOfCoefficients end
+struct LanczosLowNoise <: SourceOfCoefficients end
 
-function Base.show(io::IO, source::LanczosLowNoice)
+function Base.show(io::IO, source::LanczosLowNoise)
     if get(io, :compact, false)
         summary(io, source)
     else
         print(io,
-            "  LanczosLowNoice",
+            "  LanczosLowNoise",
             "  Holoborodko (2008) \n",
             "  Smooth Noise Robust Differentiators. \n",
-            "  http://www.holoborodko.com/pavel/numerical-methods/numerical-derivative/lanczos-low-noice-differentiators/")
+            "  http://www.holoborodko.com/pavel/numerical-methods/numerical-derivative/lanczos-low-Noise-differentiators/")
     end
 end
 
 """
-    periodic_derivative_coefficients(source::LanczosLowNoice, derivative_order, accuracy_order;
+    periodic_derivative_coefficients(source::LanczosLowNoise, derivative_order, accuracy_order;
                                      T=Float64, mode=FastMode(),
                                      stencil_width=accuracy_order+3)
 
 Create the `PeriodicDerivativeCoefficients` approximating the `derivative_order`-th
 derivative with an order of accuracy `accuracy_order` and scalar type `T` given
-by [`Holoborodko2008`](@ref) for Lanczos low noice filters
+by [`Holoborodko2008`](@ref) for Lanczos low Noise filters
 The evaluation of the derivative can be parallelized using threads by choosing
 mode=ThreadedMode()`.
 """
-function periodic_derivative_coefficients(source::LanczosLowNoice, derivative_order, accuracy_order;
+function periodic_derivative_coefficients(source::LanczosLowNoise, derivative_order, accuracy_order;
                                           T=Float64, mode=FastMode(),
                                           stencil_width=accuracy_order+3)
     method_exists = true

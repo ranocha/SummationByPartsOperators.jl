@@ -977,7 +977,7 @@ let T = Float32
                                          xmin, xmax, N, stencil_width=13)
 end
 
-# Robust method LanczosLowNoice
+# Robust method LanczosLowNoise
 let T = Float32
     xmin = one(T)
     xmax = 2*one(T)
@@ -998,7 +998,7 @@ let T = Float32
     der_order = 1
     acc_order = 2
     for stencil_width in 5:2:11
-        D = periodic_derivative_operator(LanczosLowNoice(), der_order, acc_order,
+        D = periodic_derivative_operator(LanczosLowNoise(), der_order, acc_order,
                                          xmin, xmax, N, stencil_width=stencil_width)
         println(devnull, D)
         @test derivative_order(D) == der_order
@@ -1013,14 +1013,14 @@ let T = Float32
         mul!(res, D, x2)
         @test all(i->res[i] ≈ 2*x1[i], stencil_width:length(res)-stencil_width)
     end
-    @test_throws ArgumentError D = periodic_derivative_operator(LanczosLowNoice(), der_order, acc_order,
+    @test_throws ArgumentError D = periodic_derivative_operator(LanczosLowNoise(), der_order, acc_order,
                                          xmin, xmax, N, stencil_width=3)
-    @test_throws ArgumentError D = periodic_derivative_operator(LanczosLowNoice(), der_order, acc_order,
+    @test_throws ArgumentError D = periodic_derivative_operator(LanczosLowNoise(), der_order, acc_order,
                                          xmin, xmax, N, stencil_width=13)
 
     acc_order = 4
     for stencil_width in 7:2:11
-        D = periodic_derivative_operator(LanczosLowNoice(), der_order, acc_order,
+        D = periodic_derivative_operator(LanczosLowNoise(), der_order, acc_order,
                                          xmin, xmax, N, stencil_width=stencil_width)
         println(devnull, D)
         @test derivative_order(D) == der_order
@@ -1039,9 +1039,9 @@ let T = Float32
         mul!(res, D, x4)
         @test all(i->res[i] ≈ 4*x3[i],  stencil_width:length(res)-stencil_width)
     end
-    @test_throws ArgumentError D = periodic_derivative_operator(LanczosLowNoice(), der_order, acc_order,
+    @test_throws ArgumentError D = periodic_derivative_operator(LanczosLowNoise(), der_order, acc_order,
                                          xmin, xmax, N, stencil_width=5)
-    @test_throws ArgumentError D = periodic_derivative_operator(LanczosLowNoice(), der_order, acc_order,
+    @test_throws ArgumentError D = periodic_derivative_operator(LanczosLowNoise(), der_order, acc_order,
                                          xmin, xmax, N, stencil_width=13)
 end
 
