@@ -618,53 +618,7 @@ function periodic_derivative_coefficients(source::LanczosLowNoise, derivative_or
         else
             method_exists = false
         end
-    elseif derivative_order == 2
-        #=if accuracy_order == 2
-            if stencil_width == 5
-                lower_coef = SVector{2, T}([
-                    0, 1//4
-                ])
-                upper_coef = lower_coef
-                central_coef = T(-2//4)
-            elseif stencil_width == 7
-                lower_coef = SVector{3, T}([
-                    -1//16, 2//16, 1//16
-                ])
-                upper_coef = lower_coef
-                central_coef = T(-4//16)
-            elseif stencil_width == 9
-                lower_coef = SVector{4, T}([
-                    -4//64, 4//64, 4//64, 1//64
-                ])
-                upper_coef = lower_coef
-                central_coef = T(-10//64)
-            else
-                method_exists = false
-            end
-        elseif accuracy_order == 4
-            if stencil_width == 7
-                lower_coef = SVector{3, T}([
-                    1//12, 5//12, -1//12
-                ])
-                upper_coef = lower_coef
-                central_coef = T(-10//12)
-            elseif stencil_width == 9
-                lower_coef = SVector{4, T}([
-                    -12//192, 52//192, 12//192, -7//192
-                ])
-                upper_coef = lower_coef
-                central_coef = T(-90//192)
-            else
-                method_exists = false
-            end
-        else
-            method_exists = false
-        end
-        =#
-        method_exists = false
-    else
-        method_exists = false
-    end
+        
     if method_exists == false
         throw(ArgumentError("Method with derivative_order=$derivative_order, accuracy_order=$accuracy_order, stencil_width=$stencil_width not implemented/derived."))
     end
