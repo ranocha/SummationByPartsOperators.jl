@@ -618,7 +618,7 @@ function periodic_derivative_coefficients(source::LanczosLowNoise, derivative_or
         else
             method_exists = false
         end
-        
+    end
     if method_exists == false
         throw(ArgumentError("Method with derivative_order=$derivative_order, accuracy_order=$accuracy_order, stencil_width=$stencil_width not implemented/derived."))
     end
