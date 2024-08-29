@@ -162,7 +162,7 @@ export UniformMesh1D, UniformPeriodicMesh1D
 export couple_continuously, couple_discontinuously
 export mul!
 
-export Fornberg1998, Holoborodko2008, BeljaddLeFlochMishraParés2017
+export Fornberg1998, Holoborodko2008, LanczosLowNoise, BeljaddLeFlochMishraParés2017
 export MattssonNordström2004, MattssonSvärdNordström2004, MattssonSvärdShoeybi2008,
        Mattsson2012, Mattsson2014,
        MattssonAlmquistCarpenter2014Extended, MattssonAlmquistCarpenter2014Optimal,
