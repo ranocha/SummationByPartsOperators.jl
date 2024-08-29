@@ -554,10 +554,10 @@ end
                                      stencil_width=accuracy_order+3)
 
 Create the `PeriodicDerivativeCoefficients` approximating the `derivative_order`-th
-derivative with an order of accuracy `accuracy_order` and scalar type `T` given
-by [`Holoborodko2008`](@ref) for Lanczos low Noise filters
+derivative with an order of accuracy `accuracy_order` and scalar type `T` for
+(super) Lanczos low Noise filters, see [`LanczosLowNoise`](@ref).
 The evaluation of the derivative can be parallelized using threads by choosing
-mode=ThreadedMode()`.
+`mode = ThreadedMode()`.
 """
 function periodic_derivative_coefficients(source::LanczosLowNoise,
                                           derivative_order,
