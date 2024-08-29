@@ -560,7 +560,9 @@ by [`Holoborodko2008`](@ref) for Lanczos low Noise filters
 The evaluation of the derivative can be parallelized using threads by choosing
 mode=ThreadedMode()`.
 """
-function periodic_derivative_coefficients(source::LanczosLowNoise, derivative_order, accuracy_order;
+function periodic_derivative_coefficients(source::LanczosLowNoise,
+                                          derivative_order,
+                                          accuracy_order;
                                           T=Float64, mode=FastMode(),
                                           stencil_width=accuracy_order+3)
     method_exists = true
@@ -608,7 +610,7 @@ function periodic_derivative_coefficients(source::LanczosLowNoise, derivative_or
                 central_coef = T(0)
             elseif stencil_width == 11
                 lower_coef = SVector{5, T}([
-                    296//5148, -503//5148, -532//5148, -294//5148, 300//5148
+                    -296//5148, -503//5148, -532//5148, -294//5148, 300//5148
                 ])
                 upper_coef = -lower_coef
                 central_coef = T(0)
@@ -912,6 +914,41 @@ end
         mode = _parallel_to_mode(mode)
     end
     periodic_derivative_operator(derivative_order, accuracy_order, grid, left_offset, mode)
+end
+
+"""
+    periodic_derivative_operator(source::LanczosLowNoise;
+                                 derivative_order = 1,
+                                 accuracy_order,
+                                 stencil_width = accuracy_order + 3,
+                                 xmin, xmax, N,
+                                 mode = FastMode())
+
+Create a `PeriodicDerivativeOperator` approximating the `derivative_order`-th
+derivative on a uniform grid between `xmin` and `xmax` with `N` grid points up
+to order of accuracy `accuracy_order` where `stencil_width` determines the
+number of nodes used for the finite difference stencil.
+The evaluation of the derivative can be parallelized using threads by choosing
+`mode = ThreadedMode()`.
+
+## Examples
+
+```jldoctest
+julia>
+```
+"""
+function periodic_derivative_operator(source::LanczosLowNoise;
+                                      derivative_order = 1,
+                                      accuracy_order,
+                                      stencil_width = accuracy_order + 3,
+                                      xmin, xmax, N,
+                                      mode = FastMode())
+    grid = range(xmin, stop = xmax, length = N + 1) # N includes two identical boundary nodes
+    coefficients = periodic_derivative_coefficients(source, derivative_order, accuracy_order;
+                                                    stencil_width = stencil_width,
+                                                    T = eltype(grid),
+                                                    mode = mode)
+    PeriodicDerivativeOperator(coefficients, grid)
 end
 
 
