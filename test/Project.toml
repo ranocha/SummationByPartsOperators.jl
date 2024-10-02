@@ -15,7 +15,7 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 [compat]
 Aqua = "0.8"
 BandedMatrices = "0.15, 0.16, 0.17, 1"
-DiffEqCallbacks = "2, 3"
+DiffEqCallbacks = "2, 3, 4"
 ForwardDiff = "0.10"
 Optim = "1"
 OrdinaryDiffEq = "5, 6"
