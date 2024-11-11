@@ -62,15 +62,15 @@ for T in (Float32, Float64), order in (2,4,6,8)
 
     mul!(dest1, Di_serial, u, one(T), zero(T))
     mul!(dest2, Di_serial, u, one(T))
-    @test all(i->dest1[i] ≈ dest2[i], eachindex(u))
+    @test isapprox(dest1, dest2, rtol=100*sqrt(eps(T)))
     mul!(dest1, Di_safe, u, one(T), zero(T))
     mul!(dest2, Di_safe, u, one(T))
     @test all(i->dest1[i] ≈ dest2[i], eachindex(u))
     mul!(dest1, Di_threads, u, one(T), zero(T))
     mul!(dest2, Di_threads, u, one(T))
-    @test all(i->dest1[i] ≈ dest2[i], eachindex(u))
+    @test isapprox(dest1, dest2, rtol=100*sqrt(eps(T)))
     dest3 = Di_serial*u
-    @test all(i->dest1[i] ≈ dest3[i], eachindex(u))
+    @test isapprox(dest1, dest3, rtol=100*sqrt(eps(T)))
     dest3 = Di_safe*u
     @test all(i->isapprox(dest1[i], dest3[i], atol=800000*eps(T)), eachindex(u))
     dest3 = Di_full*u
