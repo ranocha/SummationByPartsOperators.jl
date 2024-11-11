@@ -63,14 +63,17 @@ for T in (Float32, Float64), order in (2,4,6,8)
     mul!(dest1, Di_serial, u, one(T), zero(T))
     mul!(dest2, Di_serial, u, one(T))
     @test all(i->dest1[i] ≈ dest2[i], eachindex(u))
+    @info "FIXME: dissipation operators test 1" dest1 dest2 dest1-dest2
     mul!(dest1, Di_safe, u, one(T), zero(T))
     mul!(dest2, Di_safe, u, one(T))
     @test all(i->dest1[i] ≈ dest2[i], eachindex(u))
     mul!(dest1, Di_threads, u, one(T), zero(T))
     mul!(dest2, Di_threads, u, one(T))
     @test all(i->dest1[i] ≈ dest2[i], eachindex(u))
+    @info "FIXME: dissipation operators test 2" dest1 dest2 dest1-dest2
     dest3 = Di_serial*u
     @test all(i->dest1[i] ≈ dest3[i], eachindex(u))
+    @info "FIXME: dissipation operators test 3" dest1 dest3 dest1-dest3
     dest3 = Di_safe*u
     @test all(i->isapprox(dest1[i], dest3[i], atol=800000*eps(T)), eachindex(u))
     dest3 = Di_full*u
