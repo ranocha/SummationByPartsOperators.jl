@@ -37,12 +37,8 @@ for T in (Float32, Float64), acc_order in (2,4,6,8), diss_order in (2,4,6,8), D_
     mul!(dest2, D_full, u)
     @test all(i->isapprox(dest1[i], dest2[i], atol=5000*eps(T)), eachindex(u))
     mul!(dest2, D_sparse, u)
-    @test all(i->isapprox(dest1[i], dest2[i], atol=5000*eps(T)), eachindex(u))
-    @info "FIXME: banded matrices test 1" T acc_order diss_order D_source Di_source dest1 dest2 dest1-dest2 extrema(dest1-dest2) extrema(abs.(dest1-dest2)./abs.(dest1))
     @test dest1 ≈ dest2
     mul!(dest2, D_banded, u)
-    @test all(i->isapprox(dest1[i], dest2[i], atol=5000*eps(T)), eachindex(u))
-    @info "FIXME: banded matrices test 1" T acc_order diss_order D_source Di_source dest1 dest2 dest1-dest2 extrema(dest1-dest2) extrema(abs.(dest1-dest2)./abs.(dest1))
     @test dest1 ≈ dest2
 
 
