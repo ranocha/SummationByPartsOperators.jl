@@ -44,7 +44,7 @@ concurrency:
 jobs:
   test:
     if: "!contains(github.event.head_commit.message, 'skip ci')"
-    name: ${{ matrix.sbp_test }} - Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
+    name: ${{ matrix.sbp_test }} - Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ github.event_name }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -57,26 +57,21 @@ jobs:
           - ubuntu-latest
           - macOS-latest
           - windows-latest
-        arch:
-          - x64
         sbp_test:
           - part1
           - part2
         include:
           - version: '1.8'
             os: ubuntu-latest
-            arch: x64
             sbp_test: part1
           - version: '1.8'
             os: ubuntu-latest
-            arch: x64
             sbp_test: part2
     steps:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@v2
         with:
           version: ${{ matrix.version }}
-          arch: ${{ matrix.arch }}
       - uses: julia-actions/cache@v2
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
@@ -100,7 +95,7 @@ jobs:
       # - uses: coverallsapp/github-action@master
       #   with:
       #     github-token: ${{ secrets.GITHUB_TOKEN }}
-      #     flag-name: run-${{ matrix.sbp_test }}-${{ matrix.os }}-${{ matrix.version }}-${{ matrix.arch }}-${{ github.run_id }}
+      #     flag-name: run-${{ join(matrix.*, '-') }}
       #     parallel: true
       #     path-to-lcov: ./lcov.info
       # Instead, we use a more tedious approach:
@@ -109,11 +104,11 @@ jobs:
       # - Upload only the merged coverage report to Coveralls
       - shell: bash
         run: |
-          cp ./lcov.info ./lcov-${{ matrix.sbp_test }}-${{ matrix.os }}-${{ matrix.version }}-${{ matrix.arch }}.info
+          cp ./lcov.info ./lcov-${{ matrix.sbp_test }}-${{ matrix.os }}-${{ matrix.version }}.info
       - uses: actions/upload-artifact@v4
         with:
-          name: lcov-${{ matrix.sbp_test }}-${{ matrix.os }}-${{ matrix.version }}-${{ matrix.arch }}
-          path: ./lcov-${{ matrix.sbp_test }}-${{ matrix.os }}-${{ matrix.version }}-${{ matrix.arch }}.info
+          name: lcov-${{ matrix.sbp_test }}-${{ matrix.os }}-${{ matrix.version }}
+          path: ./lcov-${{ matrix.sbp_test }}-${{ matrix.os }}-${{ matrix.version }}.info
 
   finish:
     needs: test
