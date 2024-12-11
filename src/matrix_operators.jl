@@ -53,7 +53,7 @@ Base.eltype(D::MatrixDerivativeOperator{T}) where {T} = T
 function scale_by_mass_matrix!(u::AbstractVector, D::MatrixDerivativeOperator, factor=true)
     Base.require_one_based_indexing(u)
     @boundscheck begin
-        length(u) == size(D, 2) || throw(DimensionMismatch())
+        length(u) == size(D, 2) || throw(DimensionMismatch("sizes of input vector and operator do not match"))
     end
 
     @inbounds @simd for i in eachindex(u, D.weights)
@@ -66,7 +66,7 @@ end
 function scale_by_inverse_mass_matrix!(u::AbstractVector, D::MatrixDerivativeOperator, factor=true)
     Base.require_one_based_indexing(u)
     @boundscheck begin
-        length(u) == size(D, 2) || throw(DimensionMismatch())
+        length(u) == size(D, 2) || throw(DimensionMismatch("sizes of input vector and operator do not match"))
     end
 
     @inbounds @simd for i in eachindex(u, D.weights)

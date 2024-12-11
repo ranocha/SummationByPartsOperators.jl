@@ -111,7 +111,7 @@ Base.eltype(D::Union{LegendreDerivativeOperator{T},LegendreSecondDerivativeOpera
 function scale_by_mass_matrix!(u::AbstractVector, D::Union{LegendreDerivativeOperator,LegendreSecondDerivativeOperator}, factor=true)
     Base.require_one_based_indexing(u)
     @boundscheck begin
-        length(u) == size(D, 2) || throw(DimensionMismatch())
+        length(u) == size(D, 2) || throw(DimensionMismatch("sizes of input vector and operator do not match"))
     end
     @unpack Δx, basis = D
 
@@ -125,7 +125,7 @@ end
 function scale_by_inverse_mass_matrix!(u::AbstractVector, D::Union{LegendreDerivativeOperator,LegendreSecondDerivativeOperator}, factor=true)
     Base.require_one_based_indexing(u)
     @boundscheck begin
-        length(u) == size(D, 2) || throw(DimensionMismatch())
+        length(u) == size(D, 2) || throw(DimensionMismatch("sizes of input vector and operator do not match"))
     end
     @unpack Δx, basis = D
 

@@ -134,7 +134,7 @@ end
 
 function integrate(func, u::AbstractVector, D::FourierDerivativeOperator)
     @boundscheck begin
-        length(u) == length(grid(D)) || throw(DimensionMismatch())
+        length(u) == length(grid(D)) || throw(DimensionMismatch("sizes of input vector and operator do not match"))
     end
     @unpack Δx = D
 
@@ -152,7 +152,7 @@ end
 function scale_by_mass_matrix!(u::AbstractVector, D::FourierDerivativeOperator)
     Base.require_one_based_indexing(u)
     @boundscheck begin
-        length(u) == size(D, 2) || throw(DimensionMismatch())
+        length(u) == size(D, 2) || throw(DimensionMismatch("sizes of input vector and operator do not match"))
     end
     @unpack Δx = D
 
@@ -162,7 +162,7 @@ end
 function scale_by_inverse_mass_matrix!(u::AbstractVector, D::FourierDerivativeOperator)
     Base.require_one_based_indexing(u)
     @boundscheck begin
-        length(u) == size(D, 2) || throw(DimensionMismatch())
+        length(u) == size(D, 2) || throw(DimensionMismatch("sizes of input vector and operator do not match"))
     end
     @unpack Δx = D
 

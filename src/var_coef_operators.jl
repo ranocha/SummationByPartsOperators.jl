@@ -111,7 +111,7 @@ end
 function scale_by_mass_matrix!(u::AbstractVector, D::Union{DerivativeOperator,VarCoefDerivativeOperator}, factor=true)
     Base.require_one_based_indexing(u)
     @boundscheck begin
-        length(u) == size(D, 2) || throw(DimensionMismatch())
+        length(u) == size(D, 2) || throw(DimensionMismatch("sizes of input vector and operator do not match"))
     end
     @unpack Δx = D
     @unpack left_weights, right_weights = D.coefficients
@@ -132,7 +132,7 @@ end
 function scale_by_inverse_mass_matrix!(u::AbstractVector, D::Union{DerivativeOperator,VarCoefDerivativeOperator}, factor=true)
     Base.require_one_based_indexing(u)
     @boundscheck begin
-        length(u) == size(D, 2) || throw(DimensionMismatch())
+        length(u) == size(D, 2) || throw(DimensionMismatch("sizes of input vector and operator do not match"))
     end
     @unpack Δx = D
     @unpack left_weights, right_weights = D.coefficients
