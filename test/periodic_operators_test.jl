@@ -44,8 +44,10 @@ let T=Float32
     u = sinpi.(x1)
     v = copy(u)
     scale_by_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ M * u
     scale_by_inverse_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ u
 
     accuracy_order = 4
@@ -75,8 +77,10 @@ let T=Float32
     u = sinpi.(x1)
     v = copy(u)
     scale_by_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ M * u
     scale_by_inverse_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ u
 
     accuracy_order = 6
@@ -110,8 +114,10 @@ let T=Float32
     u = sinpi.(x1)
     v = copy(u)
     scale_by_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ M * u
     scale_by_inverse_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ u
 
     # second derivative operators
@@ -143,8 +149,10 @@ let T=Float32
     u = sinpi.(x1)
     v = copy(u)
     scale_by_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ M * u
     scale_by_inverse_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ u
 
     accuracy_order = 4
@@ -174,8 +182,10 @@ let T=Float32
     u = sinpi.(x1)
     v = copy(u)
     scale_by_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ M * u
     scale_by_inverse_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ u
 
     accuracy_order = 6
@@ -196,14 +206,16 @@ let T=Float32
     mul!(res, D, x5); @test norm((res - 20 .* x3)[accuracy_order:end-accuracy_order], Inf) < 50000N*eps(T)
     mul!(res, D, x6); @test norm((res - 30 .* x4)[accuracy_order:end-accuracy_order], Inf) < 52000N*eps(T)
     mul!(res, D, x7); @test norm((res - 42 .* x5)[accuracy_order:end-accuracy_order], Inf) < 92000N*eps(T)
-        # mass matrix scaling
-        M = @inferred mass_matrix(D)
-        u = sinpi.(x1)
-        v = copy(u)
-        scale_by_mass_matrix!(v, D)
-        @test v ≈ M * u
-        scale_by_inverse_mass_matrix!(v, D)
-        @test v ≈ u
+    # mass matrix scaling
+    M = @inferred mass_matrix(D)
+    u = sinpi.(x1)
+    v = copy(u)
+    scale_by_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
+    @test v ≈ M * u
+    scale_by_inverse_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
+    @test v ≈ u
 
     tmp = D * x7
     @test typeof(tmp) == typeof(res)
@@ -230,8 +242,10 @@ let T=Float32
     u = sinpi.(x1)
     v = copy(u)
     scale_by_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ M * u
     scale_by_inverse_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ u
 
     accuracy_order = 4
@@ -255,8 +269,10 @@ let T=Float32
     u = sinpi.(x1)
     v = copy(u)
     scale_by_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ M * u
     scale_by_inverse_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ u
 
     accuracy_order = 6
@@ -334,8 +350,10 @@ let T = Float64
     u = sinpi.(x1)
     v = copy(u)
     scale_by_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ M * u
     scale_by_inverse_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ u
 
     accuracy_order = 4
@@ -363,8 +381,10 @@ let T = Float64
     u = sinpi.(x1)
     v = copy(u)
     scale_by_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ M * u
     scale_by_inverse_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ u
 
     accuracy_order = 6
@@ -415,8 +435,10 @@ let T = Float64
     u = sinpi.(x1)
     v = copy(u)
     scale_by_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ M * u
     scale_by_inverse_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ u
 
     accuracy_order = 4
@@ -438,8 +460,10 @@ let T = Float64
     u = sinpi.(x1)
     v = copy(u)
     scale_by_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ M * u
     scale_by_inverse_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ u
 
     accuracy_order = 6
@@ -482,8 +506,10 @@ let T = Float64
     u = sinpi.(x1)
     v = copy(u)
     scale_by_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ M * u
     scale_by_inverse_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ u
 
     accuracy_order = 4
@@ -505,8 +531,10 @@ let T = Float64
     u = sinpi.(x1)
     v = copy(u)
     scale_by_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ M * u
     scale_by_inverse_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ u
 
     accuracy_order = 6

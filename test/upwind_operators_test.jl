@@ -85,8 +85,10 @@ D_test_list = vcat(
     u = sinpi.(x1)
     v = copy(u)
     scale_by_mass_matrix!(v, D_periodic)
+    @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D_periodic)
     @test v ≈ M * u
     scale_by_inverse_mass_matrix!(v, D_periodic)
+    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D_periodic)
     @test v ≈ u
   end
 end

@@ -101,10 +101,14 @@ using SummationByPartsOperators
     u = sinpi.(x)
     u_reference = copy(u)
     SummationByPartsOperators.scale_by_mass_matrix!(u, Dm)
+    @test_throws DimensionMismatch scale_by_mass_matrix!(@view(u[(begin + 1):(end - 1)]), Dm)
     SummationByPartsOperators.scale_by_mass_matrix!(u_reference, D_reference.minus)
+    @test_throws DimensionMismatch scale_by_mass_matrix!(@view(u_reference[(begin + 1):(end - 1)]), D_reference.minus)
     @test u ≈ u_reference
     SummationByPartsOperators.scale_by_inverse_mass_matrix!(u, Dm)
+    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(u[(begin + 1):(end - 1)]), Dm)
     SummationByPartsOperators.scale_by_inverse_mass_matrix!(u_reference, D_reference.minus)
+    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(u_reference[(begin + 1):(end - 1)]), D_reference.minus)
     @test u ≈ u_reference
 
     @test SummationByPartsOperators.get_weight(Dm, 1) == left_boundary_weight(D)
@@ -212,10 +216,14 @@ end
     u = sinpi.(x)
     u_reference = copy(u)
     SummationByPartsOperators.scale_by_mass_matrix!(u, Dm)
+    @test_throws DimensionMismatch scale_by_mass_matrix!(@view(u[(begin + 1):(end - 1)]), Dm)
     SummationByPartsOperators.scale_by_mass_matrix!(u_reference, D_reference.minus)
+    @test_throws DimensionMismatch scale_by_mass_matrix!(@view(u_reference[(begin + 1):(end - 1)]), D_reference.minus)
     @test u ≈ u_reference
     SummationByPartsOperators.scale_by_inverse_mass_matrix!(u, Dm)
+    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(u[(begin + 1):(end - 1)]), Dm)
     SummationByPartsOperators.scale_by_inverse_mass_matrix!(u_reference, D_reference.minus)
+    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(u_reference[(begin + 1):(end - 1)]), D_reference.minus)
     @test u ≈ u_reference
 
     @test SummationByPartsOperators.get_weight(Dm, 1) == left_boundary_weight(D)

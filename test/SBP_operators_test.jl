@@ -70,8 +70,10 @@ for source in D_test_list, T in (Float32,Float64)
         u = sinpi.(x1)
         v = copy(u)
         scale_by_mass_matrix!(v, D)
+        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
         @test v ≈ M * u
         scale_by_inverse_mass_matrix!(v, D)
+        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
         @test v ≈ u
     end
 
@@ -135,8 +137,10 @@ for source in D_test_list, T in (Float32,Float64)
         u = sinpi.(x1)
         v = copy(u)
         scale_by_mass_matrix!(v, D)
+        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
         @test v ≈ M * u
         scale_by_inverse_mass_matrix!(v, D)
+        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
         @test v ≈ u
     end
 
@@ -206,8 +210,10 @@ for source in D_test_list, T in (Float32,Float64)
         u = sinpi.(x1)
         v = copy(u)
         scale_by_mass_matrix!(v, D)
+        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
         @test v ≈ M * u
         scale_by_inverse_mass_matrix!(v, D)
+        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
         @test v ≈ u
     end
 
@@ -275,8 +281,10 @@ for source in D_test_list, T in (Float32,Float64)
         u = sinpi.(x1)
         v = copy(u)
         scale_by_mass_matrix!(v, D)
+        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
         @test v ≈ M * u
         scale_by_inverse_mass_matrix!(v, D)
+        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
         @test v ≈ u
     end
 
@@ -345,8 +353,10 @@ for source in D_test_list, T in (Float32,Float64)
         u = sinpi.(x1)
         v = copy(u)
         scale_by_mass_matrix!(v, D)
+        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
         @test v ≈ M * u
         scale_by_inverse_mass_matrix!(v, D)
+        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
         @test v ≈ u
     end
 
@@ -412,8 +422,10 @@ for source in D_test_list, T in (Float32,Float64)
         u = sinpi.(x1)
         v = copy(u)
         scale_by_mass_matrix!(v, D)
+        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
         @test v ≈ M * u
         scale_by_inverse_mass_matrix!(v, D)
+        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
         @test v ≈ u
     end
 
@@ -483,8 +495,10 @@ for source in D_test_list, T in (Float32,Float64)
         u = sinpi.(x1)
         v = copy(u)
         scale_by_mass_matrix!(v, D)
+        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
         @test v ≈ M * u
         scale_by_inverse_mass_matrix!(v, D)
+        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
         @test v ≈ u
     end
 
@@ -559,8 +573,10 @@ for source in D_test_list, T in (Float32,Float64)
         u = sinpi.(x1)
         v = copy(u)
         scale_by_mass_matrix!(v, D)
+        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
         @test v ≈ M * u
         scale_by_inverse_mass_matrix!(v, D)
+        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
         @test v ≈ u
     end
 
@@ -625,8 +641,10 @@ end
         u = sinpi.(x1)
         v = copy(u)
         scale_by_mass_matrix!(v, D)
+        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
         @test v ≈ M * u
         scale_by_inverse_mass_matrix!(v, D)
+        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
         @test v ≈ u
     end
 
@@ -690,8 +708,10 @@ end
         u = sinpi.(x1)
         v = copy(u)
         scale_by_mass_matrix!(v, D)
+        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
         @test v ≈ M * u
         scale_by_inverse_mass_matrix!(v, D)
+        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
         @test v ≈ u
     end
 
@@ -760,8 +780,10 @@ end
         u = sinpi.(x1)
         v = copy(u)
         scale_by_mass_matrix!(v, D)
+        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
         @test v ≈ M * u
         scale_by_inverse_mass_matrix!(v, D)
+        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
         @test v ≈ u
     end
 
@@ -835,8 +857,10 @@ end
         u = sinpi.(x1)
         v = copy(u)
         scale_by_mass_matrix!(v, D)
+        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
         @test v ≈ M * u
         scale_by_inverse_mass_matrix!(v, D)
+        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
         @test v ≈ u
     end
 
@@ -910,8 +934,10 @@ end
         u = sinpi.(x1)
         v = copy(u)
         scale_by_mass_matrix!(v, D)
+        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
         @test v ≈ M * u
         scale_by_inverse_mass_matrix!(v, D)
+        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
         @test v ≈ u
     end
 
@@ -985,8 +1011,10 @@ end
         u = sinpi.(x1)
         v = copy(u)
         scale_by_mass_matrix!(v, D)
+        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
         @test v ≈ M * u
         scale_by_inverse_mass_matrix!(v, D)
+        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
         @test v ≈ u
     end
 

@@ -109,25 +109,25 @@ mass_matrix(D::Union{LegendreDerivativeOperator,LegendreSecondDerivativeOperator
 Base.eltype(D::Union{LegendreDerivativeOperator{T},LegendreSecondDerivativeOperator{T}}) where {T} = T
 
 function scale_by_mass_matrix!(u::AbstractVector, D::Union{LegendreDerivativeOperator,LegendreSecondDerivativeOperator}, factor=true)
-    @unpack Δx, basis = D
-    N, _ = size(D)
+    Base.require_one_based_indexing(u)
     @boundscheck begin
-        @argcheck N == length(u)
+        length(u) == size(D, 2) || throw(DimensionMismatch())
     end
+    @unpack Δx, basis = D
 
     @inbounds @simd for i in eachindex(u, basis.weights)
         u[i] = factor * u[i] * (Δx * basis.weights[i])
     end
 
-    u
+    return u
 end
 
 function scale_by_inverse_mass_matrix!(u::AbstractVector, D::Union{LegendreDerivativeOperator,LegendreSecondDerivativeOperator}, factor=true)
-    @unpack Δx, basis = D
-    N, _ = size(D)
+    Base.require_one_based_indexing(u)
     @boundscheck begin
-        @argcheck N == length(u)
+        length(u) == size(D, 2) || throw(DimensionMismatch())
     end
+    @unpack Δx, basis = D
 
     @inbounds @simd for i in eachindex(u, basis.weights)
         u[i] = factor * u[i] / (Δx * basis.weights[i])

@@ -708,7 +708,7 @@ the quadrature rule associated with the periodic derivative operator `D`.
 """
 function integrate(func, u::AbstractVector, D::PeriodicDerivativeOperator)
     @boundscheck begin
-        length(u) == length(grid(D))
+        length(u) == length(grid(D)) || throw(DimensionMismatch())
     end
     @unpack Δx = D
 
@@ -724,6 +724,10 @@ function mass_matrix(D::PeriodicDerivativeOperator)
 end
 
 function scale_by_mass_matrix!(u::AbstractVector, D::PeriodicDerivativeOperator)
+    Base.require_one_based_indexing(u)
+    @boundscheck begin
+        length(u) == size(D, 2) || throw(DimensionMismatch())
+    end
     @unpack Δx = D
 
     u .*= Δx

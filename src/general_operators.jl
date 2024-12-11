@@ -274,7 +274,7 @@ the quadrature rule associated with the derivative operator `D`.
 """
 function integrate(func, u::AbstractVector, D::AbstractPeriodicDerivativeOperator)
     @boundscheck begin
-        length(u) == length(grid(D))
+        length(u) == length(grid(D)) || throw(DimensionMismatch())
     end
     @unpack Δx = D
 
