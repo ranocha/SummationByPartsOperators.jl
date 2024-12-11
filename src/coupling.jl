@@ -324,6 +324,9 @@ end
 
 for (fname, op) in ((:scale_by_mass_matrix!, Base.:*), (:scale_by_inverse_mass_matrix!, Base.:/))
   @eval function $fname(u::AbstractVector, cD::UniformCoupledOperator, factor=true)
+    @boundscheck begin
+        length(u) == length(grid(cD)) || throw(DimensionMismatch("sizes of input vector and operator do not match"))
+    end
     @unpack D, meshgrid = cD
     @unpack mesh, grid = meshgrid
     ymin, ymax = first(grid), last(grid)
