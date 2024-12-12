@@ -33,7 +33,9 @@ using SummationByPartsOperators
           u = sinpi.(x)
           v = copy(u)
           SummationByPartsOperators.scale_by_mass_matrix!(u, cD)
+          @test_throws DimensionMismatch scale_by_mass_matrix!(@view(u[(begin + 1):(end - 1)]), cD)
           SummationByPartsOperators.scale_by_inverse_mass_matrix!(u, cD)
+          @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(u[(begin + 1):(end - 1)]), cD)
           @test u ≈ v
           @test integrate(u, cD) ≈ sum(mass_matrix(cD) * u)
           @test integrate(u->u^2, u, cD) ≈ sum(u' * mass_matrix(cD) * u)
@@ -105,7 +107,9 @@ using SummationByPartsOperators
           u = sinpi.(x)
           v = copy(u)
           SummationByPartsOperators.scale_by_mass_matrix!(u, cD)
+          @test_throws DimensionMismatch scale_by_mass_matrix!(@view(u[(begin + 1):(end - 1)]), cD)
           SummationByPartsOperators.scale_by_inverse_mass_matrix!(u, cD)
+          @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(u[(begin + 1):(end - 1)]), cD)
           @test u ≈ v
           @test integrate(u, cD) ≈ sum(mass_matrix(cD) * u)
           @test integrate(u->u^2, u, cD) ≈ sum(u' * mass_matrix(cD) * u)
@@ -168,7 +172,9 @@ end
             u = sinpi.(x)
             v = copy(u)
             SummationByPartsOperators.scale_by_mass_matrix!(u, cD)
+            @test_throws DimensionMismatch scale_by_mass_matrix!(@view(u[(begin + 1):(end - 1)]), cD)
             SummationByPartsOperators.scale_by_inverse_mass_matrix!(u, cD)
+            @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(u[(begin + 1):(end - 1)]), cD)
             @test u ≈ v
             @test integrate(u, cD) ≈ sum(mass_matrix(cD) * u)
             @test integrate(u->u^2, u, cD) ≈ sum(u' * mass_matrix(cD) * u)
@@ -238,7 +244,9 @@ end
             u = sinpi.(x)
             v = copy(u)
             SummationByPartsOperators.scale_by_mass_matrix!(u, cD)
+            @test_throws DimensionMismatch scale_by_mass_matrix!(@view(u[(begin + 1):(end - 1)]), cD)
             SummationByPartsOperators.scale_by_inverse_mass_matrix!(u, cD)
+            @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(u[(begin + 1):(end - 1)]), cD)
             @test u ≈ v
             @test integrate(u, cD) ≈ sum(mass_matrix(cD) * u)
             @test integrate(u->u^2, u, cD) ≈ sum(u' * mass_matrix(cD) * u)
@@ -302,7 +310,9 @@ end
           u = sinpi.(x)
           v = copy(u)
           SummationByPartsOperators.scale_by_mass_matrix!(u, cD)
+          @test_throws DimensionMismatch scale_by_mass_matrix!(@view(u[(begin + 1):(end - 1)]), cD)
           SummationByPartsOperators.scale_by_inverse_mass_matrix!(u, cD)
+          @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(u[(begin + 1):(end - 1)]), cD)
           @test u ≈ v
           @test integrate(u, cD) ≈ sum(mass_matrix(cD) * u)
           @test integrate(u->u^2, u, cD) ≈ sum(u' * mass_matrix(cD) * u)
@@ -349,7 +359,9 @@ end
           u = sinpi.(x)
           v = copy(u)
           SummationByPartsOperators.scale_by_mass_matrix!(u, cD)
+          @test_throws DimensionMismatch scale_by_mass_matrix!(@view(u[(begin + 1):(end - 1)]), cD)
           SummationByPartsOperators.scale_by_inverse_mass_matrix!(u, cD)
+          @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(u[(begin + 1):(end - 1)]), cD)
           @test u ≈ v
           @test integrate(u, cD) ≈ sum(mass_matrix(cD) * u)
           @test integrate(u->u^2, u, cD) ≈ sum(u' * mass_matrix(cD) * u)

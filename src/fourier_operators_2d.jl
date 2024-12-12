@@ -138,7 +138,7 @@ end
 
 function integrate(func, u::AbstractMatrix, D::FourierDerivativeOperator2D)
     @boundscheck begin
-        length(u) == length(grid(D))
+        length(u) == length(grid(D)) || throw(DimensionMismatch())
     end
     @unpack Δx, Δy = D
 

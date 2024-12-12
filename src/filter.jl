@@ -45,7 +45,7 @@ end
 function (filter::ConstantFilter)(u::AbstractVector, tmp::AbstractVector)
     @unpack coefficients, nodal2modal, modal2nodal = filter
     @boundscheck begin
-        length(coefficients) == length(tmp)
+        length(coefficients) == length(tmp) || throw(DimensionMismatch())
     end
 
     mul!(tmp, nodal2modal, u)
@@ -57,7 +57,7 @@ end
 
 function (filter::ConstantFilter)(u::AbstractMatrix, tmp::AbstractVector)
     @boundscheck begin
-        length(tmp) == size(u,1)
+        length(tmp) == size(u,1) || throw(DimensionMismatch())
     end
 
     for j in Base.OneTo(size(u,2))
@@ -71,7 +71,7 @@ end
 function (filter::ConstantFilter)(u::AbstractMatrix, tmp::AbstractMatrix)
     @unpack coefficients, nodal2modal, modal2nodal = filter
     @boundscheck begin
-        size(tmp) == size(u)
+        size(tmp) == size(u) || throw(DimensionMismatch())
     end
 
     mul!(tmp, nodal2modal, u)

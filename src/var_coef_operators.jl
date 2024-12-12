@@ -109,12 +109,13 @@ function mass_matrix(D::Union{DerivativeOperator,VarCoefDerivativeOperator})
 end
 
 function scale_by_mass_matrix!(u::AbstractVector, D::Union{DerivativeOperator,VarCoefDerivativeOperator}, factor=true)
+    Base.require_one_based_indexing(u)
+    N = size(D, 1)
+    @boundscheck begin
+        length(u) == N || throw(DimensionMismatch("sizes of input vector and operator do not match"))
+    end
     @unpack Δx = D
     @unpack left_weights, right_weights = D.coefficients
-    N, _ = size(D)
-    @boundscheck begin
-        @argcheck N == length(u)
-    end
 
     @simd for i in eachindex(left_weights)
         @inbounds u[i] = factor * u[i] * (Δx * left_weights[i])
@@ -126,16 +127,17 @@ function scale_by_mass_matrix!(u::AbstractVector, D::Union{DerivativeOperator,Va
         @inbounds u[end-i+1] = factor * u[end-i+1] * (Δx * right_weights[i])
     end
 
-    u
+    return u
 end
 
 function scale_by_inverse_mass_matrix!(u::AbstractVector, D::Union{DerivativeOperator,VarCoefDerivativeOperator}, factor=true)
+    Base.require_one_based_indexing(u)
+    N = size(D, 1)
+    @boundscheck begin
+        length(u) == N || throw(DimensionMismatch("sizes of input vector and operator do not match"))
+    end
     @unpack Δx = D
     @unpack left_weights, right_weights = D.coefficients
-    N, _ = size(D)
-    @boundscheck begin
-        @argcheck N == length(u)
-    end
 
     @simd for i in eachindex(left_weights)
         @inbounds u[i] = factor * u[i] / (Δx * left_weights[i])

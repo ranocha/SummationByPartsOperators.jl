@@ -639,7 +639,7 @@ the quadrature rule associated with the SBP derivative operator `D`.
 """
 function integrate(func, u::AbstractVector, D::DerivativeOperator)
     @boundscheck begin
-        length(u) == length(grid(D))
+        length(u) == length(grid(D)) || throw(DimensionMismatch("sizes of input vector and operator do not match"))
     end
     @unpack Δx = D
     @unpack left_weights, right_weights = D.coefficients
@@ -658,7 +658,7 @@ end
 function scale_by_mass_matrix!(u::AbstractVector, D::DerivativeOperator)
     Base.require_one_based_indexing(u)
     @boundscheck begin
-        length(u) == length(grid(D))
+        length(u) == size(D, 2) || throw(DimensionMismatch("sizes of input vector and operator do not match"))
     end
     @unpack Δx = D
     @unpack left_weights, right_weights = D.coefficients
@@ -679,7 +679,7 @@ end
 function scale_by_inverse_mass_matrix!(u::AbstractVector, D::DerivativeOperator)
     Base.require_one_based_indexing(u)
     @boundscheck begin
-        length(u) == length(grid(D))
+        length(u) == size(D, 2) || throw(DimensionMismatch("sizes of input vector and operator do not match"))
     end
     @unpack Δx = D
     @unpack left_weights, right_weights = D.coefficients

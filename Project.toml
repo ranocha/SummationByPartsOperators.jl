@@ -1,7 +1,7 @@
 name = "SummationByPartsOperators"
 uuid = "9f78cca6-572e-554e-b819-917d2f1cf240"
 author = ["Hendrik Ranocha"]
-version = "0.5.70"
+version = "0.5.71"
 
 [deps]
 ArgCheck = "dce04be8-c92d-5529-be00-80e4d2c0e197"
