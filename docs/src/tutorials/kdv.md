@@ -63,7 +63,6 @@ function usol(t, x)
     μ = (xmax - xmin) / 2
     c = get_c()
     A = 3 * c
-    K = sqrt(1/c - 1)
     x_t = mod(x - c*t - xmin, xmax - xmin) + xmin - μ
 
     A / cosh(sqrt(3*A) / 6 * x_t)^2
