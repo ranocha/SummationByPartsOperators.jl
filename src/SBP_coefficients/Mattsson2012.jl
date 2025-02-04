@@ -492,7 +492,7 @@ end
 
 lower_bandwidth(cache::Mattsson2012Cache4) = 3
 upper_bandwidth(cache::Mattsson2012Cache4) = 3
-Base.checkbounds(::Type{Bool}, u::AbstractVector, ::Mattsson2012Cache4) = length(u) > 8
+Base.checkbounds(::Type{Bool}, u::AbstractVector, ::Mattsson2012Cache4) = length(u) > 12
 left_length(::Mattsson2012Cache4) = 6
 right_length(::Mattsson2012Cache4) = 6
 
@@ -2100,7 +2100,7 @@ end
 
 lower_bandwidth(cache::Mattsson2012Cache6) = 8
 upper_bandwidth(cache::Mattsson2012Cache6) = 8
-Base.checkbounds(::Type{Bool}, u::AbstractVector, ::Mattsson2012Cache6) = length(u) > 12
+Base.checkbounds(::Type{Bool}, u::AbstractVector, ::Mattsson2012Cache6) = length(u) > 18
 left_length(::Mattsson2012Cache6) = 9
 right_length(::Mattsson2012Cache6) = 9
 
