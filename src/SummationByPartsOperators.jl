@@ -109,6 +109,7 @@ include("fourier_operators.jl")
 include("fourier_operators_2d.jl")
 include("legendre_operators.jl")
 include("matrix_operators.jl")
+include("multidimensional_matrix_operators.jl")
 include("function_space_operators.jl")
 include("upwind_operators.jl")
 include("SBP_coefficients/MattssonNordström2004.jl")
@@ -157,7 +158,8 @@ export periodic_central_derivative_operator, periodic_derivative_operator, deriv
        dissipation_operator, var_coef_derivative_operator,
        fourier_derivative_operator,
        legendre_derivative_operator, legendre_second_derivative_operator,
-       upwind_operators, function_space_operator
+       upwind_operators, function_space_operator, multidimensional_function_space_operator,
+       tensor_product_operator_2D
 export UniformMesh1D, UniformPeriodicMesh1D
 export couple_continuously, couple_discontinuously
 export mul!
