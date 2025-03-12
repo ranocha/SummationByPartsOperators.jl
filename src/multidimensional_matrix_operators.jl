@@ -26,7 +26,7 @@ References:
   Multi-dimensional summation-by-parts operators for general function spaces: Theory and construction
   Journal of Computational Physics 491, 112370, [DOI: 10.1016/j.jcp.2023.112370](https://doi.org/10.1016/j.jcp.2023.112370).
 """
-@auto_hash_equals struct MultidimensionalMatrixDerivativeOperator{Dim,T,NodesType,DType<:AbstractMatrix{T},SourceOfCoefficients} <: AbstractNonperiodicDerivativeOperator{T}
+@auto_hash_equals struct MultidimensionalMatrixDerivativeOperator{Dim,T,NodesType,DType<:AbstractMatrix{T},SourceOfCoefficients} <: AbstractMatrixDerivativeOperator{T}
     grid::NodesType # length(grid) == N, e.g. Vector{SVector{Dim, T}} or `NodeSet` from KernelInterpolation.jl
     on_boundary::Vector{Bool} # length(on_boundary) == N
     normals::Vector{SVector{Dim,T}} # length(normals) == N_boundary < N
@@ -47,61 +47,28 @@ References:
 end
 
 Base.ndims(::MultidimensionalMatrixDerivativeOperator{Dim}) where {Dim} = Dim
-derivative_order(::MultidimensionalMatrixDerivativeOperator) = 1
 Base.getindex(D::MultidimensionalMatrixDerivativeOperator, i::Int) = D.Ds[i]
-
-source_of_coefficients(D::MultidimensionalMatrixDerivativeOperator) = D.source
-
-function integrate(func, u, D::MultidimensionalMatrixDerivativeOperator)
-    return integrate(func, u, D.weights)
-end
 
 function integrate_boundary(func, u, D::MultidimensionalMatrixDerivativeOperator, dim)
     return integrate(func, u, weights_boundary_scaled(D, dim))
 end
 
-mass_matrix(D::MultidimensionalMatrixDerivativeOperator) = Diagonal(D.weights)
 weights_boundary(D::MultidimensionalMatrixDerivativeOperator) = get_weight_boundary.(Ref(D), 1:length(grid(D)))
 weights_boundary_scaled(D::MultidimensionalMatrixDerivativeOperator, dim::Int) = get_weight_boundary_scaled.(Ref(D), Ref(dim), 1:length(grid(D)))
+
+"""
+    mass_matrix_boundary(D::MultidimensionalMatrixDerivativeOperator, dim)
+
+Construct the mass matrix at the boundary of a `MultidimensionalMatrixDerivativeOperator` `D` in direction `dim`.
+The boundary mass matrix is constructed to be mimetix, see
+
+- Jan Glaubitz, Simon-Christian Klein, Jan Nordström, Philipp Öffner (2023)
+  Multi-dimensional summation-by-parts operators for general function spaces: Theory and construction
+  Journal of Computational Physics 491, 112370, [DOI: 10.1016/j.jcp.2023.112370](https://doi.org/10.1016/j.jcp.2023.112370).
+"""
 mass_matrix_boundary(D::MultidimensionalMatrixDerivativeOperator, dim::Int) = Diagonal(weights_boundary_scaled(D, dim))
 
 Base.eltype(::MultidimensionalMatrixDerivativeOperator{Dim,T}) where {Dim,T} = T
-
-function scale_by_mass_matrix!(u::AbstractVector, D::MultidimensionalMatrixDerivativeOperator, factor=true)
-    N, _ = size(D)
-    @boundscheck begin
-        @argcheck N == length(u)
-    end
-
-    @inbounds @simd for i in eachindex(u, D.weights)
-        u[i] = factor * u[i] * D.weights[i]
-    end
-
-    return u
-end
-
-function scale_by_inverse_mass_matrix!(u::AbstractVector, D::MultidimensionalMatrixDerivativeOperator, factor=true)
-    N, _ = size(D)
-    @boundscheck begin
-        @argcheck N == length(u)
-    end
-
-    @inbounds @simd for i in eachindex(u, D.weights)
-        u[i] = factor * u[i] / D.weights[i]
-    end
-
-    u
-end
-
-function get_weight(D::MultidimensionalMatrixDerivativeOperator, i::Int)
-    @unpack weights = D
-    N, _ = size(D)
-    @boundscheck begin
-        @argcheck 1 <= i <= N
-    end
-    @inbounds ω = weights[i]
-    ω
-end
 
 function get_weight_boundary(D::MultidimensionalMatrixDerivativeOperator, i::Int)
     @unpack weights_boundary, on_boundary = D
@@ -138,28 +105,6 @@ function Base.show(io::IO, D::MultidimensionalMatrixDerivativeOperator)
 end
 
 # TODO: mul! How? Depends on direction
-
-function lower_bandwidth(D::MultidimensionalMatrixDerivativeOperator)
-    size(D, 1) - 1
-end
-
-function upper_bandwidth(D::MultidimensionalMatrixDerivativeOperator)
-    size(D, 1) - 1
-end
-
-function accuracy_order(D::MultidimensionalMatrixDerivativeOperator)
-    D.accuracy_order
-end
-
-function left_boundary_weight(D::MultidimensionalMatrixDerivativeOperator)
-    @inbounds retval = D.weights[begin]
-    retval
-end
-
-function right_boundary_weight(D::MultidimensionalMatrixDerivativeOperator)
-    @inbounds retval = D.weights[end]
-    retval
-end
 
 """
     tensor_product_operator_2D(D)

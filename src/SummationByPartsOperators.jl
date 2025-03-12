@@ -74,6 +74,7 @@ import PolynomialBases: integrate, evaluate_coefficients, evaluate_coefficients!
 abstract type AbstractDerivativeOperator{T} end
 abstract type AbstractNonperiodicDerivativeOperator{T} <: AbstractDerivativeOperator{T} end
 abstract type AbstractPeriodicDerivativeOperator{T} <: AbstractDerivativeOperator{T} end
+abstract type AbstractMatrixDerivativeOperator{T} <: AbstractNonperiodicDerivativeOperator{T} end
 abstract type AbstractDerivativeCoefficients{T} end
 abstract type AbstractMassMatrix{T} end
 abstract type AbstractSemidiscretization end
@@ -142,12 +143,12 @@ export PeriodicDerivativeOperator, PeriodicDissipationOperator,
        FourierPolynomialDerivativeOperator, FourierRationalDerivativeOperator,
        FourierDerivativeOperator2D,
        LegendreDerivativeOperator, LegendreSecondDerivativeOperator,
-       MatrixDerivativeOperator,
+       MatrixDerivativeOperator, MultidimensionalMatrixDerivativeOperator,
        UpwindOperators, PeriodicUpwindOperators
 export FilterCallback, ConstantFilter, ExponentialFilter
 export SafeMode, FastMode, ThreadedMode
 export derivative_order, accuracy_order, source_of_coefficients, grid, semidiscretize
-export mass_matrix
+export mass_matrix, mass_matrix_boundary
 export integrate, left_boundary_weight, right_boundary_weight,
        scale_by_mass_matrix!, scale_by_inverse_mass_matrix!,
        derivative_left, derivative_right,
@@ -158,8 +159,7 @@ export periodic_central_derivative_operator, periodic_derivative_operator, deriv
        dissipation_operator, var_coef_derivative_operator,
        fourier_derivative_operator,
        legendre_derivative_operator, legendre_second_derivative_operator,
-       upwind_operators, function_space_operator, multidimensional_function_space_operator,
-       tensor_product_operator_2D
+       upwind_operators, function_space_operator, tensor_product_operator_2D
 export UniformMesh1D, UniformPeriodicMesh1D
 export couple_continuously, couple_discontinuously
 export mul!
