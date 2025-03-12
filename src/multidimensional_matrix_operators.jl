@@ -137,14 +137,14 @@ function tensor_product_operator_2D(D)
     on_boundary[N + 1:N:end-N + 1] .= true
     on_boundary[end-N+1:end] .= true
 
-    D_1D = Matrix(D)
+    D_1D = sparse(D)
     M_1D = mass_matrix(D)
     M = kron(M_1D, M_1D)
     D_x = kron(D_1D, Diagonal(I, N))
     D_y = kron(Diagonal(I, N), D_1D)
 
     weights = diag(M)
-    Ds = (sparse(D_x), sparse(D_y))
+    Ds = (D_x, D_y)
     normals = Vector{SVector{2,Float64}}(undef, 4 * N - 4)
     # weights_boundary is chosen such that
     # mass_matrix_boundary(D, 1) == Diagonal(kron(B_1D, M_1D)) ( = Q_x + Q_x') and

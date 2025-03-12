@@ -98,9 +98,11 @@ end
         @test length(grid(D_t)) == N^2
         M = mass_matrix(D_t)
         D_x = D_t[1]
+        @test D_x isa SparseMatrixCSC
         B_x = mass_matrix_boundary(D_t, 1)
         @test M * D_x + D_x' * M ≈ B_x
         D_y = D_t[2]
+        @test D_y isa SparseMatrixCSC
         B_y = mass_matrix_boundary(D_t, 2)
         @test M * D_y + D_y' * M ≈ B_y
 
