@@ -114,9 +114,10 @@ end
 # TODO: mul! How? Depends on direction
 
 """
-    tensor_product_operator_2D(D)
+    tensor_product_operator_2D(D_x, D_y = D_x)
 
-Create a 2D [`MultidimensionalMatrixDerivativeOperator`](@ref) on a square based on a 1D derivative operator `D` using a tensor product structure.
+Create a 2D [`MultidimensionalMatrixDerivativeOperator`](@ref) on a square based on a 1D derivative operators `D_x` and `D_y` using a tensor product structure.
+The operator `D_x` is used in the x-direction and `D_y` in the y-direction.
 
 For the construction, see also:
 - Sigrun Ortleb (2021)
@@ -128,64 +129,70 @@ For the construction, see also:
   Review of summation-by-parts schemes for initial-boundary-value problems
   Journal of Computational Physics 268, pp. 17-38, [DOI: 10.1016/j.jcp.2014.02.031](https://doi.org/10.1016/j.jcp.2014.02.031).
 """
-function tensor_product_operator_2D(D)
-    T = eltype(D)
-    nodes_1D = grid(D)
-    N = length(nodes_1D)
-    nodes = SVector.(vec(nodes_1D' .* ones(N)), vec(ones(N)' .* nodes_1D))
-    on_boundary = zeros(Bool, N^2)
-    on_boundary[1:N] .= true # left boundary
-    on_boundary[N:N:end-N + 1] .= true # lower boundary
-    on_boundary[N + 1:N:end-N + 1] .= true # upper boundary
-    on_boundary[end-N+1:end] .= true # right boundary
+function tensor_product_operator_2D(D_x, D_y = D_x)
+    T = promote_type(eltype(D_x), eltype(D_y))
+    nodes_1D_x = grid(D_x)
+    nodes_1D_y = grid(D_y)
+    N_x = length(nodes_1D_x)
+    N_y = length(nodes_1D_y)
+    nodes = SVector.(vec(nodes_1D_x' .* ones(N_y)), vec(ones(N_x)' .* nodes_1D_y))
+    on_boundary = zeros(Bool, N_x * N_y)
+    on_boundary[1:N_y] .= true # left boundary
+    on_boundary[N_y:N_y:end-N_y + 1] .= true # lower boundary
+    on_boundary[N_y + 1:N_y:end-N_y + 1] .= true # upper boundary
+    on_boundary[end-N_y+1:end] .= true # right boundary
 
-    D_1D = sparse(D)
-    M_1D = mass_matrix(D)
-    M = kron(M_1D, M_1D)
-    D_x = kron(D_1D, Diagonal(I, N))
-    D_y = kron(Diagonal(I, N), D_1D)
+    D_1D_x = sparse(D_x)
+    M_1D_x = mass_matrix(D_x)
+    D_1D_y = sparse(D_y)
+    M_1D_y = mass_matrix(D_y)
+    M_t = kron(M_1D_x, M_1D_y)
+    D_t_x = kron(D_1D_x, Diagonal(I, N_y))
+    D_t_y = kron(Diagonal(I, N_x), D_1D_y)
 
-    weights = diag(M)
-    Ds = (D_x, D_y)
-    normals = Vector{SVector{2,T}}(undef, 4 * N - 4)
+    weights = diag(M_t)
+    Ds = (D_t_x, D_t_y)
+    normals = Vector{SVector{2,T}}(undef, 2 * (N_x + N_y) - 4)
     # weights_boundary is chosen such that
-    # mass_matrix_boundary(D, 1) == Diagonal(kron(B_1D, M_1D)) ( = Q_x + Q_x') and
-    # mass_matrix_boundary(D, 2) == Diagonal(kron(M_1D, B_1D)) ( = Q_y + Q_y')
-    weights_boundary = Vector{T}(undef, 4 * N - 4)
+    # mass_matrix_boundary(D, 1) == Diagonal(kron(B_1D_1, M_1D_2)) ( = Q_x + Q_x') and
+    # mass_matrix_boundary(D, 2) == Diagonal(kron(M_1D_2, B_1D_1)) ( = Q_y + Q_y')
+    # TODO: For different D_x and D_y, one of the above conditions is not fulfilled depending on the choice of weights_boundary at the corners
+    weights_boundary = Vector{T}(undef, 4 * (N_x + N_y) - 4)
     j = 0
     for i in eachindex(normals)
         if i == 1 # lower left corner
             normals[i] = SVector(-1.0, -1.0)
-            weights_boundary[i] = M_1D[1, 1]
-        elseif i < N # left boundary
+            weights_boundary[i] = M_1D_y[1, 1] # or M_1D_x[1, 1]?
+        elseif i < N_y # left boundary
             normals[i] = SVector(-1.0, 0.0)
-            weights_boundary[i] = M_1D[i, i]
-        elseif i == N # upper left corner
+            weights_boundary[i] = M_1D_y[i, i]
+        elseif i == N_y # upper left corner
             normals[i] = SVector(-1.0, 1.0)
-            weights_boundary[i] = M_1D[N, N]
-        elseif i < 3 * N - 3
-            if (i - N - 1) % 2 == 0 # lower boundary
+            weights_boundary[i] = M_1D_y[N_y, N_y] # or M_1D_x[1, 1]?
+        elseif i < 2 * N_x + N_y - 3
+            if (i - N_y - 1) % 2 == 0 # lower boundary
                 normals[i] = SVector(0.0, -1.0)
-                k = i - N + 1 - j
-                weights_boundary[i] = M_1D[k, k]
+                k = i - N_y + 1 - j
+                weights_boundary[i] = M_1D_x[k, k]
             else # upper boundary
                 normals[i] = SVector(0.0, 1.0)
-                k = i - N - j
-                weights_boundary[i] = M_1D[k, k]
+                k = i - N_y - j
+                weights_boundary[i] = M_1D_x[k, k]
                 j += 1
             end
-        elseif i == 3 * N - 3 # lower right corner
+        elseif i == 2 * N_x + N_y - 3 # lower right corner
             normals[i] = SVector(1.0, -1.0)
-            weights_boundary[i] = M_1D[1, 1]
-        elseif i < 4 * N - 4 # right boundary
+            weights_boundary[i] = M_1D_y[1, 1] # or M_1D_x[N_x, N_x]?
+        elseif i < 2 * (N_x + N_y) - 4 # right boundary
             normals[i] = SVector(1.0, 0.0)
-            k = i - (3 * N - 4)
-            weights_boundary[i] = M_1D[k, k]
-        else # i == 4 * N - 4 # upper right corner
+            k = i - (2 * N_x + N_y - 4)
+            weights_boundary[i] = M_1D_y[k, k]
+        else # i == 2 * (N_x + N_y) - 4 # upper right corner
             normals[i] = SVector(1.0, 1.0)
-            weights_boundary[i] = M_1D[N, N]
+            weights_boundary[i] = M_1D_y[N_y, N_y] # or M_1D_x[N_x, N_x]?
         end
     end
+    acc_order = min(accuracy_order(D_x), accuracy_order(D_y))
     return MultidimensionalMatrixDerivativeOperator(nodes, on_boundary, normals, weights, weights_boundary, Ds,
-                                                    accuracy_order(D), source_of_coefficients(D))
+                                                    acc_order, source_of_coefficients(D_x)) # source of coefficients? D_x or D_y?
 end
