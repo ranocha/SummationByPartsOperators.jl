@@ -114,7 +114,7 @@ Create a 2D [`MultidimensionalMatrixDerivativeOperator`](@ref) on a square based
 For the construction, see also:
 - Sigrun Ortleb (2021)
   Numerical Methods for Fluid Flow:
-    High Order SBP Schemes, IMEX Advection-Diffusion Splitting and  Positivity Preservation for Production-Destruction-PDEs
+    High Order SBP Schemes, IMEX Advection-Diffusion Splitting and Positivity Preservation for Production-Destruction-PDEs
   Habilitation thesis, University of Kassel, [DOI: 10.17170/kobra-202301037274](https://doi.org/10.17170/kobra-202301037274),
   Chapter 1.2.4.
 - Magnus Svärd, Jan Nordström (2014)

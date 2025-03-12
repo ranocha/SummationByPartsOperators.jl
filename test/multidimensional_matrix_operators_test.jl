@@ -51,9 +51,9 @@ end
             D_x = D_multi[1]
             @test Matrix(D_x) == Matrix(D)
             @test sparse(D_x) == sparse(D)
-            B = mass_matrix_boundary(D_multi, 1)
-            @test B == mass_matrix_boundary(D)
-            @test isapprox(M * D_x + D_x' * M, B)
+            B_x = mass_matrix_boundary(D_multi, 1)
+            @test B_x == mass_matrix_boundary(D)
+            @test M * D_x + D_x' * M ≈ B_x
 
             x = grid(D)
             u = sinpi.(x)
@@ -76,5 +76,36 @@ end
             @test SummationByPartsOperators.lower_bandwidth(D_multi) == size(D_multi[1], 1) - 1
             @test SummationByPartsOperators.upper_bandwidth(D_multi) == size(D_multi[1], 1) - 1
         end
+    end
+end
+
+@testset "2D tensor product operators" begin
+    N = 14
+    xmin_construction = 0.5
+    xmax_construction = 1.0
+
+    for acc_order in [2, 4, 6]
+        D = derivative_operator(MattssonNordström2004(), 1, acc_order, xmin_construction, xmax_construction, N)
+        D_t = tensor_product_operator_2D(D)
+
+        for compact in (true, false)
+            show(IOContext(devnull, :compact=>compact), D_t)
+            summary(IOContext(devnull, :compact=>compact), D_t)
+        end
+
+        @test ndims(D_t) == 2
+        @test derivative_order(D_t) == 1
+        @test accuracy_order(D_t) == acc_order
+        @test source_of_coefficients(D_t) == source_of_coefficients(D)
+        @test eltype(D_t) == eltype(D)
+
+        @test length(grid(D_t)) == N^2
+        M = mass_matrix(D_t)
+        D_x = D_t[1]
+        B_x = mass_matrix_boundary(D_t, 1)
+        @test M * D_x + D_x' * M ≈ B_x
+        D_y = D_t[2]
+        B_y = mass_matrix_boundary(D_t, 2)
+        @test M * D_y + D_y' * M ≈ B_y
     end
 end
