@@ -107,5 +107,16 @@ end
         D_y = D_t[2]
         B_y = mass_matrix_boundary(D_t, 2)
         @test M * D_y + D_y' * M ≈ B_y
+
+        M_1D = mass_matrix(D)
+        Q_1D = M_1D * Matrix(D)
+        Q_x = kron(Q_1D, M_1D)
+        Q_y = kron(M_1D, Q_1D)
+        @test Q_x ≈ M * D_x
+        @test Q_y ≈ M * D_y
+
+        B_1D = mass_matrix_boundary(D)
+        @test B_x ≈ Diagonal(kron(B_1D, M_1D))
+        @test B_y ≈ Diagonal(kron(M_1D, B_1D))
     end
 end

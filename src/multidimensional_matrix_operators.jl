@@ -132,57 +132,50 @@ function tensor_product_operator_2D(D)
     on_boundary[end-N+1:end] .= true
 
     D_1D = Matrix(D)
-    P_1D = mass_matrix(D)
-    P = kron(P_1D, P_1D)
-    D_x = kron(D_1D, Matrix(I, (N, N))) # = inv(P) * Q_x, Q_x = kron(P_1D, Q_1D), Q_1D = P_1D * D_1D
-    D_y = kron(Matrix(I, (N, N)), D_1D) # = inv(P) * Q_y, Q_y = kron(Q_1D, P_1D), Q_1D = D_1D * P_1D
+    M_1D = mass_matrix(D)
+    M = kron(M_1D, M_1D)
+    D_x = kron(D_1D, Matrix(I, (N, N)))
+    D_y = kron(Matrix(I, (N, N)), D_1D)
 
-    # B_1D = zeros(N, N)
-    # B_1D[1, 1] = -1.0
-    # B_1D[end, end] = 1.0
-
-    # B_x = Diagonal(kron(B_1D, P_1D)) # = Q_x + Q_x'
-    # B_y = Diagonal(kron(P_1D, B_1D)) # = Q_y + Q_y'
-
-    weights = diag(P)
+    weights = diag(M)
     Ds = (sparse(D_x), sparse(D_y))
     normals = Vector{SVector{2,Float64}}(undef, 4 * N - 4)
     # weights_boundary is chosen such that
-    # mass_matrix_boundary(D, 1) == Diagonal(kron(B_1D, P_1D)) ( = Q_x + Q_x') and
-    # mass_matrix_boundary(D, 2) == Diagonal(kron(P_1D, B_1D)) ( = Q_y + Q_y')
+    # mass_matrix_boundary(D, 1) == Diagonal(kron(B_1D, M_1D)) ( = Q_x + Q_x') and
+    # mass_matrix_boundary(D, 2) == Diagonal(kron(M_1D, B_1D)) ( = Q_y + Q_y')
     weights_boundary = Vector{Float64}(undef, 4 * N - 4)
     j = 0
     for i in eachindex(normals)
         if i == 1 # lower left corner
             normals[i] = SVector(-1.0, -1.0)
-            weights_boundary[i] = P_1D[1, 1]
+            weights_boundary[i] = M_1D[1, 1]
         elseif i < N # left boundary
             normals[i] = SVector(-1.0, 0.0)
-            weights_boundary[i] = P_1D[i, i]
+            weights_boundary[i] = M_1D[i, i]
         elseif i == N # upper left corner
             normals[i] = SVector(-1.0, 1.0)
-            weights_boundary[i] = P_1D[N, N]
+            weights_boundary[i] = M_1D[N, N]
         elseif i < 3 * N - 3
             if (i - N - 1) % 2 == 0 # lower boundary
                 normals[i] = SVector(0.0, -1.0)
                 k = i - N + 1 - j
-                weights_boundary[i] = P_1D[k, k]
+                weights_boundary[i] = M_1D[k, k]
             else # upper boundary
                 normals[i] = SVector(0.0, 1.0)
                 k = i - N - j
-                weights_boundary[i] = P_1D[k, k]
+                weights_boundary[i] = M_1D[k, k]
                 j += 1
             end
         elseif i == 3 * N - 3 # lower right corner
             normals[i] = SVector(1.0, -1.0)
-            weights_boundary[i] = P_1D[1, 1]
+            weights_boundary[i] = M_1D[1, 1]
         elseif i < 4 * N - 4 # right boundary
             normals[i] = SVector(1.0, 0.0)
             k = i - (3 * N - 4)
-            weights_boundary[i] = P_1D[k, k]
+            weights_boundary[i] = M_1D[k, k]
         else # i == 4 * N - 4 # upper right corner
             normals[i] = SVector(1.0, 1.0)
-            weights_boundary[i] = P_1D[N, N]
+            weights_boundary[i] = M_1D[N, N]
         end
     end
     return MultidimensionalMatrixDerivativeOperator(nodes, on_boundary, normals, weights, weights_boundary, Ds,
