@@ -17,6 +17,14 @@ To obtain the derivative operator in a specific direction, use `D[dim]`. The bou
 is given by `mass_matrix(D)`.
 
 See also [`tensor_product_operator_2D`](@ref).
+
+References:
+- Jason E. Hicken, David C. Del Rey Fernandez, and David W. Zingg (2016)
+  Multidimensional Summation-by-Parts Operators: General Theory and Application to Simplex Elements
+  SIAM Journal of Scientific Computing 38(4), pp. A1935-A1958, [DOI: 10.1137/15M1038360](https://doi.org/10.1137/15M1038360).
+- Jan Glaubitz, Simon-Christian Klein, Jan Nordström, Philipp Öffner (2023)
+  Multi-dimensional summation-by-parts operators for general function spaces: Theory and construction
+  Journal of Computational Physics 491, 112370, [DOI: 10.1016/j.jcp.2023.112370](https://doi.org/10.1016/j.jcp.2023.112370).
 """
 @auto_hash_equals struct MultidimensionalMatrixDerivativeOperator{Dim,T,NodesType,DType<:AbstractMatrix{T},SourceOfCoefficients} <: AbstractNonperiodicDerivativeOperator{T}
     grid::NodesType # length(grid) == N, e.g. Vector{SVector{Dim, T}} or `NodeSet` from KernelInterpolation.jl
