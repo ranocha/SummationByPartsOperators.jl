@@ -168,11 +168,8 @@ end
   x = grid(D)
   @test integrate(x, D) == integrate(x, Dp)
 
-  B = zeros(N, N)
-  B[1, 1] = -1.0
-  B[end, end] = 1.0
   M = mass_matrix(D)
-  @test M * Matrix(Dp) + Matrix(Dm)' * M ≈ B
+  @test M * Matrix(Dp) + Matrix(Dm)' * M ≈ mass_matrix_boundary(D)
 
   @test_throws ArgumentError UpwindOperators(
     derivative_operator(Mattsson2017(:minus  ), 1, acc_order, xmin, xmax, N),

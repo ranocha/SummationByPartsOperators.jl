@@ -4,18 +4,6 @@ using LinearAlgebra
 using StaticArrays
 using SparseArrays
 
-function SummationByPartsOperators.mass_matrix_boundary(D::SummationByPartsOperators.AbstractDerivativeOperator)
-    T = eltype(D)
-    b = zeros(T, length(grid(D)))
-    b[1] = T(-1.0)
-    b[end] = T(1.0)
-    return Diagonal(b)
-end
-
-function SummationByPartsOperators.integrate_boundary(func, u, D::SummationByPartsOperators.AbstractDerivativeOperator)
-    return func(u[end]) - func(u[1])
-end
-
 @testset "Check against MattssonNordström2004() in 1D" begin
     N = 14
     xmin_construction = 0.5

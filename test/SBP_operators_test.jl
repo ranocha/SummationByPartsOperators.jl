@@ -16,9 +16,6 @@ for source in D_test_list, T in (Float32,Float64)
     xmin = -one(T)
     xmax = 2*one(T)
     N = 101
-    B = zeros(T, N, N)
-    B[1, 1] = convert(T, -1)
-    B[end, end] = convert(T, 1)
     der_order = 1
 
     acc_order = 2
@@ -47,7 +44,7 @@ for source in D_test_list, T in (Float32,Float64)
         @test SummationByPartsOperators.xmax(D) ≈ xmax
         # SBP property
         M = mass_matrix(D)
-        @test M * Matrix(D) + Matrix(D)' * M ≈ B
+        @test M * Matrix(D) + Matrix(D)' * M ≈ mass_matrix_boundary(D)
         # interior and boundary
         mul!(res, D, x0)
         @test all(i->abs(res[i]) < 1000*eps(T), eachindex(res))
@@ -106,7 +103,7 @@ for source in D_test_list, T in (Float32,Float64)
         @test SummationByPartsOperators.xmax(D) ≈ xmax
         # SBP property
         M = mass_matrix(D)
-        @test M * Matrix(D) + Matrix(D)' * M ≈ B
+        @test M * Matrix(D) + Matrix(D)' * M ≈ mass_matrix_boundary(D)
         # interior and boundary
         mul!(res, D, x0)
         @test all(i->abs(res[i]) < 1000*eps(T), eachindex(res))
@@ -173,7 +170,7 @@ for source in D_test_list, T in (Float32,Float64)
         @test SummationByPartsOperators.xmax(D) ≈ xmax
         # SBP property
         M = mass_matrix(D)
-        @test M * Matrix(D) + Matrix(D)' * M ≈ B
+        @test M * Matrix(D) + Matrix(D)' * M ≈ mass_matrix_boundary(D)
         # interior and boundary
         mul!(res, D, x0)
         @test all(i->abs(res[i]) < 1000*eps(T), eachindex(res))
@@ -246,7 +243,7 @@ for source in D_test_list, T in (Float32,Float64)
         @test SummationByPartsOperators.xmax(D) ≈ xmax
         # SBP property
         M = mass_matrix(D)
-        @test M * Matrix(D) + Matrix(D)' * M ≈ B
+        @test M * Matrix(D) + Matrix(D)' * M ≈ mass_matrix_boundary(D)
         # interior and boundary
         mul!(res, D, x0)
         @test all(i->abs(res[i]) < 16000*eps(T), eachindex(res))
