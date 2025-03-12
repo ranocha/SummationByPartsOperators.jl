@@ -48,6 +48,7 @@ end
 
 Base.ndims(::MultidimensionalMatrixDerivativeOperator{Dim}) where {Dim} = Dim
 Base.getindex(D::MultidimensionalMatrixDerivativeOperator, i::Int) = D.Ds[i]
+Base.eltype(::MultidimensionalMatrixDerivativeOperator{Dim,T}) where {Dim,T} = T
 
 """
     integrate_boundary([func,] u, D::MultidimensionalMatrixDerivativeOperator, dim)
@@ -75,8 +76,6 @@ The boundary mass matrix is constructed to be mimetic, see
   Journal of Computational Physics 491, 112370, [DOI: 10.1016/j.jcp.2023.112370](https://doi.org/10.1016/j.jcp.2023.112370).
 """
 mass_matrix_boundary(D::MultidimensionalMatrixDerivativeOperator, dim::Int) = Diagonal(weights_boundary_scaled(D, dim))
-
-Base.eltype(::MultidimensionalMatrixDerivativeOperator{Dim,T}) where {Dim,T} = T
 
 function get_weight_boundary(D::MultidimensionalMatrixDerivativeOperator, i::Int)
     @unpack weights_boundary, on_boundary = D

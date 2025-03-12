@@ -1214,8 +1214,8 @@ for T in (Float32, Float64)
 
         @test integrate(u, D) ≈ sum(mass_matrix(D) * u)
         @test integrate(u->u^2, u, D) ≈ dot(u, mass_matrix(D), u)
-        @test integrate_boundary(x7, D) ≈ 0.0
-        @test integrate_boundary(u->u^2, x7, D) ≈ 0.0
+        @test integrate_boundary(u, D) ≈ 0.0
+        @test integrate_boundary(u->u^2, u, D) ≈ 0.0
     end
 
     for N in (8, 9), acc_order in (2, 3, 4)
