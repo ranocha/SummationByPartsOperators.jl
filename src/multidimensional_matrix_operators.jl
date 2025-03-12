@@ -49,6 +49,12 @@ end
 Base.ndims(::MultidimensionalMatrixDerivativeOperator{Dim}) where {Dim} = Dim
 Base.getindex(D::MultidimensionalMatrixDerivativeOperator, i::Int) = D.Ds[i]
 
+"""
+    integrate_boundary(func, u, D::MultidimensionalMatrixDerivativeOperator, dim)
+
+Map the function `func` to the coefficients `u` and integrate along the boundary in direction `dim` with respect to
+the surface quadrature rule associated with the `MultidimensionalMatrixDerivativeOperator` `D`.
+"""
 function integrate_boundary(func, u, D::MultidimensionalMatrixDerivativeOperator, dim)
     return integrate(func, u, weights_boundary_scaled(D, dim))
 end
