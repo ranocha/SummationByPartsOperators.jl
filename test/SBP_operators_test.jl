@@ -59,6 +59,10 @@ for source in D_test_list, T in (Float32,Float64)
         k=0; @test integrate(x0, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
         k=1; @test integrate(x1, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
         @test integrate(identity, x1, D) ≈ (xmax^2 - xmin^2) / 2
+        # boundary integration
+        @test integrate_boundary(x0, D) ≈ x0[end] - x0[begin]
+        @test integrate_boundary(x1, D) ≈ x1[end] - x1[begin]
+        @test integrate_boundary(identity, x1, D) ≈ xmax - xmin
         # boundary derivative
         @test derivative_left( D, x1, Val{0}()) ≈ x1[begin]
         @test derivative_right(D, x1, Val{0}()) ≈ x1[end]
@@ -126,6 +130,10 @@ for source in D_test_list, T in (Float32,Float64)
         k=2; @test integrate(x2, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
         k=3; @test integrate(x3, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
         @test integrate(identity, x1, D) ≈ (xmax^2 - xmin^2) / 2
+        # boundary integration
+        @test integrate_boundary(x0, D) ≈ x0[end] - x0[begin]
+        @test integrate_boundary(x1, D) ≈ x1[end] - x1[begin]
+        @test integrate_boundary(identity, x1, D) ≈ xmax - xmin
         # boundary derivative
         @test derivative_left( D, x1, Val{0}()) ≈ x1[begin]
         @test derivative_right(D, x1, Val{0}()) ≈ x1[end]
@@ -199,6 +207,10 @@ for source in D_test_list, T in (Float32,Float64)
         k=6; @test integrate(x6, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
         k=7; @test integrate(x7, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
         @test integrate(identity, x1, D) ≈ (xmax^2 - xmin^2) / 2
+        # boundary integration
+        @test integrate_boundary(x0, D) ≈ x0[end] - x0[begin]
+        @test integrate_boundary(x1, D) ≈ x1[end] - x1[begin]
+        @test integrate_boundary(identity, x1, D) ≈ xmax - xmin
         # boundary derivative
         @test derivative_left( D, x1, Val{0}()) ≈ x1[begin]
         @test derivative_right(D, x1, Val{0}()) ≈ x1[end]
@@ -270,6 +282,10 @@ for source in D_test_list, T in (Float32,Float64)
         k=6; @test integrate(x6, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
         k=7; @test integrate(x7, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
         @test integrate(identity, x1, D) ≈ (xmax^2 - xmin^2) / 2
+        # boundary integration
+        @test integrate_boundary(x0, D) ≈ x0[end] - x0[begin]
+        @test integrate_boundary(x1, D) ≈ x1[end] - x1[begin]
+        @test integrate_boundary(identity, x1, D) ≈ xmax - xmin
         # boundary derivative
         @test derivative_left( D, x1, Val{0}()) ≈ x1[begin]
         @test derivative_right(D, x1, Val{0}()) ≈ x1[end]

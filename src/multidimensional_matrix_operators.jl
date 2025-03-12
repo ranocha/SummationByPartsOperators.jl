@@ -28,7 +28,7 @@ References:
 """
 @auto_hash_equals struct MultidimensionalMatrixDerivativeOperator{Dim,T,NodesType,DType<:AbstractMatrix{T},SourceOfCoefficients} <: AbstractMatrixDerivativeOperator{T}
     grid::NodesType # length(grid) == N, e.g. Vector{SVector{Dim, T}} or `NodeSet` from KernelInterpolation.jl
-    on_boundary::Vector{Bool} # length(on_boundary) == N
+    on_boundary::Vector{Bool} # length(on_boundary) == N, sum(on_boundary) == N_boundary
     normals::Vector{SVector{Dim,T}} # length(normals) == N_boundary < N
     weights::Vector{T} # length(weights) == N
     weights_boundary::Vector{T} # length(weights_boundary) == N_boundary < N
@@ -50,7 +50,7 @@ Base.ndims(::MultidimensionalMatrixDerivativeOperator{Dim}) where {Dim} = Dim
 Base.getindex(D::MultidimensionalMatrixDerivativeOperator, i::Int) = D.Ds[i]
 
 """
-    integrate_boundary(func, u, D::MultidimensionalMatrixDerivativeOperator, dim)
+    integrate_boundary([func,] u, D::MultidimensionalMatrixDerivativeOperator, dim)
 
 Map the function `func` to the coefficients `u` and integrate along the boundary in direction `dim` with respect to
 the surface quadrature rule associated with the `MultidimensionalMatrixDerivativeOperator` `D`.
@@ -59,6 +59,8 @@ function integrate_boundary(func, u, D::MultidimensionalMatrixDerivativeOperator
     return integrate(func, u, weights_boundary_scaled(D, dim))
 end
 
+integrate_boundary(u, D::MultidimensionalMatrixDerivativeOperator, dim) = integrate_boundary(identity, u, D, dim)
+
 weights_boundary(D::MultidimensionalMatrixDerivativeOperator) = get_weight_boundary.(Ref(D), 1:length(grid(D)))
 weights_boundary_scaled(D::MultidimensionalMatrixDerivativeOperator, dim::Int) = get_weight_boundary_scaled.(Ref(D), Ref(dim), 1:length(grid(D)))
 
@@ -66,7 +68,7 @@ weights_boundary_scaled(D::MultidimensionalMatrixDerivativeOperator, dim::Int) =
     mass_matrix_boundary(D::MultidimensionalMatrixDerivativeOperator, dim)
 
 Construct the mass matrix at the boundary of a `MultidimensionalMatrixDerivativeOperator` `D` in direction `dim`.
-The boundary mass matrix is constructed to be mimetix, see
+The boundary mass matrix is constructed to be mimetic, see
 
 - Jan Glaubitz, Simon-Christian Klein, Jan Nordström, Philipp Öffner (2023)
   Multi-dimensional summation-by-parts operators for general function spaces: Theory and construction
