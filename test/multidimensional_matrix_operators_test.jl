@@ -58,6 +58,10 @@ end
             x = grid(D)
             u = sinpi.(x)
             u_reference = copy(u)
+
+            @test integrate(abs2, u, D_multi) ≈ integrate(abs2, u, D)
+            @test integrate_boundary(abs2, u, D_multi, 1) ≈ abs2(u[end]) - abs2(u[1])
+
             SummationByPartsOperators.scale_by_mass_matrix!(u, D_multi)
             @test_throws DimensionMismatch scale_by_mass_matrix!(@view(u[(begin + 1):(end - 1)]), D_multi)
             SummationByPartsOperators.scale_by_mass_matrix!(u_reference, D)
