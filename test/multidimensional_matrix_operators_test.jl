@@ -97,7 +97,7 @@ end
         @test ndims(D_t) == 2
         @test derivative_order(D_t) == 1
         @test accuracy_order(D_t) == acc_order
-        @test source_of_coefficients(D_t) == source_of_coefficients(D)
+        @test source_of_coefficients(D_t) == source_of_coefficients(D_1)
         @test eltype(D_t) == eltype(D_1) == eltype(D_2) == T
         @test real(D_t) == real(D_1) == real(D_2) == T
 
