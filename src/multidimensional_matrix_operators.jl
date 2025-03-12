@@ -133,10 +133,10 @@ function tensor_product_operator_2D(D)
     N = length(nodes_1D)
     nodes = SVector.(vec(nodes_1D' .* ones(N)), vec(ones(N)' .* nodes_1D))
     on_boundary = zeros(Bool, N^2)
-    on_boundary[1:N] .= true
-    on_boundary[N:N:end-N + 1] .= true
-    on_boundary[N + 1:N:end-N + 1] .= true
-    on_boundary[end-N+1:end] .= true
+    on_boundary[1:N] .= true # left boundary
+    on_boundary[N:N:end-N + 1] .= true # lower boundary
+    on_boundary[N + 1:N:end-N + 1] .= true # upper boundary
+    on_boundary[end-N+1:end] .= true # right boundary
 
     D_1D = sparse(D)
     M_1D = mass_matrix(D)
