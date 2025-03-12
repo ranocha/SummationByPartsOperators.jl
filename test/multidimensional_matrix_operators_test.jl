@@ -116,5 +116,26 @@ end
         B_1D = mass_matrix_boundary(D)
         @test B_x ≈ Diagonal(kron(B_1D, M_1D))
         @test B_y ≈ Diagonal(kron(M_1D, B_1D))
+
+        # accuracy test
+        T = eltype(D)
+        x = grid(D_t)
+        x0 = ones(N^2)
+        x1 = first.(x)
+        y1 = last.(x)
+        res = D_t[1] * x0; @test all(i->res[i] < 1000 * eps(T), eachindex(res))
+        res = D_t[2] * x0; @test all(i->res[i] < 1000 * eps(T), eachindex(res))
+        res = D_t[1] * x1; @test all(i->res[i] ≈ x0[i], eachindex(res))
+        res = D_t[1] * y1; @test all(i->res[i] < 1000 * eps(T), eachindex(res))
+        res = D_t[2] * x1; @test all(i->res[i] < 1000 * eps(T), eachindex(res))
+        res = D_t[2] * y1; @test all(i->res[i] ≈ x0[i], eachindex(res))
+        if acc_order >= 4
+            res = D_t[1] * x1.^2; @test all(i->res[i] ≈ 2 * x1[i], eachindex(res))
+            res = D_t[2] * y1.^2; @test all(i->res[i] ≈ 2 * y1[i], eachindex(res))
+        end
+        if acc_order >= 6
+            res = D_t[1] * x1.^3; @test all(i->res[i] ≈ 3 * x1[i]^2, eachindex(res))
+            res = D_t[2] * y1.^3; @test all(i->res[i] ≈ 3 * y1[i]^2, eachindex(res))
+        end
     end
 end
