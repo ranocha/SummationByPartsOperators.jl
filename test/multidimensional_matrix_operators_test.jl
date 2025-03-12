@@ -12,6 +12,10 @@ function SummationByPartsOperators.mass_matrix_boundary(D::SummationByPartsOpera
     return Diagonal(b)
 end
 
+function SummationByPartsOperators.integrate_boundary(func, u, D::SummationByPartsOperators.AbstractDerivativeOperator)
+    return func(u[end]) - func(u[1])
+end
+
 @testset "Check against MattssonNordström2004() in 1D" begin
     N = 14
     xmin_construction = 0.5
@@ -60,7 +64,7 @@ end
             u_reference = copy(u)
 
             @test integrate(abs2, u, D_multi) ≈ integrate(abs2, u, D)
-            @test integrate_boundary(abs2, u, D_multi, 1) ≈ abs2(u[end]) - abs2(u[1])
+            @test integrate_boundary(abs2, u, D_multi, 1) ≈ integrate_boundary(abs2, u, D)
 
             SummationByPartsOperators.scale_by_mass_matrix!(u, D_multi)
             @test_throws DimensionMismatch scale_by_mass_matrix!(@view(u[(begin + 1):(end - 1)]), D_multi)
