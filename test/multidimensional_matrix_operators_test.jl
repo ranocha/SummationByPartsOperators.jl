@@ -1,0 +1,80 @@
+using Test
+using SummationByPartsOperators
+using LinearAlgebra
+using StaticArrays
+using SparseArrays
+
+function SummationByPartsOperators.mass_matrix_boundary(D::SummationByPartsOperators.AbstractDerivativeOperator)
+    T = eltype(D)
+    b = zeros(T, length(grid(D)))
+    b[1] = T(-1.0)
+    b[end] = T(1.0)
+    return Diagonal(b)
+end
+
+@testset "Check against MattssonNordström2004() in 1D" begin
+    N = 14
+    xmin_construction = 0.5
+    xmax_construction = 1.0
+
+    for acc_order in [2, 4, 6]
+        D = derivative_operator(MattssonNordström2004(), 1, acc_order, xmin_construction, xmax_construction, N)
+
+        nodes = SVector.(grid(D))
+        on_boundary = fill(false, N)
+        on_boundary[1] = true
+        on_boundary[end] = true
+        normals = [SVector(-1.0), SVector(1.0)]
+        weights = diag(mass_matrix(D))
+        weights_boundary = [1.0, 1.0]
+        Ds_dense = (Matrix(D),)
+        D_multi_dense = MultidimensionalMatrixDerivativeOperator(nodes, on_boundary, normals, weights, weights_boundary, Ds_dense, acc_order, source_of_coefficients(D))
+        Ds_sparse = (sparse(D),)
+        D_multi_sparse = MultidimensionalMatrixDerivativeOperator(nodes, on_boundary, normals, weights, weights_boundary, Ds_sparse, acc_order, source_of_coefficients(D))
+        @test D_multi_sparse[1] isa SparseMatrixCSC
+
+        for D_multi in (D_multi_dense, D_multi_sparse)
+            for compact in (true, false)
+                show(IOContext(devnull, :compact=>compact), D_multi)
+                summary(IOContext(devnull, :compact=>compact), D_multi)
+            end
+
+            @test ndims(D_multi) == 1
+            @test derivative_order(D_multi) == 1
+            @test accuracy_order(D_multi) == acc_order
+            @test source_of_coefficients(D_multi) == source_of_coefficients(D)
+            @test eltype(D_multi) == eltype(D)
+
+            @test grid(D_multi) == SVector.(grid(D))
+            M = mass_matrix(D_multi)
+            @test M == mass_matrix(D)
+            D_x = D_multi[1]
+            @test Matrix(D_x) == Matrix(D)
+            @test sparse(D_x) == sparse(D)
+            B = mass_matrix_boundary(D_multi, 1)
+            @test B == mass_matrix_boundary(D)
+            @test isapprox(M * D_x + D_x' * M, B)
+
+            x = grid(D)
+            u = sinpi.(x)
+            u_reference = copy(u)
+            SummationByPartsOperators.scale_by_mass_matrix!(u, D_multi)
+            @test_throws DimensionMismatch scale_by_mass_matrix!(@view(u[(begin + 1):(end - 1)]), D_multi)
+            SummationByPartsOperators.scale_by_mass_matrix!(u_reference, D)
+            @test_throws DimensionMismatch scale_by_mass_matrix!(@view(u_reference[(begin + 1):(end - 1)]), D)
+            @test u ≈ u_reference
+            SummationByPartsOperators.scale_by_inverse_mass_matrix!(u, D_multi)
+            @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(u[(begin + 1):(end - 1)]), D_multi)
+            SummationByPartsOperators.scale_by_inverse_mass_matrix!(u_reference, D)
+            @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(u_reference[(begin + 1):(end - 1)]), D)
+            @test u ≈ u_reference
+
+            @test SummationByPartsOperators.weights_boundary(D_multi) == [1.0, zeros(eltype(D_multi), N - 2)..., 1.0]
+            @test SummationByPartsOperators.get_weight(D_multi, 1) == left_boundary_weight(D_multi) == left_boundary_weight(D)
+            @test SummationByPartsOperators.get_weight(D_multi, N) == right_boundary_weight(D_multi) == right_boundary_weight(D)
+
+            @test SummationByPartsOperators.lower_bandwidth(D_multi) == size(D_multi[1], 1) - 1
+            @test SummationByPartsOperators.upper_bandwidth(D_multi) == size(D_multi[1], 1) - 1
+        end
+    end
+end
