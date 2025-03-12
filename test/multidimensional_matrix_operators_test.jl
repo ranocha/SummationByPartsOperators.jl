@@ -80,8 +80,8 @@ end
     xmin_construction = 0.5
     xmax_construction = 1.0
 
-    for acc_order in [2, 4, 6]
-        D = derivative_operator(MattssonNordström2004(), 1, acc_order, xmin_construction, xmax_construction, N)
+    for acc_order in [2, 4, 6], T in (Float32, Float64)
+        D = derivative_operator(MattssonNordström2004(), 1, acc_order, T(xmin_construction), T(xmax_construction), N)
         D_t = tensor_product_operator_2D(D)
 
         for compact in (true, false)
@@ -93,7 +93,8 @@ end
         @test derivative_order(D_t) == 1
         @test accuracy_order(D_t) == acc_order
         @test source_of_coefficients(D_t) == source_of_coefficients(D)
-        @test eltype(D_t) == eltype(D)
+        @test eltype(D_t) == eltype(D) == T
+        @test real(D_t) == real(D) == T
 
         @test length(grid(D_t)) == N^2
         M = mass_matrix(D_t)
@@ -118,24 +119,23 @@ end
         @test B_y ≈ Diagonal(kron(M_1D, B_1D))
 
         # accuracy test
-        T = eltype(D)
         x = grid(D_t)
         x0 = ones(N^2)
         x1 = first.(x)
         y1 = last.(x)
         res = D_t[1] * x0; @test all(i->res[i] < 1000 * eps(T), eachindex(res))
         res = D_t[2] * x0; @test all(i->res[i] < 1000 * eps(T), eachindex(res))
-        res = D_t[1] * x1; @test all(i->res[i] ≈ x0[i], eachindex(res))
+        res = D_t[1] * x1; @test all(i->isapprox(res[i], x0[i], atol = 1000 * eps(T)), eachindex(res))
         res = D_t[1] * y1; @test all(i->res[i] < 1000 * eps(T), eachindex(res))
         res = D_t[2] * x1; @test all(i->res[i] < 1000 * eps(T), eachindex(res))
-        res = D_t[2] * y1; @test all(i->res[i] ≈ x0[i], eachindex(res))
+        res = D_t[2] * y1; @test all(i->isapprox(res[i], x0[i], atol = 1000 * eps(T)), eachindex(res))
         if acc_order >= 4
-            res = D_t[1] * x1.^2; @test all(i->res[i] ≈ 2 * x1[i], eachindex(res))
-            res = D_t[2] * y1.^2; @test all(i->res[i] ≈ 2 * y1[i], eachindex(res))
+            res = D_t[1] * x1.^2; @test all(i->isapprox(res[i], 2 * x1[i], atol = 1000 * eps(T)), eachindex(res))
+            res = D_t[2] * y1.^2; @test all(i->isapprox(res[i], 2 * y1[i], atol = 1000 * eps(T)), eachindex(res))
         end
         if acc_order >= 6
-            res = D_t[1] * x1.^3; @test all(i->res[i] ≈ 3 * x1[i]^2, eachindex(res))
-            res = D_t[2] * y1.^3; @test all(i->res[i] ≈ 3 * y1[i]^2, eachindex(res))
+            res = D_t[1] * x1.^3; @test all(i->isapprox(res[i], 3 * x1[i]^2, atol = 1000 * eps(T)), eachindex(res))
+            res = D_t[2] * y1.^3; @test all(i->isapprox(res[i], 3 * y1[i]^2, atol = 1000 * eps(T)), eachindex(res))
         end
     end
 end

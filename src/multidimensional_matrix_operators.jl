@@ -129,6 +129,7 @@ For the construction, see also:
   Journal of Computational Physics 268, pp. 17-38, [DOI: 10.1016/j.jcp.2014.02.031](https://doi.org/10.1016/j.jcp.2014.02.031).
 """
 function tensor_product_operator_2D(D)
+    T = eltype(D)
     nodes_1D = grid(D)
     N = length(nodes_1D)
     nodes = SVector.(vec(nodes_1D' .* ones(N)), vec(ones(N)' .* nodes_1D))
@@ -146,11 +147,11 @@ function tensor_product_operator_2D(D)
 
     weights = diag(M)
     Ds = (D_x, D_y)
-    normals = Vector{SVector{2,Float64}}(undef, 4 * N - 4)
+    normals = Vector{SVector{2,T}}(undef, 4 * N - 4)
     # weights_boundary is chosen such that
     # mass_matrix_boundary(D, 1) == Diagonal(kron(B_1D, M_1D)) ( = Q_x + Q_x') and
     # mass_matrix_boundary(D, 2) == Diagonal(kron(M_1D, B_1D)) ( = Q_y + Q_y')
-    weights_boundary = Vector{Float64}(undef, 4 * N - 4)
+    weights_boundary = Vector{T}(undef, 4 * N - 4)
     j = 0
     for i in eachindex(normals)
         if i == 1 # lower left corner
