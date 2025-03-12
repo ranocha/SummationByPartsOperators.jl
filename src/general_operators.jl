@@ -267,7 +267,7 @@ end
 
 
 """
-    integrate([func,] u, D::AbstractPeriodicDerivativeOperator)
+    integrate([func = identity,] u, D::AbstractPeriodicDerivativeOperator)
 
 Map the function `func` to the coefficients `u` and integrate with respect to
 the quadrature rule associated with the derivative operator `D`.
@@ -284,18 +284,17 @@ function integrate(func, u::AbstractVector, D::AbstractPeriodicDerivativeOperato
 end
 
 """
-    integrate_boundary([func,] u, D::AbstractDerivativeOperator)
+    integrate_boundary([func = identity,] u, D::AbstractDerivativeOperator)
 
 Map the function `func` to the coefficients `u` and integrate along the boundary. For classical 1D
-operators this is `func(u[end]) - func(u[1])`. For periodic 1D operators this is zero.
+operators this is `func(u[end]) - func(u[begin])`. For periodic 1D operators this is zero.
 """
 function integrate_boundary(func, u, D::AbstractNonperiodicDerivativeOperator)
-    return func(u[end]) - func(u[1])
+    return func(u[end]) - func(u[begin])
 end
 
 function integrate_boundary(func, u, D::AbstractPeriodicDerivativeOperator)
-    T = eltype(D)
-    return T(0)
+    return zero(func(u[begin]))
 end
 
 integrate_boundary(u, D) = integrate_boundary(identity, u, D)
@@ -310,15 +309,14 @@ operators this is the zero matrix.
 function mass_matrix_boundary(D::AbstractNonperiodicDerivativeOperator)
     T = eltype(D)
     b = zeros(T, length(grid(D)))
-    b[1] = T(-1.0)
-    b[end] = T(1.0)
+    b[begin] = -one(T)
+    b[end] = one(T)
     return Diagonal(b)
 end
 
 function mass_matrix_boundary(D::AbstractPeriodicDerivativeOperator)
     T = eltype(D)
-    b = zeros(T, length(grid(D)))
-    return Diagonal(b)
+    return zero(T) * I
 end
 
 """

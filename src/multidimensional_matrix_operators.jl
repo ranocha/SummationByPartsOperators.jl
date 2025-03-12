@@ -51,10 +51,10 @@ Base.getindex(D::MultidimensionalMatrixDerivativeOperator, i::Int) = D.Ds[i]
 Base.eltype(::MultidimensionalMatrixDerivativeOperator{Dim,T}) where {Dim,T} = T
 
 """
-    integrate_boundary([func,] u, D::MultidimensionalMatrixDerivativeOperator, dim)
+    integrate_boundary([func = identity,] u, D::MultidimensionalMatrixDerivativeOperator, dim)
 
 Map the function `func` to the coefficients `u` and integrate along the boundary in direction `dim` with respect to
-the surface quadrature rule associated with the `MultidimensionalMatrixDerivativeOperator` `D`.
+the surface quadrature rule associated with the [`MultidimensionalMatrixDerivativeOperator`](@ref) `D`.
 """
 function integrate_boundary(func, u, D::MultidimensionalMatrixDerivativeOperator, dim)
     return integrate(func, u, weights_boundary_scaled(D, dim))
@@ -68,7 +68,7 @@ weights_boundary_scaled(D::MultidimensionalMatrixDerivativeOperator, dim::Int) =
 """
     mass_matrix_boundary(D::MultidimensionalMatrixDerivativeOperator, dim)
 
-Construct the mass matrix at the boundary of a `MultidimensionalMatrixDerivativeOperator` `D` in direction `dim`.
+Construct the mass matrix at the boundary of a [`MultidimensionalMatrixDerivativeOperator`](@ref) `D` in direction `dim`.
 The boundary mass matrix is constructed to be mimetic, see
 
 - Jan Glaubitz, Simon-Christian Klein, Jan Nordström, Philipp Öffner (2023)
