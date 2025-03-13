@@ -97,7 +97,7 @@ end
         @test ndims(D_t) == 2
         @test derivative_order(D_t) == 1
         @test accuracy_order(D_t) == acc_order
-        @test source_of_coefficients(D_t) isa SourceOfCoefficientsCombination
+        @test source_of_coefficients(D_t) isa SourceOfCoefficientsCombination{2}
         for compact in (true, false)
             show(IOContext(devnull, :compact=>compact), source_of_coefficients(D_t))
             summary(IOContext(devnull, :compact=>compact), source_of_coefficients(D_t))
