@@ -28,10 +28,10 @@ References:
 """
 @auto_hash_equals struct MultidimensionalMatrixDerivativeOperator{Dim,T,NodesType,DType<:AbstractMatrix{T},SourceOfCoefficients} <: AbstractMatrixDerivativeOperator{T}
     grid::NodesType # length(grid) == N, e.g. Vector{SVector{Dim, T}} or `NodeSet` from KernelInterpolation.jl
-    boundary_indices::Vector{Int} # length(boundary_indices) == N_boundary < N
-    normals::Vector{SVector{Dim,T}} # length(normals) == N_boundary < N
+    boundary_indices::Vector{Int} # length(boundary_indices) == N_boundary
+    normals::Vector{SVector{Dim,T}} # length(normals) == N_boundary
     weights::Vector{T} # length(weights) == N
-    weights_boundary::Vector{T} # length(weights_boundary) == N_boundary < N
+    weights_boundary::Vector{T} # length(weights_boundary) == N_boundary
     Ds::NTuple{Dim,DType}
     accuracy_order::Int
     source::SourceOfCoefficients
