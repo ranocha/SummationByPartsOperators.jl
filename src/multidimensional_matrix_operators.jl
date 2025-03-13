@@ -155,7 +155,7 @@ function tensor_product_operator_2D(D_x, D_y = D_x)
     # mass_matrix_boundary(D, 1) == Diagonal(kron(B_1D_1, M_1D_2)) ( = Q_x + Q_x') and
     # mass_matrix_boundary(D, 2) == Diagonal(kron(M_1D_2, B_1D_1)) ( = Q_y + Q_y')
     # TODO: For different D_x and D_y, one of the above conditions is not fulfilled depending on the choice of weights_boundary at the corners
-    weights_boundary = Vector{T}(undef, 4 * (N_x + N_y) - 4)
+    weights_boundary = Vector{T}(undef, 2 * (N_x + N_y) - 4)
     j = 0
     for i in eachindex(normals)
         if i == 1 # lower left corner
