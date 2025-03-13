@@ -10,7 +10,8 @@ An instance of this type can be constructed by passing the nodes `nodes` (e.g. a
 indicates which nodes are on the boundary, the normal vectors `normals` of the boundary nodes, the weights `weights` and `weights_boundary`
 of the operator, the derivative matrices `Ds` in each direction, the `accuracy_order` of the operator, and the `source` of coefficients, which
 can be `nothing` for experimentation. The lengths of `boundary_indices`, `normals`, and `weights_boundary` should be the same and should coincide
-with the number of boundary nodes.
+with the number of boundary nodes. Indices in `boundary_indices` can appear multiple times if the boundary nodes are shared between
+different boundaries, e.g. corners.
 
 To obtain the derivative operator in a specific direction, use `D[dim]`. The boundary operator in a specific direction can be obtained with
 `mass_matrix_boundary(D, dim)` and will be constructed as a mimetic operator based on `weights_boundary`. The mass matrix of the operator
