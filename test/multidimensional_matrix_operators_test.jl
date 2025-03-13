@@ -78,7 +78,7 @@ end
 
 @testset "2D tensor product operators" begin
     N_x = 14
-    N_y = 16
+    N_y = 18
     xmin_construction = 0.5
     xmax_construction = 1.0
     ymin_construction = -1.0
@@ -86,7 +86,7 @@ end
 
     for acc_order in [2, 4, 6], T in (Float32, Float64)
         D_1 = derivative_operator(MattssonNordström2004(), 1, acc_order, T(xmin_construction), T(xmax_construction), N_x)
-        D_2 = derivative_operator(MattssonNordström2004(), 1, acc_order, T(ymin_construction), T(ymax_construction), N_y)
+        D_2 = derivative_operator(MattssonAlmquistCarpenter2014Extended(), 1, acc_order, T(ymin_construction), T(ymax_construction), N_y)
         D_t = tensor_product_operator_2D(D_1, D_2)
 
         for compact in (true, false)
@@ -97,7 +97,7 @@ end
         @test ndims(D_t) == 2
         @test derivative_order(D_t) == 1
         @test accuracy_order(D_t) == acc_order
-        @test source_of_coefficients(D_t) == source_of_coefficients(D_1)
+        @test source_of_coefficients(D_t) isa SourceOfCoefficientsCombination
         @test eltype(D_t) == eltype(D_1) == eltype(D_2) == T
         @test real(D_t) == real(D_1) == real(D_2) == T
 

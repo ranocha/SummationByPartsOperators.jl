@@ -112,6 +112,26 @@ function Base.show(io::IO, D::MultidimensionalMatrixDerivativeOperator)
 end
 
 """
+    SourceOfCoefficientsCombination(sources::SourceOfCoefficients...)
+
+Combine multiple sources of coefficients into a single source.
+"""
+struct SourceOfCoefficientsCombination{N} <: SourceOfCoefficients
+    sources::NTuple{N,SourceOfCoefficients}
+end
+
+function SourceOfCoefficientsCombination(sources::SourceOfCoefficients...)
+    return SourceOfCoefficientsCombination(sources)
+end
+
+function Base.show(io::IO, source::SourceOfCoefficientsCombination)
+    println(io, "Combined sources of coefficients with ", length(source.sources), " sources:")
+    for s in source.sources
+        println(io, "- ", s)
+    end
+end
+
+"""
     tensor_product_operator_2D(D_x, D_y = D_x)
 
 Create a 2D [`MultidimensionalMatrixDerivativeOperator`](@ref) on a square based on a 1D derivative operators `D_x` and `D_y` using a tensor product structure.
@@ -191,6 +211,11 @@ function tensor_product_operator_2D(D_x, D_y = D_x)
         end
     end
     acc_order = min(accuracy_order(D_x), accuracy_order(D_y))
+    if source_of_coefficients(D_x) == source_of_coefficients(D_y)
+        source = source_of_coefficients(D_x)
+    else
+        source = SourceOfCoefficientsCombination(source_of_coefficients(D_x), source_of_coefficients(D_y))
+    end
     return MultidimensionalMatrixDerivativeOperator(nodes, on_boundary, normals, weights, weights_boundary, Ds,
-                                                    acc_order, source_of_coefficients(D_x)) # TODO: source of coefficients? D_x? D_y?
+                                                    acc_order, source)
 end
