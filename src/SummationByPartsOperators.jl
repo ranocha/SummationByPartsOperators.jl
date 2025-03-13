@@ -149,7 +149,8 @@ export FilterCallback, ConstantFilter, ExponentialFilter
 export SafeMode, FastMode, ThreadedMode
 export derivative_order, accuracy_order, source_of_coefficients, grid, semidiscretize
 export mass_matrix, mass_matrix_boundary
-export integrate, integrate_boundary, left_boundary_weight, right_boundary_weight,
+export integrate, integrate_boundary, restrict_boundary,
+       left_boundary_weight, right_boundary_weight,
        scale_by_mass_matrix!, scale_by_inverse_mass_matrix!,
        derivative_left, derivative_right,
        mul_transpose_derivative_left!, mul_transpose_derivative_right!,

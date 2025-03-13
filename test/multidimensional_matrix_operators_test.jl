@@ -13,16 +13,14 @@ using SparseArrays
         D = derivative_operator(MattssonNordström2004(), 1, acc_order, xmin_construction, xmax_construction, N)
 
         nodes = SVector.(grid(D))
-        on_boundary = fill(false, N)
-        on_boundary[1] = true
-        on_boundary[end] = true
+        boundary_indices = [1, N]
         normals = [SVector(-1.0), SVector(1.0)]
         weights = diag(mass_matrix(D))
         weights_boundary = [1.0, 1.0]
         Ds_dense = (Matrix(D),)
-        D_multi_dense = MultidimensionalMatrixDerivativeOperator(nodes, on_boundary, normals, weights, weights_boundary, Ds_dense, acc_order, source_of_coefficients(D))
+        D_multi_dense = MultidimensionalMatrixDerivativeOperator(nodes, boundary_indices, normals, weights, weights_boundary, Ds_dense, acc_order, source_of_coefficients(D))
         Ds_sparse = (sparse(D),)
-        D_multi_sparse = MultidimensionalMatrixDerivativeOperator(nodes, on_boundary, normals, weights, weights_boundary, Ds_sparse, acc_order, source_of_coefficients(D))
+        D_multi_sparse = MultidimensionalMatrixDerivativeOperator(nodes, boundary_indices, normals, weights, weights_boundary, Ds_sparse, acc_order, source_of_coefficients(D))
         @test D_multi_sparse[1] isa SparseMatrixCSC
 
         for D_multi in (D_multi_dense, D_multi_sparse)
@@ -66,7 +64,7 @@ using SparseArrays
             @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(u_reference[(begin + 1):(end - 1)]), D)
             @test u ≈ u_reference
 
-            @test SummationByPartsOperators.weights_boundary(D_multi) == [1.0, zeros(eltype(D_multi), N - 2)..., 1.0]
+            @test SummationByPartsOperators.weights_boundary(D_multi) == [1.0, 1.0]
             @test SummationByPartsOperators.get_weight(D_multi, 1) == left_boundary_weight(D_multi) == left_boundary_weight(D)
             @test SummationByPartsOperators.get_weight(D_multi, N) == right_boundary_weight(D_multi) == right_boundary_weight(D)
 
@@ -109,12 +107,9 @@ end
         M = mass_matrix(D_t)
         D_x = D_t[1]
         @test D_x isa SparseMatrixCSC
-        B_x = mass_matrix_boundary(D_t, 1)
-        @test M * D_x + D_x' * M ≈ B_x
+
         D_y = D_t[2]
         @test D_y isa SparseMatrixCSC
-        B_y = mass_matrix_boundary(D_t, 2)
-        # @test M * D_y + D_y' * M ≈ B_y # TODO: Fix this
 
         M_1D_1 = mass_matrix(D_1)
         M_1D_2 = mass_matrix(D_2)
@@ -125,10 +120,15 @@ end
         @test Q_x ≈ M * D_x
         @test Q_y ≈ M * D_y
 
-        B_1D_1 = mass_matrix_boundary(D_1)
-        B_1D_2 = mass_matrix_boundary(D_2)
-        @test B_x ≈ Diagonal(kron(B_1D_1, M_1D_2))
-        # @test B_y ≈ Diagonal(kron(M_1D_2, B_1D_1)) # TODO: Fix this
+        @test_throws ArgumentError B_x = mass_matrix_boundary(D_t, 1)
+        @test_throws ArgumentError B_y = mass_matrix_boundary(D_t, 2)
+        # These tests would only be valid if boundary nodes are not included in the 1D grid, e.g., for Gauss-Legendre operators
+        # @test M * D_x + D_x' * M ≈ B_x
+        # @test M * D_y + D_y' * M ≈ B_y
+        # B_1D_1 = mass_matrix_boundary(D_1)
+        # B_1D_2 = mass_matrix_boundary(D_2)
+        # @test B_x ≈ Diagonal(kron(B_1D_1, M_1D_2))
+        # @test B_y ≈ Diagonal(kron(M_1D_1, B_1D_2))
 
         # accuracy test
         x = grid(D_t)

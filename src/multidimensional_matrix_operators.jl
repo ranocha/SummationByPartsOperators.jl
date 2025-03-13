@@ -1,16 +1,16 @@
 """
     MultidimensionalMatrixDerivativeOperator{Dim, T}
-    MultidimensionalMatrixDerivativeOperator(nodes::NodesType, on_boundary::Vector{Bool}, normals::Vector{SVector{Dim,T}},
+    MultidimensionalMatrixDerivativeOperator(nodes::NodesType, boundary_indices::Vector{Int}, normals::Vector{SVector{Dim,T}},
                                              weights::Vector{T}, weights_boundary::Vector{T}, Ds::NTuple{Dim,DType},
                                              accuracy_order::Int, source::SourceOfCoefficients) where {Dim,T<:Real,NodesType,DType<:AbstractMatrix{T}}
 
 Multidimensional operator that represents a first-derivative operator based on matrices.
 
-An instance of this type can be constructed by passing the nodes `nodes` (e.g. a `Vector{SVector}`), a vector of booleans `on_boundary` that
-indicates whether a node is on the boundary or not, the normal vectors `normals` of the boundary nodes, the weights `weights` and `weights_boundary`
+An instance of this type can be constructed by passing the nodes `nodes` (e.g. a `Vector{SVector}`), a vector of indices `boundary_indices` that
+indicates which nodes are on the boundary, the normal vectors `normals` of the boundary nodes, the weights `weights` and `weights_boundary`
 of the operator, the derivative matrices `Ds` in each direction, the `accuracy_order` of the operator, and the `source` of coefficients, which
-can be `nothing` for experimentation. The lengths of `normals` and `weights_boundary` should be the same and should coincide with the number of
-boundary nodes (i.e. the number if `true`s in `on_boundary`).
+can be `nothing` for experimentation. The lengths of `boundary_indices`, `normals`, and `weights_boundary` should be the same and should coincide
+with the number of boundary nodes.
 
 To obtain the derivative operator in a specific direction, use `D[dim]`. The boundary operator in a specific direction can be obtained with
 `mass_matrix_boundary(D, dim)` and will be constructed as a mimetic operator based on `weights_boundary`. The mass matrix of the operator
@@ -28,7 +28,7 @@ References:
 """
 @auto_hash_equals struct MultidimensionalMatrixDerivativeOperator{Dim,T,NodesType,DType<:AbstractMatrix{T},SourceOfCoefficients} <: AbstractMatrixDerivativeOperator{T}
     grid::NodesType # length(grid) == N, e.g. Vector{SVector{Dim, T}} or `NodeSet` from KernelInterpolation.jl
-    on_boundary::Vector{Bool} # length(on_boundary) == N, sum(on_boundary) == N_boundary
+    boundary_indices::Vector{Int} # length(boundary_indices) == N_boundary < N
     normals::Vector{SVector{Dim,T}} # length(normals) == N_boundary < N
     weights::Vector{T} # length(weights) == N
     weights_boundary::Vector{T} # length(weights_boundary) == N_boundary < N
@@ -37,18 +37,26 @@ References:
     source::SourceOfCoefficients
 
     function MultidimensionalMatrixDerivativeOperator(nodes::NodesType,
-        on_boundary::Vector{Bool},
+        boundary_indices::Vector{Int},
         normals::Vector{SVector{Dim,T}},
         weights::Vector{T}, weights_boundary::Vector{T},
         Ds::NTuple{Dim,DType}, accuracy_order::Int,
         source::SourceOfCoefficients) where {Dim,T<:Real,NodesType,DType<:AbstractMatrix{T},SourceOfCoefficients}
-        new{Dim,T,NodesType,DType,SourceOfCoefficients}(nodes, on_boundary, normals, weights, weights_boundary, Ds, accuracy_order, source)
+        if length(nodes) != length(weights)
+            throw(ArgumentError("The number of nodes and weights should be the same"))
+        end
+        if !(length(boundary_indices) == length(normals) == length(weights_boundary))
+            throw(ArgumentError("The number of boundary indices, normals, and boundary weights should be the same"))
+        end
+        new{Dim,T,NodesType,DType,SourceOfCoefficients}(nodes, boundary_indices, normals, weights, weights_boundary, Ds, accuracy_order, source)
     end
 end
 
 Base.ndims(::MultidimensionalMatrixDerivativeOperator{Dim}) where {Dim} = Dim
 Base.getindex(D::MultidimensionalMatrixDerivativeOperator, i::Int) = D.Ds[i]
 Base.eltype(::MultidimensionalMatrixDerivativeOperator{Dim,T}) where {Dim,T} = T
+
+restrict_boundary(u, D::MultidimensionalMatrixDerivativeOperator) = u[D.boundary_indices]
 
 """
     integrate_boundary([func = identity,] u, D::MultidimensionalMatrixDerivativeOperator, dim)
@@ -57,13 +65,13 @@ Map the function `func` to the coefficients `u` and integrate along the boundary
 the surface quadrature rule associated with the [`MultidimensionalMatrixDerivativeOperator`](@ref) `D`.
 """
 function integrate_boundary(func, u, D::MultidimensionalMatrixDerivativeOperator, dim)
-    return integrate(func, u, weights_boundary_scaled(D, dim))
+    return integrate(func, restrict_boundary(u, D), weights_boundary_scaled(D, dim))
 end
 
 integrate_boundary(u, D::MultidimensionalMatrixDerivativeOperator, dim) = integrate_boundary(identity, u, D, dim)
 
-weights_boundary(D::MultidimensionalMatrixDerivativeOperator) = get_weight_boundary.(Ref(D), 1:length(grid(D)))
-weights_boundary_scaled(D::MultidimensionalMatrixDerivativeOperator, dim::Int) = get_weight_boundary_scaled.(Ref(D), Ref(dim), 1:length(grid(D)))
+weights_boundary(D::MultidimensionalMatrixDerivativeOperator) = get_weight_boundary.(Ref(D), 1:length(D.weights_boundary))
+weights_boundary_scaled(D::MultidimensionalMatrixDerivativeOperator, dim::Int) = get_weight_boundary_scaled.(Ref(D), Ref(dim), 1:length(D.weights_boundary))
 
 """
     mass_matrix_boundary(D::MultidimensionalMatrixDerivativeOperator, dim)
@@ -75,30 +83,29 @@ The boundary mass matrix is constructed to be mimetic, see
   Multi-dimensional summation-by-parts operators for general function spaces: Theory and construction
   Journal of Computational Physics 491, 112370, [DOI: 10.1016/j.jcp.2023.112370](https://doi.org/10.1016/j.jcp.2023.112370).
 """
-mass_matrix_boundary(D::MultidimensionalMatrixDerivativeOperator, dim::Int) = Diagonal(weights_boundary_scaled(D, dim))
+function mass_matrix_boundary(D::MultidimensionalMatrixDerivativeOperator, dim::Int)
+    if length(unique(D.boundary_indices)) != length(D.boundary_indices)
+        throw(ArgumentError("The boundary indices should be unique"))
+    end
+    b = zeros(eltype(D), length(D.grid))
+    b[D.boundary_indices] .= weights_boundary_scaled(D, dim)
+    return Diagonal(b)
+end
 
 function get_weight_boundary(D::MultidimensionalMatrixDerivativeOperator, i::Int)
-    @unpack weights_boundary, on_boundary = D
-    N, _ = size(D)
+    @unpack weights_boundary = D
+    N_boundary = length(weights_boundary)
     @boundscheck begin
-        @argcheck 1 <= i <= N
+        @argcheck 1 <= i <= N_boundary
     end
-    if !on_boundary[i]
-        return zero(eltype(D))
-    end
-    j = sum(view(on_boundary, 1:i))
-    @inbounds ω = weights_boundary[j]
+    @inbounds ω = weights_boundary[i]
     return ω
 end
 
 function get_weight_boundary_scaled(D::MultidimensionalMatrixDerivativeOperator, dim::Int, i::Int)
-    @unpack normals, on_boundary = D
-    if !on_boundary[i]
-        return zero(eltype(D))
-    end
+    @unpack normals = D
     ω = get_weight_boundary(D, i)
-    j = sum(view(on_boundary, 1:i))
-    ω * normals[j][dim]
+    return ω * normals[i][dim]
 end
 
 function Base.show(io::IO, D::MultidimensionalMatrixDerivativeOperator)
@@ -154,11 +161,6 @@ function tensor_product_operator_2D(D_x, D_y = D_x)
     N_x = length(nodes_1D_x)
     N_y = length(nodes_1D_y)
     nodes = SVector.(vec(nodes_1D_x' .* ones(T, N_y)), vec(ones(T, N_x)' .* nodes_1D_y))
-    on_boundary = zeros(Bool, N_x * N_y)
-    on_boundary[1:N_y] .= true # left boundary
-    on_boundary[N_y:N_y:end-N_y + 1] .= true # lower boundary
-    on_boundary[N_y + 1:N_y:end-N_y + 1] .= true # upper boundary
-    on_boundary[end-N_y+1:end] .= true # right boundary
 
     D_1D_x = sparse(D_x)
     M_1D_x = mass_matrix(D_x)
@@ -170,44 +172,32 @@ function tensor_product_operator_2D(D_x, D_y = D_x)
 
     weights = diag(M_t)
     Ds = (D_t_x, D_t_y)
-    normals = Vector{SVector{2,T}}(undef, 2 * (N_x + N_y) - 4)
-    # weights_boundary is chosen such that
-    # mass_matrix_boundary(D, 1) == Diagonal(kron(B_1D_1, M_1D_2)) ( = Q_x + Q_x') and
-    # mass_matrix_boundary(D, 2) == Diagonal(kron(M_1D_2, B_1D_1)) ( = Q_y + Q_y')
-    # TODO: For different D_x and D_y, one of the above conditions is not fulfilled depending on the choice of weights_boundary at the corners
-    weights_boundary = Vector{T}(undef, 2 * (N_x + N_y) - 4)
-    j = 0
-    for i in eachindex(normals)
-        if i == 1 # lower left corner
-            normals[i] = SVector(-1.0, -1.0)
-            weights_boundary[i] = M_1D_y[1, 1] # or M_1D_x[1, 1]?
-        elseif i < N_y # left boundary
+    # Since the left and right end points are always included, we need to store the corners twice in the boundary indices,
+    # once with the weight from the x-direction and once with the weight from the y-direction with corresponding normals.
+    N_boundary = 2 * (N_x + N_y)
+    boundary_indices = [1:N_y..., # left boundary, N_y
+                        1:N_y:((N_x - 1) * N_y + 1)..., # lower boundary, N_x
+                        N_y:N_y:(N_x * N_y)..., # upper boundary, N_x
+                        ((N_x - 1)* N_y + 1):N_x * N_y...] # right boundary, N_y
+    normals = Vector{SVector{2,T}}(undef, N_boundary)
+    weights_boundary = Vector{T}(undef, N_boundary)
+    for i in eachindex(boundary_indices)
+        if i <= N_y # left boundary
             normals[i] = SVector(-1.0, 0.0)
-            weights_boundary[i] = M_1D_y[i, i]
-        elseif i == N_y # upper left corner
-            normals[i] = SVector(-1.0, 1.0)
-            weights_boundary[i] = M_1D_y[N_y, N_y] # or M_1D_x[1, 1]?
-        elseif i < 2 * N_x + N_y - 3
-            if (i - N_y - 1) % 2 == 0 # lower boundary
-                normals[i] = SVector(0.0, -1.0)
-                k = i - N_y + 1 - j
-                weights_boundary[i] = M_1D_x[k, k]
-            else # upper boundary
-                normals[i] = SVector(0.0, 1.0)
-                k = i - N_y - j
-                weights_boundary[i] = M_1D_x[k, k]
-                j += 1
-            end
-        elseif i == 2 * N_x + N_y - 3 # lower right corner
-            normals[i] = SVector(1.0, -1.0)
-            weights_boundary[i] = M_1D_y[1, 1] # or M_1D_x[N_x, N_x]?
-        elseif i < 2 * (N_x + N_y) - 4 # right boundary
-            normals[i] = SVector(1.0, 0.0)
-            k = i - (2 * N_x + N_y - 4)
+            k = i
             weights_boundary[i] = M_1D_y[k, k]
-        else # i == 2 * (N_x + N_y) - 4 # upper right corner
-            normals[i] = SVector(1.0, 1.0)
-            weights_boundary[i] = M_1D_y[N_y, N_y] # or M_1D_x[N_x, N_x]?
+        elseif i <= N_x + N_y # lower boundary
+            normals[i] = SVector(0.0, -1.0)
+            k = i - N_y
+            weights_boundary[i] = M_1D_x[k, k]
+        elseif i <= 2 * N_x + N_y # upper boundary
+            normals[i] = SVector(0.0, 1.0)
+            k = i - N_x - N_y
+            weights_boundary[i] = M_1D_x[k, k]
+        else # right boundary
+            normals[i] = SVector(1.0, 0.0)
+            k = i - 2 * N_x - N_y
+            weights_boundary[i] = M_1D_y[k, k]
         end
     end
     acc_order = min(accuracy_order(D_x), accuracy_order(D_y))
@@ -216,6 +206,6 @@ function tensor_product_operator_2D(D_x, D_y = D_x)
     else
         source = SourceOfCoefficientsCombination(source_of_coefficients(D_x), source_of_coefficients(D_y))
     end
-    return MultidimensionalMatrixDerivativeOperator(nodes, on_boundary, normals, weights, weights_boundary, Ds,
+    return MultidimensionalMatrixDerivativeOperator(nodes, boundary_indices, normals, weights, weights_boundary, Ds,
                                                     acc_order, source)
 end

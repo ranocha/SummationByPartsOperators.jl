@@ -300,6 +300,15 @@ end
 integrate_boundary(u, D) = integrate_boundary(identity, u, D)
 
 """
+    restrict_boundary(u, D::AbstractDerivativeOperator)
+
+Restrict the coefficients `u` to the boundary nodes of the derivative operator `D`.
+"""
+restrict_boundary(u, D::AbstractNonperiodicDerivativeOperator) = u[[begin, end]]
+
+restrict_boundary(u, D::AbstractPeriodicDerivativeOperator) = eltype(u)[]
+
+"""
     mass_matrix_boundary(D::AbstractDerivativeOperator)
 
 Construct the mass matrix at the boundary of a derivative operator `D`. For classical 1D
