@@ -111,8 +111,6 @@ function Base.show(io::IO, D::MultidimensionalMatrixDerivativeOperator)
     end
 end
 
-# TODO: mul! How? Depends on direction
-
 """
     tensor_product_operator_2D(D_x, D_y = D_x)
 
@@ -194,5 +192,5 @@ function tensor_product_operator_2D(D_x, D_y = D_x)
     end
     acc_order = min(accuracy_order(D_x), accuracy_order(D_y))
     return MultidimensionalMatrixDerivativeOperator(nodes, on_boundary, normals, weights, weights_boundary, Ds,
-                                                    acc_order, source_of_coefficients(D_x)) # source of coefficients? D_x or D_y?
+                                                    acc_order, source_of_coefficients(D_x)) # TODO: source of coefficients? D_x? D_y?
 end
