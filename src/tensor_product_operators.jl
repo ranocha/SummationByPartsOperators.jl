@@ -135,8 +135,8 @@ function tensor_product_operator_2D(D_x, D_y = D_x)
                         ((N_x - 1)* N_y + 1):N_x * N_y...] # right boundary, N_y
     normals = Vector{SVector{2,T}}(undef, N_boundary)
     # weights_boundary is chosen such that
-    # mass_matrix_boundary(D, 1) == Diagonal(kron(B_1D_1, M_1D_2)) ( = Q_x + Q_x') and
-    # mass_matrix_boundary(D, 2) == Diagonal(kron(M_1D_1, B_1D_2)) ( = Q_y + Q_y')
+    # mass_matrix_boundary(D, 1) == Diagonal(kron(B_1D_x, M_1D_y)) ( = Q_x + Q_x') and
+    # mass_matrix_boundary(D, 2) == Diagonal(kron(M_1D_x, B_1D_y)) ( = Q_y + Q_y')
     weights_boundary = Vector{T}(undef, N_boundary)
     for i in eachindex(boundary_indices)
         if i <= N_y # left boundary
