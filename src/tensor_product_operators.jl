@@ -90,7 +90,7 @@ end
 """
     tensor_product_operator_2D(D_x, D_y = D_x)
 
-Create a 2D [`TensorProductOperator`](@ref) on a square based on 1D derivative operators `D_x` and `D_y` using a tensor product structure.
+Create a 2D [`TensorProductOperator`](@ref) on a rectangle based on 1D derivative operators `D_x` and `D_y` using a tensor product structure.
 The operator `D_x` is used in the x-direction and `D_y` in the y-direction.
 
 For the construction, see also:
