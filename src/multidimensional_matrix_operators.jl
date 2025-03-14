@@ -27,7 +27,7 @@ References:
   Multi-dimensional summation-by-parts operators for general function spaces: Theory and construction
   Journal of Computational Physics 491, 112370, [DOI: 10.1016/j.jcp.2023.112370](https://doi.org/10.1016/j.jcp.2023.112370).
 """
-@auto_hash_equals struct MultidimensionalMatrixDerivativeOperator{Dim,T,NodesType,DType<:AbstractMatrix{T},SourceOfCoefficients} <: AbstractMatrixDerivativeOperator{T}
+@auto_hash_equals struct MultidimensionalMatrixDerivativeOperator{Dim,T,NodesType,DType<:AbstractMatrix{T},SourceOfCoefficients} <: AbstractMultidimensionalMatrixDerivativeOperator{Dim,T}
     grid::NodesType # length(grid) == N, e.g. Vector{SVector{Dim, T}} or `NodeSet` from KernelInterpolation.jl
     boundary_indices::Vector{Int} # length(boundary_indices) == N_boundary
     normals::Vector{SVector{Dim,T}} # length(normals) == N_boundary
@@ -53,11 +53,11 @@ References:
     end
 end
 
-Base.ndims(::MultidimensionalMatrixDerivativeOperator{Dim}) where {Dim} = Dim
-Base.getindex(D::MultidimensionalMatrixDerivativeOperator, i::Int) = D.Ds[i]
-Base.eltype(::MultidimensionalMatrixDerivativeOperator{Dim,T}) where {Dim,T} = T
+Base.ndims(::AbstractMultidimensionalMatrixDerivativeOperator{Dim}) where {Dim} = Dim
+Base.getindex(D::AbstractMultidimensionalMatrixDerivativeOperator, i::Int) = D.Ds[i]
+Base.eltype(::AbstractMultidimensionalMatrixDerivativeOperator{Dim,T}) where {Dim,T} = T
 
-restrict_boundary(u, D::MultidimensionalMatrixDerivativeOperator) = u[D.boundary_indices]
+restrict_boundary(u, D::AbstractMultidimensionalMatrixDerivativeOperator) = u[D.boundary_indices]
 
 """
     integrate_boundary([func = identity,] u, D::MultidimensionalMatrixDerivativeOperator, dim)
@@ -65,17 +65,17 @@ restrict_boundary(u, D::MultidimensionalMatrixDerivativeOperator) = u[D.boundary
 Map the function `func` to the coefficients `u` and integrate along the boundary in direction `dim` with respect to
 the surface quadrature rule associated with the [`MultidimensionalMatrixDerivativeOperator`](@ref) `D`.
 """
-function integrate_boundary(func, u, D::MultidimensionalMatrixDerivativeOperator, dim)
+function integrate_boundary(func, u, D::AbstractMultidimensionalMatrixDerivativeOperator, dim)
     return integrate(func, restrict_boundary(u, D), weights_boundary_scaled(D, dim))
 end
 
-integrate_boundary(u, D::MultidimensionalMatrixDerivativeOperator, dim) = integrate_boundary(identity, u, D, dim)
+integrate_boundary(u, D::AbstractMultidimensionalMatrixDerivativeOperator, dim) = integrate_boundary(identity, u, D, dim)
 
-weights_boundary(D::MultidimensionalMatrixDerivativeOperator) = get_weight_boundary.(Ref(D), 1:length(D.weights_boundary))
-weights_boundary_scaled(D::MultidimensionalMatrixDerivativeOperator, dim::Int) = get_weight_boundary_scaled.(Ref(D), Ref(dim), 1:length(D.weights_boundary))
+weights_boundary(D::AbstractMultidimensionalMatrixDerivativeOperator) = get_weight_boundary.(Ref(D), 1:length(D.weights_boundary))
+weights_boundary_scaled(D::AbstractMultidimensionalMatrixDerivativeOperator, dim::Int) = get_weight_boundary_scaled.(Ref(D), Ref(dim), 1:length(D.weights_boundary))
 
 """
-    mass_matrix_boundary(D::MultidimensionalMatrixDerivativeOperator, dim)
+    mass_matrix_boundary(D::AbstractMultidimensionalMatrixDerivativeOperator, dim)
 
 Construct the mass matrix at the boundary of a [`MultidimensionalMatrixDerivativeOperator`](@ref) `D` in direction `dim`.
 The boundary mass matrix is constructed to be mimetic, see
@@ -93,7 +93,7 @@ function mass_matrix_boundary(D::MultidimensionalMatrixDerivativeOperator, dim::
     return Diagonal(b)
 end
 
-function get_weight_boundary(D::MultidimensionalMatrixDerivativeOperator, i::Int)
+function get_weight_boundary(D::AbstractMultidimensionalMatrixDerivativeOperator, i::Int)
     @unpack weights_boundary = D
     N_boundary = length(weights_boundary)
     @boundscheck begin
@@ -103,7 +103,7 @@ function get_weight_boundary(D::MultidimensionalMatrixDerivativeOperator, i::Int
     return ω
 end
 
-function get_weight_boundary_scaled(D::MultidimensionalMatrixDerivativeOperator, dim::Int, i::Int)
+function get_weight_boundary_scaled(D::AbstractMultidimensionalMatrixDerivativeOperator, dim::Int, i::Int)
     @unpack normals = D
     ω = get_weight_boundary(D, i)
     return ω * normals[i][dim]
@@ -117,96 +117,4 @@ function Base.show(io::IO, D::MultidimensionalMatrixDerivativeOperator)
         print(io, ndims(D), "-dimensional matrix-based first-derivative operator {T=", eltype(D), "}")
         print(io, " on ", length(x), " nodes")
     end
-end
-
-"""
-    SourceOfCoefficientsCombination(sources::SourceOfCoefficients...)
-
-Combine multiple sources of coefficients into a single source.
-"""
-struct SourceOfCoefficientsCombination{N} <: SourceOfCoefficients
-    sources::NTuple{N,SourceOfCoefficients}
-end
-
-function SourceOfCoefficientsCombination(sources::SourceOfCoefficients...)
-    return SourceOfCoefficientsCombination(sources)
-end
-
-function Base.show(io::IO, source::SourceOfCoefficientsCombination)
-    println(io, "Combined sources of coefficients with ", length(source.sources), " sources:")
-    for s in source.sources
-        println(io, "- ", s)
-    end
-end
-
-"""
-    tensor_product_operator_2D(D_x, D_y = D_x)
-
-Create a 2D [`MultidimensionalMatrixDerivativeOperator`](@ref) on a square based on a 1D derivative operators `D_x` and `D_y` using a tensor product structure.
-The operator `D_x` is used in the x-direction and `D_y` in the y-direction.
-
-For the construction, see also:
-- Sigrun Ortleb (2021)
-  Numerical Methods for Fluid Flow:
-    High Order SBP Schemes, IMEX Advection-Diffusion Splitting and Positivity Preservation for Production-Destruction-PDEs
-  Habilitation thesis, University of Kassel, [DOI: 10.17170/kobra-202301037274](https://doi.org/10.17170/kobra-202301037274),
-  Chapter 1.2.4.
-- Magnus Svärd, Jan Nordström (2014)
-  Review of summation-by-parts schemes for initial-boundary-value problems
-  Journal of Computational Physics 268, pp. 17-38, [DOI: 10.1016/j.jcp.2014.02.031](https://doi.org/10.1016/j.jcp.2014.02.031).
-"""
-function tensor_product_operator_2D(D_x, D_y = D_x)
-    T = promote_type(eltype(D_x), eltype(D_y))
-    nodes_1D_x = grid(D_x)
-    nodes_1D_y = grid(D_y)
-    N_x = length(nodes_1D_x)
-    N_y = length(nodes_1D_y)
-    nodes = SVector.(vec(nodes_1D_x' .* ones(T, N_y)), vec(ones(T, N_x)' .* nodes_1D_y))
-
-    D_1D_x = sparse(D_x)
-    M_1D_x = mass_matrix(D_x)
-    D_1D_y = sparse(D_y)
-    M_1D_y = mass_matrix(D_y)
-    M_t = kron(M_1D_x, M_1D_y)
-    D_t_x = kron(D_1D_x, Diagonal(I, N_y))
-    D_t_y = kron(Diagonal(I, N_x), D_1D_y)
-
-    weights = diag(M_t)
-    Ds = (D_t_x, D_t_y)
-    # Since the left and right end points are always included, we need to store the corners twice in the boundary indices,
-    # once with the weight from the x-direction and once with the weight from the y-direction with corresponding normals.
-    N_boundary = 2 * (N_x + N_y)
-    boundary_indices = [1:N_y..., # left boundary, N_y
-                        1:N_y:((N_x - 1) * N_y + 1)..., # lower boundary, N_x
-                        N_y:N_y:(N_x * N_y)..., # upper boundary, N_x
-                        ((N_x - 1)* N_y + 1):N_x * N_y...] # right boundary, N_y
-    normals = Vector{SVector{2,T}}(undef, N_boundary)
-    weights_boundary = Vector{T}(undef, N_boundary)
-    for i in eachindex(boundary_indices)
-        if i <= N_y # left boundary
-            normals[i] = SVector(-1.0, 0.0)
-            k = i
-            weights_boundary[i] = M_1D_y[k, k]
-        elseif i <= N_x + N_y # lower boundary
-            normals[i] = SVector(0.0, -1.0)
-            k = i - N_y
-            weights_boundary[i] = M_1D_x[k, k]
-        elseif i <= 2 * N_x + N_y # upper boundary
-            normals[i] = SVector(0.0, 1.0)
-            k = i - N_x - N_y
-            weights_boundary[i] = M_1D_x[k, k]
-        else # right boundary
-            normals[i] = SVector(1.0, 0.0)
-            k = i - 2 * N_x - N_y
-            weights_boundary[i] = M_1D_y[k, k]
-        end
-    end
-    acc_order = min(accuracy_order(D_x), accuracy_order(D_y))
-    if source_of_coefficients(D_x) == source_of_coefficients(D_y)
-        source = source_of_coefficients(D_x)
-    else
-        source = SourceOfCoefficientsCombination(source_of_coefficients(D_x), source_of_coefficients(D_y))
-    end
-    return MultidimensionalMatrixDerivativeOperator(nodes, boundary_indices, normals, weights, weights_boundary, Ds,
-                                                    acc_order, source)
 end

@@ -120,15 +120,14 @@ end
         @test Q_x ≈ M * D_x
         @test Q_y ≈ M * D_y
 
-        @test_throws ArgumentError B_x = mass_matrix_boundary(D_t, 1)
-        @test_throws ArgumentError B_y = mass_matrix_boundary(D_t, 2)
-        # These tests would only be valid if boundary nodes are not included in the 1D grid, e.g., for Gauss-Legendre operators
-        # @test M * D_x + D_x' * M ≈ B_x
-        # @test M * D_y + D_y' * M ≈ B_y
-        # B_1D_1 = mass_matrix_boundary(D_1)
-        # B_1D_2 = mass_matrix_boundary(D_2)
-        # @test B_x ≈ Diagonal(kron(B_1D_1, M_1D_2))
-        # @test B_y ≈ Diagonal(kron(M_1D_1, B_1D_2))
+        B_x = mass_matrix_boundary(D_t, 1)
+        B_y = mass_matrix_boundary(D_t, 2)
+        @test M * D_x + D_x' * M ≈ B_x
+        @test M * D_y + D_y' * M ≈ B_y
+        B_1D_1 = mass_matrix_boundary(D_1)
+        B_1D_2 = mass_matrix_boundary(D_2)
+        @test B_x ≈ Diagonal(kron(B_1D_1, M_1D_2))
+        @test B_y ≈ Diagonal(kron(M_1D_1, B_1D_2))
 
         # accuracy test
         x = grid(D_t)

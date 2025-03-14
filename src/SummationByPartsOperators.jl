@@ -75,6 +75,7 @@ abstract type AbstractDerivativeOperator{T} end
 abstract type AbstractNonperiodicDerivativeOperator{T} <: AbstractDerivativeOperator{T} end
 abstract type AbstractPeriodicDerivativeOperator{T} <: AbstractDerivativeOperator{T} end
 abstract type AbstractMatrixDerivativeOperator{T} <: AbstractNonperiodicDerivativeOperator{T} end
+abstract type AbstractMultidimensionalMatrixDerivativeOperator{Dim,T} <: AbstractMatrixDerivativeOperator{T} end
 abstract type AbstractDerivativeCoefficients{T} end
 abstract type AbstractMassMatrix{T} end
 abstract type AbstractSemidiscretization end
@@ -111,6 +112,7 @@ include("fourier_operators_2d.jl")
 include("legendre_operators.jl")
 include("matrix_operators.jl")
 include("multidimensional_matrix_operators.jl")
+include("tensor_product_operators.jl")
 include("function_space_operators.jl")
 include("upwind_operators.jl")
 include("SBP_coefficients/MattssonNordström2004.jl")
@@ -143,7 +145,7 @@ export PeriodicDerivativeOperator, PeriodicDissipationOperator,
        FourierPolynomialDerivativeOperator, FourierRationalDerivativeOperator,
        FourierDerivativeOperator2D,
        LegendreDerivativeOperator, LegendreSecondDerivativeOperator,
-       MatrixDerivativeOperator, MultidimensionalMatrixDerivativeOperator,
+       MatrixDerivativeOperator, MultidimensionalMatrixDerivativeOperator, TensorProductOperator,
        UpwindOperators, PeriodicUpwindOperators
 export FilterCallback, ConstantFilter, ExponentialFilter
 export SafeMode, FastMode, ThreadedMode
