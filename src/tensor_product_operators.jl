@@ -3,6 +3,7 @@
     TensorProductOperator{Dim,T}
 
 A tensor product operator is a [`MultidimensionalMatrixDerivativeOperator`](@ref) that is the tensor product of one-dimensional derivative operators.
+
 See also [`tensor_product_operator_2D`](@ref).
 
 References:

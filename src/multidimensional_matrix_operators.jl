@@ -17,7 +17,7 @@ To obtain the derivative operator in a specific direction, use `D[dim]`. The bou
 `mass_matrix_boundary(D, dim)` and will be constructed as a mimetic operator based on `weights_boundary`. The mass matrix of the operator
 is given by `mass_matrix(D)`.
 
-See also [`tensor_product_operator_2D`](@ref).
+See also [`TensorProductOperator`](@ref).
 
 References:
 - Jason E. Hicken, David C. Del Rey Fernandez, and David W. Zingg (2016)
