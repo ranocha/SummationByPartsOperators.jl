@@ -24,7 +24,7 @@ end
 
 # This allows us to treat a `TensorProductOperator` as a `MultidimensionalMatrixDerivativeOperator`.
 function Base.getproperty(D::TensorProductOperator, name::Symbol)
-    if name in [:D_multi, :N_x, :N_y]
+    if name in (:D_multi, :N_x, :N_y)
         return getfield(D, name)
     else
         return getproperty(D.D_multi, name)
