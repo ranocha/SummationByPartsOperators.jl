@@ -52,8 +52,6 @@ function mass_matrix_boundary(D::TensorProductOperator{2}, dim::Int)
         deleteat!(boundary_weights, corners_y_dir)
         deleteat!(boundary_indices, corners_y_dir)
     end
-    # @show boundary_indices
-    # @show boundary_weights
     b = zeros(eltype(D), length(D.grid))
     b[boundary_indices] .= boundary_weights
     return Diagonal(b)
