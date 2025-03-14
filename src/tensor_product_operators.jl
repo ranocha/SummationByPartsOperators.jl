@@ -109,6 +109,11 @@ function tensor_product_operator_2D(D_x, D_y = D_x)
     nodes_1D_y = grid(D_y)
     N_x = length(nodes_1D_x)
     N_y = length(nodes_1D_y)
+    # The nodes are sorted like this:
+    #   (N_y)     (2 * N_y)    ...      (N_x * N_y)
+    # (N_y - 1) (2 * N_y - 1)  ...    (N_x * N_y - 1)
+    #    ⋮            ⋮                      ⋮
+    #   (1)       (N_y + 1)    ... ((N_x - 1) * N_y + 1)
     nodes = SVector.(vec(nodes_1D_x' .* ones(T, N_y)), vec(ones(T, N_x)' .* nodes_1D_y))
 
     D_1D_x = sparse(D_x)
