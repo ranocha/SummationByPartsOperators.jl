@@ -140,19 +140,19 @@ function tensor_product_operator_2D(D_x, D_y = D_x)
     weights_boundary = Vector{T}(undef, N_boundary)
     for i in eachindex(boundary_indices)
         if i <= N_y # left boundary
-            normals[i] = SVector(-1.0, 0.0)
+            normals[i] = [-1, 0]
             k = i
             weights_boundary[i] = M_1D_y[k, k]
         elseif i <= N_x + N_y # lower boundary
-            normals[i] = SVector(0.0, -1.0)
+            normals[i] = [0, -1]
             k = i - N_y
             weights_boundary[i] = M_1D_x[k, k]
         elseif i <= 2 * N_x + N_y # upper boundary
-            normals[i] = SVector(0.0, 1.0)
+            normals[i] = [0, 1]
             k = i - N_x - N_y
             weights_boundary[i] = M_1D_x[k, k]
         else # right boundary
-            normals[i] = SVector(1.0, 0.0)
+            normals[i] = [1, 0]
             k = i - 2 * N_x - N_y
             weights_boundary[i] = M_1D_y[k, k]
         end
