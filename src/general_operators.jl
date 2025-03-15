@@ -267,7 +267,7 @@ end
 
 
 """
-    integrate(func, u, D::AbstractPeriodicDerivativeOperator)
+    integrate([func = identity,] u, D::AbstractPeriodicDerivativeOperator)
 
 Map the function `func` to the coefficients `u` and integrate with respect to
 the quadrature rule associated with the derivative operator `D`.
@@ -283,7 +283,50 @@ function integrate(func, u::AbstractVector, D::AbstractPeriodicDerivativeOperato
     Δx * res
 end
 
+"""
+    integrate_boundary([func = identity,] u, D::AbstractDerivativeOperator)
 
+Map the function `func` to the coefficients `u` and integrate along the boundary. For classical 1D
+operators this is `func(u[end]) - func(u[begin])`. For periodic 1D operators this is zero.
+"""
+function integrate_boundary(func, u, D::AbstractNonperiodicDerivativeOperator)
+    return func(u[end]) - func(u[begin])
+end
+
+function integrate_boundary(func, u, D::AbstractPeriodicDerivativeOperator)
+    return zero(func(u[begin]))
+end
+
+integrate_boundary(u, D) = integrate_boundary(identity, u, D)
+
+"""
+    restrict_boundary(u, D::AbstractDerivativeOperator)
+
+Restrict the coefficients `u` to the boundary nodes of the derivative operator `D`.
+"""
+restrict_boundary(u, D::AbstractNonperiodicDerivativeOperator) = u[[begin, end]]
+
+restrict_boundary(u, D::AbstractPeriodicDerivativeOperator) = eltype(u)[]
+
+"""
+    mass_matrix_boundary(D::AbstractDerivativeOperator)
+
+Construct the mass matrix at the boundary of a derivative operator `D`. For classical 1D
+non-periodic operators, this is the matrix `Diagonal([-1, 0, ..., 0, 1])`. For periodic 1D
+operators this is the zero matrix.
+"""
+function mass_matrix_boundary(D::AbstractNonperiodicDerivativeOperator)
+    T = eltype(D)
+    b = zeros(T, length(grid(D)))
+    b[begin] = -one(T)
+    b[end] = one(T)
+    return Diagonal(b)
+end
+
+function mass_matrix_boundary(D::AbstractPeriodicDerivativeOperator)
+    T = eltype(D)
+    return zero(T) * I
+end
 
 """
     LinearlyCombinedDerivativeOperators
