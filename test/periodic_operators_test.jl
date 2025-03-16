@@ -32,7 +32,7 @@ let T=Float32
     @test SummationByPartsOperators.xmin(D) ≈ xmin
     @test SummationByPartsOperators.xmax(D) ≈ xmax
     M = mass_matrix(D)
-    @test M * Matrix(D) + Matrix(D)' * M ≈ zeros(T, N, N)
+    @test M * Matrix(D) + Matrix(D)' * M ≈ mass_matrix_boundary(D)
     mul!(res, D, x0)
     @test all(i->abs(res[i]) < eps(T), accuracy_order:length(res)-accuracy_order)
     mul!(res, D, x1)
@@ -61,7 +61,7 @@ let T=Float32
     @test SummationByPartsOperators.xmin(D) ≈ xmin
     @test SummationByPartsOperators.xmax(D) ≈ xmax
     M = mass_matrix(D)
-    @test M * Matrix(D) + Matrix(D)' * M ≈ zeros(T, N, N)
+    @test M * Matrix(D) + Matrix(D)' * M ≈ mass_matrix_boundary(D)
     mul!(res, D, x0)
     @test all(i->abs(res[i]) < 50*eps(T), accuracy_order:length(res)-accuracy_order)
     mul!(res, D, x1)
@@ -94,7 +94,7 @@ let T=Float32
     @test SummationByPartsOperators.xmin(D) ≈ xmin
     @test SummationByPartsOperators.xmax(D) ≈ xmax
     M = mass_matrix(D)
-    @test M * Matrix(D) + Matrix(D)' * M ≈ zeros(T, N, N)
+    @test M * Matrix(D) + Matrix(D)' * M ≈ mass_matrix_boundary(D)
     mul!(res, D, x0)
     @test all(i->abs(res[i]) < 50*eps(T), accuracy_order:length(res)-accuracy_order)
     mul!(res, D, x1)
@@ -232,7 +232,7 @@ let T=Float32
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == true # because this operator is zero!
     M = mass_matrix(D)
-    @test M * Matrix(D) + Matrix(D)' * M ≈ zeros(T, N, N)
+    @test M * Matrix(D) + Matrix(D)' * M ≈ mass_matrix_boundary(D)
     mul!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < eps(T)
     mul!(res, D, x1); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 1400*eps(T)
     mul!(res, D, x2); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 7000*eps(T)
@@ -257,7 +257,7 @@ let T=Float32
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
     M = mass_matrix(D)
-    @test M * Matrix(D) + Matrix(D)' * M ≈ zeros(T, N, N)
+    @test M * Matrix(D) + Matrix(D)' * M ≈ mass_matrix_boundary(D)
     mul!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 400*eps(T)
     mul!(res, D, x1); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 10000N*eps(T)
     mul!(res, D, x2); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 50000N*eps(T)
@@ -284,7 +284,7 @@ let T=Float32
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
     M = mass_matrix(D)
-    @test M * Matrix(D) + Matrix(D)' * M ≈ zeros(T, N, N)
+    @test M * Matrix(D) + Matrix(D)' * M ≈ mass_matrix_boundary(D)
     mul!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 300*eps(T)
     mul!(res, D, x1); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 80000N*eps(T)
     mul!(res, D, x2); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 300000N*eps(T)
@@ -306,6 +306,8 @@ let T=Float32
 
     @test integrate(x7, D) ≈ sum(mass_matrix(D) * x7)
     @test integrate(u->u^2, x7, D) ≈ dot(x7, mass_matrix(D), x7)
+    @test integrate_boundary(x7, D) ≈ 0.0
+    @test integrate_boundary(u->u^2, x7, D) ≈ 0.0
 end
 
 # Accuracy tests with Float64.
@@ -336,7 +338,7 @@ let T = Float64
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
     M = mass_matrix(D)
-    @test M * Matrix(D) + Matrix(D)' * M ≈ zeros(T, N, N)
+    @test M * Matrix(D) + Matrix(D)' * M ≈ mass_matrix_boundary(D)
     mul!(res, D, x0)
     @test all(i->abs(res[i]) < eps(T), accuracy_order:length(res)-accuracy_order)
     mul!(res, D, x1)
@@ -363,7 +365,7 @@ let T = Float64
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
     M = mass_matrix(D)
-    @test M * Matrix(D) + Matrix(D)' * M ≈ zeros(T, N, N)
+    @test M * Matrix(D) + Matrix(D)' * M ≈ mass_matrix_boundary(D)
     mul!(res, D, x0)
     @test all(i->abs(res[i]) < 10*eps(T), accuracy_order:length(res)-accuracy_order)
     mul!(res, D, x1)
@@ -394,7 +396,7 @@ let T = Float64
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
     M = mass_matrix(D)
-    @test M * Matrix(D) + Matrix(D)' * M ≈ zeros(T, N, N)
+    @test M * Matrix(D) + Matrix(D)' * M ≈ mass_matrix_boundary(D)
     mul!(res, D, x0)
     @test all(i->abs(res[i]) < 10*eps(T), accuracy_order:length(res)-accuracy_order)
     mul!(res, D, x1)
@@ -496,7 +498,7 @@ let T = Float64
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == true # because this operator is zero!
     M = mass_matrix(D)
-    @test M * Matrix(D) + Matrix(D)' * M ≈ zeros(T, N, N)
+    @test M * Matrix(D) + Matrix(D)' * M ≈ mass_matrix_boundary(D)
     mul!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < eps(T)
     mul!(res, D, x1); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 1400*eps(T)
     mul!(res, D, x2); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 7000*eps(T)
@@ -519,7 +521,7 @@ let T = Float64
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
     M = mass_matrix(D)
-    @test M * Matrix(D) + Matrix(D)' * M ≈ zeros(T, N, N)
+    @test M * Matrix(D) + Matrix(D)' * M ≈ mass_matrix_boundary(D)
     mul!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 400*eps(T)
     mul!(res, D, x1); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 20000*eps(T)
     mul!(res, D, x2); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 200000*eps(T)
@@ -544,7 +546,7 @@ let T = Float64
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
     M = mass_matrix(D)
-    @test M * Matrix(D) + Matrix(D)' * M ≈ zeros(T, N, N)
+    @test M * Matrix(D) + Matrix(D)' * M ≈ mass_matrix_boundary(D)
     mul!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 300*eps(T)
     mul!(res, D, x1); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 70000*eps(T)
     mul!(res, D, x2); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 200000*eps(T)
@@ -566,6 +568,8 @@ let T = Float64
 
     @test integrate(x7, D) ≈ sum(mass_matrix(D) * x7)
     @test integrate(u->u^2, x7, D) ≈ dot(x7, mass_matrix(D), x7)
+    @test integrate_boundary(x7, D) ≈ 0.0
+    @test integrate_boundary(u->u^2, x7, D) ≈ 0.0
 end
 
 # Compare Fornberg algorithm with exact representation of central derivative coefficients.
@@ -892,7 +896,7 @@ let T = Float32
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == false
         M = mass_matrix(D)
-        @test M * Matrix(D) + Matrix(D)' * M ≈ zeros(T, N, N)
+        @test M * Matrix(D) + Matrix(D)' * M ≈ mass_matrix_boundary(D)
         mul!(res, D, x0)
         @test all(i->abs(res[i]) < eps(T), stencil_width:length(res)-stencil_width)
         mul!(res, D, x1)
@@ -914,7 +918,7 @@ let T = Float32
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == false
         M = mass_matrix(D)
-        @test M * Matrix(D) + Matrix(D)' * M ≈ zeros(T, N, N)
+        @test M * Matrix(D) + Matrix(D)' * M ≈ mass_matrix_boundary(D)
         mul!(res, D, x0)
         @test all(i->abs(res[i]) < 50*eps(T),  stencil_width:length(res)-stencil_width)
         mul!(res, D, x1)
@@ -1037,7 +1041,7 @@ end
             @test accuracy_order(D) == acc_order
             @test issymmetric(D) == false
             M = mass_matrix(D)
-            @test M * Matrix(D) + Matrix(D)' * M ≈ zeros(T, N, N)
+            @test M * Matrix(D) + Matrix(D)' * M ≈ mass_matrix_boundary(D)
             mul!(res, D, x0)
             @test all(i->abs(res[i]) < 20 * eps(T), stencil_width:length(res)-stencil_width)
             mul!(res, D, x1)
@@ -1072,7 +1076,7 @@ end
             @test accuracy_order(D) == acc_order
             @test issymmetric(D) == false
             M = mass_matrix(D)
-            @test M * Matrix(D) + Matrix(D)' * M ≈ zeros(T, N, N)
+            @test M * Matrix(D) + Matrix(D)' * M ≈ mass_matrix_boundary(D)
             mul!(res, D, x0)
             @test all(i->abs(res[i]) < 50 * eps(T),  stencil_width:length(res)-stencil_width)
             mul!(res, D, x1)
@@ -1131,7 +1135,7 @@ end
             @test accuracy_order(D) == acc_order
             @test issymmetric(D) == false
             M = mass_matrix(D)
-            @test M * Matrix(D) + Matrix(D)' * M == zeros(T, N, N)
+            @test M * Matrix(D) + Matrix(D)' * M == mass_matrix_boundary(D)
             mul!(res, D, x0)
             @test all(i->iszero(res[i]), stencil_width:length(res)-stencil_width)
             mul!(res, D, x1)
@@ -1152,7 +1156,7 @@ end
             @test accuracy_order(D) == acc_order
             @test issymmetric(D) == false
             M = mass_matrix(D)
-            @test M * Matrix(D) + Matrix(D)' * M == zeros(T, N, N)
+            @test M * Matrix(D) + Matrix(D)' * M == mass_matrix_boundary(D)
             mul!(res, D, x0)
             @test all(i->iszero(res[i]),  stencil_width:length(res)-stencil_width)
             mul!(res, D, x1)
@@ -1210,6 +1214,8 @@ for T in (Float32, Float64)
 
         @test integrate(u, D) ≈ sum(mass_matrix(D) * u)
         @test integrate(u->u^2, u, D) ≈ dot(u, mass_matrix(D), u)
+        @test integrate_boundary(u, D) ≈ 0.0
+        @test integrate_boundary(u->u^2, u, D) ≈ 0.0
     end
 
     for N in (8, 9), acc_order in (2, 3, 4)
