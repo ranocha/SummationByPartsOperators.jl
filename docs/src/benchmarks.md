@@ -13,7 +13,7 @@ Let's set up some benchmark code.
 ```@example first-derivative-periodic
 using BenchmarkTools
 using LinearAlgebra, SparseArrays
-using SummationByPartsOperators, DiffEqOperators
+using SummationByPartsOperators
 
 BLAS.set_num_threads(1) # make sure that BLAS is serial to be fair
 
@@ -23,13 +23,10 @@ xmin, xmax = T(0), T(1)
 D_SBP = periodic_derivative_operator(derivative_order=1, accuracy_order=2,
                                      xmin=xmin, xmax=xmax, N=100)
 x = grid(D_SBP)
-D_DEO = CenteredDifference(derivative_order(D_SBP), accuracy_order(D_SBP),
-                           step(x), length(x)) * PeriodicBC(eltype(D_SBP))
 
 D_sparse = sparse(D_SBP)
 
 u = randn(eltype(D_SBP), length(x)); du = similar(u);
-@show D_SBP * u ≈ D_DEO * u ≈ D_sparse * u
 
 function doit(D, text, du, u)
   println(text)
@@ -51,19 +48,13 @@ of magnitude slower than the optimized implementation from SummationByPartsOpera
 doit(D_sparse, "D_sparse:", du, u)
 ```
 
-Finally, we benchmark the implementation of the same derivative operator in
-DiffEqOperators.jl.
-```@example first-derivative-periodic
-doit(D_DEO, "D_DEO:", du, u)
-```
-
 These results were obtained using the following versions.
 ```@example first-derivative-periodic
 using InteractiveUtils
 versioninfo()
 
 using Pkg
-Pkg.status(["SummationByPartsOperators", "DiffEqOperators"],
+Pkg.status(["SummationByPartsOperators"],
            mode=PKGMODE_MANIFEST)
 nothing # hide
 ```
