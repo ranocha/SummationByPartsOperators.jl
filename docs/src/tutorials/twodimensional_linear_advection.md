@@ -4,9 +4,9 @@ In this tutorial, we consider the linear advection equation in two dimensions
 
 ```math
 \begin{aligned}
-    \partial_t u(t,x,y) + a_1\partial_x u(t,x,y) + a_2\partial_y u(t,x,y) &= 0, && t \in (0,T), (x, y)\in\Omega \\
+    \partial_t u(t,x,y) + a_1\partial_x u(t,x,y) + a_2\partial_y u(t,x,y) &= 0, && t \in (0,T), (x, y)\in\Omega, \\
     u(0,x,y) &= u_0(x,y), && (x,y) \in\Omega, \\
-    u(t,x,y) &= g(t,x,y), && t \in (0,T), (x,y) \in\Gamma_-,
+    u(t,x,y) &= g(t,x,y), && t \in (0,T), (x,y) \in\Gamma_-.
 \end{aligned}
 ```
 
@@ -97,7 +97,7 @@ A semidiscretization of the 2D linear advection equation with weakly enforced bo
 ```
 
 where the right-hand side is the simultaneous approximation term (SAT) used for the weak imposition of the boundary conditions. The vector ``\boldsymbol{g}``
-contains the boundary values given by the boundary condition at the inflow boundary and is set to ``\boldsymbol{u}`` on the outflow boundary, i.e.
+contains the boundary values given by the boundary condition at the inflow boundary and is set to ``\boldsymbol{u}`` on the outflow boundary, i.e.,
 for ``n = 1, \ldots, N`` we have
 
 ```math
