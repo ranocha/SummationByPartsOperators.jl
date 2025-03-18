@@ -169,19 +169,6 @@ and coefficients of Mattsson (2017)
   Diagonal-norm upwind SBP operators.
   Journal of Computational Physics 335, pp. 283-310.
   (upwind coefficients plus)
-
-julia> Matrix(D.central)
-10×10 Matrix{Rational{Int64}}:
- -2//1   3//1  -1//1   0//1   0//1   0//1   0//1   0//1   0//1   0//1
- -3//5   0//1   4//5  -1//5   0//1   0//1   0//1   0//1   0//1   0//1
-  1//4  -1//1   0//1   1//1  -1//4   0//1   0//1   0//1   0//1   0//1
-  0//1   1//4  -1//1   0//1   1//1  -1//4   0//1   0//1   0//1   0//1
-  0//1   0//1   1//4  -1//1   0//1   1//1  -1//4   0//1   0//1   0//1
-  0//1   0//1   0//1   1//4  -1//1   0//1   1//1  -1//4   0//1   0//1
-  0//1   0//1   0//1   0//1   1//4  -1//1   0//1   1//1  -1//4   0//1
-  0//1   0//1   0//1   0//1   0//1   1//4  -1//1   0//1   1//1  -1//4
-  0//1   0//1   0//1   0//1   0//1   0//1   1//5  -4//5   0//1   3//5
-  0//1   0//1   0//1   0//1   0//1   0//1   0//1   1//1  -3//1   2//1
 ```
 """
 function upwind_operators(source_type, args...; derivative_order = 1, kwargs...)
@@ -220,17 +207,6 @@ Periodic first-derivative operator of order 2 on a grid in [0//1, 8//1] using 8 
 stencils with 0 nodes to the left, 2 nodes to the right, and coefficients of Fornberg (1998)
   Calculation of Weights in Finite Difference Formulas.
   SIAM Rev. 40.3, pp. 685-691.
-
-julia> Matrix(D.central)
-8×8 Matrix{Rational{Int64}}:
-  0//1   1//1  -1//4   0//1   0//1   0//1   1//4  -1//1
- -1//1   0//1   1//1  -1//4   0//1   0//1   0//1   1//4
-  1//4  -1//1   0//1   1//1  -1//4   0//1   0//1   0//1
-  0//1   1//4  -1//1   0//1   1//1  -1//4   0//1   0//1
-  0//1   0//1   1//4  -1//1   0//1   1//1  -1//4   0//1
-  0//1   0//1   0//1   1//4  -1//1   0//1   1//1  -1//4
- -1//4   0//1   0//1   0//1   1//4  -1//1   0//1   1//1
-  1//1  -1//4   0//1   0//1   0//1   1//4  -1//1   0//1
 ```
 """
 function upwind_operators(::typeof(periodic_derivative_operator);
