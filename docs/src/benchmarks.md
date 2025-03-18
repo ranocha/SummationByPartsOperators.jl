@@ -27,6 +27,7 @@ x = grid(D_SBP)
 D_sparse = sparse(D_SBP)
 
 u = randn(eltype(D_SBP), length(x)); du = similar(u);
+@show D_SBP * u ≈ D_sparse * u
 
 function doit(D, text, du, u)
   println(text)
