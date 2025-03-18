@@ -75,7 +75,7 @@ makedocs(modules = [SummationByPartsOperators],
                  "tutorials/variable_linear_advection.md",
                  "tutorials/wave_equation.md",
                  "tutorials/kdv.md",
-                 "tutorials/twodimensional_linear_advection.md",
+                 "tutorials/twodimensional_linear_advection.md"
              ],
              "Automatic differentiation (AD)" => "ad.md",
              "Applications & references" => "applications.md",
