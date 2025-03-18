@@ -13,28 +13,33 @@ derivative operator `D::AbstractMatrix` on a reference interval, assuming that t
 `nodes` contain the boundary points of the reference interval. `source` is
 the source of coefficients and can be `nothing` for experimentation.
 """
-@auto_hash_equals struct MatrixDerivativeOperator{T, Dtype <: AbstractMatrix{T}, SourceOfCoefficients} <: AbstractMatrixDerivativeOperator{T}
-  grid::Vector{T}
-  weights::Vector{T}
-  D::Dtype
-  accuracy_order::Int
-  source::SourceOfCoefficients
+@auto_hash_equals struct MatrixDerivativeOperator{T, Dtype <: AbstractMatrix{T},
+                                                  SourceOfCoefficients} <:
+                         AbstractMatrixDerivativeOperator{T}
+    grid::Vector{T}
+    weights::Vector{T}
+    D::Dtype
+    accuracy_order::Int
+    source::SourceOfCoefficients
 
-  function MatrixDerivativeOperator(xmin::T, xmax::T,
-                                    nodes::Vector{T},
-                                    weights::Vector{T},
-                                    D::AbstractMatrix{T},
-                                    accuracy_order::Int,
-                                    source::SourceOfCoefficients) where {T <: Real, SourceOfCoefficients}
-      # The `nodes`, `weights`, and `D` are given on a reference interval.
-      # We need to scale them by the Jacobian to get their values on the
-      # given interval.
-      jac = (last(nodes) - first(nodes)) / (xmax - xmin)
-      grid = (nodes .- first(nodes)) ./ jac .+ xmin
-      Δx = inv(jac)
+    function MatrixDerivativeOperator(xmin::T, xmax::T,
+                                      nodes::Vector{T},
+                                      weights::Vector{T},
+                                      D::AbstractMatrix{T},
+                                      accuracy_order::Int,
+                                      source::SourceOfCoefficients) where {T <: Real,
+                                                                           SourceOfCoefficients
+                                                                           }
+        # The `nodes`, `weights`, and `D` are given on a reference interval.
+        # We need to scale them by the Jacobian to get their values on the
+        # given interval.
+        jac = (last(nodes) - first(nodes)) / (xmax - xmin)
+        grid = (nodes .- first(nodes)) ./ jac .+ xmin
+        Δx = inv(jac)
 
-      new{T, typeof(D), SourceOfCoefficients}(grid, Δx * weights, jac * D, accuracy_order, source)
-  end
+        new{T, typeof(D), SourceOfCoefficients}(grid, Δx * weights, jac * D, accuracy_order,
+                                                source)
+    end
 end
 
 derivative_order(D::AbstractMatrixDerivativeOperator) = 1
@@ -43,17 +48,19 @@ LinearAlgebra.issymmetric(D::MatrixDerivativeOperator) = false
 source_of_coefficients(D::AbstractMatrixDerivativeOperator) = D.source
 
 function integrate(func, u, D::AbstractMatrixDerivativeOperator)
-  return integrate(func, u, D.weights)
+    return integrate(func, u, D.weights)
 end
 
 mass_matrix(D::AbstractMatrixDerivativeOperator) = Diagonal(D.weights)
 
 Base.eltype(D::MatrixDerivativeOperator{T}) where {T} = T
 
-function scale_by_mass_matrix!(u::AbstractVector, D::AbstractMatrixDerivativeOperator, factor=true)
+function scale_by_mass_matrix!(u::AbstractVector, D::AbstractMatrixDerivativeOperator,
+                               factor = true)
     Base.require_one_based_indexing(u)
     @boundscheck begin
-        length(u) == size(D, 2) || throw(DimensionMismatch("sizes of input vector and operator do not match"))
+        length(u) == size(D, 2) ||
+            throw(DimensionMismatch("sizes of input vector and operator do not match"))
     end
 
     @inbounds @simd for i in eachindex(u, D.weights)
@@ -63,10 +70,12 @@ function scale_by_mass_matrix!(u::AbstractVector, D::AbstractMatrixDerivativeOpe
     return u
 end
 
-function scale_by_inverse_mass_matrix!(u::AbstractVector, D::AbstractMatrixDerivativeOperator, factor=true)
+function scale_by_inverse_mass_matrix!(u::AbstractVector,
+                                       D::AbstractMatrixDerivativeOperator, factor = true)
     Base.require_one_based_indexing(u)
     @boundscheck begin
-        length(u) == size(D, 2) || throw(DimensionMismatch("sizes of input vector and operator do not match"))
+        length(u) == size(D, 2) ||
+            throw(DimensionMismatch("sizes of input vector and operator do not match"))
     end
 
     @inbounds @simd for i in eachindex(u, D.weights)
@@ -96,9 +105,9 @@ function Base.show(io::IO, D::MatrixDerivativeOperator)
     end
 end
 
-
 # TODO: Enable different evaluation modes
-function mul!(dest::AbstractVector, Dop::MatrixDerivativeOperator, u::AbstractVector, α=true, β=false)
+function mul!(dest::AbstractVector, Dop::MatrixDerivativeOperator, u::AbstractVector,
+              α = true, β = false)
     @unpack D = Dop
     N, _ = size(D)
     @boundscheck begin
@@ -108,7 +117,6 @@ function mul!(dest::AbstractVector, Dop::MatrixDerivativeOperator, u::AbstractVe
 
     mul!(dest, D, u, α, β)
 end
-
 
 function lower_bandwidth(D::AbstractMatrixDerivativeOperator)
     size(D, 1) - 1
@@ -121,7 +129,6 @@ end
 function accuracy_order(D::AbstractMatrixDerivativeOperator)
     D.accuracy_order
 end
-
 
 function left_boundary_weight(D::AbstractMatrixDerivativeOperator)
     @inbounds retval = D.weights[begin]

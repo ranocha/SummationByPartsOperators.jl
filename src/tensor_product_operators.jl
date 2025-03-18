@@ -16,8 +16,9 @@ References:
   Review of summation-by-parts schemes for initial-boundary-value problems
   Journal of Computational Physics 268, pp. 17-38, [DOI: 10.1016/j.jcp.2014.02.031](https://doi.org/10.1016/j.jcp.2014.02.031).
 """
-@auto_hash_equals struct TensorProductOperator{Dim,T} <: AbstractMultidimensionalMatrixDerivativeOperator{Dim,T}
-    D_multi::MultidimensionalMatrixDerivativeOperator{Dim,T}
+@auto_hash_equals struct TensorProductOperator{Dim, T} <:
+                         AbstractMultidimensionalMatrixDerivativeOperator{Dim, T}
+    D_multi::MultidimensionalMatrixDerivativeOperator{Dim, T}
     N_x::Int
     N_y::Int
 end
@@ -39,16 +40,16 @@ function mass_matrix_boundary(D::TensorProductOperator{2}, dim::Int)
     # This exploits how we construct the tensor product operator in `tensor_product_operator_2D`.
     if dim == 1
         corners_x_dir = [N_y + 1, # lower left corner
-                         N_x + N_y, # upper left corner
-                         N_x + N_y + 1, # lower right corner
-                         2 * N_x + N_y] # upper right corner
+            N_x + N_y, # upper left corner
+            N_x + N_y + 1, # lower right corner
+            2 * N_x + N_y] # upper right corner
         deleteat!(boundary_weights, corners_x_dir)
         deleteat!(boundary_indices, corners_x_dir)
     else # dim == 2
         corners_y_dir = [1, # lower left corner
-                         N_y,  # upper left corner
-                         2 * N_x + N_y + 1, # lower right corner
-                         2 * (N_x + N_y)] # upper right corner
+            N_y,  # upper left corner
+            2 * N_x + N_y + 1, # lower right corner
+            2 * (N_x + N_y)] # upper right corner
         deleteat!(boundary_weights, corners_y_dir)
         deleteat!(boundary_indices, corners_y_dir)
     end
@@ -73,7 +74,7 @@ end
 Combine multiple sources of coefficients into a single source.
 """
 struct SourceOfCoefficientsCombination{N} <: SourceOfCoefficients
-    sources::NTuple{N,SourceOfCoefficients}
+    sources::NTuple{N, SourceOfCoefficients}
 end
 
 function SourceOfCoefficientsCombination(sources::SourceOfCoefficients...)
@@ -81,7 +82,8 @@ function SourceOfCoefficientsCombination(sources::SourceOfCoefficients...)
 end
 
 function Base.show(io::IO, source::SourceOfCoefficientsCombination)
-    println(io, "Combined sources of coefficients with ", length(source.sources), " sources:")
+    println(io, "Combined sources of coefficients with ", length(source.sources),
+            " sources:")
     for s in source.sources
         println(io, "- ", s)
     end
@@ -130,10 +132,10 @@ function tensor_product_operator_2D(D_x, D_y = D_x)
     # once with the weight from the x-direction and once with the weight from the y-direction with corresponding normals.
     N_boundary = 2 * (N_x + N_y)
     boundary_indices = [1:N_y..., # left boundary, N_y
-                        1:N_y:((N_x - 1) * N_y + 1)..., # lower boundary, N_x
-                        N_y:N_y:(N_x * N_y)..., # upper boundary, N_x
-                        ((N_x - 1)* N_y + 1):N_x * N_y...] # right boundary, N_y
-    normals = Vector{SVector{2,T}}(undef, N_boundary)
+        1:N_y:((N_x - 1) * N_y + 1)..., # lower boundary, N_x
+        N_y:N_y:(N_x * N_y)..., # upper boundary, N_x
+        ((N_x - 1) * N_y + 1):(N_x * N_y)...] # right boundary, N_y
+    normals = Vector{SVector{2, T}}(undef, N_boundary)
     # weights_boundary is chosen such that
     # mass_matrix_boundary(D, 1) == Diagonal(kron(B_1D_x, M_1D_y)) ( = Q_x + Q_x') and
     # mass_matrix_boundary(D, 2) == Diagonal(kron(M_1D_x, B_1D_y)) ( = Q_y + Q_y')
@@ -161,8 +163,11 @@ function tensor_product_operator_2D(D_x, D_y = D_x)
     if source_of_coefficients(D_x) == source_of_coefficients(D_y)
         source = source_of_coefficients(D_x)
     else
-        source = SourceOfCoefficientsCombination(source_of_coefficients(D_x), source_of_coefficients(D_y))
+        source = SourceOfCoefficientsCombination(source_of_coefficients(D_x),
+                                                 source_of_coefficients(D_y))
     end
-    D_multi = MultidimensionalMatrixDerivativeOperator(nodes, boundary_indices, normals, weights, weights_boundary, Ds, acc_order, source)
+    D_multi = MultidimensionalMatrixDerivativeOperator(nodes, boundary_indices, normals,
+                                                       weights, weights_boundary, Ds,
+                                                       acc_order, source)
     return TensorProductOperator(D_multi, N_x, N_y)
 end
