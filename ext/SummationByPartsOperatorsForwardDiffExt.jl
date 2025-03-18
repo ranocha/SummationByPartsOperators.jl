@@ -7,10 +7,10 @@ else
 end
 
 using SummationByPartsOperators:
-    FourierDerivativeOperator,
-    FourierPolynomialDerivativeOperator,
-    FourierRationalDerivativeOperator,
-    PeriodicRationalDerivativeOperator
+                                 FourierDerivativeOperator,
+                                 FourierPolynomialDerivativeOperator,
+                                 FourierRationalDerivativeOperator,
+                                 PeriodicRationalDerivativeOperator
 import SummationByPartsOperators: mul!
 
 # FFTW.jl cannot handle `Dual`s and `Partial`s.
@@ -21,13 +21,11 @@ for Dtype in [
     FourierDerivativeOperator,
     FourierPolynomialDerivativeOperator,
     FourierRationalDerivativeOperator,
-    PeriodicRationalDerivativeOperator,
+    PeriodicRationalDerivativeOperator
 ]
-    @eval Base.@propagate_inbounds function mul!(
-        dest::AbstractVector{Partials{1,T}},
-        D::$Dtype,
-        u::AbstractVector{Partials{1,T}},
-    ) where {T}
+    @eval Base.@propagate_inbounds function mul!(dest::AbstractVector{Partials{1, T}},
+                                                 D::$Dtype,
+                                                 u::AbstractVector{Partials{1, T}}) where {T}
         _dest = reinterpret(reshape, T, dest)
         _u = reinterpret(reshape, T, u)
         mul!(_dest, D, _u)

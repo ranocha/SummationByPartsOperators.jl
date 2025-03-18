@@ -18,12 +18,12 @@ using OrdinaryDiffEq, DiffEqCallbacks
         semi(du, ode.u0, nothing, first(tspan))
 
         saving = SavingCallback(semi, saveat = range(tspan..., length = 10))
-        sol =
-            solve(ode, SSPRK104(), dt = 1 / 20N, save_everystep = false, callback = saving)
+        sol = solve(ode, SSPRK104(), dt = 1 / 20N, save_everystep = false,
+                    callback = saving)
     end
 
     # Periodic FD
-    for acc_order = 2:2:8
+    for acc_order in 2:2:8
         D = periodic_derivative_operator(1, acc_order, xmin, xmax, N)
         Di = dissipation_operator(D)
         semi = QuarticNonconvexPeriodicSemidiscretization(D, Di, split_form)
@@ -33,7 +33,7 @@ using OrdinaryDiffEq, DiffEqCallbacks
         semi(du, ode.u0, nothing, first(tspan))
 
         saving = SavingCallback(semi, saveat = range(tspan..., length = 10))
-        sol =
-            solve(ode, SSPRK104(), dt = 1 / 20N, save_everystep = false, callback = saving)
+        sol = solve(ode, SSPRK104(), dt = 1 / 20N, save_everystep = false,
+                    callback = saving)
     end
 end

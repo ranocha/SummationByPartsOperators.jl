@@ -2,20 +2,17 @@ using Test
 using LinearAlgebra
 using SummationByPartsOperators
 
-D_test_list = (
-    MattssonNordström2004(),
-    MattssonSvärdNordström2004(),
-    MattssonSvärdShoeybi2008(),
-    Mattsson2014(),
-    MattssonAlmquistCarpenter2014Extended(),
-)
+D_test_list = (MattssonNordström2004(),
+               MattssonSvärdNordström2004(),
+               MattssonSvärdShoeybi2008(),
+               Mattsson2014(),
+               MattssonAlmquistCarpenter2014Extended())
 Di_test_list = (MattssonSvärdNordström2004(),)
-
 
 # Nonperiodic: Test symmetry and eigenvalues
 for source_D in D_test_list,
     source_Di in Di_test_list,
-    acc_order = 2:2:8,
+    acc_order in 2:2:8,
     T in (Float32, Float64)
 
     xmin = -one(T)
@@ -34,7 +31,7 @@ for source_D in D_test_list,
     @inferred mass_matrix(D)
     H = mass_matrix(D)
 
-    for order = 2:2:8
+    for order in 2:2:8
         Di = try
             dissipation_operator(source_Di, D, order = order)
         catch err
@@ -50,7 +47,6 @@ for source_D in D_test_list,
         @test minimum(real, eigvals(HDi)) < 10 * eps(T)
     end
 end
-
 
 # Nonperiodic: Compare mul! with β=0 and mul! without β.
 for T in (Float32, Float64), order in (2, 4, 6, 8)
@@ -85,16 +81,15 @@ for T in (Float32, Float64), order in (2, 4, 6, 8)
     @test all(i -> isapprox(dest1[i], dest3[i], atol = 800000 * eps(T)), eachindex(u))
 end
 
-
 # Periodic: Test symmetry and eigenvalues
-for acc_order = 2:2:8, T in (Float32, Float64)
+for acc_order in 2:2:8, T in (Float32, Float64)
     xmin = -one(T)
     xmax = 2 * one(T)
     N = 100
     der_order = 1
 
     D = periodic_derivative_operator(der_order, acc_order, xmin, xmax, N)
-    for order = 2:2:8
+    for order in 2:2:8
         Di = dissipation_operator(D, order = order)
         println(devnull, Di)
         HDi = Matrix(Di)
@@ -102,7 +97,6 @@ for acc_order = 2:2:8, T in (Float32, Float64)
         @test minimum(real, eigvals(HDi)) < 10 * eps(T)
     end
 end
-
 
 # Periodic: Compare mul! with β=0 and mul! without β.
 for T in (Float32, Float64), order in (2, 4, 6, 8)
@@ -133,7 +127,6 @@ for T in (Float32, Float64), order in (2, 4, 6, 8)
     dest3 = Di_safe * u
     @test maximum(abs, dest1 - dest3) < 5 * u[end] * N * eps(T)
 end
-
 
 # Compare periodic and nonperiodic.
 for T in (Float32, Float64), order in (2, 4, 6, 8)

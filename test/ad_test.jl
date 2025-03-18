@@ -9,13 +9,11 @@ using Test
 
 @testset "Jacobian" begin
     @testset "periodic_derivative_operator" begin
-        D = periodic_derivative_operator(
-            derivative_order = 1,
-            accuracy_order = 2,
-            xmin = 0.0,
-            xmax = 1.0,
-            N = 8,
-        )
+        D = periodic_derivative_operator(derivative_order = 1,
+                                         accuracy_order = 2,
+                                         xmin = 0.0,
+                                         xmax = 1.0,
+                                         N = 8)
         u = rand(size(D, 2))
         f = let D = D
             f(u) = D * u
@@ -25,14 +23,12 @@ using Test
     end
 
     @testset "derivative_operator" begin
-        D = derivative_operator(
-            MattssonNordström2004(),
-            derivative_order = 1,
-            accuracy_order = 2,
-            xmin = 0.0,
-            xmax = 1.0,
-            N = 8,
-        )
+        D = derivative_operator(MattssonNordström2004(),
+                                derivative_order = 1,
+                                accuracy_order = 2,
+                                xmin = 0.0,
+                                xmax = 1.0,
+                                N = 8)
         u = rand(size(D, 2))
         f = let D = D
             f(u) = D * u
@@ -52,19 +48,17 @@ end
         #         (w,)
         #     ),)
         # )
-        partials = reinterpret(reshape, ForwardDiff.Partials{1,T}, w)
-        duals = StructArray{ForwardDiff.Dual{Nothing,T,1}}((x, partials))
+        partials = reinterpret(reshape, ForwardDiff.Partials{1, T}, w)
+        duals = StructArray{ForwardDiff.Dual{Nothing, T, 1}}((x, partials))
         return duals
     end
 
-    function ForwardDiff.value(dx::StructArray{D}) where {D<:ForwardDiff.Dual}
+    function ForwardDiff.value(dx::StructArray{D}) where {D <: ForwardDiff.Dual}
         return dx.value
     end
 
-    function ForwardDiff.partials(
-        dx::StructArray{<:ForwardDiff.Dual{Tag,T,1}},
-        i,
-    ) where {Tag,T}
+    function ForwardDiff.partials(dx::StructArray{<:ForwardDiff.Dual{Tag, T, 1}},
+                                  i) where {Tag, T}
         # This was the original suggestion. We need to update it (see above).
         # return getproperty(dx.partials.values, i)
         @assert i == 1
@@ -77,9 +71,9 @@ end
         u = randn(size(D, 2))
         v = randn(size(D, 2))
         u_v = StructDual(u, v)
-        f_df = @inferred(D * u_v)
-        @test ForwardDiff.value(f_df) ≈ @inferred(D * u)
-        @test ForwardDiff.partials(f_df, 1) ≈ @inferred(D * v)
+        f_df = @inferred(D*u_v)
+        @test ForwardDiff.value(f_df) ≈ @inferred(D*u)
+        @test ForwardDiff.partials(f_df, 1) ≈ @inferred(D*v)
 
         f = let D = D
             f(u) = u .* (D * (u .^ 2))
@@ -97,9 +91,9 @@ end
         u = randn(size(D, 2))
         v = randn(size(D, 2))
         u_v = StructDual(u, v)
-        f_df = @inferred(D * u_v)
-        @test ForwardDiff.value(f_df) ≈ @inferred(D * u)
-        @test ForwardDiff.partials(f_df, 1) ≈ @inferred(D * v)
+        f_df = @inferred(D*u_v)
+        @test ForwardDiff.value(f_df) ≈ @inferred(D*u)
+        @test ForwardDiff.partials(f_df, 1) ≈ @inferred(D*v)
 
         f = let D = D
             f(u) = u .* (D * (u .^ 2))
@@ -117,9 +111,9 @@ end
         u = randn(size(D, 2))
         v = randn(size(D, 2))
         u_v = StructDual(u, v)
-        f_df = @inferred(D * u_v)
-        @test ForwardDiff.value(f_df) ≈ @inferred(D * u)
-        @test ForwardDiff.partials(f_df, 1) ≈ @inferred(D * v)
+        f_df = @inferred(D*u_v)
+        @test ForwardDiff.value(f_df) ≈ @inferred(D*u)
+        @test ForwardDiff.partials(f_df, 1) ≈ @inferred(D*v)
 
         f = let D = D
             f(u) = u .* (D * (u .^ 2))
@@ -131,21 +125,19 @@ end
     end
 
     @testset "PeriodicRationalDerivativeOperator, 1" begin
-        D = periodic_derivative_operator(
-            derivative_order = 1,
-            accuracy_order = 4,
-            xmin = 0.0,
-            xmax = 2.0,
-            N = 20,
-        )
+        D = periodic_derivative_operator(derivative_order = 1,
+                                         accuracy_order = 4,
+                                         xmin = 0.0,
+                                         xmax = 2.0,
+                                         N = 20)
         D = I - D^2
 
         u = randn(size(D, 2))
         v = randn(size(D, 2))
         u_v = StructDual(u, v)
-        f_df = @inferred(D * u_v)
-        @test ForwardDiff.value(f_df) ≈ @inferred(D * u)
-        @test ForwardDiff.partials(f_df, 1) ≈ @inferred(D * v)
+        f_df = @inferred(D*u_v)
+        @test ForwardDiff.value(f_df) ≈ @inferred(D*u)
+        @test ForwardDiff.partials(f_df, 1) ≈ @inferred(D*v)
 
         f = let D = D
             f(u) = u .* (D * (u .^ 2))
@@ -157,21 +149,19 @@ end
     end
 
     @testset "PeriodicRationalDerivativeOperator, 2" begin
-        D = periodic_derivative_operator(
-            derivative_order = 1,
-            accuracy_order = 4,
-            xmin = 0.0,
-            xmax = 2.0,
-            N = 20,
-        )
+        D = periodic_derivative_operator(derivative_order = 1,
+                                         accuracy_order = 4,
+                                         xmin = 0.0,
+                                         xmax = 2.0,
+                                         N = 20)
         D = inv(I - D^2)
 
         u = randn(size(D, 2))
         v = randn(size(D, 2))
         u_v = StructDual(u, v)
-        f_df = @inferred(D * u_v)
-        @test ForwardDiff.value(f_df) ≈ @inferred(D * u)
-        @test ForwardDiff.partials(f_df, 1) ≈ @inferred(D * v)
+        f_df = @inferred(D*u_v)
+        @test ForwardDiff.value(f_df) ≈ @inferred(D*u)
+        @test ForwardDiff.partials(f_df, 1) ≈ @inferred(D*v)
 
         f = let D = D
             f(u) = u .* (D * (u .^ 2))

@@ -13,15 +13,13 @@ if VERSION >= v"1.9"
         for compact in (true, false)
             show(IOContext(devnull, :compact => compact), source)
         end
-        let basis_functions = [x -> x^i for i = 0:3]
+        let basis_functions = [x -> x^i for i in 0:3]
             D = function_space_operator(basis_functions, nodes, source)
             # Only first-derivative operators are implemented yet
-            @test_throws ArgumentError function_space_operator(
-                basis_functions,
-                nodes,
-                source;
-                derivative_order = 2,
-            )
+            @test_throws ArgumentError function_space_operator(basis_functions,
+                                                               nodes,
+                                                               source;
+                                                               derivative_order = 2,)
 
             @test grid(D) ≈ nodes
             @test all(isapprox.(D * ones(N), zeros(N); atol = 1e-13))
@@ -54,7 +52,7 @@ if VERSION >= v"1.9"
             0.5698824835924449,
             0.623949064816263,
             0.8574665549914025,
-            1.0,
+            1.0
         ]
         N = length(nodes)
         let basis_functions = [one, identity, exp]

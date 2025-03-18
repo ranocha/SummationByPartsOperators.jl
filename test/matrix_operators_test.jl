@@ -11,61 +11,49 @@ using SummationByPartsOperators
     xmin_application = -0.25
     xmax_application = 0.75
 
-    for acc_order = 2:6
-        Dm_bounded = derivative_operator(
-            Mattsson2017(:minus),
-            1,
-            acc_order,
-            xmin_construction,
-            xmax_construction,
-            N,
-        )
-        Dp_bounded = derivative_operator(
-            Mattsson2017(:plus),
-            1,
-            acc_order,
-            xmin_construction,
-            xmax_construction,
-            N,
-        )
-        Dc_bounded = derivative_operator(
-            Mattsson2017(:central),
-            1,
-            acc_order,
-            xmin_construction,
-            xmax_construction,
-            N,
-        )
+    for acc_order in 2:6
+        Dm_bounded = derivative_operator(Mattsson2017(:minus),
+                                         1,
+                                         acc_order,
+                                         xmin_construction,
+                                         xmax_construction,
+                                         N)
+        Dp_bounded = derivative_operator(Mattsson2017(:plus),
+                                         1,
+                                         acc_order,
+                                         xmin_construction,
+                                         xmax_construction,
+                                         N)
+        Dc_bounded = derivative_operator(Mattsson2017(:central),
+                                         1,
+                                         acc_order,
+                                         xmin_construction,
+                                         xmax_construction,
+                                         N)
 
         nodes = collect(grid(Dc_bounded))
         weights = diag(mass_matrix(Dc_bounded))
-        Dm = MatrixDerivativeOperator(
-            xmin_application,
-            xmax_application,
-            nodes,
-            weights,
-            Matrix(Dm_bounded),
-            acc_order,
-            source_of_coefficients(Dm_bounded),
-        )
-        Dp = MatrixDerivativeOperator(
-            xmin_application,
-            xmax_application,
-            nodes,
-            weights,
-            Matrix(Dp_bounded),
-            acc_order,
-            source_of_coefficients(Dp_bounded),
-        )
-        Dc = MatrixDerivativeOperator(
-            xmin_application,
-            xmax_application,
-            nodes,
-            weights,
-            Matrix(Dc_bounded),
-            acc_order,
-            source_of_coefficients(Dc_bounded),
-        )
+        Dm = MatrixDerivativeOperator(xmin_application,
+                                      xmax_application,
+                                      nodes,
+                                      weights,
+                                      Matrix(Dm_bounded),
+                                      acc_order,
+                                      source_of_coefficients(Dm_bounded))
+        Dp = MatrixDerivativeOperator(xmin_application,
+                                      xmax_application,
+                                      nodes,
+                                      weights,
+                                      Matrix(Dp_bounded),
+                                      acc_order,
+                                      source_of_coefficients(Dp_bounded))
+        Dc = MatrixDerivativeOperator(xmin_application,
+                                      xmax_application,
+                                      nodes,
+                                      weights,
+                                      Matrix(Dc_bounded),
+                                      acc_order,
+                                      source_of_coefficients(Dc_bounded))
         D = UpwindOperators(Dm, Dc, Dp)
 
         for compact in (true, false)
@@ -92,14 +80,12 @@ using SummationByPartsOperators
         @test issymmetric(Dp) == false
         @test issymmetric(Dc) == false
 
-        D_reference = upwind_operators(
-            Mattsson2017;
-            derivative_order = 1,
-            accuracy_order = acc_order,
-            xmin = xmin_application,
-            xmax = xmax_application,
-            N = N,
-        )
+        D_reference = upwind_operators(Mattsson2017;
+                                       derivative_order = 1,
+                                       accuracy_order = acc_order,
+                                       xmin = xmin_application,
+                                       xmax = xmax_application,
+                                       N = N,)
         @test x ≈ grid(D_reference)
         @test M ≈ mass_matrix(D_reference)
 
@@ -141,29 +127,19 @@ using SummationByPartsOperators
         u = sinpi.(x)
         u_reference = copy(u)
         SummationByPartsOperators.scale_by_mass_matrix!(u, Dm)
-        @test_throws DimensionMismatch scale_by_mass_matrix!(
-            @view(u[(begin+1):(end-1)]),
-            Dm,
-        )
+        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(u[(begin + 1):(end - 1)]),
+                                                             Dm)
         SummationByPartsOperators.scale_by_mass_matrix!(u_reference, D_reference.minus)
-        @test_throws DimensionMismatch scale_by_mass_matrix!(
-            @view(u_reference[(begin+1):(end-1)]),
-            D_reference.minus,
-        )
+        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(u_reference[(begin + 1):(end - 1)]),
+                                                             D_reference.minus)
         @test u ≈ u_reference
         SummationByPartsOperators.scale_by_inverse_mass_matrix!(u, Dm)
-        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(
-            @view(u[(begin+1):(end-1)]),
-            Dm,
-        )
-        SummationByPartsOperators.scale_by_inverse_mass_matrix!(
-            u_reference,
-            D_reference.minus,
-        )
-        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(
-            @view(u_reference[(begin+1):(end-1)]),
-            D_reference.minus,
-        )
+        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(u[(begin + 1):(end - 1)]),
+                                                                     Dm)
+        SummationByPartsOperators.scale_by_inverse_mass_matrix!(u_reference,
+                                                                D_reference.minus)
+        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(u_reference[(begin + 1):(end - 1)]),
+                                                                     D_reference.minus)
         @test u ≈ u_reference
 
         @test SummationByPartsOperators.get_weight(Dm, 1) == left_boundary_weight(D)
@@ -181,61 +157,49 @@ end
     xmin_application = -0.25
     xmax_application = 0.75
 
-    for acc_order = 2:6
-        Dm_bounded = derivative_operator(
-            Mattsson2017(:minus),
-            1,
-            acc_order,
-            xmin_construction,
-            xmax_construction,
-            N,
-        )
-        Dp_bounded = derivative_operator(
-            Mattsson2017(:plus),
-            1,
-            acc_order,
-            xmin_construction,
-            xmax_construction,
-            N,
-        )
-        Dc_bounded = derivative_operator(
-            Mattsson2017(:central),
-            1,
-            acc_order,
-            xmin_construction,
-            xmax_construction,
-            N,
-        )
+    for acc_order in 2:6
+        Dm_bounded = derivative_operator(Mattsson2017(:minus),
+                                         1,
+                                         acc_order,
+                                         xmin_construction,
+                                         xmax_construction,
+                                         N)
+        Dp_bounded = derivative_operator(Mattsson2017(:plus),
+                                         1,
+                                         acc_order,
+                                         xmin_construction,
+                                         xmax_construction,
+                                         N)
+        Dc_bounded = derivative_operator(Mattsson2017(:central),
+                                         1,
+                                         acc_order,
+                                         xmin_construction,
+                                         xmax_construction,
+                                         N)
 
         nodes = collect(grid(Dc_bounded))
         weights = diag(mass_matrix(Dc_bounded))
-        Dm = MatrixDerivativeOperator(
-            xmin_application,
-            xmax_application,
-            nodes,
-            weights,
-            sparse(Dm_bounded),
-            acc_order,
-            source_of_coefficients(Dm_bounded),
-        )
-        Dp = MatrixDerivativeOperator(
-            xmin_application,
-            xmax_application,
-            nodes,
-            weights,
-            sparse(Dp_bounded),
-            acc_order,
-            source_of_coefficients(Dp_bounded),
-        )
-        Dc = MatrixDerivativeOperator(
-            xmin_application,
-            xmax_application,
-            nodes,
-            weights,
-            sparse(Dc_bounded),
-            acc_order,
-            source_of_coefficients(Dc_bounded),
-        )
+        Dm = MatrixDerivativeOperator(xmin_application,
+                                      xmax_application,
+                                      nodes,
+                                      weights,
+                                      sparse(Dm_bounded),
+                                      acc_order,
+                                      source_of_coefficients(Dm_bounded))
+        Dp = MatrixDerivativeOperator(xmin_application,
+                                      xmax_application,
+                                      nodes,
+                                      weights,
+                                      sparse(Dp_bounded),
+                                      acc_order,
+                                      source_of_coefficients(Dp_bounded))
+        Dc = MatrixDerivativeOperator(xmin_application,
+                                      xmax_application,
+                                      nodes,
+                                      weights,
+                                      sparse(Dc_bounded),
+                                      acc_order,
+                                      source_of_coefficients(Dc_bounded))
         D = UpwindOperators(Dm, Dc, Dp)
 
         for compact in (true, false)
@@ -262,14 +226,12 @@ end
         @test issymmetric(Dp) == false
         @test issymmetric(Dc) == false
 
-        D_reference = upwind_operators(
-            Mattsson2017;
-            derivative_order = 1,
-            accuracy_order = acc_order,
-            xmin = xmin_application,
-            xmax = xmax_application,
-            N = N,
-        )
+        D_reference = upwind_operators(Mattsson2017;
+                                       derivative_order = 1,
+                                       accuracy_order = acc_order,
+                                       xmin = xmin_application,
+                                       xmax = xmax_application,
+                                       N = N,)
         @test x ≈ grid(D_reference)
         @test M ≈ mass_matrix(D_reference)
 
@@ -311,29 +273,19 @@ end
         u = sinpi.(x)
         u_reference = copy(u)
         SummationByPartsOperators.scale_by_mass_matrix!(u, Dm)
-        @test_throws DimensionMismatch scale_by_mass_matrix!(
-            @view(u[(begin+1):(end-1)]),
-            Dm,
-        )
+        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(u[(begin + 1):(end - 1)]),
+                                                             Dm)
         SummationByPartsOperators.scale_by_mass_matrix!(u_reference, D_reference.minus)
-        @test_throws DimensionMismatch scale_by_mass_matrix!(
-            @view(u_reference[(begin+1):(end-1)]),
-            D_reference.minus,
-        )
+        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(u_reference[(begin + 1):(end - 1)]),
+                                                             D_reference.minus)
         @test u ≈ u_reference
         SummationByPartsOperators.scale_by_inverse_mass_matrix!(u, Dm)
-        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(
-            @view(u[(begin+1):(end-1)]),
-            Dm,
-        )
-        SummationByPartsOperators.scale_by_inverse_mass_matrix!(
-            u_reference,
-            D_reference.minus,
-        )
-        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(
-            @view(u_reference[(begin+1):(end-1)]),
-            D_reference.minus,
-        )
+        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(u[(begin + 1):(end - 1)]),
+                                                                     Dm)
+        SummationByPartsOperators.scale_by_inverse_mass_matrix!(u_reference,
+                                                                D_reference.minus)
+        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(u_reference[(begin + 1):(end - 1)]),
+                                                                     D_reference.minus)
         @test u ≈ u_reference
 
         @test SummationByPartsOperators.get_weight(Dm, 1) == left_boundary_weight(D)

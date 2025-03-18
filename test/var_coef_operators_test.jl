@@ -28,7 +28,6 @@ test_list = (Mattsson2012(),)
     end
 end
 
-
 @testset "Test consistency for vanishing coefficients" begin
     for source in test_list, T in (Float32, Float64), acc_order in (2, 4, 6)
         xmin = zero(T)
@@ -42,7 +41,6 @@ end
     end
 end
 
-
 @testset "Compare mul! with β=0 and mul! without β" begin
     for T in (Float32, Float64), acc_order in (2, 4, 6)
         xmin = zero(T)
@@ -50,28 +48,24 @@ end
         N = 51
         source = Mattsson2012()
 
-        D2var_serial =
-            var_coef_derivative_operator(source, 2, acc_order, xmin, xmax, N, one)
-        D2var_threads = var_coef_derivative_operator(
-            source,
-            2,
-            acc_order,
-            xmin,
-            xmax,
-            N,
-            one,
-            ThreadedMode(),
-        )
-        D2var_safe = var_coef_derivative_operator(
-            source,
-            2,
-            acc_order,
-            xmin,
-            xmax,
-            N,
-            one,
-            SafeMode(),
-        )
+        D2var_serial = var_coef_derivative_operator(source, 2, acc_order, xmin, xmax, N,
+                                                    one)
+        D2var_threads = var_coef_derivative_operator(source,
+                                                     2,
+                                                     acc_order,
+                                                     xmin,
+                                                     xmax,
+                                                     N,
+                                                     one,
+                                                     ThreadedMode())
+        D2var_safe = var_coef_derivative_operator(source,
+                                                  2,
+                                                  acc_order,
+                                                  xmin,
+                                                  xmax,
+                                                  N,
+                                                  one,
+                                                  SafeMode())
         D2var_full = Matrix(D2var_serial)
         D2var_sparse = sparse(D2var_serial)
 
@@ -98,7 +92,6 @@ end
     end
 end
 
-
 @testset "Test interior symmetry" begin
     for source in test_list, T in (Float32, Float64), acc_order in (2, 4, 6)
         xmin = one(T)
@@ -108,7 +101,7 @@ end
         D2var = var_coef_derivative_operator(source, 2, acc_order, xmin, xmax, N, inv)
         M = mass_matrix(D2var)
         D2 = sparse(D2var)
-        A = (M*D2)[2:end-1, 2:end-1]
+        A = (M * D2)[2:(end - 1), 2:(end - 1)]
         @test maximum(abs, A - A') < 200 * eps(T)
     end
 end

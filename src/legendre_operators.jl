@@ -5,18 +5,16 @@
 A derivative operator on a nonperiodic Lobatto-Legendre grid with scalar type
 `T` computing the first derivative using a Legendre expansion.
 """
-@auto_hash_equals struct LegendreDerivativeOperator{T<:Real} <:
+@auto_hash_equals struct LegendreDerivativeOperator{T <: Real} <:
                          AbstractNonperiodicDerivativeOperator{T}
     jac::T
     Δx::T
     grid::Vector{T} # N nodes, including the left and the right boundary
     basis::LobattoLegendre{T}
 
-    function LegendreDerivativeOperator(
-        xmin::T,
-        xmax::T,
-        basis::LobattoLegendre{T},
-    ) where {T<:Real}
+    function LegendreDerivativeOperator(xmin::T,
+                                        xmax::T,
+                                        basis::LobattoLegendre{T}) where {T <: Real}
         grid = map_from_canonical.(basis.nodes, xmin, xmax, basis)
         jac = 2 / (xmax - xmin)
         Δx = inv(jac)
@@ -31,7 +29,7 @@ end
 Construct the `LegendreDerivativeOperator` on a uniform grid between `xmin` and
 `xmax` using `N` nodes and `N-1` Legendre modes.
 """
-function LegendreDerivativeOperator(xmin::T, xmax::T, N::Int) where {T<:Real}
+function LegendreDerivativeOperator(xmin::T, xmax::T, N::Int) where {T <: Real}
     @argcheck N >= 2
 
     basis = LobattoLegendre(N - 1, T)
@@ -57,14 +55,13 @@ end
 derivative_order(D::LegendreDerivativeOperator) = 1
 LinearAlgebra.issymmetric(D::LegendreDerivativeOperator) = false
 
-
 """
     LegendreSecondDerivativeOperator{T<:Real}
 
 A derivative operator on a nonperiodic Lobatto-Legendre grid with scalar type
 `T` computing the second derivative using a Legendre expansion.
 """
-@auto_hash_equals struct LegendreSecondDerivativeOperator{T<:Real} <:
+@auto_hash_equals struct LegendreSecondDerivativeOperator{T <: Real} <:
                          AbstractNonperiodicDerivativeOperator{T}
     D2::Matrix{T}
     jac::T
@@ -72,7 +69,7 @@ A derivative operator on a nonperiodic Lobatto-Legendre grid with scalar type
     grid::Vector{T} # N nodes, including the left and the right boundary
     basis::LobattoLegendre{T}
 
-    function LegendreSecondDerivativeOperator(xmin::T, xmax::T, N::Int) where {T<:Real}
+    function LegendreSecondDerivativeOperator(xmin::T, xmax::T, N::Int) where {T <: Real}
         @argcheck N >= 2
 
         basis = LobattoLegendre(N - 1, T)
@@ -103,29 +100,30 @@ end
 
 derivative_order(D::LegendreSecondDerivativeOperator) = 2
 
-
-integrate(func, u, D::Union{LegendreDerivativeOperator,LegendreSecondDerivativeOperator}) =
+function integrate(func, u,
+                   D::Union{LegendreDerivativeOperator, LegendreSecondDerivativeOperator})
     D.Δx * integrate(func, u, D.basis)
-function evaluate_coefficients(
-    u,
-    D::Union{LegendreDerivativeOperator,LegendreSecondDerivativeOperator},
-    npoints = 2 * size(D, 2) + 1,
-)
+end
+function evaluate_coefficients(u,
+                               D::Union{LegendreDerivativeOperator,
+                                        LegendreSecondDerivativeOperator},
+                               npoints = 2 * size(D, 2) + 1)
     evaluate_coefficients(u, D.basis, npoints)
 end
 
-mass_matrix(D::Union{LegendreDerivativeOperator,LegendreSecondDerivativeOperator}) =
+function mass_matrix(D::Union{LegendreDerivativeOperator, LegendreSecondDerivativeOperator})
     Diagonal(D.Δx * D.basis.weights)
+end
 
-Base.eltype(
-    D::Union{LegendreDerivativeOperator{T},LegendreSecondDerivativeOperator{T}},
-) where {T} = T
+function Base.eltype(D::Union{LegendreDerivativeOperator{T},
+                              LegendreSecondDerivativeOperator{T}}) where {T}
+    T
+end
 
-function scale_by_mass_matrix!(
-    u::AbstractVector,
-    D::Union{LegendreDerivativeOperator,LegendreSecondDerivativeOperator},
-    factor = true,
-)
+function scale_by_mass_matrix!(u::AbstractVector,
+                               D::Union{LegendreDerivativeOperator,
+                                        LegendreSecondDerivativeOperator},
+                               factor = true)
     Base.require_one_based_indexing(u)
     @boundscheck begin
         length(u) == size(D, 2) ||
@@ -140,11 +138,10 @@ function scale_by_mass_matrix!(
     return u
 end
 
-function scale_by_inverse_mass_matrix!(
-    u::AbstractVector,
-    D::Union{LegendreDerivativeOperator,LegendreSecondDerivativeOperator},
-    factor = true,
-)
+function scale_by_inverse_mass_matrix!(u::AbstractVector,
+                                       D::Union{LegendreDerivativeOperator,
+                                                LegendreSecondDerivativeOperator},
+                                       factor = true)
     Base.require_one_based_indexing(u)
     @boundscheck begin
         length(u) == size(D, 2) ||
@@ -159,10 +156,8 @@ function scale_by_inverse_mass_matrix!(
     u
 end
 
-function get_weight(
-    D::Union{LegendreDerivativeOperator,LegendreSecondDerivativeOperator},
-    i::Int,
-)
+function get_weight(D::Union{LegendreDerivativeOperator, LegendreSecondDerivativeOperator},
+                    i::Int)
     @unpack Δx, basis = D
     @unpack weights = basis
     N, _ = size(D)
@@ -179,16 +174,14 @@ function Base.show(io::IO, D::LegendreDerivativeOperator)
     else
         x = grid(D)
         print(io, "First derivative operator {T=", eltype(D), "}")
-        print(
-            io,
-            " on ",
-            length(x),
-            " Lobatto Legendre nodes in [",
-            first(x),
-            ", ",
-            last(x),
-            "]",
-        )
+        print(io,
+              " on ",
+              length(x),
+              " Lobatto Legendre nodes in [",
+              first(x),
+              ", ",
+              last(x),
+              "]")
     end
 end
 
@@ -198,27 +191,22 @@ function Base.show(io::IO, D::LegendreSecondDerivativeOperator)
     else
         x = grid(D)
         print(io, "Second derivative operator {T=", eltype(D), "}")
-        print(
-            io,
-            " on ",
-            length(x),
-            " Lobatto Legendre nodes in [",
-            first(x),
-            ", ",
-            last(x),
-            "]",
-        )
+        print(io,
+              " on ",
+              length(x),
+              " Lobatto Legendre nodes in [",
+              first(x),
+              ", ",
+              last(x),
+              "]")
     end
 end
 
-
-function mul!(
-    dest::AbstractVector,
-    D::LegendreDerivativeOperator,
-    u::AbstractVector,
-    α = true,
-    β = false,
-)
+function mul!(dest::AbstractVector,
+              D::LegendreDerivativeOperator,
+              u::AbstractVector,
+              α = true,
+              β = false)
     @unpack jac, basis = D
     N, _ = size(D)
     @boundscheck begin
@@ -229,13 +217,11 @@ function mul!(
     mul!(dest, basis.D, u, α * jac, β)
 end
 
-function mul!(
-    dest::AbstractVector,
-    D::LegendreSecondDerivativeOperator,
-    u::AbstractVector,
-    α = true,
-    β = false,
-)
+function mul!(dest::AbstractVector,
+              D::LegendreSecondDerivativeOperator,
+              u::AbstractVector,
+              α = true,
+              β = false)
     @unpack jac, D2 = D
     N, _ = size(D2)
     @boundscheck begin
@@ -266,40 +252,32 @@ function derivative_right(D::LegendreSecondDerivativeOperator, u::AbstractVector
     jac * dot(view(basis.D, size(D, 1), :), u)
 end
 
-
-function lower_bandwidth(
-    D::Union{LegendreDerivativeOperator,LegendreSecondDerivativeOperator},
-)
+function lower_bandwidth(D::Union{LegendreDerivativeOperator,
+                                  LegendreSecondDerivativeOperator})
     size(D, 1) - 1
 end
 
-function upper_bandwidth(
-    D::Union{LegendreDerivativeOperator,LegendreSecondDerivativeOperator},
-)
+function upper_bandwidth(D::Union{LegendreDerivativeOperator,
+                                  LegendreSecondDerivativeOperator})
     size(D, 1) - 1
 end
 
-function accuracy_order(
-    D::Union{LegendreDerivativeOperator,LegendreSecondDerivativeOperator},
-)
+function accuracy_order(D::Union{LegendreDerivativeOperator,
+                                 LegendreSecondDerivativeOperator})
     size(D, 1) - 1
 end
 
-
-function left_boundary_weight(
-    D::Union{LegendreDerivativeOperator,LegendreSecondDerivativeOperator},
-)
+function left_boundary_weight(D::Union{LegendreDerivativeOperator,
+                                       LegendreSecondDerivativeOperator})
     @inbounds retval = D.Δx * D.basis.weights[1]
     retval
 end
 
-function right_boundary_weight(
-    D::Union{LegendreDerivativeOperator,LegendreSecondDerivativeOperator},
-)
+function right_boundary_weight(D::Union{LegendreDerivativeOperator,
+                                        LegendreSecondDerivativeOperator})
     @inbounds retval = D.Δx * D.basis.weights[end]
     retval
 end
-
 
 function ConstantFilter(basis::LobattoLegendre{T}, filter, tmp::Array) where {T}
     Np1 = length(basis.nodes)
@@ -311,11 +289,9 @@ function ConstantFilter(basis::LobattoLegendre{T}, filter, tmp::Array) where {T}
     ConstantFilter(coefficients, nodal2modal, modal2nodal, tmp, filter)
 end
 
-function ConstantFilter(
-    basis::LobattoLegendre{T},
-    filter,
-    TmpEltype::DataType = T,
-) where {T}
+function ConstantFilter(basis::LobattoLegendre{T},
+                        filter,
+                        TmpEltype::DataType = T) where {T}
     Np1 = length(basis.nodes)
     tmp = Array{TmpEltype}(undef, Np1)
 
@@ -331,6 +307,5 @@ derivative operator `D` with parameters given by the filter function `filter`.
 function ConstantFilter(D::LegendreDerivativeOperator{T}, filter, TmpEltype = T) where {T}
     ConstantFilter(D.basis, filter, TmpEltype)
 end
-
 
 # TODO: LegendreSuperSpectralViscosity

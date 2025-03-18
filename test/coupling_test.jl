@@ -6,12 +6,12 @@ using SummationByPartsOperators
 
 @testset "Coupled Legendre operators" begin
     for T in (Float32, Float64)
-        for degree = 1:5
+        for degree in 1:5
             ymin = T(0)
             ymax = T(2)
             D = legendre_derivative_operator(ymin, ymax, degree + 1)
 
-            for N = 1:3
+            for N in 1:3
                 xmin = T(-1)
                 xmax = T(2)
                 mesh = UniformMesh1D(xmin, xmax, N)
@@ -25,7 +25,7 @@ using SummationByPartsOperators
                     x = grid(cD)
                     println(x)
                     @test norm(cD * x .^ 0) < 100N * eps(float(T))
-                    for k = 1:degree
+                    for k in 1:degree
                         @test cD * x .^ k ≈ k .* x .^ (k - 1)
                     end
                     @test accuracy_order(cD) == accuracy_order(D)
@@ -33,24 +33,17 @@ using SummationByPartsOperators
                     u = sinpi.(x)
                     v = copy(u)
                     SummationByPartsOperators.scale_by_mass_matrix!(u, cD)
-                    @test_throws DimensionMismatch scale_by_mass_matrix!(
-                        @view(u[(begin+1):(end-1)]),
-                        cD,
-                    )
+                    @test_throws DimensionMismatch scale_by_mass_matrix!(@view(u[(begin + 1):(end - 1)]),
+                                                                         cD)
                     SummationByPartsOperators.scale_by_inverse_mass_matrix!(u, cD)
-                    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(
-                        @view(u[(begin+1):(end-1)]),
-                        cD,
-                    )
+                    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(u[(begin + 1):(end - 1)]),
+                                                                                 cD)
                     @test u ≈ v
                     @test integrate(u, cD) ≈ sum(mass_matrix(cD) * u)
                     @test integrate(u -> u^2, u, cD) ≈ sum(u' * mass_matrix(cD) * u)
-                    @test cD * u ≈ BandedMatrix(cD) * u atol = eps(float(T)) rtol =
-                        sqrt(eps(float(T)))
-                    @test cD * u ≈ Matrix(cD) * u atol = eps(float(T)) rtol =
-                        sqrt(eps(float(T)))
-                    @test cD * u ≈ sparse(cD) * u atol = eps(float(T)) rtol =
-                        sqrt(eps(float(T)))
+                    @test cD * u≈BandedMatrix(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
+                    @test cD * u≈Matrix(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
+                    @test cD * u≈sparse(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
                     @test SummationByPartsOperators.xmin(cD) ≈ xmin
                     @test SummationByPartsOperators.xmax(cD) ≈ xmax
 
@@ -97,7 +90,7 @@ using SummationByPartsOperators
                 @test norm(res) < 100N * eps(float(T))
             end
 
-            for N = 1:3
+            for N in 1:3
                 xmin = T(-1)
                 xmax = T(2)
                 mesh = UniformPeriodicMesh1D(xmin, xmax, N)
@@ -116,22 +109,16 @@ using SummationByPartsOperators
                     u = sinpi.(x)
                     v = copy(u)
                     SummationByPartsOperators.scale_by_mass_matrix!(u, cD)
-                    @test_throws DimensionMismatch scale_by_mass_matrix!(
-                        @view(u[(begin+1):(end-1)]),
-                        cD,
-                    )
+                    @test_throws DimensionMismatch scale_by_mass_matrix!(@view(u[(begin + 1):(end - 1)]),
+                                                                         cD)
                     SummationByPartsOperators.scale_by_inverse_mass_matrix!(u, cD)
-                    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(
-                        @view(u[(begin+1):(end-1)]),
-                        cD,
-                    )
+                    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(u[(begin + 1):(end - 1)]),
+                                                                                 cD)
                     @test u ≈ v
                     @test integrate(u, cD) ≈ sum(mass_matrix(cD) * u)
                     @test integrate(u -> u^2, u, cD) ≈ sum(u' * mass_matrix(cD) * u)
-                    @test cD * u ≈ Matrix(cD) * u atol = eps(float(T)) rtol =
-                        sqrt(eps(float(T)))
-                    @test cD * u ≈ sparse(cD) * u atol = eps(float(T)) rtol =
-                        sqrt(eps(float(T)))
+                    @test cD * u≈Matrix(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
+                    @test cD * u≈sparse(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
                     @test SummationByPartsOperators.xmin(cD) ≈ xmin
                     @test SummationByPartsOperators.xmax(cD) ≈ xmax
                 end
@@ -160,20 +147,17 @@ using SummationByPartsOperators
     end
 end
 
-
 @testset "Coupled FD operators" begin
     for T in (Float32, Float64)
-        for acc_order = 2:2:6
-            for source in (
-                MattssonNordström2004(),
-                MattssonAlmquistCarpenter2014Extended(),
-                MattssonAlmquistCarpenter2014Optimal(),
-            )
+        for acc_order in 2:2:6
+            for source in (MattssonNordström2004(),
+                           MattssonAlmquistCarpenter2014Extended(),
+                           MattssonAlmquistCarpenter2014Optimal())
                 ymin = T(0)
                 ymax = T(2)
                 D = derivative_operator(source, 1, acc_order, ymin, ymax, 31)
 
-                for N = 1:3
+                for N in 1:3
                     xmin = T(-1)
                     xmax = T(2)
                     mesh = UniformMesh1D(xmin, xmax, N)
@@ -191,24 +175,17 @@ end
                         u = sinpi.(x)
                         v = copy(u)
                         SummationByPartsOperators.scale_by_mass_matrix!(u, cD)
-                        @test_throws DimensionMismatch scale_by_mass_matrix!(
-                            @view(u[(begin+1):(end-1)]),
-                            cD,
-                        )
+                        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(u[(begin + 1):(end - 1)]),
+                                                                             cD)
                         SummationByPartsOperators.scale_by_inverse_mass_matrix!(u, cD)
-                        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(
-                            @view(u[(begin+1):(end-1)]),
-                            cD,
-                        )
+                        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(u[(begin + 1):(end - 1)]),
+                                                                                     cD)
                         @test u ≈ v
                         @test integrate(u, cD) ≈ sum(mass_matrix(cD) * u)
                         @test integrate(u -> u^2, u, cD) ≈ sum(u' * mass_matrix(cD) * u)
-                        @test cD * u ≈ BandedMatrix(cD) * u atol = eps(float(T)) rtol =
-                            sqrt(eps(float(T)))
-                        @test cD * u ≈ Matrix(cD) * u atol = eps(float(T)) rtol =
-                            sqrt(eps(float(T)))
-                        @test cD * u ≈ sparse(cD) * u atol = eps(float(T)) rtol =
-                            sqrt(eps(float(T)))
+                        @test cD * u≈BandedMatrix(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
+                        @test cD * u≈Matrix(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
+                        @test cD * u≈sparse(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
                         @test SummationByPartsOperators.xmin(cD) ≈ xmin
                         @test SummationByPartsOperators.xmax(cD) ≈ xmax
 
@@ -255,7 +232,7 @@ end
                     @test norm(res) < 100N * eps(float(T))
                 end
 
-                for N = 1:3
+                for N in 1:3
                     xmin = T(-1)
                     xmax = T(2)
                     mesh = UniformPeriodicMesh1D(xmin, xmax, N)
@@ -272,22 +249,16 @@ end
                         u = sinpi.(x)
                         v = copy(u)
                         SummationByPartsOperators.scale_by_mass_matrix!(u, cD)
-                        @test_throws DimensionMismatch scale_by_mass_matrix!(
-                            @view(u[(begin+1):(end-1)]),
-                            cD,
-                        )
+                        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(u[(begin + 1):(end - 1)]),
+                                                                             cD)
                         SummationByPartsOperators.scale_by_inverse_mass_matrix!(u, cD)
-                        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(
-                            @view(u[(begin+1):(end-1)]),
-                            cD,
-                        )
+                        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(u[(begin + 1):(end - 1)]),
+                                                                                     cD)
                         @test u ≈ v
                         @test integrate(u, cD) ≈ sum(mass_matrix(cD) * u)
                         @test integrate(u -> u^2, u, cD) ≈ sum(u' * mass_matrix(cD) * u)
-                        @test cD * u ≈ Matrix(cD) * u atol = eps(float(T)) rtol =
-                            sqrt(eps(float(T)))
-                        @test cD * u ≈ sparse(cD) * u atol = eps(float(T)) rtol =
-                            sqrt(eps(float(T)))
+                        @test cD * u≈Matrix(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
+                        @test cD * u≈sparse(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
                         @test SummationByPartsOperators.xmin(cD) ≈ xmin
                         @test SummationByPartsOperators.xmax(cD) ≈ xmax
                     end
@@ -317,16 +288,15 @@ end
     end
 end
 
-
 @testset "Coupled upwind operators" begin
     for T in (Float32, Float64, Rational{Int128})
-        for acc_order = 2:7
+        for acc_order in 2:7
             ymin = T(0)
             ymax = T(2)
             Dp = derivative_operator(Mattsson2017(:plus), 1, acc_order, ymin, ymax, 31)
             Dm = derivative_operator(Mattsson2017(:minus), 1, acc_order, ymin, ymax, 31)
 
-            for N = 1:3
+            for N in 1:3
                 xmin = T(-1)
                 xmax = T(2)
                 mesh = UniformMesh1D(xmin, xmax, N)
@@ -336,14 +306,12 @@ end
                 cDm_central = couple_discontinuously(Dm, mesh)
                 cDp_plus = couple_discontinuously(Dp, mesh, Val(:plus))
                 cDm_minus = couple_discontinuously(Dm, mesh, Val(:minus))
-                for cD in (
-                    cDp_continuous,
-                    cDm_continuous,
-                    cDp_central,
-                    cDm_central,
-                    cDp_plus,
-                    cDm_minus,
-                )
+                for cD in (cDp_continuous,
+                           cDm_continuous,
+                           cDp_central,
+                           cDm_central,
+                           cDp_plus,
+                           cDm_minus)
                     print(cD)
                     x = grid(cD)
                     println(x)
@@ -353,32 +321,23 @@ end
                     u = sinpi.(x)
                     v = copy(u)
                     SummationByPartsOperators.scale_by_mass_matrix!(u, cD)
-                    @test_throws DimensionMismatch scale_by_mass_matrix!(
-                        @view(u[(begin+1):(end-1)]),
-                        cD,
-                    )
+                    @test_throws DimensionMismatch scale_by_mass_matrix!(@view(u[(begin + 1):(end - 1)]),
+                                                                         cD)
                     SummationByPartsOperators.scale_by_inverse_mass_matrix!(u, cD)
-                    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(
-                        @view(u[(begin+1):(end-1)]),
-                        cD,
-                    )
+                    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(u[(begin + 1):(end - 1)]),
+                                                                                 cD)
                     @test u ≈ v
                     @test integrate(u, cD) ≈ sum(mass_matrix(cD) * u)
                     @test integrate(u -> u^2, u, cD) ≈ sum(u' * mass_matrix(cD) * u)
-                    @test cD * u ≈ BandedMatrix(cD) * u atol = eps(float(T)) rtol =
-                        sqrt(eps(float(T)))
-                    @test cD * u ≈ Matrix(cD) * u atol = eps(float(T)) rtol =
-                        sqrt(eps(float(T)))
-                    @test cD * u ≈ sparse(cD) * u atol = eps(float(T)) rtol =
-                        sqrt(eps(float(T)))
+                    @test cD * u≈BandedMatrix(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
+                    @test cD * u≈Matrix(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
+                    @test cD * u≈sparse(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
                     @test SummationByPartsOperators.xmin(cD) ≈ xmin
                     @test SummationByPartsOperators.xmax(cD) ≈ xmax
                 end
-                for (cDp, cDm) in (
-                    (cDp_continuous, cDm_continuous),
-                    (cDp_central, cDm_central),
-                    (cDp_plus, cDm_minus),
-                )
+                for (cDp, cDm) in ((cDp_continuous, cDm_continuous),
+                                   (cDp_central, cDm_central),
+                                   (cDp_plus, cDm_minus))
                     cDp_dense = Matrix(cDp)
                     cDm_dense = Matrix(cDm)
                     M = mass_matrix(cDp)
@@ -395,7 +354,7 @@ end
                 end
             end
 
-            for N = 1:3
+            for N in 1:3
                 xmin = T(-1)
                 xmax = T(2)
                 mesh = UniformPeriodicMesh1D(xmin, xmax, N)
@@ -405,14 +364,12 @@ end
                 cDm_central = couple_discontinuously(Dm, mesh)
                 cDp_plus = couple_discontinuously(Dp, mesh, Val(:plus))
                 cDm_minus = couple_discontinuously(Dm, mesh, Val(:minus))
-                for cD in (
-                    cDp_continuous,
-                    cDm_continuous,
-                    cDp_central,
-                    cDm_central,
-                    cDp_plus,
-                    cDm_minus,
-                )
+                for cD in (cDp_continuous,
+                           cDm_continuous,
+                           cDp_central,
+                           cDm_central,
+                           cDp_plus,
+                           cDm_minus)
                     print(cD)
                     x = grid(cD)
                     println(x)
@@ -422,30 +379,22 @@ end
                     u = sinpi.(x)
                     v = copy(u)
                     SummationByPartsOperators.scale_by_mass_matrix!(u, cD)
-                    @test_throws DimensionMismatch scale_by_mass_matrix!(
-                        @view(u[(begin+1):(end-1)]),
-                        cD,
-                    )
+                    @test_throws DimensionMismatch scale_by_mass_matrix!(@view(u[(begin + 1):(end - 1)]),
+                                                                         cD)
                     SummationByPartsOperators.scale_by_inverse_mass_matrix!(u, cD)
-                    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(
-                        @view(u[(begin+1):(end-1)]),
-                        cD,
-                    )
+                    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(u[(begin + 1):(end - 1)]),
+                                                                                 cD)
                     @test u ≈ v
                     @test integrate(u, cD) ≈ sum(mass_matrix(cD) * u)
                     @test integrate(u -> u^2, u, cD) ≈ sum(u' * mass_matrix(cD) * u)
-                    @test cD * u ≈ Matrix(cD) * u atol = eps(float(T)) rtol =
-                        sqrt(eps(float(T)))
-                    @test cD * u ≈ sparse(cD) * u atol = eps(float(T)) rtol =
-                        sqrt(eps(float(T)))
+                    @test cD * u≈Matrix(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
+                    @test cD * u≈sparse(cD) * u atol=eps(float(T)) rtol=sqrt(eps(float(T)))
                     @test SummationByPartsOperators.xmin(cD) ≈ xmin
                     @test SummationByPartsOperators.xmax(cD) ≈ xmax
                 end
-                for (cDp, cDm) in (
-                    (cDp_continuous, cDm_continuous),
-                    (cDp_central, cDm_central),
-                    (cDp_plus, cDm_minus),
-                )
+                for (cDp, cDm) in ((cDp_continuous, cDm_continuous),
+                                   (cDp_central, cDm_central),
+                                   (cDp_plus, cDm_minus))
                     cDp_dense = Matrix(cDp)
                     cDm_dense = Matrix(cDm)
                     M = mass_matrix(cDp)
@@ -463,7 +412,6 @@ end
     end
 end
 
-
 @testset "Coupled 2nd derivative FD operators" begin
     for T in (Float32, Float64)
         xmin = zero(T)
@@ -474,16 +422,14 @@ end
 
         D2op2 = couple_continuously(D2op1, UniformPeriodicMesh1D(xmin, xmax, 1))
 
-        D2op2 = couple_continuously(
-            derivative_operator(MattssonNordström2004(), 2, 2, xmin, xmax, 5),
-            UniformMesh1D(xmin, xmax, 2),
-        )
+        D2op2 = couple_continuously(derivative_operator(MattssonNordström2004(), 2, 2, xmin,
+                                                        xmax, 5),
+                                    UniformMesh1D(xmin, xmax, 2))
         @test Matrix(D2op1) ≈ Matrix(D2op2) ≈ BandedMatrix(D2op1) ≈ BandedMatrix(D2op2)
         @test SummationByPartsOperators.xmin(D2op2) ≈ xmin
         @test SummationByPartsOperators.xmax(D2op2) ≈ xmax
     end
 end
-
 
 @testset "Coupled 2nd derivative Legendre operators" begin
     for T in (Float32, Float64)
@@ -503,7 +449,6 @@ end
 
         D2op2 = couple_continuously(D2op1, UniformMesh1D(xmin, xmax, 1))
         @test Matrix(D2op1) ≈ Matrix(D2op2)
-
 
         D2op2 = couple_continuously(D2op1, UniformPeriodicMesh1D(xmin, xmax, 1))
         @test SummationByPartsOperators.xmin(D2op2) ≈ xmin
