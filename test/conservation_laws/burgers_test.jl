@@ -19,7 +19,7 @@ using Test, SummationByPartsOperators
     end
 
     @testset "Periodic FD" begin
-        for acc_order in 2:2:8
+        for acc_order = 2:2:8
             D = periodic_derivative_operator(1, acc_order, xmin, xmax, N)
             Di = dissipation_operator(D)
             semi = BurgersPeriodicSemidiscretization(D, Di, split_form)
@@ -42,8 +42,15 @@ using Test, SummationByPartsOperators
     end
 
     @testset "SBP FD" begin
-        for acc_order in 2:2:8
-            D = derivative_operator(MattssonSvärdNordström2004(), 1, acc_order, xmin, xmax, N)
+        for acc_order = 2:2:8
+            D = derivative_operator(
+                MattssonSvärdNordström2004(),
+                1,
+                acc_order,
+                xmin,
+                xmax,
+                N,
+            )
             Di = dissipation_operator(D)
             semi = BurgersNonperiodicSemidiscretization(D, Di, split_form, zero, zero)
             println(devnull, semi)

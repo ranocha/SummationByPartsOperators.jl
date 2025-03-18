@@ -4,22 +4,33 @@
 
 The coefficients of a derivative operator on a periodic grid.
 """
-@auto_hash_equals struct PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,ExecutionMode,SourceOfCoefficients} <: AbstractDerivativeCoefficients{T}
+@auto_hash_equals struct PeriodicDerivativeCoefficients{
+    T,
+    LowerOffset,
+    UpperOffset,
+    ExecutionMode,
+    SourceOfCoefficients,
+} <: AbstractDerivativeCoefficients{T}
     # coefficients defining the operator and its action
-    lower_coef::SVector{LowerOffset, T}
+    lower_coef::SVector{LowerOffset,T}
     central_coef::T
-    upper_coef::SVector{UpperOffset, T}
+    upper_coef::SVector{UpperOffset,T}
     mode::ExecutionMode
     # corresponding orders etc.
     derivative_order::Int
-    accuracy_order  ::Int
-    symmetric       ::Bool
+    accuracy_order::Int
+    symmetric::Bool
     source_of_coefficients::SourceOfCoefficients
 
     function PeriodicDerivativeCoefficients(
-            lower_coef::SVector{LowerOffset, T}, central_coef::T, upper_coef::SVector{UpperOffset, T},
-            mode::ExecutionMode, derivative_order::Int, accuracy_order::Int,
-            source_of_coefficients::SourceOfCoefficients) where {T,LowerOffset,UpperOffset,ExecutionMode,SourceOfCoefficients}
+        lower_coef::SVector{LowerOffset,T},
+        central_coef::T,
+        upper_coef::SVector{UpperOffset,T},
+        mode::ExecutionMode,
+        derivative_order::Int,
+        accuracy_order::Int,
+        source_of_coefficients::SourceOfCoefficients,
+    ) where {T,LowerOffset,UpperOffset,ExecutionMode,SourceOfCoefficients}
         symmetric = LowerOffset == UpperOffset
         if symmetric
             @inbounds for i in Base.OneTo(LowerOffset)
@@ -27,80 +38,141 @@ The coefficients of a derivative operator on a periodic grid.
             end
         end
         new{T,LowerOffset,UpperOffset,ExecutionMode,SourceOfCoefficients}(
-            lower_coef, central_coef, upper_coef, mode,
-            derivative_order, accuracy_order, symmetric, source_of_coefficients)
+            lower_coef,
+            central_coef,
+            upper_coef,
+            mode,
+            derivative_order,
+            accuracy_order,
+            symmetric,
+            source_of_coefficients,
+        )
     end
 end
 
 
 # Compute `α*D*u + β*dest` and store the result in `dest`.
-function mul!(dest::AbstractVector, coefficients::PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset}, u::AbstractVector, α, β) where {T,LowerOffset,UpperOffset}
+function mul!(
+    dest::AbstractVector,
+    coefficients::PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset},
+    u::AbstractVector,
+    α,
+    β,
+) where {T,LowerOffset,UpperOffset}
     @boundscheck begin
         @argcheck length(dest) == length(u) DimensionMismatch
-        @argcheck length(u) > LowerOffset+UpperOffset DimensionMismatch
+        @argcheck length(u) > LowerOffset + UpperOffset DimensionMismatch
     end
 
     @unpack lower_coef, central_coef, upper_coef, mode = coefficients
-    convolve_periodic_boundary_coefficients!(dest, lower_coef, central_coef, upper_coef, u, α, β)
-    convolve_interior_coefficients!(dest, lower_coef, central_coef, upper_coef, u, α, β, static_length(lower_coef), static_length(upper_coef), mode)
+    convolve_periodic_boundary_coefficients!(
+        dest,
+        lower_coef,
+        central_coef,
+        upper_coef,
+        u,
+        α,
+        β,
+    )
+    convolve_interior_coefficients!(
+        dest,
+        lower_coef,
+        central_coef,
+        upper_coef,
+        u,
+        α,
+        β,
+        static_length(lower_coef),
+        static_length(upper_coef),
+        mode,
+    )
 end
 
 # Compute `α*D*u` and store the result in `dest`.
-function mul!(dest::AbstractVector, coefficients::PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset}, u::AbstractVector, α) where {T,LowerOffset,UpperOffset}
+function mul!(
+    dest::AbstractVector,
+    coefficients::PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset},
+    u::AbstractVector,
+    α,
+) where {T,LowerOffset,UpperOffset}
     @boundscheck begin
         @argcheck length(dest) == length(u) DimensionMismatch
-        @argcheck length(u) > LowerOffset+UpperOffset DimensionMismatch
+        @argcheck length(u) > LowerOffset + UpperOffset DimensionMismatch
     end
 
     @unpack lower_coef, central_coef, upper_coef, mode = coefficients
-    convolve_periodic_boundary_coefficients!(dest, lower_coef, central_coef, upper_coef, u, α)
-    convolve_interior_coefficients!(dest, lower_coef, central_coef, upper_coef, u, α, static_length(lower_coef), static_length(upper_coef), mode)
+    convolve_periodic_boundary_coefficients!(
+        dest,
+        lower_coef,
+        central_coef,
+        upper_coef,
+        u,
+        α,
+    )
+    convolve_interior_coefficients!(
+        dest,
+        lower_coef,
+        central_coef,
+        upper_coef,
+        u,
+        α,
+        static_length(lower_coef),
+        static_length(upper_coef),
+        mode,
+    )
 end
 
 
-@generated function convolve_periodic_boundary_coefficients!(dest::AbstractVector, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset},
-                                                             u::AbstractVector, α, β) where {LowerOffset, UpperOffset}
-    ex_lower = :( nothing )
-    for i in 1:LowerOffset
-        ex = :( lower_coef[$LowerOffset]*u[end-$(LowerOffset-i)] )
-        for j in LowerOffset-1:-1:1
-            if i-j < 1
-                ex = :( $ex + lower_coef[$j]*u[end-$(j-i)] )
+@generated function convolve_periodic_boundary_coefficients!(
+    dest::AbstractVector,
+    lower_coef::SVector{LowerOffset},
+    central_coef,
+    upper_coef::SVector{UpperOffset},
+    u::AbstractVector,
+    α,
+    β,
+) where {LowerOffset,UpperOffset}
+    ex_lower = :(nothing)
+    for i = 1:LowerOffset
+        ex = :(lower_coef[$LowerOffset] * u[end-$(LowerOffset - i)])
+        for j = LowerOffset-1:-1:1
+            if i - j < 1
+                ex = :($ex + lower_coef[$j] * u[end-$(j - i)])
             else
-                ex = :( $(ex) + lower_coef[$j]*u[$(i-j)] )
+                ex = :($(ex) + lower_coef[$j] * u[$(i - j)])
             end
         end
-        ex = :( $ex + central_coef*u[$i] )
-        for j in 1:UpperOffset
-            ex = :( $ex + upper_coef[$j]*u[$(i+j)] )
+        ex = :($ex + central_coef * u[$i])
+        for j = 1:UpperOffset
+            ex = :($ex + upper_coef[$j] * u[$(i + j)])
         end
         ex_lower = quote
             $ex_lower
-            @inbounds dest[$i] = β*dest[$i] + α*$ex
+            @inbounds dest[$i] = β * dest[$i] + α * $ex
         end
     end
 
-    ex_upper = :( nothing )
-    for i in (UpperOffset-1):-1:0
+    ex_upper = :(nothing)
+    for i = (UpperOffset-1):-1:0
         if LowerOffset > 0
-            ex = :( lower_coef[$LowerOffset]*u[end-$(i+LowerOffset)] )
-            for j in LowerOffset-1:-1:1
-                ex = :( $ex + lower_coef[$j]*u[end-$(j+i)] )
+            ex = :(lower_coef[$LowerOffset] * u[end-$(i + LowerOffset)])
+            for j = LowerOffset-1:-1:1
+                ex = :($ex + lower_coef[$j] * u[end-$(j + i)])
             end
-            ex = :( $ex + central_coef*u[end-$i] )
+            ex = :($ex + central_coef * u[end-$i])
         else
-            ex = :( central_coef*u[end-$i] )
+            ex = :(central_coef * u[end-$i])
         end
-        for j in 1:UpperOffset
-            if i-j < 0
-                ex = :( $ex + upper_coef[$j]*u[$(j-i)] )
+        for j = 1:UpperOffset
+            if i - j < 0
+                ex = :($ex + upper_coef[$j] * u[$(j - i)])
             else
-                ex = :( $ex + upper_coef[$j]*u[end-$(i-j)] )
+                ex = :($ex + upper_coef[$j] * u[end-$(i - j)])
             end
         end
         ex_upper = quote
             $ex_upper
-            @inbounds dest[end-$i] = β*dest[end-$i] + α*$ex
+            @inbounds dest[end-$i] = β * dest[end-$i] + α * $ex
         end
     end
 
@@ -110,49 +182,55 @@ end
     end
 end
 
-@generated function convolve_periodic_boundary_coefficients!(dest::AbstractVector, lower_coef::SVector{LowerOffset}, central_coef, upper_coef::SVector{UpperOffset},
-                                                             u::AbstractVector, α) where {LowerOffset, UpperOffset}
-    ex_lower = :( nothing )
-    for i in 1:LowerOffset
-        ex = :( lower_coef[$LowerOffset]*u[end-$(LowerOffset-i)] )
-        for j in LowerOffset-1:-1:1
-            if i-j < 1
-                ex = :( $ex + lower_coef[$j]*u[end-$(j-i)] )
+@generated function convolve_periodic_boundary_coefficients!(
+    dest::AbstractVector,
+    lower_coef::SVector{LowerOffset},
+    central_coef,
+    upper_coef::SVector{UpperOffset},
+    u::AbstractVector,
+    α,
+) where {LowerOffset,UpperOffset}
+    ex_lower = :(nothing)
+    for i = 1:LowerOffset
+        ex = :(lower_coef[$LowerOffset] * u[end-$(LowerOffset - i)])
+        for j = LowerOffset-1:-1:1
+            if i - j < 1
+                ex = :($ex + lower_coef[$j] * u[end-$(j - i)])
             else
-                ex = :( $(ex) + lower_coef[$j]*u[$(i-j)] )
+                ex = :($(ex) + lower_coef[$j] * u[$(i - j)])
             end
         end
-        ex = :( $ex + central_coef*u[$i] )
-        for j in 1:UpperOffset
-            ex = :( $ex + upper_coef[$j]*u[$(i+j)] )
+        ex = :($ex + central_coef * u[$i])
+        for j = 1:UpperOffset
+            ex = :($ex + upper_coef[$j] * u[$(i + j)])
         end
         ex_lower = quote
             $ex_lower
-            @inbounds dest[$i] = α*$ex
+            @inbounds dest[$i] = α * $ex
         end
     end
 
-    ex_upper = :( nothing )
-    for i in (UpperOffset-1):-1:0
+    ex_upper = :(nothing)
+    for i = (UpperOffset-1):-1:0
         if LowerOffset > 0
-            ex = :( lower_coef[$LowerOffset]*u[end-$(i+LowerOffset)] )
-            for j in LowerOffset-1:-1:1
-                ex = :( $ex + lower_coef[$j]*u[end-$(j+i)] )
+            ex = :(lower_coef[$LowerOffset] * u[end-$(i + LowerOffset)])
+            for j = LowerOffset-1:-1:1
+                ex = :($ex + lower_coef[$j] * u[end-$(j + i)])
             end
-            ex = :( $ex + central_coef*u[end-$i] )
+            ex = :($ex + central_coef * u[end-$i])
         else
-            ex = :( central_coef*u[end-$i] )
+            ex = :(central_coef * u[end-$i])
         end
-        for j in 1:UpperOffset
-            if i-j < 0
-                ex = :( $ex + upper_coef[$j]*u[$(j-i)] )
+        for j = 1:UpperOffset
+            if i - j < 0
+                ex = :($ex + upper_coef[$j] * u[$(j - i)])
             else
-                ex = :( $ex + upper_coef[$j]*u[end-$(i-j)] )
+                ex = :($ex + upper_coef[$j] * u[end-$(i - j)])
             end
         end
         ex_upper = quote
             $ex_upper
-            @inbounds dest[end-$i] = α*$ex
+            @inbounds dest[end-$i] = α * $ex
         end
     end
 
@@ -179,11 +257,13 @@ function Base.show(io::IO, source::BeljaddLeFlochMishraParés2017)
     if get(io, :compact, false)
         summary(io, source)
     else
-        print(io,
+        print(
+            io,
             "Beljadid, LeFloch, Mishra, Parés (2017) \n",
             "  Schemes with Well-Controlled Dissipation. Hyperbolic Systems in \n",
             "    Nonconservative Form. \n",
-            "  Communications in Computational Physics 21.4, pp. 913-946.")
+            "  Communications in Computational Physics 21.4, pp. 913-946.",
+        )
     end
 end
 
@@ -195,7 +275,12 @@ derivative with an order of accuracy `accuracy_order` and scalar type `T`.
 The evaluation of the derivative can be parallelized using threads by choosing
 `mode=ThreadedMode())`.
 """
-function periodic_central_derivative_coefficients(derivative_order, accuracy_order, T=Float64, mode=FastMode())
+function periodic_central_derivative_coefficients(
+    derivative_order,
+    accuracy_order,
+    T = Float64,
+    mode = FastMode(),
+)
     @argcheck derivative_order > 0
     @argcheck accuracy_order > 0
 
@@ -208,17 +293,17 @@ function periodic_central_derivative_coefficients(derivative_order, accuracy_ord
         # Beljadid, LeFloch, Mishra, Parés (2017)
         # Schemes with Well-Controlled Dissipation. Hyperbolic Systems in Nonconservative Form.
         # Communications in Computational Physics 21.4, pp. 913-946.
-        n = (accuracy_order+1) ÷ 2
+        n = (accuracy_order + 1) ÷ 2
         coef = Vector{T}(undef, n)
-        for j in 1:n
+        for j = 1:n
             tmp = one(Rational{Int128})
             if iseven(j)
                 tmp *= -1
             end
-            for i in 1:j
-                tmp *= (n+1-i) // (n+i)
+            for i = 1:j
+                tmp *= (n + 1 - i) // (n + i)
             end
-            coef[j] =  tmp / j
+            coef[j] = tmp / j
         end
         upper_coef = SVector{n,T}(coef)
         central_coef = zero(T)
@@ -229,20 +314,20 @@ function periodic_central_derivative_coefficients(derivative_order, accuracy_ord
         # Beljadid, LeFloch, Mishra, Parés (2017)
         # Schemes with Well-Controlled Dissipation. Hyperbolic Systems in Nonconservative Form.
         # Communications in Computational Physics 21.4, pp. 913-946.
-        n = (accuracy_order+1) ÷ 2
+        n = (accuracy_order + 1) ÷ 2
         coef = Vector{T}(undef, n)
-        for j in 1:n
+        for j = 1:n
             tmp = one(Rational{Int128})
             if iseven(j)
                 tmp *= -1
             end
-            for i in 1:j
-                tmp *= (n+1-i) // (n+i)
+            for i = 1:j
+                tmp *= (n + 1 - i) // (n + i)
             end
-            coef[j] =  2*tmp / j^2
+            coef[j] = 2 * tmp / j^2
         end
         upper_coef = SVector{n,T}(coef)
-        central_coef = -2*sum(upper_coef)
+        central_coef = -2 * sum(upper_coef)
         lower_coef = upper_coef
         source = BeljaddLeFlochMishraParés2017()
     elseif derivative_order == 3
@@ -250,22 +335,22 @@ function periodic_central_derivative_coefficients(derivative_order, accuracy_ord
         # Beljadid, LeFloch, Mishra, Parés (2017)
         # Schemes with Well-Controlled Dissipation. Hyperbolic Systems in Nonconservative Form.
         # Communications in Computational Physics 21.4, pp. 913-946.
-        n = (accuracy_order+1) ÷ 2
+        n = (accuracy_order + 1) ÷ 2
         coef = Vector{T}(undef, n)
-        for j in 1:n
+        for j = 1:n
             tmp = one(Rational{Int128})
             if isodd(j)
                 tmp *= -1
             end
-            for i in 1:j
-                tmp *= (n+1-i) // (n+i)
+            for i = 1:j
+                tmp *= (n + 1 - i) // (n + i)
             end
             fac = zero(Rational{Int128})
-            for k in 1:n
+            for k = 1:n
                 k == j && continue
                 fac += 1 // k^2
             end
-            coef[j] =  6*tmp*fac/ j
+            coef[j] = 6 * tmp * fac / j
         end
         upper_coef = SVector{n,T}(coef)
         central_coef = zero(T)
@@ -275,7 +360,15 @@ function periodic_central_derivative_coefficients(derivative_order, accuracy_ord
         throw(ArgumentError("Derivative order $derivative_order not implemented yet."))
     end
 
-    PeriodicDerivativeCoefficients(lower_coef, central_coef, upper_coef, mode, derivative_order, accuracy_order, source)
+    PeriodicDerivativeCoefficients(
+        lower_coef,
+        central_coef,
+        upper_coef,
+        mode,
+        derivative_order,
+        accuracy_order,
+        source,
+    )
 end
 
 """
@@ -292,10 +385,12 @@ function Base.show(io::IO, source::Fornberg1998)
     if get(io, :compact, false)
         summary(io, source)
     else
-        print(io,
+        print(
+            io,
             "Fornberg (1998) \n",
             "  Calculation of Weights in Finite Difference Formulas. \n",
-            "  SIAM Rev. 40.3, pp. 685-691.")
+            "  SIAM Rev. 40.3, pp. 685-691.",
+        )
     end
 end
 
@@ -318,33 +413,33 @@ function fornberg(xx::Vector{T}, m::Int) where {T}
 
     z = zero(T)
     n = length(x) - 1
-    c = fill(zero(T), length(x), m+1)
+    c = fill(zero(T), length(x), m + 1)
     c1 = one(T)
     c4 = x[1] - z
-    c[1,1] = one(T)
-    for i in 1:n
-        mn = min(i,m)
+    c[1, 1] = one(T)
+    for i = 1:n
+        mn = min(i, m)
         c2 = one(T)
         c5 = c4
         c4 = x[i+1] - z
-        for j in 0:i-1
+        for j = 0:i-1
             c3 = x[i+1] - x[j+1]
             c2 = c2 * c3
-            if j == i-1
-                for k in mn:-1:1
-                    c[i+1,k+1] = c1 * (k*c[i,k]-c5*c[i,k+1]) / c2
+            if j == i - 1
+                for k = mn:-1:1
+                    c[i+1, k+1] = c1 * (k * c[i, k] - c5 * c[i, k+1]) / c2
                 end
-                c[i+1,1] = -c1*c5*c[i,1] / c2
+                c[i+1, 1] = -c1 * c5 * c[i, 1] / c2
             end
-            for k in mn:-1:1
-                c[j+1,k+1] = (c4*c[j+1,k+1]-k*c[j+1,k]) / c3
+            for k = mn:-1:1
+                c[j+1, k+1] = (c4 * c[j+1, k+1] - k * c[j+1, k]) / c3
             end
-            c[j+1,1] = c4*c[j+1,1] / c3
+            c[j+1, 1] = c4 * c[j+1, 1] / c3
         end
         c1 = c2
     end
 
-    c[:,end]
+    c[:, end]
 end
 
 """
@@ -358,9 +453,13 @@ the leftmost grid point used is determined by `left_offset`.
 The evaluation of the derivative can be parallelized using threads by choosing
 mode=ThreadedMode()`.
 """
-function periodic_derivative_coefficients(derivative_order, accuracy_order,
-                                          left_offset::Int=-(accuracy_order+1)÷2,
-                                          T=Float64, mode=FastMode())
+function periodic_derivative_coefficients(
+    derivative_order,
+    accuracy_order,
+    left_offset::Int = -(accuracy_order + 1) ÷ 2,
+    T = Float64,
+    mode = FastMode(),
+)
     @argcheck -accuracy_order <= left_offset <= 0
 
     x = Rational{Int128}.(left_offset:left_offset+accuracy_order)
@@ -368,19 +467,27 @@ function periodic_derivative_coefficients(derivative_order, accuracy_order,
 
     z = zero(eltype(x))
     lower_idx = x .< z
-    central_idx = first(findall(xx->xx==z, x))
+    central_idx = first(findall(xx -> xx == z, x))
     upper_idx = x .> z
 
     LowerOffset = sum(lower_idx)
     UpperOffset = sum(upper_idx)
 
-    lower_coef = SVector{LowerOffset, T}(T.(reverse(c[lower_idx])))
+    lower_coef = SVector{LowerOffset,T}(T.(reverse(c[lower_idx])))
     central_coef = T(c[central_idx])
-    upper_coef = SVector{UpperOffset, T}(T.(c[upper_idx]))
+    upper_coef = SVector{UpperOffset,T}(T.(c[upper_idx]))
 
     source = Fornberg1998()
 
-    PeriodicDerivativeCoefficients(lower_coef, central_coef, upper_coef, mode, derivative_order, accuracy_order, source)
+    PeriodicDerivativeCoefficients(
+        lower_coef,
+        central_coef,
+        upper_coef,
+        mode,
+        derivative_order,
+        accuracy_order,
+        source,
+    )
 end
 
 
@@ -399,10 +506,12 @@ function Base.show(io::IO, source::Holoborodko2008)
     if get(io, :compact, false)
         summary(io, source)
     else
-        print(io,
+        print(
+            io,
             "  Holoborodko (2008) \n",
             "  Smooth Noise Robust Differentiators. \n",
-            "  http://www.holoborodko.com/pavel/numerical-methods/numerical-derivative/smooth-low-noise-differentiators/")
+            "  http://www.holoborodko.com/pavel/numerical-methods/numerical-derivative/smooth-low-noise-differentiators/",
+        )
     end
 end
 
@@ -417,34 +526,32 @@ by [`Holoborodko2008`](@ref).
 The evaluation of the derivative can be parallelized using threads by choosing
 mode=ThreadedMode()`.
 """
-function periodic_derivative_coefficients(source::Holoborodko2008, derivative_order, accuracy_order;
-                                          T=Float64, mode=FastMode(),
-                                          stencil_width=accuracy_order+3)
+function periodic_derivative_coefficients(
+    source::Holoborodko2008,
+    derivative_order,
+    accuracy_order;
+    T = Float64,
+    mode = FastMode(),
+    stencil_width = accuracy_order + 3,
+)
     method_exists = true
     if derivative_order == 1
         if accuracy_order == 2
             if stencil_width == 5
-                lower_coef = SVector{2, T}([
-                    -2//8, -1//8
-                ])
+                lower_coef = SVector{2,T}([-2 // 8, -1 // 8])
                 upper_coef = -lower_coef
                 central_coef = T(0)
             elseif stencil_width == 7
-                lower_coef = SVector{3, T}([
-                    -5//32, -4//32, -1//32
-                ])
+                lower_coef = SVector{3,T}([-5 // 32, -4 // 32, -1 // 32])
                 upper_coef = -lower_coef
                 central_coef = T(0)
             elseif stencil_width == 9
-                lower_coef = SVector{4, T}([
-                    -14//128, -14//128, -6//128, -1//128
-                ])
+                lower_coef = SVector{4,T}([-14 // 128, -14 // 128, -6 // 128, -1 // 128])
                 upper_coef = -lower_coef
                 central_coef = T(0)
             elseif stencil_width == 11
-                lower_coef = SVector{5, T}([
-                    -42//512, -48//512, -27//512, -8//512, -1//512
-                ])
+                lower_coef =
+                    SVector{5,T}([-42 // 512, -48 // 512, -27 // 512, -8 // 512, -1 // 512])
                 upper_coef = -lower_coef
                 central_coef = T(0)
             else
@@ -452,20 +559,20 @@ function periodic_derivative_coefficients(source::Holoborodko2008, derivative_or
             end
         elseif accuracy_order == 4
             if stencil_width == 7
-                lower_coef = SVector{3, T}([
-                    -39//96, -12//96, 5//96
-                ])
+                lower_coef = SVector{3,T}([-39 // 96, -12 // 96, 5 // 96])
                 upper_coef = -lower_coef
                 central_coef = T(0)
             elseif stencil_width == 9
-                lower_coef = SVector{4, T}([
-                    -27//96, -16//96, 1//96, 2//96
-                ])
+                lower_coef = SVector{4,T}([-27 // 96, -16 // 96, 1 // 96, 2 // 96])
                 upper_coef = -lower_coef
                 central_coef = T(0)
             elseif stencil_width == 11
-                lower_coef = SVector{5, T}([
-                    -322//1536, -256//1536, -39//1536, 32//1536, 11//1536
+                lower_coef = SVector{5,T}([
+                    -322 // 1536,
+                    -256 // 1536,
+                    -39 // 1536,
+                    32 // 1536,
+                    11 // 1536,
                 ])
                 upper_coef = -lower_coef
                 central_coef = T(0)
@@ -478,39 +585,29 @@ function periodic_derivative_coefficients(source::Holoborodko2008, derivative_or
     elseif derivative_order == 2
         if accuracy_order == 2
             if stencil_width == 5
-                lower_coef = SVector{2, T}([
-                    0, 1//4
-                ])
+                lower_coef = SVector{2,T}([0, 1 // 4])
                 upper_coef = lower_coef
-                central_coef = T(-2//4)
+                central_coef = T(-2 // 4)
             elseif stencil_width == 7
-                lower_coef = SVector{3, T}([
-                    -1//16, 2//16, 1//16
-                ])
+                lower_coef = SVector{3,T}([-1 // 16, 2 // 16, 1 // 16])
                 upper_coef = lower_coef
-                central_coef = T(-4//16)
+                central_coef = T(-4 // 16)
             elseif stencil_width == 9
-                lower_coef = SVector{4, T}([
-                    -4//64, 4//64, 4//64, 1//64
-                ])
+                lower_coef = SVector{4,T}([-4 // 64, 4 // 64, 4 // 64, 1 // 64])
                 upper_coef = lower_coef
-                central_coef = T(-10//64)
+                central_coef = T(-10 // 64)
             else
                 method_exists = false
             end
         elseif accuracy_order == 4
             if stencil_width == 7
-                lower_coef = SVector{3, T}([
-                    1//12, 5//12, -1//12
-                ])
+                lower_coef = SVector{3,T}([1 // 12, 5 // 12, -1 // 12])
                 upper_coef = lower_coef
-                central_coef = T(-10//12)
+                central_coef = T(-10 // 12)
             elseif stencil_width == 9
-                lower_coef = SVector{4, T}([
-                    -12//192, 52//192, 12//192, -7//192
-                ])
+                lower_coef = SVector{4,T}([-12 // 192, 52 // 192, 12 // 192, -7 // 192])
                 upper_coef = lower_coef
-                central_coef = T(-90//192)
+                central_coef = T(-90 // 192)
             else
                 method_exists = false
             end
@@ -521,10 +618,22 @@ function periodic_derivative_coefficients(source::Holoborodko2008, derivative_or
         method_exists = false
     end
     if method_exists == false
-        throw(ArgumentError("Method with derivative_order=$derivative_order, accuracy_order=$accuracy_order, stencil_width=$stencil_width not implemented/derived."))
+        throw(
+            ArgumentError(
+                "Method with derivative_order=$derivative_order, accuracy_order=$accuracy_order, stencil_width=$stencil_width not implemented/derived.",
+            ),
+        )
     end
 
-    PeriodicDerivativeCoefficients(lower_coef, central_coef, upper_coef, mode, derivative_order, accuracy_order, source)
+    PeriodicDerivativeCoefficients(
+        lower_coef,
+        central_coef,
+        upper_coef,
+        mode,
+        derivative_order,
+        accuracy_order,
+        source,
+    )
 end
 
 """
@@ -541,10 +650,12 @@ function Base.show(io::IO, source::LanczosLowNoise)
     if get(io, :compact, false)
         summary(io, source)
     else
-        print(io,
+        print(
+            io,
             "  Holoborodko (2008) \n",
             "  Smooth Noise Robust Differentiators. \n",
-            "  http://www.holoborodko.com/pavel/numerical-methods/numerical-derivative/lanczos-low-Noise-differentiators/")
+            "  http://www.holoborodko.com/pavel/numerical-methods/numerical-derivative/lanczos-low-Noise-differentiators/",
+        )
     end
 end
 
@@ -559,36 +670,32 @@ derivative with an order of accuracy `accuracy_order` and scalar type `T` for
 The evaluation of the derivative can be parallelized using threads by choosing
 `mode = ThreadedMode()`.
 """
-function periodic_derivative_coefficients(source::LanczosLowNoise,
-                                          derivative_order,
-                                          accuracy_order;
-                                          T=Float64, mode=FastMode(),
-                                          stencil_width=accuracy_order+3)
+function periodic_derivative_coefficients(
+    source::LanczosLowNoise,
+    derivative_order,
+    accuracy_order;
+    T = Float64,
+    mode = FastMode(),
+    stencil_width = accuracy_order + 3,
+)
     method_exists = true
     if derivative_order == 1
         if accuracy_order == 2
             if stencil_width == 5
-                lower_coef = SVector{2, T}([
-                    -1//10, -2//10
-                ])
+                lower_coef = SVector{2,T}([-1 // 10, -2 // 10])
                 upper_coef = -lower_coef
                 central_coef = T(0)
             elseif stencil_width == 7
-                lower_coef = SVector{3, T}([
-                    -1//28, -2//28, -3//28
-                ])
+                lower_coef = SVector{3,T}([-1 // 28, -2 // 28, -3 // 28])
                 upper_coef = -lower_coef
                 central_coef = T(0)
             elseif stencil_width == 9
-                lower_coef = SVector{4, T}([
-                    -1//60, -2//60, -3//60, -4//60
-                ])
+                lower_coef = SVector{4,T}([-1 // 60, -2 // 60, -3 // 60, -4 // 60])
                 upper_coef = -lower_coef
                 central_coef = T(0)
             elseif stencil_width == 11
-                lower_coef = SVector{5, T}([
-                    -1//110, -2//110, -3//110, -4//110, -5//110
-                ])
+                lower_coef =
+                    SVector{5,T}([-1 // 110, -2 // 110, -3 // 110, -4 // 110, -5 // 110])
                 upper_coef = -lower_coef
                 central_coef = T(0)
             else
@@ -596,20 +703,21 @@ function periodic_derivative_coefficients(source::LanczosLowNoise,
             end
         elseif accuracy_order == 4
             if stencil_width == 7
-                lower_coef = SVector{3, T}([
-                    -58//252, -67//252, 22//252
-                ])
+                lower_coef = SVector{3,T}([-58 // 252, -67 // 252, 22 // 252])
                 upper_coef = -lower_coef
                 central_coef = T(0)
             elseif stencil_width == 9
-                lower_coef = SVector{4, T}([
-                    -126//1188, -193//1188, -142//1188, 86//1188
-                ])
+                lower_coef =
+                    SVector{4,T}([-126 // 1188, -193 // 1188, -142 // 1188, 86 // 1188])
                 upper_coef = -lower_coef
                 central_coef = T(0)
             elseif stencil_width == 11
-                lower_coef = SVector{5, T}([
-                    -296//5148, -503//5148, -532//5148, -294//5148, 300//5148
+                lower_coef = SVector{5,T}([
+                    -296 // 5148,
+                    -503 // 5148,
+                    -532 // 5148,
+                    -294 // 5148,
+                    300 // 5148,
                 ])
                 upper_coef = -lower_coef
                 central_coef = T(0)
@@ -621,10 +729,22 @@ function periodic_derivative_coefficients(source::LanczosLowNoise,
         end
     end
     if method_exists == false
-        throw(ArgumentError("Method with derivative_order=$derivative_order, accuracy_order=$accuracy_order, stencil_width=$stencil_width not implemented/derived."))
+        throw(
+            ArgumentError(
+                "Method with derivative_order=$derivative_order, accuracy_order=$accuracy_order, stencil_width=$stencil_width not implemented/derived.",
+            ),
+        )
     end
 
-    PeriodicDerivativeCoefficients(lower_coef, central_coef, upper_coef, mode, derivative_order, accuracy_order, source)
+    PeriodicDerivativeCoefficients(
+        lower_coef,
+        central_coef,
+        upper_coef,
+        mode,
+        derivative_order,
+        accuracy_order,
+        source,
+    )
 end
 
 """
@@ -634,45 +754,93 @@ A derivative operator on a uniform periodic grid.
 See [`periodic_derivative_operator`](@ref) and
 [`periodic_central_derivative_operator`](@ref).
 """
-@auto_hash_equals struct PeriodicDerivativeOperator{T,LowerOffset,UpperOffset,ExecutionMode,SourceOfCoefficients,Grid} <: AbstractPeriodicDerivativeOperator{T}
-    coefficients::PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,ExecutionMode,SourceOfCoefficients}
+@auto_hash_equals struct PeriodicDerivativeOperator{
+    T,
+    LowerOffset,
+    UpperOffset,
+    ExecutionMode,
+    SourceOfCoefficients,
+    Grid,
+} <: AbstractPeriodicDerivativeOperator{T}
+    coefficients::PeriodicDerivativeCoefficients{
+        T,
+        LowerOffset,
+        UpperOffset,
+        ExecutionMode,
+        SourceOfCoefficients,
+    }
     grid_compute::Grid   # N   nodes, including the left and excluding the right boundary
     grid_evaluate::Grid #  N+1 nodes, including both boundaries
     Δx::T
     factor::T
 
-    function PeriodicDerivativeOperator(coefficients::PeriodicDerivativeCoefficients{T,LowerOffset,UpperOffset,ExecutionMode,SourceOfCoefficients},
-                                        grid_evaluate::Grid) where {T,LowerOffset,UpperOffset,ExecutionMode,SourceOfCoefficients,Grid}
-        @argcheck length(grid_evaluate) > LowerOffset+UpperOffset DimensionMismatch
-        grid_compute = range(grid_evaluate[1], stop=grid_evaluate[end-1], length=length(grid_evaluate)-1)
+    function PeriodicDerivativeOperator(
+        coefficients::PeriodicDerivativeCoefficients{
+            T,
+            LowerOffset,
+            UpperOffset,
+            ExecutionMode,
+            SourceOfCoefficients,
+        },
+        grid_evaluate::Grid,
+    ) where {T,LowerOffset,UpperOffset,ExecutionMode,SourceOfCoefficients,Grid}
+        @argcheck length(grid_evaluate) > LowerOffset + UpperOffset DimensionMismatch
+        grid_compute = range(
+            grid_evaluate[1],
+            stop = grid_evaluate[end-1],
+            length = length(grid_evaluate) - 1,
+        )
 
         Δx = step(grid_evaluate)
         factor = inv(Δx^coefficients.derivative_order)
-        new{T,LowerOffset,UpperOffset,ExecutionMode,SourceOfCoefficients,Grid}(coefficients, grid_compute, grid_evaluate, Δx, factor)
+        new{T,LowerOffset,UpperOffset,ExecutionMode,SourceOfCoefficients,Grid}(
+            coefficients,
+            grid_compute,
+            grid_evaluate,
+            Δx,
+            factor,
+        )
     end
 end
 
-@inline source_of_coefficients(D::PeriodicDerivativeOperator) = source_of_coefficients(D.coefficients)
+@inline source_of_coefficients(D::PeriodicDerivativeOperator) =
+    source_of_coefficients(D.coefficients)
 
 
-function Base.show(io::IO, D::PeriodicDerivativeOperator{T,LowerOffset,UpperOffset}) where {T,LowerOffset,UpperOffset}
+function Base.show(
+    io::IO,
+    D::PeriodicDerivativeOperator{T,LowerOffset,UpperOffset},
+) where {T,LowerOffset,UpperOffset}
     x = D.grid_evaluate
     if derivative_order(D) == 1
         print(io, "Periodic first-derivative operator")
-    elseif  derivative_order(D) == 2
+    elseif derivative_order(D) == 2
         print(io, "Periodic second-derivative operator")
-    elseif  derivative_order(D) == 3
+    elseif derivative_order(D) == 3
         print(io, "Periodic third-derivative operator")
     else
-        print(io, "Periodic ", derivative_order(D),
-              "-derivative operator")
+        print(io, "Periodic ", derivative_order(D), "-derivative operator")
     end
     print(io, " of order ", accuracy_order(D))
     if get(io, :compact, false) == false
-        print(io, " on a grid in [", first(x), ", ", last(x),
-                "] using ", size(D, 1), " nodes, \n")
-        print(io, "stencils with ", LowerOffset, " nodes to the left, ",
-                UpperOffset, " nodes to the right, and coefficients")
+        print(
+            io,
+            " on a grid in [",
+            first(x),
+            ", ",
+            last(x),
+            "] using ",
+            size(D, 1),
+            " nodes, \n",
+        )
+        print(
+            io,
+            "stencils with ",
+            LowerOffset,
+            " nodes to the left, ",
+            UpperOffset,
+            " nodes to the right, and coefficients",
+        )
     end
     print(io, " of ", source_of_coefficients(D))
 end
@@ -682,21 +850,32 @@ xmax(D::PeriodicDerivativeOperator) = last(D.grid_evaluate)
 
 
 # Compute `α*D*u + β*dest` and store the result in `dest`.
-Base.@propagate_inbounds function mul!(dest::AbstractVector, D::PeriodicDerivativeOperator, u::AbstractVector, α, β)
+Base.@propagate_inbounds function mul!(
+    dest::AbstractVector,
+    D::PeriodicDerivativeOperator,
+    u::AbstractVector,
+    α,
+    β,
+)
     @boundscheck begin
         @argcheck size(D, 2) == length(u) DimensionMismatch
         @argcheck size(D, 1) == length(dest) DimensionMismatch
     end
-    @inbounds mul!(dest, D.coefficients, u, α*D.factor, β)
+    @inbounds mul!(dest, D.coefficients, u, α * D.factor, β)
 end
 
 # Compute `α*D*u` and store the result in `dest`.
-Base.@propagate_inbounds function mul!(dest::AbstractVector, D::PeriodicDerivativeOperator, u::AbstractVector, α)
+Base.@propagate_inbounds function mul!(
+    dest::AbstractVector,
+    D::PeriodicDerivativeOperator,
+    u::AbstractVector,
+    α,
+)
     @boundscheck begin
         @argcheck size(D, 2) == length(u) DimensionMismatch
         @argcheck size(D, 1) == length(dest) DimensionMismatch
     end
-    @inbounds mul!(dest, D.coefficients, u, α*D.factor)
+    @inbounds mul!(dest, D.coefficients, u, α * D.factor)
 end
 
 
@@ -708,7 +887,8 @@ the quadrature rule associated with the periodic derivative operator `D`.
 """
 function integrate(func, u::AbstractVector, D::PeriodicDerivativeOperator)
     @boundscheck begin
-        length(u) == length(grid(D)) || throw(DimensionMismatch("sizes of input vector and operator do not match"))
+        length(u) == length(grid(D)) ||
+            throw(DimensionMismatch("sizes of input vector and operator do not match"))
     end
     @unpack Δx = D
 
@@ -726,7 +906,8 @@ end
 function scale_by_mass_matrix!(u::AbstractVector, D::PeriodicDerivativeOperator)
     Base.require_one_based_indexing(u)
     @boundscheck begin
-        length(u) == size(D, 2) || throw(DimensionMismatch("sizes of input vector and operator do not match"))
+        length(u) == size(D, 2) ||
+            throw(DimensionMismatch("sizes of input vector and operator do not match"))
     end
     @unpack Δx = D
 
@@ -736,7 +917,8 @@ end
 function scale_by_inverse_mass_matrix!(u::AbstractVector, D::PeriodicDerivativeOperator)
     Base.require_one_based_indexing(u)
     @boundscheck begin
-        length(u) == size(D, 2) || throw(DimensionMismatch("sizes of input vector and operator do not match"))
+        length(u) == size(D, 2) ||
+            throw(DimensionMismatch("sizes of input vector and operator do not match"))
     end
     @unpack Δx = D
 
@@ -754,16 +936,29 @@ to order of accuracy `accuracy_order`.
 The evaluation of the derivative can be parallelized using threads by choosing
 `mode=ThreadedMode()`.
 """
-function periodic_central_derivative_operator(derivative_order, accuracy_order,
-                                              xmin, xmax, N, mode=FastMode())
+function periodic_central_derivative_operator(
+    derivative_order,
+    accuracy_order,
+    xmin,
+    xmax,
+    N,
+    mode = FastMode(),
+)
     if mode === Val(:serial) || mode === Val(:threads)
         # TODO: deprecated in v0.5
-        Base.depwarn("Providing the argument `parallel` is deprecated." *
-                     "Use `mode` instead.", :periodic_central_derivative_operator)
+        Base.depwarn(
+            "Providing the argument `parallel` is deprecated." * "Use `mode` instead.",
+            :periodic_central_derivative_operator,
+        )
         mode = _parallel_to_mode(mode)
     end
-    grid_evaluate = range(xmin, stop=xmax, length=N+1) # N includes two identical boundary nodes
-    coefficients = periodic_central_derivative_coefficients(derivative_order, accuracy_order, eltype(grid_evaluate), mode)
+    grid_evaluate = range(xmin, stop = xmax, length = N + 1) # N includes two identical boundary nodes
+    coefficients = periodic_central_derivative_coefficients(
+        derivative_order,
+        accuracy_order,
+        eltype(grid_evaluate),
+        mode,
+    )
     PeriodicDerivativeOperator(coefficients, grid_evaluate)
 end
 
@@ -795,42 +990,88 @@ stencils with 1 nodes to the left, 1 nodes to the right, and coefficients of For
   SIAM Rev. 40.3, pp. 685-691.
 ```
 """
-function periodic_derivative_operator(derivative_order::Integer, accuracy_order,
-                                      xmin, xmax, N, left_offset::Int=-(accuracy_order+1)÷2,
-                                      mode=FastMode())
+function periodic_derivative_operator(
+    derivative_order::Integer,
+    accuracy_order,
+    xmin,
+    xmax,
+    N,
+    left_offset::Int = -(accuracy_order + 1) ÷ 2,
+    mode = FastMode(),
+)
     if mode === Val(:serial) || mode === Val(:threads)
         # TODO: deprecated in v0.5
-        Base.depwarn("Providing the argument `parallel` is deprecated." *
-                     "Use `mode` instead.", :periodic_derivative_operator)
+        Base.depwarn(
+            "Providing the argument `parallel` is deprecated." * "Use `mode` instead.",
+            :periodic_derivative_operator,
+        )
         mode = _parallel_to_mode(mode)
     end
-    grid = range(xmin, stop=xmax, length=N+1) # N includes two identical boundary nodes
-    coefficients = periodic_derivative_coefficients(derivative_order, accuracy_order, left_offset, eltype(grid), mode)
+    grid = range(xmin, stop = xmax, length = N + 1) # N includes two identical boundary nodes
+    coefficients = periodic_derivative_coefficients(
+        derivative_order,
+        accuracy_order,
+        left_offset,
+        eltype(grid),
+        mode,
+    )
     PeriodicDerivativeOperator(coefficients, grid)
 end
 
-@inline function periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N,
-                                              mode, left_offset::Int=-(accuracy_order+1)÷2)
+@inline function periodic_derivative_operator(
+    derivative_order,
+    accuracy_order,
+    xmin,
+    xmax,
+    N,
+    mode,
+    left_offset::Int = -(accuracy_order + 1) ÷ 2,
+)
     if mode === Val(:serial) || mode === Val(:threads)
         # TODO: deprecated in v0.5
-        Base.depwarn("Providing the argument `parallel` is deprecated." *
-                     "Use `mode` instead.", :periodic_derivative_operator)
+        Base.depwarn(
+            "Providing the argument `parallel` is deprecated." * "Use `mode` instead.",
+            :periodic_derivative_operator,
+        )
         mode = _parallel_to_mode(mode)
     end
-    periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N, left_offset, mode)
+    periodic_derivative_operator(
+        derivative_order,
+        accuracy_order,
+        xmin,
+        xmax,
+        N,
+        left_offset,
+        mode,
+    )
 end
 
-function periodic_derivative_operator(; derivative_order, accuracy_order,
-                                      xmin, xmax, N, left_offset::Int=-(accuracy_order+1)÷2,
-                                      mode=FastMode())
+function periodic_derivative_operator(;
+    derivative_order,
+    accuracy_order,
+    xmin,
+    xmax,
+    N,
+    left_offset::Int = -(accuracy_order + 1) ÷ 2,
+    mode = FastMode(),
+)
     if mode === Val(:serial) || mode === Val(:threads)
         # TODO: deprecated in v0.5
-        Base.depwarn("Providing the argument `parallel` is deprecated." *
-                     "Use `mode` instead.", :periodic_derivative_operator)
+        Base.depwarn(
+            "Providing the argument `parallel` is deprecated." * "Use `mode` instead.",
+            :periodic_derivative_operator,
+        )
         mode = _parallel_to_mode(mode)
     end
-    periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax, N,
-                                 left_offset, mode)
+    periodic_derivative_operator(
+        derivative_order,
+        accuracy_order,
+        xmin,
+        xmax,
+        N,
+        left_offset,
+        mode,
+    )
 end
 
 """
@@ -859,30 +1100,68 @@ stencils with 2 nodes to the left, 2 nodes to the right, and coefficients of   H
   http://www.holoborodko.com/pavel/numerical-methods/numerical-derivative/smooth-low-noise-differentiators/
 ```
 """
-function periodic_derivative_operator(source::Holoborodko2008, derivative_order, accuracy_order,
-                                      xmin, xmax, N; mode=FastMode(), parallel=nothing, kwargs...)
+function periodic_derivative_operator(
+    source::Holoborodko2008,
+    derivative_order,
+    accuracy_order,
+    xmin,
+    xmax,
+    N;
+    mode = FastMode(),
+    parallel = nothing,
+    kwargs...,
+)
     if parallel !== nothing
         # TODO: deprecated in v0.5
-        Base.depwarn("Providing the keyword argument `parallel` is deprecated." *
-                     "Use `mode` instead.", :periodic_derivative_operator)
+        Base.depwarn(
+            "Providing the keyword argument `parallel` is deprecated." *
+            "Use `mode` instead.",
+            :periodic_derivative_operator,
+        )
         mode = _parallel_to_mode(parallel)
     end
-    grid = range(xmin, stop=xmax, length=N+1) # N includes two identical boundary nodes
-    coefficients = periodic_derivative_coefficients(source, derivative_order, accuracy_order;
-                                                    kwargs..., T=eltype(grid), mode=mode)
+    grid = range(xmin, stop = xmax, length = N + 1) # N includes two identical boundary nodes
+    coefficients = periodic_derivative_coefficients(
+        source,
+        derivative_order,
+        accuracy_order;
+        kwargs...,
+        T = eltype(grid),
+        mode = mode,
+    )
     PeriodicDerivativeOperator(coefficients, grid)
 end
 
-function periodic_derivative_operator(source::Holoborodko2008; derivative_order, accuracy_order,
-                                      xmin, xmax, N, mode=FastMode(), parallel=nothing, kwargs...)
+function periodic_derivative_operator(
+    source::Holoborodko2008;
+    derivative_order,
+    accuracy_order,
+    xmin,
+    xmax,
+    N,
+    mode = FastMode(),
+    parallel = nothing,
+    kwargs...,
+)
     if parallel !== nothing
         # TODO: deprecated in v0.5
-        Base.depwarn("Providing the keyword argument `parallel` is deprecated." *
-                     "Use `mode` instead.", :periodic_derivative_operator)
+        Base.depwarn(
+            "Providing the keyword argument `parallel` is deprecated." *
+            "Use `mode` instead.",
+            :periodic_derivative_operator,
+        )
         mode = _parallel_to_mode(parallel)
     end
-    periodic_derivative_operator(source, derivative_order, accuracy_order, xmin, xmax, N;
-                                 mode=mode, kwargs...)
+    periodic_derivative_operator(
+        source,
+        derivative_order,
+        accuracy_order,
+        xmin,
+        xmax,
+        N;
+        mode = mode,
+        kwargs...,
+    )
 end
 
 """
@@ -895,29 +1174,44 @@ the leftmost grid point used is determined by `left_offset`.
 The evaluation of the derivative can be parallelized using threads by choosing
 `mode=ThreadedMode())`.
 """
-function periodic_derivative_operator(derivative_order, accuracy_order,
-                                      grid::Union{LinRange,StepRangeLen},
-                                      left_offset::Int=-(accuracy_order+1)÷2,
-                                      mode=FastMode())
+function periodic_derivative_operator(
+    derivative_order,
+    accuracy_order,
+    grid::Union{LinRange,StepRangeLen},
+    left_offset::Int = -(accuracy_order + 1) ÷ 2,
+    mode = FastMode(),
+)
     if mode === Val(:serial) || mode === Val(:threads)
         # TODO: deprecated in v0.5
-        Base.depwarn("Providing the argument `parallel` is deprecated." *
-                     "Use `mode` instead.", :periodic_derivative_operator)
+        Base.depwarn(
+            "Providing the argument `parallel` is deprecated." * "Use `mode` instead.",
+            :periodic_derivative_operator,
+        )
         mode = _parallel_to_mode(mode)
     end
-    coefficients = periodic_derivative_coefficients(derivative_order, accuracy_order,
-        left_offset, eltype(grid), mode)
+    coefficients = periodic_derivative_coefficients(
+        derivative_order,
+        accuracy_order,
+        left_offset,
+        eltype(grid),
+        mode,
+    )
     PeriodicDerivativeOperator(coefficients, grid)
 end
 
-@inline function periodic_derivative_operator(derivative_order, accuracy_order,
-                                              grid::Union{LinRange,StepRangeLen},
-                                              mode::AbstractExecutionMode,
-                                              left_offset::Int=-(accuracy_order+1)÷2)
+@inline function periodic_derivative_operator(
+    derivative_order,
+    accuracy_order,
+    grid::Union{LinRange,StepRangeLen},
+    mode::AbstractExecutionMode,
+    left_offset::Int = -(accuracy_order + 1) ÷ 2,
+)
     if mode === Val(:serial) || mode === Val(:threads)
         # TODO: deprecated in v0.5
-        Base.depwarn("Providing the argument `parallel` is deprecated." *
-                     "Use `mode` instead.", :periodic_derivative_operator)
+        Base.depwarn(
+            "Providing the argument `parallel` is deprecated." * "Use `mode` instead.",
+            :periodic_derivative_operator,
+        )
         mode = _parallel_to_mode(mode)
     end
     periodic_derivative_operator(derivative_order, accuracy_order, grid, left_offset, mode)
@@ -972,17 +1266,25 @@ stencils with 3 nodes to the left, 3 nodes to the right, and coefficients of   H
   http://www.holoborodko.com/pavel/numerical-methods/numerical-derivative/lanczos-low-Noise-differentiators/
 ```
 """
-function periodic_derivative_operator(source::LanczosLowNoise;
-                                      derivative_order = 1,
-                                      accuracy_order,
-                                      stencil_width = accuracy_order + 3,
-                                      xmin, xmax, N,
-                                      mode = FastMode())
+function periodic_derivative_operator(
+    source::LanczosLowNoise;
+    derivative_order = 1,
+    accuracy_order,
+    stencil_width = accuracy_order + 3,
+    xmin,
+    xmax,
+    N,
+    mode = FastMode(),
+)
     grid = range(xmin, stop = xmax, length = N + 1) # N includes two identical boundary nodes
-    coefficients = periodic_derivative_coefficients(source, derivative_order, accuracy_order;
-                                                    stencil_width = stencil_width,
-                                                    T = eltype(grid),
-                                                    mode = mode)
+    coefficients = periodic_derivative_coefficients(
+        source,
+        derivative_order,
+        accuracy_order;
+        stencil_width = stencil_width,
+        T = eltype(grid),
+        mode = mode,
+    )
     PeriodicDerivativeOperator(coefficients, grid)
 end
 
@@ -994,14 +1296,38 @@ end
 A dissipation operator on a periodic finite difference grid.
 See [`dissipation_operator`](@ref).
 """
-@auto_hash_equals struct PeriodicDissipationOperator{T,LowerOffset,UpperOffset,ExecutionMode,SourceOfCoefficients,Grid} <: AbstractPeriodicDerivativeOperator{T}
+@auto_hash_equals struct PeriodicDissipationOperator{
+    T,
+    LowerOffset,
+    UpperOffset,
+    ExecutionMode,
+    SourceOfCoefficients,
+    Grid,
+} <: AbstractPeriodicDerivativeOperator{T}
     factor::T
-    Di::PeriodicDerivativeOperator{T,LowerOffset,UpperOffset,ExecutionMode,SourceOfCoefficients,Grid}
+    Di::PeriodicDerivativeOperator{
+        T,
+        LowerOffset,
+        UpperOffset,
+        ExecutionMode,
+        SourceOfCoefficients,
+        Grid,
+    }
 
-    function PeriodicDissipationOperator(factor::T, Di::PeriodicDerivativeOperator{T,LowerOffset,UpperOffset,ExecutionMode,SourceOfCoefficients,Grid}) where {T,LowerOffset,UpperOffset,ExecutionMode,SourceOfCoefficients,Grid}
+    function PeriodicDissipationOperator(
+        factor::T,
+        Di::PeriodicDerivativeOperator{
+            T,
+            LowerOffset,
+            UpperOffset,
+            ExecutionMode,
+            SourceOfCoefficients,
+            Grid,
+        },
+    ) where {T,LowerOffset,UpperOffset,ExecutionMode,SourceOfCoefficients,Grid}
         # check validity
         @argcheck iseven(derivative_order(Di))
-        @argcheck (-1)^(1+derivative_order(Di)÷2)*factor >= 0
+        @argcheck (-1)^(1 + derivative_order(Di) ÷ 2) * factor >= 0
         new{T,LowerOffset,UpperOffset,ExecutionMode,SourceOfCoefficients,Grid}(factor, Di)
     end
 end
@@ -1012,16 +1338,23 @@ accuracy_order(Di::PeriodicDissipationOperator) = accuracy_order(Di.Di)
 source_of_coefficients(Di::PeriodicDissipationOperator) = MattssonSvärdNordström2004()
 
 function Base.show(io::IO, Di::PeriodicDissipationOperator)
-    if  derivative_order(Di) == 2
+    if derivative_order(Di) == 2
         print(io, "Periodic second-derivative dissipation operator")
     else
-        print(io, "Periodic ", derivative_order(Di),
-              "-derivative dissipation operator")
+        print(io, "Periodic ", derivative_order(Di), "-derivative dissipation operator")
     end
     print(io, " of order ", accuracy_order(Di))
     if get(io, :compact, false) == false
-        print(io, " on a grid in [", first(Di.Di.grid_evaluate), ", ", last(Di.Di.grid_evaluate),
-                "] using ", size(Di, 1), " nodes \n")
+        print(
+            io,
+            " on a grid in [",
+            first(Di.Di.grid_evaluate),
+            ", ",
+            last(Di.Di.grid_evaluate),
+            "] using ",
+            size(Di, 1),
+            " nodes \n",
+        )
         print(io, "and coefficients")
     end
     print(io, " of ", source_of_coefficients(Di))
@@ -1029,15 +1362,24 @@ end
 
 
 # Compute `α*D*u + β*dest` and store the result in `dest`.
-Base.@propagate_inbounds function mul!(dest::AbstractVector, Di::PeriodicDissipationOperator,
-                                       u::AbstractVector, α, β)
-    mul!(dest, Di.Di, u, Di.factor*α, β)
+Base.@propagate_inbounds function mul!(
+    dest::AbstractVector,
+    Di::PeriodicDissipationOperator,
+    u::AbstractVector,
+    α,
+    β,
+)
+    mul!(dest, Di.Di, u, Di.factor * α, β)
 end
 
 # Compute `α*D*u` and store the result in `dest`.
-Base.@propagate_inbounds function mul!(dest::AbstractVector, Di::PeriodicDissipationOperator,
-                                       u::AbstractVector, α)
-    mul!(dest, Di.Di, u, Di.factor*α)
+Base.@propagate_inbounds function mul!(
+    dest::AbstractVector,
+    Di::PeriodicDissipationOperator,
+    u::AbstractVector,
+    α,
+)
+    mul!(dest, Di.Di, u, Di.factor * α)
 end
 
 
@@ -1053,20 +1395,25 @@ derivative operator `D`.
 The evaluation of the derivative can be parallelized using threads by choosing
 `mode=ThreadedMode()`.
 """
-function dissipation_operator(D::PeriodicDerivativeOperator;
-                              strength=eltype(D)(1),
-                              order=accuracy_order(D),
-                              mode=D.coefficients.mode,
-                              parallel=nothing)
+function dissipation_operator(
+    D::PeriodicDerivativeOperator;
+    strength = eltype(D)(1),
+    order = accuracy_order(D),
+    mode = D.coefficients.mode,
+    parallel = nothing,
+)
     if parallel !== nothing
         # TODO: deprecated in v0.5
-        Base.depwarn("Providing the keyword argument `parallel` is deprecated." *
-                     "Use `mode` instead.", :dissipation_operator)
+        Base.depwarn(
+            "Providing the keyword argument `parallel` is deprecated." *
+            "Use `mode` instead.",
+            :dissipation_operator,
+        )
         mode = _parallel_to_mode(parallel)
     end
     @argcheck iseven(order) ArgumentError("Dissipation operators require even derivatives.")
     # account for the grid spacing
-    factor = strength * (-1)^(1 + order÷2) * D.Δx^order
+    factor = strength * (-1)^(1 + order ÷ 2) * D.Δx^order
     x = D.grid_evaluate
     Di = periodic_derivative_operator(order, order, first(x), last(x), size(D, 1), mode)
     PeriodicDissipationOperator(factor, Di)
@@ -1075,7 +1422,14 @@ end
 
 
 
-@auto_hash_equals struct PeriodicRationalDerivativeOperator{T<:Real, Dtype<:PeriodicDerivativeOperator{T}, Nnum, Nden, RFFT, IRFFT} <: AbstractPeriodicDerivativeOperator{T}
+@auto_hash_equals struct PeriodicRationalDerivativeOperator{
+    T<:Real,
+    Dtype<:PeriodicDerivativeOperator{T},
+    Nnum,
+    Nden,
+    RFFT,
+    IRFFT,
+} <: AbstractPeriodicDerivativeOperator{T}
     D::Dtype
     num_coef::NTuple{Nnum,T}
     den_coef::NTuple{Nden,T}
@@ -1084,30 +1438,49 @@ end
     rfft_plan::RFFT
     irfft_plan::IRFFT
 
-    function PeriodicRationalDerivativeOperator(D::Dtype, num_coef::NTuple{Nnum,T}, den_coef::NTuple{Nden,T}, tmp::Vector{Complex{T}}, eigval::Vector{Complex{T}}, rfft_plan::RFFT, irfft_plan::IRFFT) where {T<:Real, Dtype<:PeriodicDerivativeOperator{T}, Nnum, Nden, RFFT, IRFFT}
+    function PeriodicRationalDerivativeOperator(
+        D::Dtype,
+        num_coef::NTuple{Nnum,T},
+        den_coef::NTuple{Nden,T},
+        tmp::Vector{Complex{T}},
+        eigval::Vector{Complex{T}},
+        rfft_plan::RFFT,
+        irfft_plan::IRFFT,
+    ) where {T<:Real,Dtype<:PeriodicDerivativeOperator{T},Nnum,Nden,RFFT,IRFFT}
         @argcheck length(irfft_plan) == length(tmp) DimensionMismatch
         @argcheck length(irfft_plan) == length(eigval) DimensionMismatch
-        @argcheck length(irfft_plan) == (length(rfft_plan)÷2)+1 DimensionMismatch
+        @argcheck length(irfft_plan) == (length(rfft_plan) ÷ 2) + 1 DimensionMismatch
         @argcheck length(grid(D)) == length(rfft_plan) DimensionMismatch
 
-        new{T,Dtype,Nnum,Nden,RFFT,IRFFT}(D, num_coef, den_coef, tmp, eigval, rfft_plan, irfft_plan)
+        new{T,Dtype,Nnum,Nden,RFFT,IRFFT}(
+            D,
+            num_coef,
+            den_coef,
+            tmp,
+            eigval,
+            rfft_plan,
+            irfft_plan,
+        )
     end
 end
 
 
-function _eigvals!(eigval::Vector{Complex{T}}, D::PeriodicDerivativeOperator{T}) where {T<:Real}
+function _eigvals!(
+    eigval::Vector{Complex{T}},
+    D::PeriodicDerivativeOperator{T},
+) where {T<:Real}
     @unpack factor = D
     @unpack lower_coef, central_coef, upper_coef = D.coefficients
     N = length(grid(D))
 
-    @inbounds for idx in 1:length(eigval)
+    @inbounds for idx = 1:length(eigval)
         tmp_eigval = zero(T)
         for j in Base.OneTo(length(lower_coef))
-            tmp_eigval += factor * lower_coef[j] * (exp(2π * im * (idx-1) * (-j) / N))
+            tmp_eigval += factor * lower_coef[j] * (exp(2π * im * (idx - 1) * (-j) / N))
         end
         tmp_eigval += factor * central_coef
         for j in Base.OneTo(length(upper_coef))
-            tmp_eigval += factor * upper_coef[j] * (exp(2π * im * (idx-1) * (+j) / N))
+            tmp_eigval += factor * upper_coef[j] * (exp(2π * im * (idx - 1) * (+j) / N))
         end
         eigval[idx] = tmp_eigval
     end
@@ -1115,7 +1488,9 @@ function _eigvals!(eigval::Vector{Complex{T}}, D::PeriodicDerivativeOperator{T})
     eigval
 end
 
-function PeriodicRationalDerivativeOperator(D::PeriodicDerivativeOperator{T}) where {T<:Real}
+function PeriodicRationalDerivativeOperator(
+    D::PeriodicDerivativeOperator{T},
+) where {T<:Real}
     x = grid(D)
     u = zero.(x)
     rfft_plan = plan_rfft(u)
@@ -1125,17 +1500,45 @@ function PeriodicRationalDerivativeOperator(D::PeriodicDerivativeOperator{T}) wh
     eigval = similar(tmp)
     _eigvals!(eigval, D)
 
-    PeriodicRationalDerivativeOperator(D, (zero(T), one(T)), (one(T),), tmp, eigval, rfft_plan, irfft_plan)
+    PeriodicRationalDerivativeOperator(
+        D,
+        (zero(T), one(T)),
+        (one(T),),
+        tmp,
+        eigval,
+        rfft_plan,
+        irfft_plan,
+    )
 end
 
-function PeriodicRationalDerivativeOperator(rat::PeriodicRationalDerivativeOperator, num_coef, den_coef)
+function PeriodicRationalDerivativeOperator(
+    rat::PeriodicRationalDerivativeOperator,
+    num_coef,
+    den_coef,
+)
 
-    PeriodicRationalDerivativeOperator(rat.D, num_coef, den_coef, rat.tmp, rat.eigval, rat.rfft_plan, rat.irfft_plan)
+    PeriodicRationalDerivativeOperator(
+        rat.D,
+        num_coef,
+        den_coef,
+        rat.tmp,
+        rat.eigval,
+        rat.rfft_plan,
+        rat.irfft_plan,
+    )
 end
 
-function PeriodicRationalDerivativeOperator(D::PeriodicDerivativeOperator, num_coef, den_coef)
+function PeriodicRationalDerivativeOperator(
+    D::PeriodicDerivativeOperator,
+    num_coef,
+    den_coef,
+)
 
-    PeriodicRationalDerivativeOperator(PeriodicRationalDerivativeOperator(D), num_coef, den_coef)
+    PeriodicRationalDerivativeOperator(
+        PeriodicRationalDerivativeOperator(D),
+        num_coef,
+        den_coef,
+    )
 end
 
 Base.size(rat::PeriodicRationalDerivativeOperator) = size(rat.D)
@@ -1158,9 +1561,13 @@ end
 function mul_poly(coef1, coef2)
     T = promote_type(eltype(coef1), eltype(coef2))
 
-    coef = ntuple(idx->zero(T), (length(coef1)-1) + (length(coef2)-1) + 1)
-    for idx1 in 0:length(coef1)-1, idx2 in 0:length(coef2)-1
-        coef = Base.setindex(coef, coef[idx1+idx2+1] + coef1[idx1+1] * coef2[idx2+1], idx1+idx2+1)
+    coef = ntuple(idx -> zero(T), (length(coef1) - 1) + (length(coef2) - 1) + 1)
+    for idx1 = 0:length(coef1)-1, idx2 = 0:length(coef2)-1
+        coef = Base.setindex(
+            coef,
+            coef[idx1+idx2+1] + coef1[idx1+1] * coef2[idx2+1],
+            idx1 + idx2 + 1,
+        )
     end
 
     coef
@@ -1169,11 +1576,11 @@ end
 function add_poly(coef1, coef2)
     T = promote_type(eltype(coef1), eltype(coef2))
 
-    coef = ntuple(idx->zero(T), max(length(coef1), length(coef2)))
-    for idx in 1:length(coef1)
+    coef = ntuple(idx -> zero(T), max(length(coef1), length(coef2)))
+    for idx = 1:length(coef1)
         coef = Base.setindex(coef, coef[idx] + coef1[idx], idx)
     end
-    for idx in 1:length(coef2)
+    for idx = 1:length(coef2)
         coef = Base.setindex(coef, coef[idx] + coef2[idx], idx)
     end
 
@@ -1183,11 +1590,11 @@ end
 function subtract_poly(coef1, coef2)
     T = promote_type(eltype(coef1), eltype(coef2))
 
-    coef = ntuple(idx->zero(T), max(length(coef1), length(coef2)))
-    for idx in 1:length(coef1)
+    coef = ntuple(idx -> zero(T), max(length(coef1), length(coef2)))
+    for idx = 1:length(coef1)
         coef = Base.setindex(coef, coef[idx] + coef1[idx], idx)
     end
-    for idx in 1:length(coef2)
+    for idx = 1:length(coef2)
         coef = Base.setindex(coef, coef[idx] - coef2[idx], idx)
     end
 
@@ -1208,14 +1615,14 @@ end
 
 function Base.literal_pow(::typeof(^), D1::PeriodicDerivativeOperator, ::Val{P}) where {P}
     T = eltype(D1)
-    coef = Base.setindex( ntuple(_->zero(T), Val{P+1}()), one(T), P+1)
+    coef = Base.setindex(ntuple(_ -> zero(T), Val{P + 1}()), one(T), P + 1)
     PeriodicRationalDerivativeOperator(D1, coef, (one(T),))
 end
 
 function Base.:*(factor::Union{Real,Integer}, rat::PeriodicRationalDerivativeOperator)
     @unpack num_coef = rat
-    for idx in 1:length(num_coef)
-        num_coef = Base.setindex(num_coef, factor*num_coef[idx], idx)
+    for idx = 1:length(num_coef)
+        num_coef = Base.setindex(num_coef, factor * num_coef[idx], idx)
     end
 
     PeriodicRationalDerivativeOperator(rat, num_coef, rat.den_coef)
@@ -1250,10 +1657,16 @@ function Base.:*(scaling::UniformScaling, D::PeriodicDerivativeOperator)
 end
 
 
-function Base.:+(rat1::PeriodicRationalDerivativeOperator, rat2::PeriodicRationalDerivativeOperator)
+function Base.:+(
+    rat1::PeriodicRationalDerivativeOperator,
+    rat2::PeriodicRationalDerivativeOperator,
+)
     @argcheck rat1.D == rat2.D ArgumentError
 
-    num_coef = add_poly(mul_poly(rat1.num_coef, rat2.den_coef), mul_poly(rat1.den_coef, rat2.num_coef))
+    num_coef = add_poly(
+        mul_poly(rat1.num_coef, rat2.den_coef),
+        mul_poly(rat1.den_coef, rat2.num_coef),
+    )
     den_coef = mul_poly(rat1.den_coef, rat2.den_coef)
     PeriodicRationalDerivativeOperator(rat1, num_coef, den_coef)
 end
@@ -1285,10 +1698,16 @@ function Base.:+(scaling::UniformScaling, D::PeriodicDerivativeOperator)
     scaling + PeriodicRationalDerivativeOperator(D)
 end
 
-function Base.:-(rat1::PeriodicRationalDerivativeOperator, rat2::PeriodicRationalDerivativeOperator)
+function Base.:-(
+    rat1::PeriodicRationalDerivativeOperator,
+    rat2::PeriodicRationalDerivativeOperator,
+)
     @argcheck rat1.D == rat2.D ArgumentError
 
-    num_coef = subtract_poly(mul_poly(rat1.num_coef, rat2.den_coef), mul_poly(rat1.den_coef, rat2.num_coef))
+    num_coef = subtract_poly(
+        mul_poly(rat1.num_coef, rat2.den_coef),
+        mul_poly(rat1.den_coef, rat2.num_coef),
+    )
     den_coef = mul_poly(rat1.den_coef, rat2.den_coef)
     PeriodicRationalDerivativeOperator(rat1, num_coef, den_coef)
 end
@@ -1323,7 +1742,10 @@ function Base.:-(scaling::UniformScaling, D::PeriodicDerivativeOperator)
     scaling - PeriodicRationalDerivativeOperator(D)
 end
 
-function Base.:*(rat1::PeriodicRationalDerivativeOperator, rat2::PeriodicRationalDerivativeOperator)
+function Base.:*(
+    rat1::PeriodicRationalDerivativeOperator,
+    rat2::PeriodicRationalDerivativeOperator,
+)
     @argcheck rat1.D == rat2.D ArgumentError
 
     num_coef = mul_poly(rat1.num_coef, rat2.num_coef)
@@ -1339,7 +1761,10 @@ function Base.:*(rat1::PeriodicDerivativeOperator, rat2::PeriodicRationalDerivat
     PeriodicRationalDerivativeOperator(rat1) * rat2
 end
 
-function Base.:/(rat1::PeriodicRationalDerivativeOperator, rat2::PeriodicRationalDerivativeOperator)
+function Base.:/(
+    rat1::PeriodicRationalDerivativeOperator,
+    rat2::PeriodicRationalDerivativeOperator,
+)
     @argcheck rat1.D == rat2.D ArgumentError
 
     num_coef = mul_poly(rat1.num_coef, rat2.den_coef)
@@ -1356,7 +1781,11 @@ function Base.:/(rat1::PeriodicDerivativeOperator, rat2::PeriodicRationalDerivat
 end
 
 
-function mul!(dest::AbstractVector{T}, rat::PeriodicRationalDerivativeOperator, u::AbstractVector{T}) where {T}
+function mul!(
+    dest::AbstractVector{T},
+    rat::PeriodicRationalDerivativeOperator,
+    u::AbstractVector{T},
+) where {T}
     @unpack D, num_coef, den_coef, tmp, eigval, rfft_plan, irfft_plan = rat
     N, _ = size(D)
     @boundscheck begin
@@ -1371,7 +1800,11 @@ function mul!(dest::AbstractVector{T}, rat::PeriodicRationalDerivativeOperator, 
     mul!(dest, irfft_plan, tmp)
 end
 
-function LinearAlgebra.ldiv!(dest::AbstractVector{T}, rat::PeriodicRationalDerivativeOperator, u::AbstractVector{T}) where {T}
+function LinearAlgebra.ldiv!(
+    dest::AbstractVector{T},
+    rat::PeriodicRationalDerivativeOperator,
+    u::AbstractVector{T},
+) where {T}
     @unpack D, num_coef, den_coef, tmp, eigval, rfft_plan, irfft_plan = rat
     N, _ = size(D)
     @boundscheck begin
