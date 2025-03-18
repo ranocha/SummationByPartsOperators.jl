@@ -22,10 +22,10 @@ for T in (Float32, Float64)
     sum_3_12 = D₃ + sum_12
 
     for compact in (true, false)
-        show(IOContext(devnull, :compact=>compact), sum_12)
-        show(IOContext(devnull, :compact=>compact), sum_123)
-        show(IOContext(devnull, :compact=>compact), sum_12_3)
-        show(IOContext(devnull, :compact=>compact), sum_3_12)
+        show(IOContext(devnull, :compact => compact), sum_12)
+        show(IOContext(devnull, :compact => compact), sum_123)
+        show(IOContext(devnull, :compact => compact), sum_12_3)
+        show(IOContext(devnull, :compact => compact), sum_3_12)
     end
 
     @test grid(sum_12) == x
@@ -33,14 +33,14 @@ for T in (Float32, Float64)
     # Compare mul! with β=0 and mul! without β
     mul!(dest1, sum_12, u, one(T), zero(T))
     mul!(dest2, sum_12, u, one(T))
-    @test all(i->dest1[i] ≈ dest2[i], eachindex(u))
+    @test all(i -> dest1[i] ≈ dest2[i], eachindex(u))
 
     # Test commutativity
     mul!(dest1, sum_123, u, T(2))
     mul!(dest2, sum_12_3, u, T(2))
     mul!(dest3, sum_3_12, u, T(2))
-    @test all(i->dest1[i] ≈ dest2[i], eachindex(u))
-    @test all(i->dest1[i] ≈ dest3[i], eachindex(u))
+    @test all(i -> dest1[i] ≈ dest2[i], eachindex(u))
+    @test all(i -> dest1[i] ≈ dest3[i], eachindex(u))
 
     @testset "Differences" begin
         diff = D₁ - D₂
@@ -84,16 +84,16 @@ for T in (Float32, Float64)
     end
 
     @testset "Products and quotients" begin
-        combi = (1//2) * D₁
+        combi = (1 // 2) * D₁
         @test combi * u ≈ (D₁ * u) / 2
 
-        combi = D₁ * (1//2)
+        combi = D₁ * (1 // 2)
         @test combi * u ≈ (D₁ * u) / 2
 
-        combi = (1//2) * (D₁ + D₂)
+        combi = (1 // 2) * (D₁ + D₂)
         @test combi * u ≈ (D₁ * u + D₂ * u) / 2
 
-        combi = (D₁ + D₂) * (1//2)
+        combi = (D₁ + D₂) * (1 // 2)
         @test combi * u ≈ (D₁ * u + D₂ * u) / 2
 
         combi = D₁ / 2

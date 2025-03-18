@@ -17,8 +17,9 @@ using OrdinaryDiffEq, DiffEqCallbacks
         du = similar(ode.u0)
         semi(du, ode.u0, nothing, first(tspan))
 
-        saving = SavingCallback(semi, saveat=range(tspan..., length=10))
-        sol = solve(ode, SSPRK104(), dt=T(1/5N), save_everystep=false, callback=saving)
+        saving = SavingCallback(semi, saveat = range(tspan..., length = 10))
+        sol = solve(ode, SSPRK104(), dt = T(1 / 5N), save_everystep = false,
+                    callback = saving)
     end
 
     # Periodic FD
@@ -31,8 +32,9 @@ using OrdinaryDiffEq, DiffEqCallbacks
         du = similar(ode.u0)
         semi(du, ode.u0, nothing, first(tspan))
 
-        saving = SavingCallback(semi, saveat=range(tspan..., length=10))
-        sol = solve(ode, SSPRK104(), dt=T(1/5N), save_everystep=false, callback=saving)
+        saving = SavingCallback(semi, saveat = range(tspan..., length = 10))
+        sol = solve(ode, SSPRK104(), dt = T(1 / 5N), save_everystep = false,
+                    callback = saving)
     end
 
     # Legendre
@@ -44,8 +46,9 @@ using OrdinaryDiffEq, DiffEqCallbacks
         du = similar(ode.u0)
         semi(du, ode.u0, nothing, first(tspan))
 
-        saving = SavingCallback(semi, saveat=range(tspan..., length=10))
-        sol = solve(ode, SSPRK104(), dt=T(1/(1+N^20)), save_everystep=false, callback=saving)
+        saving = SavingCallback(semi, saveat = range(tspan..., length = 10))
+        sol = solve(ode, SSPRK104(), dt = T(1 / (1 + N^20)), save_everystep = false,
+                    callback = saving)
     end
 
     # SBP FD
@@ -58,7 +61,8 @@ using OrdinaryDiffEq, DiffEqCallbacks
         du = similar(ode.u0)
         semi(du, ode.u0, nothing, first(tspan))
 
-        saving = SavingCallback(semi, saveat=range(tspan..., length=10))
-        sol = solve(ode, SSPRK104(), dt=T(1/5N), save_everystep=false, callback=saving)
+        saving = SavingCallback(semi, saveat = range(tspan..., length = 10))
+        sol = solve(ode, SSPRK104(), dt = T(1 / 5N), save_everystep = false,
+                    callback = saving)
     end
 end

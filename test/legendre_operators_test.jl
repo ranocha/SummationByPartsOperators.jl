@@ -2,12 +2,11 @@ using Test, SummationByPartsOperators
 using LinearAlgebra
 using SpecialFunctions
 
-
 function accuracy_test!(res, ufunc, dufunc, D)
     u = compute_coefficients(ufunc, D)
     du = compute_coefficients(dufunc, D)
     mul!(res, D, u)
-    maximum(abs, du-res) < 5*length(res)*eps(eltype(res))
+    maximum(abs, du - res) < 5 * length(res) * eps(eltype(res))
 end
 
 # Accuracy Tests
@@ -20,7 +19,7 @@ for T in (Float32, Float64)
         B[1, 1] = convert(T, -1)
         B[end, end] = convert(T, 1)
         D = legendre_derivative_operator(xmin, xmax, N)
-        @test D == legendre_derivative_operator(xmin=xmin, xmax=xmax, N=N)
+        @test D == legendre_derivative_operator(xmin = xmin, xmax = xmax, N = N)
         println(devnull, D)
         @test SummationByPartsOperators.derivative_order(D) == 1
         @test issymmetric(D) == false
@@ -29,14 +28,14 @@ for T in (Float32, Float64)
         M = mass_matrix(D)
         @test M * Matrix(D) + Matrix(D)' * M ≈ B
         u = compute_coefficients(zero, D)
-        res = D*u
-        for k in 1:N-1
-            ufunc = x -> x^k/typeof(x)(gamma(k+1))
-            dufunc = x -> x^(k-1)/typeof(x)(gamma(k))
+        res = D * u
+        for k in 1:(N - 1)
+            ufunc = x -> x^k / typeof(x)(gamma(k + 1))
+            dufunc = x -> x^(k - 1) / typeof(x)(gamma(k))
             @test accuracy_test!(res, ufunc, dufunc, D)
             xplot, duplot = evaluate_coefficients(res, D)
-            @test maximum(abs, duplot - dufunc.(xplot)) < 5N*eps(T)
-            @test abs(integrate(u, D)) < N*eps(T)
+            @test maximum(abs, duplot - dufunc.(xplot)) < 5N * eps(T)
+            @test abs(integrate(u, D)) < N * eps(T)
         end
     end
 end
@@ -50,14 +49,14 @@ for T in (Float32, Float64), filter_type in (ExponentialFilter(),)
         D = legendre_derivative_operator(xmin, xmax, N)
         filter! = ConstantFilter(D, filter_type)
         u = compute_coefficients(zero, D)
-        res = D*u
-        for k in 1:N-1
-            compute_coefficients!(u, x->exp(sinpi(x)), D)
-            norm2_u = integrate(u->u^2, u, D)
+        res = D * u
+        for k in 1:(N - 1)
+            compute_coefficients!(u, x -> exp(sinpi(x)), D)
+            norm2_u = integrate(u -> u^2, u, D)
             filter!(u)
-            @test integrate(u->u^2, u, D) <= norm2_u
+            @test integrate(u -> u^2, u, D) <= norm2_u
             @test integrate(u, D) ≈ sum(mass_matrix(D) * u)
-            @test integrate(u->u^2, u, D) ≈ dot(u, mass_matrix(D), u)
+            @test integrate(u -> u^2, u, D) ≈ dot(u, mass_matrix(D), u)
         end
     end
 end
