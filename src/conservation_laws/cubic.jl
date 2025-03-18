@@ -10,44 +10,45 @@ with periodic boundary conditions.
 or `nothing`, and `split_form::Union{Val(true), Val(false)}` determines whether
 the canonical split form or the conservative form is used.
 """
-@auto_hash_equals struct CubicPeriodicSemidiscretization{T,
-                                                         Derivative <:
-                                                         AbstractDerivativeOperator{T},
-                                                         Dissipation,
-                                                         SplitForm <:
-                                                         Union{Val{false}, Val{true}}} <:
-                         AbstractSemidiscretization
+@auto_hash_equals struct CubicPeriodicSemidiscretization{
+    T,
+    Derivative<:AbstractDerivativeOperator{T},
+    Dissipation,
+    SplitForm<:Union{Val{false},Val{true}},
+} <: AbstractSemidiscretization
     derivative::Derivative
     dissipation::Dissipation
     tmp1::Vector{T}
     tmp2::Vector{T}
     split_form::SplitForm
 
-    function CubicPeriodicSemidiscretization(derivative::Derivative,
-                                             dissipation::Dissipation,
-                                             split_form::SplitForm = Val{false}()) where {
-                                                                                          T,
-                                                                                          Derivative <:
-                                                                                          AbstractDerivativeOperator{T},
-                                                                                          Dissipation,
-                                                                                          SplitForm <:
-                                                                                          Union{Val{false},
-                                                                                                Val{true}}
-                                                                                          }
+    function CubicPeriodicSemidiscretization(
+        derivative::Derivative,
+        dissipation::Dissipation,
+        split_form::SplitForm = Val{false}(),
+    ) where {
+        T,
+        Derivative<:AbstractDerivativeOperator{T},
+        Dissipation,
+        SplitForm<:Union{Val{false},Val{true}},
+    }
         if dissipation !== nothing
-            @argcheck size(derivative)==size(dissipation) DimensionMismatch
-            @argcheck grid(derivative)==grid(dissipation) ArgumentError
+            @argcheck size(derivative) == size(dissipation) DimensionMismatch
+            @argcheck grid(derivative) == grid(dissipation) ArgumentError
         end
         N = size(derivative, 2)
         tmp1 = Array{T}(undef, N)
         tmp2 = Array{T}(undef, N)
-        new{T, Derivative, Dissipation, SplitForm}(derivative,
-                                                   dissipation,
-                                                   tmp1,
-                                                   tmp2,
-                                                   split_form)
+        new{T,Derivative,Dissipation,SplitForm}(
+            derivative,
+            dissipation,
+            tmp1,
+            tmp2,
+            split_form,
+        )
     end
 end
+
 
 function Base.show(io::IO, semi::CubicPeriodicSemidiscretization)
     if get(io, :compact, false)
@@ -65,6 +66,7 @@ function Base.show(io::IO, semi::CubicPeriodicSemidiscretization)
         print(io, semi.dissipation)
     end
 end
+
 
 function (disc::CubicPeriodicSemidiscretization)(du, u, p, t)
     @unpack tmp1, tmp2, derivative, dissipation, split_form = disc
@@ -104,6 +106,7 @@ function (disc::CubicPeriodicSemidiscretization)(du, u, p, t)
     nothing
 end
 
+
 """
     CubicNonperiodicSemidiscretization(D, Di, split_form, left_bc, right_bc)
 
@@ -115,15 +118,14 @@ with nonperiodic boundary conditions `left_bc(t)`, `right_bc(t)`.
 or `nothing`, and `split_form::Union{Val(true), Val(false)}` determines whether
 the canonical split form or the conservative form is used.
 """
-@auto_hash_equals struct CubicNonperiodicSemidiscretization{T,
-                                                            Derivative <:
-                                                            AbstractDerivativeOperator{T},
-                                                            Dissipation,
-                                                            SplitForm <:
-                                                            Union{Val{false}, Val{true}},
-                                                            LeftBC,
-                                                            RightBC} <:
-                         AbstractSemidiscretization
+@auto_hash_equals struct CubicNonperiodicSemidiscretization{
+    T,
+    Derivative<:AbstractDerivativeOperator{T},
+    Dissipation,
+    SplitForm<:Union{Val{false},Val{true}},
+    LeftBC,
+    RightBC,
+} <: AbstractSemidiscretization
     derivative::Derivative
     dissipation::Dissipation
     tmp1::Vector{T}
@@ -132,37 +134,39 @@ the canonical split form or the conservative form is used.
     left_bc::LeftBC
     right_bc::RightBC
 
-    function CubicNonperiodicSemidiscretization(derivative::Derivative,
-                                                dissipation::Dissipation,
-                                                split_form::SplitForm,
-                                                left_bc::LeftBC,
-                                                right_bc::RightBC) where {
-                                                                          T,
-                                                                          Derivative <:
-                                                                          AbstractDerivativeOperator{T},
-                                                                          Dissipation,
-                                                                          SplitForm <:
-                                                                          Union{Val{false},
-                                                                                Val{true}},
-                                                                          LeftBC,
-                                                                          RightBC
-                                                                          }
+    function CubicNonperiodicSemidiscretization(
+        derivative::Derivative,
+        dissipation::Dissipation,
+        split_form::SplitForm,
+        left_bc::LeftBC,
+        right_bc::RightBC,
+    ) where {
+        T,
+        Derivative<:AbstractDerivativeOperator{T},
+        Dissipation,
+        SplitForm<:Union{Val{false},Val{true}},
+        LeftBC,
+        RightBC,
+    }
         if dissipation !== nothing
-            @argcheck size(derivative)==size(dissipation) DimensionMismatch
-            @argcheck grid(derivative)==grid(dissipation) ArgumentError
+            @argcheck size(derivative) == size(dissipation) DimensionMismatch
+            @argcheck grid(derivative) == grid(dissipation) ArgumentError
         end
         N = size(derivative, 2)
         tmp1 = Array{T}(undef, N)
         tmp2 = Array{T}(undef, N)
-        new{T, Derivative, Dissipation, SplitForm, LeftBC, RightBC}(derivative,
-                                                                    dissipation,
-                                                                    tmp1,
-                                                                    tmp2,
-                                                                    split_form,
-                                                                    left_bc,
-                                                                    right_bc)
+        new{T,Derivative,Dissipation,SplitForm,LeftBC,RightBC}(
+            derivative,
+            dissipation,
+            tmp1,
+            tmp2,
+            split_form,
+            left_bc,
+            right_bc,
+        )
     end
 end
+
 
 function Base.show(io::IO, semi::CubicNonperiodicSemidiscretization)
     if get(io, :compact, false)
@@ -181,7 +185,8 @@ function Base.show(io::IO, semi::CubicNonperiodicSemidiscretization)
     end
 end
 
-function godunov_flux_cubic(uₗ::T, uᵣ::T) where {T <: Real}
+
+function godunov_flux_cubic(uₗ::T, uᵣ::T) where {T<:Real}
     uₗ^3
 end
 

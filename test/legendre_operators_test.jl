@@ -2,6 +2,7 @@ using Test, SummationByPartsOperators
 using LinearAlgebra
 using SpecialFunctions
 
+
 function accuracy_test!(res, ufunc, dufunc, D)
     u = compute_coefficients(ufunc, D)
     du = compute_coefficients(dufunc, D)
@@ -29,7 +30,7 @@ for T in (Float32, Float64)
         @test M * Matrix(D) + Matrix(D)' * M ≈ B
         u = compute_coefficients(zero, D)
         res = D * u
-        for k in 1:(N - 1)
+        for k = 1:N-1
             ufunc = x -> x^k / typeof(x)(gamma(k + 1))
             dufunc = x -> x^(k - 1) / typeof(x)(gamma(k))
             @test accuracy_test!(res, ufunc, dufunc, D)
@@ -50,7 +51,7 @@ for T in (Float32, Float64), filter_type in (ExponentialFilter(),)
         filter! = ConstantFilter(D, filter_type)
         u = compute_coefficients(zero, D)
         res = D * u
-        for k in 1:(N - 1)
+        for k = 1:N-1
             compute_coefficients!(u, x -> exp(sinpi(x)), D)
             norm2_u = integrate(u -> u^2, u, D)
             filter!(u)

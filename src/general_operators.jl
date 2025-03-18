@@ -69,13 +69,15 @@ the derivative operator `D`.
 function right_boundary_weight end
 
 function Base.summary(io::IO, D::AbstractDerivativeOperator)
-    print(io,
-          nameof(typeof(D)),
-          "(derivative:",
-          derivative_order(D),
-          ", accuracy:",
-          accuracy_order(D),
-          ")")
+    print(
+        io,
+        nameof(typeof(D)),
+        "(derivative:",
+        derivative_order(D),
+        ", accuracy:",
+        accuracy_order(D),
+        ")",
+    )
 end
 
 """
@@ -93,6 +95,8 @@ Scale the vector `u` by the inverse of the mass matrix associated to the
 derivative operator `D`.
 """
 function scale_by_inverse_mass_matrix! end
+
+
 
 abstract type AbstractExecutionMode end
 """
@@ -120,14 +124,14 @@ struct ThreadedMode <: AbstractExecutionMode end
 _parallel_to_mode(::Val{:threads}) = ThreadedMode()
 _parallel_to_mode(::Val{:serial}) = FastMode()
 
-function derivative_order(coefficients::AbstractDerivativeCoefficients)
+
+derivative_order(coefficients::AbstractDerivativeCoefficients) =
     coefficients.derivative_order
-end
 accuracy_order(coefficients::AbstractDerivativeCoefficients) = coefficients.accuracy_order
 Base.eltype(coefficients::AbstractDerivativeCoefficients{T}) where {T} = T
-function LinearAlgebra.issymmetric(coefficients::AbstractDerivativeCoefficients)
+LinearAlgebra.issymmetric(coefficients::AbstractDerivativeCoefficients) =
     coefficients.symmetric
-end
+
 
 derivative_order(D::AbstractDerivativeOperator) = derivative_order(D.coefficients)
 accuracy_order(D::AbstractDerivativeOperator) = accuracy_order(D.coefficients)
@@ -154,13 +158,14 @@ end
 xmin(D::AbstractDerivativeOperator) = first(grid(D))
 xmax(D::AbstractDerivativeOperator) = last(grid(D))
 
+
 Base.@propagate_inbounds function mul!(dest, D::AbstractDerivativeOperator, u)
     mul!(dest, D, u, one(recursive_bottom_eltype(dest)))
 end
 
 function Base.:*(D::AbstractDerivativeOperator, u)
     @boundscheck begin
-        @argcheck size(D, 1)==size(D, 2)==length(u) DimensionMismatch
+        @argcheck size(D, 1) == size(D, 2) == length(u) DimensionMismatch
     end
     T = typeof(one(eltype(D)) * first(u))
     dest = similar(u, T)
@@ -169,11 +174,12 @@ function Base.:*(D::AbstractDerivativeOperator, u)
     dest
 end
 
+
 function Base.Matrix(D::AbstractDerivativeOperator{T}) where {T}
     v = Array{T}(undef, size(D, 2)...)
     fill!(v, zero(eltype(v)))
     A = Array{T}(undef, size(D)...)
-    for i in 1:size(D, 2)
+    for i = 1:size(D, 2)
         v[i] = one(T)
         # Using a view here can cause problems with FFT based operators.
         # Since this part is not performance critical, we can also just use copies.
@@ -184,6 +190,7 @@ function Base.Matrix(D::AbstractDerivativeOperator{T}) where {T}
     A
 end
 
+
 function SparseArrays.sparse(D::AbstractDerivativeOperator{T}) where {T}
     M, N = size(D)
     rowind = Vector{Int}()
@@ -192,7 +199,7 @@ function SparseArrays.sparse(D::AbstractDerivativeOperator{T}) where {T}
     v = fill(zero(T), N)
     dest = Array{T}(undef, M)
 
-    for i in 1:N
+    for i = 1:N
         v[i] = one(T)
         mul!(dest, D, v)
         js = findall(!iszero, dest)
@@ -203,10 +210,11 @@ function SparseArrays.sparse(D::AbstractDerivativeOperator{T}) where {T}
         end
         v[i] = zero(T)
     end
-    colptr[N + 1] = length(nzval) + 1
+    colptr[N+1] = length(nzval) + 1
 
     return SparseMatrixCSC(M, N, colptr, rowind, nzval)
 end
+
 
 """
     compute_coefficients(u, D::AbstractDerivativeOperator)
@@ -231,6 +239,7 @@ derivative operator `D` and stores the result in `uval`.
 function compute_coefficients!(uval, u, D::AbstractDerivativeOperator)
     uval .= u.(grid(D))
 end
+
 
 """
     evaluate_coefficients(u, D::AbstractDerivativeOperator)
@@ -265,6 +274,7 @@ function evaluate_coefficients!(xplot, uplot, u, D::AbstractDerivativeOperator)
 
     xplot, uplot
 end
+
 
 """
     integrate([func = identity,] u, D::AbstractPeriodicDerivativeOperator)
@@ -334,59 +344,59 @@ end
 
 Form linear combinations of several derivative operators lazily.
 """
-@auto_hash_equals struct LinearlyCombinedDerivativeOperators{T,
-                                                             N,
-                                                             Operators <:
-                                                             Tuple{Vararg{AbstractDerivativeOperator{T},
-                                                                          N}},
-                                                             Coefficients <:
-                                                             Tuple{Vararg{T, N}}} <:
-                         AbstractDerivativeOperator{T}
+@auto_hash_equals struct LinearlyCombinedDerivativeOperators{
+    T,
+    N,
+    Operators<:Tuple{Vararg{AbstractDerivativeOperator{T},N}},
+    Coefficients<:Tuple{Vararg{T,N}},
+} <: AbstractDerivativeOperator{T}
     operators::Operators
     coefficients::Coefficients
 
-    function LinearlyCombinedDerivativeOperators{T, N, Operators, Coefficients}(operators::Operators,
-                                                                                coefficients::Coefficients) where {
-                                                                                                                   T,
-                                                                                                                   N,
-                                                                                                                   Operators <:
-                                                                                                                   Tuple{Vararg{AbstractDerivativeOperator{T},
-                                                                                                                                N}},
-                                                                                                                   Coefficients <:
-                                                                                                                   Tuple{Vararg{T,
-                                                                                                                                N}}
-                                                                                                                   }
-        @argcheck all(i -> size(operators[i]) == size(first(operators)),
-                      eachindex(operators)) DimensionMismatch
-        @argcheck all(i -> grid(operators[i]) ≈ grid(first(operators)),
-                      eachindex(operators)) ArgumentError
-        new{T, N, Operators, Coefficients}(operators, coefficients)
+    function LinearlyCombinedDerivativeOperators{T,N,Operators,Coefficients}(
+        operators::Operators,
+        coefficients::Coefficients,
+    ) where {
+        T,
+        N,
+        Operators<:Tuple{Vararg{AbstractDerivativeOperator{T},N}},
+        Coefficients<:Tuple{Vararg{T,N}},
+    }
+        @argcheck all(
+            i -> size(operators[i]) == size(first(operators)),
+            eachindex(operators),
+        ) DimensionMismatch
+        @argcheck all(
+            i -> grid(operators[i]) ≈ grid(first(operators)),
+            eachindex(operators),
+        ) ArgumentError
+        new{T,N,Operators,Coefficients}(operators, coefficients)
     end
 end
 
-function LinearlyCombinedDerivativeOperators(ops::NTuple{N, AbstractDerivativeOperator{T}},
-                                             coefficients::NTuple{N, Number}) where {T, N}
+function LinearlyCombinedDerivativeOperators(
+    ops::NTuple{N,AbstractDerivativeOperator{T}},
+    coefficients::NTuple{N,Number},
+) where {T,N}
     coefficients = map(c -> convert(T, c), coefficients)
-    return LinearlyCombinedDerivativeOperators{T, N, typeof(ops), typeof(coefficients)}(ops,
-                                                                                        coefficients)
+    return LinearlyCombinedDerivativeOperators{T,N,typeof(ops),typeof(coefficients)}(
+        ops,
+        coefficients,
+    )
 end
 
-function LinearlyCombinedDerivativeOperators(ops...)
+LinearlyCombinedDerivativeOperators(ops...) =
     LinearlyCombinedDerivativeOperators(ops, ntuple(_ -> true, length(ops)))
-end
 
 # TODO: deprecated in v0.5.28
 Base.@deprecate_binding SumOfDerivativeOperators LinearlyCombinedDerivativeOperators false
 
 Base.size(combi::LinearlyCombinedDerivativeOperators) = size(first(combi.operators))
-function Base.size(combi::LinearlyCombinedDerivativeOperators, i::Int)
+Base.size(combi::LinearlyCombinedDerivativeOperators, i::Int) =
     size(first(combi.operators), i)
-end
-function Base.length(::Type{LinearlyCombinedDerivativeOperators{T, N, Operators,
-                                                                Coefficients}}) where {T, N,
-                                                                                       Operators,
-                                                                                       Coefficients
-                                                                                       }
+function Base.length(
+    ::Type{LinearlyCombinedDerivativeOperators{T,N,Operators,Coefficients}},
+) where {T,N,Operators,Coefficients}
     N
 end
 grid(combi::LinearlyCombinedDerivativeOperators) = grid(first(combi.operators))
@@ -402,6 +412,7 @@ function Base.show(io::IO, combi::LinearlyCombinedDerivativeOperators)
     end
 end
 
+
 function Base.:+(D1::AbstractDerivativeOperator, D2::AbstractDerivativeOperator)
     LinearlyCombinedDerivativeOperators(D1, D2)
 end
@@ -416,11 +427,16 @@ function Base.:+(D::AbstractDerivativeOperator, combi::LinearlyCombinedDerivativ
     LinearlyCombinedDerivativeOperators((combi.operators..., D), coefficients)
 end
 
-function Base.:+(combi1::LinearlyCombinedDerivativeOperators,
-                 combi2::LinearlyCombinedDerivativeOperators)
-    LinearlyCombinedDerivativeOperators((combi1.operators..., combi2.operators...),
-                                        (combi1.coefficients..., combi2.coefficients...))
+function Base.:+(
+    combi1::LinearlyCombinedDerivativeOperators,
+    combi2::LinearlyCombinedDerivativeOperators,
+)
+    LinearlyCombinedDerivativeOperators(
+        (combi1.operators..., combi2.operators...),
+        (combi1.coefficients..., combi2.coefficients...),
+    )
 end
+
 
 function Base.:-(D1::AbstractDerivativeOperator, D2::AbstractDerivativeOperator)
     T = eltype(D1)
@@ -437,12 +453,17 @@ function Base.:-(D::AbstractDerivativeOperator, combi::LinearlyCombinedDerivativ
     LinearlyCombinedDerivativeOperators((D, combi.operators...), coefficients)
 end
 
-function Base.:-(combi1::LinearlyCombinedDerivativeOperators,
-                 combi2::LinearlyCombinedDerivativeOperators)
+function Base.:-(
+    combi1::LinearlyCombinedDerivativeOperators,
+    combi2::LinearlyCombinedDerivativeOperators,
+)
     coefficients = (combi1.coefficients..., map(c -> -c, combi2.coefficients)...)
-    LinearlyCombinedDerivativeOperators((combi1.operators..., combi2.operators...),
-                                        coefficients)
+    LinearlyCombinedDerivativeOperators(
+        (combi1.operators..., combi2.operators...),
+        coefficients,
+    )
 end
+
 
 function Base.:+(D::AbstractDerivativeOperator)
     D
@@ -452,6 +473,7 @@ function Base.:+(combi::LinearlyCombinedDerivativeOperators)
     combi
 end
 
+
 function Base.:-(D::AbstractDerivativeOperator)
     LinearlyCombinedDerivativeOperators((D,), (-one(eltype(D)),))
 end
@@ -460,6 +482,7 @@ function Base.:-(combi::LinearlyCombinedDerivativeOperators)
     coefficients = map(c -> -c, combi.coefficients)
     LinearlyCombinedDerivativeOperators(combi.operators, coefficients)
 end
+
 
 function Base.:*(c::Number, D::AbstractDerivativeOperator)
     LinearlyCombinedDerivativeOperators((D,), (c,))
@@ -479,6 +502,7 @@ function Base.:*(combi::LinearlyCombinedDerivativeOperators, c::Number)
     # TODO: Assume associativity
     c * combi
 end
+
 
 function Base.:\(c::Number, D::AbstractDerivativeOperator)
     if eltype(D) <: AbstractFloat
@@ -504,19 +528,22 @@ function Base.:/(combi::LinearlyCombinedDerivativeOperators, c::Number)
     c \ combi
 end
 
-@unroll function mul!(dest::AbstractVector,
-                      combi::LinearlyCombinedDerivativeOperators,
-                      u::AbstractVector,
-                      α,
-                      β)
+
+@unroll function mul!(
+    dest::AbstractVector,
+    combi::LinearlyCombinedDerivativeOperators,
+    u::AbstractVector,
+    α,
+    β,
+)
     @unpack operators, coefficients = combi
     @boundscheck begin
-        @argcheck size(first(operators), 2)==length(u) DimensionMismatch
-        @argcheck size(first(operators), 1)==length(dest) DimensionMismatch
+        @argcheck size(first(operators), 2) == length(u) DimensionMismatch
+        @argcheck size(first(operators), 1) == length(dest) DimensionMismatch
     end
 
     @inbounds mul!(dest, operators[1], u, α * coefficients[1], β)
-    @unroll for i in 1:length(combi)
+    @unroll for i = 1:length(combi)
         if i != 1
             @inbounds mul!(dest, operators[i], u, α * coefficients[i], one(β))
         end
@@ -525,18 +552,20 @@ end
     nothing
 end
 
-@unroll function mul!(dest::AbstractVector,
-                      combi::LinearlyCombinedDerivativeOperators,
-                      u::AbstractVector,
-                      α)
+@unroll function mul!(
+    dest::AbstractVector,
+    combi::LinearlyCombinedDerivativeOperators,
+    u::AbstractVector,
+    α,
+)
     @unpack operators, coefficients = combi
     @boundscheck begin
-        @argcheck size(first(operators), 2)==length(u) DimensionMismatch
-        @argcheck size(first(operators), 1)==length(dest) DimensionMismatch
+        @argcheck size(first(operators), 2) == length(u) DimensionMismatch
+        @argcheck size(first(operators), 1) == length(dest) DimensionMismatch
     end
 
     @inbounds mul!(dest, operators[1], u, α * coefficients[1])
-    @unroll for i in 1:length(combi)
+    @unroll for i = 1:length(combi)
         if i != 1
             @inbounds mul!(dest, operators[i], u, α * coefficients[i], one(α))
         end

@@ -14,38 +14,48 @@ function Base.show(io::IO, source::Mattsson2012)
     if get(io, :compact, false)
         summary(io, source)
     else
-        print(io,
-              "Mattsson (2012) \n",
-              "  Summation by Parts Operators for Finite Difference Approximations of\n",
-              "    Second-Derivatives with Variable Coefficients. \n",
-              "  Journal of Scientific Computing 51, pp. 650-682. \n",
-              "See also (first derivatives) \n",
-              "  Mattsson, Nordström (2004) \n",
-              "  Summation by parts operators for finite difference approximations of second \n",
-              "    derivatives. \n",
-              "  Journal of Computational Physics 199, pp. 503-540.")
+        print(
+            io,
+            "Mattsson (2012) \n",
+            "  Summation by Parts Operators for Finite Difference Approximations of\n",
+            "    Second-Derivatives with Variable Coefficients. \n",
+            "  Journal of Scientific Computing 51, pp. 650-682. \n",
+            "See also (first derivatives) \n",
+            "  Mattsson, Nordström (2004) \n",
+            "  Summation by parts operators for finite difference approximations of second \n",
+            "    derivatives. \n",
+            "  Journal of Computational Physics 199, pp. 503-540.",
+        )
     end
 end
 
-@inline function first_derivative_coefficients(source::Mattsson2012,
-                                               order::Int,
-                                               T = Float64,
-                                               mode = FastMode())
+
+@inline function first_derivative_coefficients(
+    source::Mattsson2012,
+    order::Int,
+    T = Float64,
+    mode = FastMode(),
+)
     first_derivative_coefficients(MattssonNordström2004(), order, T, mode)
 end
 
-@inline function second_derivative_coefficients(source::Mattsson2012,
-                                                order::Int,
-                                                T = Float64,
-                                                mode = FastMode())
+@inline function second_derivative_coefficients(
+    source::Mattsson2012,
+    order::Int,
+    T = Float64,
+    mode = FastMode(),
+)
     second_derivative_coefficients(MattssonNordström2004(), order, T, mode)
 end
 
-function var_coef_derivative_coefficients(source::Mattsson2012,
-                                          derivative_order::Int,
-                                          accuracy_order::Int,
-                                          grid,
-                                          mode = FastMode())
+
+function var_coef_derivative_coefficients(
+    source::Mattsson2012,
+    derivative_order::Int,
+    accuracy_order::Int,
+    grid,
+    mode = FastMode(),
+)
     @argcheck derivative_order == 2
     T = eltype(grid)
     if accuracy_order == 2
@@ -58,25 +68,31 @@ function var_coef_derivative_coefficients(source::Mattsson2012,
         right_weights = left_weights
     elseif accuracy_order == 6
         coefficient_cache = Mattsson2012Cache6(T)
-        left_weights = SVector(T(13649 // 43200),
-                               T(12013 // 8640),
-                               T(2711 // 4320),
-                               T(5359 // 4320),
-                               T(7877 // 8640),
-                               T(43801 // 43200))
+        left_weights = SVector(
+            T(13649 // 43200),
+            T(12013 // 8640),
+            T(2711 // 4320),
+            T(5359 // 4320),
+            T(7877 // 8640),
+            T(43801 // 43200),
+        )
         right_weights = left_weights
     else
         throw(ArgumentError("Order of accuracy $accuracy_order not implemented/derived."))
     end
 
-    VarCoefDerivativeCoefficients(coefficient_cache,
-                                  left_weights,
-                                  right_weights,
-                                  mode,
-                                  derivative_order,
-                                  accuracy_order,
-                                  source)
+    VarCoefDerivativeCoefficients(
+        coefficient_cache,
+        left_weights,
+        right_weights,
+        mode,
+        derivative_order,
+        accuracy_order,
+        source,
+    )
 end
+
+
 
 struct Mattsson2012Cache2{T} <: AbstractCoefficientCache{T}
     half::T
@@ -94,81 +110,108 @@ Base.checkbounds(::Type{Bool}, u::AbstractVector, ::Mattsson2012Cache2) = length
 left_length(::Mattsson2012Cache2) = 1
 right_length(::Mattsson2012Cache2) = 1
 
-function convolve_boundary_coefficients!(dest::AbstractVector,
-                                         cache::Mattsson2012Cache2,
-                                         u::AbstractVector,
-                                         b::AbstractVector,
-                                         α,
-                                         ::SafeMode)
+function convolve_boundary_coefficients!(
+    dest::AbstractVector,
+    cache::Mattsson2012Cache2,
+    u::AbstractVector,
+    b::AbstractVector,
+    α,
+    ::SafeMode,
+)
     @inbounds begin
         dest[1] = α * ((2 * b[1] - b[2]) * u[1] + (-3 * b[1] + b[2]) * u[2] + b[1] * u[3])
 
-        dest[end] = α * ((2 * b[end] - b[end - 1]) * u[end] +
-                     (-3 * b[end] + b[end - 1]) * u[end - 1] +
-                     b[end] * u[end - 2])
+        dest[end] =
+            α * (
+                (2 * b[end] - b[end-1]) * u[end] +
+                (-3 * b[end] + b[end-1]) * u[end-1] +
+                b[end] * u[end-2]
+            )
     end
 end
-function convolve_boundary_coefficients!(dest::AbstractVector,
-                                         cache::Mattsson2012Cache2,
-                                         u::AbstractVector,
-                                         b::AbstractVector,
-                                         α,
-                                         ::Union{FastMode, ThreadedMode})
+function convolve_boundary_coefficients!(
+    dest::AbstractVector,
+    cache::Mattsson2012Cache2,
+    u::AbstractVector,
+    b::AbstractVector,
+    α,
+    ::Union{FastMode,ThreadedMode},
+)
     @inbounds @muladd begin
         dest[1] = α * ((2 * b[1] - b[2]) * u[1] + (-3 * b[1] + b[2]) * u[2] + b[1] * u[3])
 
-        dest[end] = α * ((2 * b[end] - b[end - 1]) * u[end] +
-                     (-3 * b[end] + b[end - 1]) * u[end - 1] +
-                     b[end] * u[end - 2])
+        dest[end] =
+            α * (
+                (2 * b[end] - b[end-1]) * u[end] +
+                (-3 * b[end] + b[end-1]) * u[end-1] +
+                b[end] * u[end-2]
+            )
     end
 end
 
-function convolve_boundary_coefficients!(dest::AbstractVector,
-                                         cache::Mattsson2012Cache2,
-                                         u::AbstractVector,
-                                         b::AbstractVector,
-                                         α,
-                                         β,
-                                         ::SafeMode)
+function convolve_boundary_coefficients!(
+    dest::AbstractVector,
+    cache::Mattsson2012Cache2,
+    u::AbstractVector,
+    b::AbstractVector,
+    α,
+    β,
+    ::SafeMode,
+)
     @inbounds begin
-        dest[1] = α * ((2 * b[1] - b[2]) * u[1] + (-3 * b[1] + b[2]) * u[2] + b[1] * u[3]) +
-                  β * dest[1]
+        dest[1] =
+            α * ((2 * b[1] - b[2]) * u[1] + (-3 * b[1] + b[2]) * u[2] + b[1] * u[3]) +
+            β * dest[1]
 
-        dest[end] = α * ((2 * b[end] - b[end - 1]) * u[end] +
-                     (-3 * b[end] + b[end - 1]) * u[end - 1] +
-                     b[end] * u[end - 2]) + β * dest[end]
+        dest[end] =
+            α * (
+                (2 * b[end] - b[end-1]) * u[end] +
+                (-3 * b[end] + b[end-1]) * u[end-1] +
+                b[end] * u[end-2]
+            ) + β * dest[end]
     end
 end
-function convolve_boundary_coefficients!(dest::AbstractVector,
-                                         cache::Mattsson2012Cache2,
-                                         u::AbstractVector,
-                                         b::AbstractVector,
-                                         α,
-                                         β,
-                                         ::Union{FastMode, ThreadedMode})
+function convolve_boundary_coefficients!(
+    dest::AbstractVector,
+    cache::Mattsson2012Cache2,
+    u::AbstractVector,
+    b::AbstractVector,
+    α,
+    β,
+    ::Union{FastMode,ThreadedMode},
+)
     @inbounds @muladd begin
-        dest[1] = α * ((2 * b[1] - b[2]) * u[1] + (-3 * b[1] + b[2]) * u[2] + b[1] * u[3]) +
-                  β * dest[1]
+        dest[1] =
+            α * ((2 * b[1] - b[2]) * u[1] + (-3 * b[1] + b[2]) * u[2] + b[1] * u[3]) +
+            β * dest[1]
 
-        dest[end] = α * ((2 * b[end] - b[end - 1]) * u[end] +
-                     (-3 * b[end] + b[end - 1]) * u[end - 1] +
-                     b[end] * u[end - 2]) + β * dest[end]
+        dest[end] =
+            α * (
+                (2 * b[end] - b[end-1]) * u[end] +
+                (-3 * b[end] + b[end-1]) * u[end-1] +
+                b[end] * u[end-2]
+            ) + β * dest[end]
     end
 end
 
 @inline function convolve_interior_coefficients_loopbody(i, cache::Mattsson2012Cache2, u, b)
     @unpack half = cache
     @inbounds begin
-        b_im1 = b[i - 1]
+        b_im1 = b[i-1]
         b_i = b[i]
-        b_ip1 = b[i + 1]
+        b_ip1 = b[i+1]
 
-        retval = half * ((b_im1 + b_i) * u[i - 1] - (b_im1 + 2 * b_i + b_ip1) * u[i] +
-                  (b_i + b_ip1) * u[i + 1])
+        retval =
+            half * (
+                (b_im1 + b_i) * u[i-1] - (b_im1 + 2 * b_i + b_ip1) * u[i] +
+                (b_i + b_ip1) * u[i+1]
+            )
     end
 
     retval
 end
+
+
 
 struct Mattsson2012Cache4{T} <: AbstractCoefficientCache{T}
     d111::T
@@ -315,6 +358,7 @@ struct Mattsson2012Cache4{T} <: AbstractCoefficientCache{T}
     di_0_0::T
     di_0p1::T
     di_0p2::T
+
 
     function Mattsson2012Cache4(::Type{T}) where {T}
         d111 = T(920 // 289)
@@ -468,150 +512,152 @@ struct Mattsson2012Cache4{T} <: AbstractCoefficientCache{T}
         di_0p1 = T(-5 // 6)
         di_0p2 = T(-1 // 24)
 
-        new{T}(d111,
-               d112,
-               d113,
-               d114,
-               d121,
-               d123,
-               d124,
-               d131,
-               d132,
-               d133,
-               d134,
-               d141,
-               d143,
-               d144,
-               d153,
-               d154,
-               d163,
-               d164,
-               d211,
-               d213,
-               d214,
-               d221,
-               d223,
-               d224,
-               d231,
-               d233,
-               d234,
-               d241,
-               d243,
-               d244,
-               d253,
-               d254,
-               d263,
-               d264,
-               d311,
-               d312,
-               d313,
-               d314,
-               d321,
-               d323,
-               d324,
-               d331,
-               d332,
-               d333,
-               d334,
-               d335,
-               d341,
-               d343,
-               d344,
-               d345,
-               d353,
-               d354,
-               d355,
-               d363,
-               d364,
-               d365,
-               d411,
-               d413,
-               d414,
-               d421,
-               d423,
-               d424,
-               d431,
-               d433,
-               d434,
-               d435,
-               d441,
-               d443,
-               d444,
-               d445,
-               d446,
-               d453,
-               d454,
-               d455,
-               d456,
-               d463,
-               d464,
-               d465,
-               d466,
-               d513,
-               d514,
-               d523,
-               d524,
-               d533,
-               d534,
-               d535,
-               d543,
-               d544,
-               d545,
-               d546,
-               d553,
-               d554,
-               d555,
-               d556,
-               d557,
-               d563,
-               d564,
-               d565,
-               d566,
-               d567,
-               d575,
-               d576,
-               d577,
-               d613,
-               d614,
-               d623,
-               d624,
-               d633,
-               d634,
-               d635,
-               d643,
-               d644,
-               d645,
-               d646,
-               d653,
-               d654,
-               d655,
-               d656,
-               d657,
-               d663,
-               d664,
-               d665,
-               d666,
-               d667,
-               d668,
-               d675,
-               d676,
-               d677,
-               d678,
-               d686,
-               d687,
-               d688,
-               dim2m2,
-               dim2m1,
-               dim2_0,
-               dim1m2,
-               dim1m1,
-               dim1_0,
-               dim1p1,
-               di_0m2,
-               di_0m1,
-               di_0_0,
-               di_0p1,
-               di_0p2)
+        new{T}(
+            d111,
+            d112,
+            d113,
+            d114,
+            d121,
+            d123,
+            d124,
+            d131,
+            d132,
+            d133,
+            d134,
+            d141,
+            d143,
+            d144,
+            d153,
+            d154,
+            d163,
+            d164,
+            d211,
+            d213,
+            d214,
+            d221,
+            d223,
+            d224,
+            d231,
+            d233,
+            d234,
+            d241,
+            d243,
+            d244,
+            d253,
+            d254,
+            d263,
+            d264,
+            d311,
+            d312,
+            d313,
+            d314,
+            d321,
+            d323,
+            d324,
+            d331,
+            d332,
+            d333,
+            d334,
+            d335,
+            d341,
+            d343,
+            d344,
+            d345,
+            d353,
+            d354,
+            d355,
+            d363,
+            d364,
+            d365,
+            d411,
+            d413,
+            d414,
+            d421,
+            d423,
+            d424,
+            d431,
+            d433,
+            d434,
+            d435,
+            d441,
+            d443,
+            d444,
+            d445,
+            d446,
+            d453,
+            d454,
+            d455,
+            d456,
+            d463,
+            d464,
+            d465,
+            d466,
+            d513,
+            d514,
+            d523,
+            d524,
+            d533,
+            d534,
+            d535,
+            d543,
+            d544,
+            d545,
+            d546,
+            d553,
+            d554,
+            d555,
+            d556,
+            d557,
+            d563,
+            d564,
+            d565,
+            d566,
+            d567,
+            d575,
+            d576,
+            d577,
+            d613,
+            d614,
+            d623,
+            d624,
+            d633,
+            d634,
+            d635,
+            d643,
+            d644,
+            d645,
+            d646,
+            d653,
+            d654,
+            d655,
+            d656,
+            d657,
+            d663,
+            d664,
+            d665,
+            d666,
+            d667,
+            d668,
+            d675,
+            d676,
+            d677,
+            d678,
+            d686,
+            d687,
+            d688,
+            dim2m2,
+            dim2m1,
+            dim2_0,
+            dim1m2,
+            dim1m1,
+            dim1_0,
+            dim1p1,
+            di_0m2,
+            di_0m1,
+            di_0_0,
+            di_0p1,
+            di_0p2,
+        )
     end
 end
 
@@ -621,12 +667,14 @@ Base.checkbounds(::Type{Bool}, u::AbstractVector, ::Mattsson2012Cache4) = length
 left_length(::Mattsson2012Cache4) = 6
 right_length(::Mattsson2012Cache4) = 6
 
-function convolve_boundary_coefficients!(dest::AbstractVector,
-                                         cache::Mattsson2012Cache4,
-                                         u::AbstractVector,
-                                         b::AbstractVector,
-                                         α,
-                                         ::SafeMode)
+function convolve_boundary_coefficients!(
+    dest::AbstractVector,
+    cache::Mattsson2012Cache4,
+    u::AbstractVector,
+    b::AbstractVector,
+    α,
+    ::SafeMode,
+)
     @unpack d111,
     d112,
     d113,
@@ -769,161 +817,191 @@ function convolve_boundary_coefficients!(dest::AbstractVector,
         #b7 = b[7]
         #b8 = b[8]
 
-        dest[1] = α * ((d111 * b[1] + d112 * b[2] + d113 * b[3] + d114 * b[4]) * u[1] +
-                   (d121 * b[1] + d123 * b[3] + d124 * b[4]) * u[2] +
-                   (d131 * b[1] + d132 * b[2] + d133 * b[3] + d134 * b[4]) * u[3] +
-                   (d141 * b[1] + d143 * b[3] + d144 * b[4]) * u[4] +
-                   (d153 * b[3] + d154 * b[4]) * u[5] +
-                   (d163 * b[3] + d164 * b[4]) * u[6])
-        dest[2] = α * ((d211 * b[1] + d213 * b[3] + d214 * b[4]) * u[1] +
-                   (d221 * b[1] + d223 * b[3] + d224 * b[4]) * u[2] +
-                   (d231 * b[1] + d233 * b[3] + d234 * b[4]) * u[3] +
-                   (d241 * b[1] + d243 * b[3] + d244 * b[4]) * u[4] +
-                   (d253 * b[3] + d254 * b[4]) * u[5] +
-                   (d263 * b[3] + d264 * b[4]) * u[6])
-        dest[3] = α * ((d311 * b[1] + d312 * b[2] + d313 * b[3] + d314 * b[4]) * u[1] +
-                   (d321 * b[1] + d323 * b[3] + d324 * b[4]) * u[2] +
-                   (d331 * b[1] + d332 * b[2] + d333 * b[3] + d334 * b[4] + d335 * b[5]) *
-                   u[3] +
-                   (d341 * b[1] + d343 * b[3] + d344 * b[4] + d345 * b[5]) * u[4] +
-                   (d353 * b[3] + d354 * b[4] + d355 * b[5]) * u[5] +
-                   (d363 * b[3] + d364 * b[4] + d365 * b[5]) * u[6])
-        dest[4] = α * ((d411 * b[1] + d413 * b[3] + d414 * b[4]) * u[1] +
-                   (d421 * b[1] + d423 * b[3] + d424 * b[4]) * u[2] +
-                   (d431 * b[1] + d433 * b[3] + d434 * b[4] + d435 * b[5]) * u[3] +
-                   (d441 * b[1] + d443 * b[3] + d444 * b[4] + d445 * b[5] + d446 * b[6]) *
-                   u[4] +
-                   (d453 * b[3] + d454 * b[4] + d455 * b[5] + d456 * b[6]) * u[5] +
-                   (d463 * b[3] + d464 * b[4] + d465 * b[5] + d466 * b[6]) * u[6])
-        dest[5] = α * ((d513 * b[3] + d514 * b[4]) * u[1] +
-                   (d523 * b[3] + d524 * b[4]) * u[2] +
-                   (d533 * b[3] + d534 * b[4] + d535 * b[5]) * u[3] +
-                   (d543 * b[3] + d544 * b[4] + d545 * b[5] + d546 * b[6]) * u[4] +
-                   (d553 * b[3] + d554 * b[4] + d555 * b[5] + d556 * b[6] + d557 * b[7]) *
-                   u[5] +
-                   (d563 * b[3] + d564 * b[4] + d565 * b[5] + d566 * b[6] + d567 * b[7]) *
-                   u[6] +
-                   (d575 * b[5] + d576 * b[6] + d577 * b[7]) * u[7])
-        dest[6] = α * ((d613 * b[3] + d614 * b[4]) * u[1] +
-                   (d623 * b[3] + d624 * b[4]) * u[2] +
-                   (d633 * b[3] + d634 * b[4] + d635 * b[5]) * u[3] +
-                   (d643 * b[3] + d644 * b[4] + d645 * b[5] + d646 * b[6]) * u[4] +
-                   (d653 * b[3] + d654 * b[4] + d655 * b[5] + d656 * b[6] + d657 * b[7]) *
-                   u[5] +
-                   (d663 * b[3] +
+        dest[1] =
+            α * (
+                (d111 * b[1] + d112 * b[2] + d113 * b[3] + d114 * b[4]) * u[1] +
+                (d121 * b[1] + d123 * b[3] + d124 * b[4]) * u[2] +
+                (d131 * b[1] + d132 * b[2] + d133 * b[3] + d134 * b[4]) * u[3] +
+                (d141 * b[1] + d143 * b[3] + d144 * b[4]) * u[4] +
+                (d153 * b[3] + d154 * b[4]) * u[5] +
+                (d163 * b[3] + d164 * b[4]) * u[6]
+            )
+        dest[2] =
+            α * (
+                (d211 * b[1] + d213 * b[3] + d214 * b[4]) * u[1] +
+                (d221 * b[1] + d223 * b[3] + d224 * b[4]) * u[2] +
+                (d231 * b[1] + d233 * b[3] + d234 * b[4]) * u[3] +
+                (d241 * b[1] + d243 * b[3] + d244 * b[4]) * u[4] +
+                (d253 * b[3] + d254 * b[4]) * u[5] +
+                (d263 * b[3] + d264 * b[4]) * u[6]
+            )
+        dest[3] =
+            α * (
+                (d311 * b[1] + d312 * b[2] + d313 * b[3] + d314 * b[4]) * u[1] +
+                (d321 * b[1] + d323 * b[3] + d324 * b[4]) * u[2] +
+                (d331 * b[1] + d332 * b[2] + d333 * b[3] + d334 * b[4] + d335 * b[5]) *
+                u[3] +
+                (d341 * b[1] + d343 * b[3] + d344 * b[4] + d345 * b[5]) * u[4] +
+                (d353 * b[3] + d354 * b[4] + d355 * b[5]) * u[5] +
+                (d363 * b[3] + d364 * b[4] + d365 * b[5]) * u[6]
+            )
+        dest[4] =
+            α * (
+                (d411 * b[1] + d413 * b[3] + d414 * b[4]) * u[1] +
+                (d421 * b[1] + d423 * b[3] + d424 * b[4]) * u[2] +
+                (d431 * b[1] + d433 * b[3] + d434 * b[4] + d435 * b[5]) * u[3] +
+                (d441 * b[1] + d443 * b[3] + d444 * b[4] + d445 * b[5] + d446 * b[6]) *
+                u[4] +
+                (d453 * b[3] + d454 * b[4] + d455 * b[5] + d456 * b[6]) * u[5] +
+                (d463 * b[3] + d464 * b[4] + d465 * b[5] + d466 * b[6]) * u[6]
+            )
+        dest[5] =
+            α * (
+                (d513 * b[3] + d514 * b[4]) * u[1] +
+                (d523 * b[3] + d524 * b[4]) * u[2] +
+                (d533 * b[3] + d534 * b[4] + d535 * b[5]) * u[3] +
+                (d543 * b[3] + d544 * b[4] + d545 * b[5] + d546 * b[6]) * u[4] +
+                (d553 * b[3] + d554 * b[4] + d555 * b[5] + d556 * b[6] + d557 * b[7]) *
+                u[5] +
+                (d563 * b[3] + d564 * b[4] + d565 * b[5] + d566 * b[6] + d567 * b[7]) *
+                u[6] +
+                (d575 * b[5] + d576 * b[6] + d577 * b[7]) * u[7]
+            )
+        dest[6] =
+            α * (
+                (d613 * b[3] + d614 * b[4]) * u[1] +
+                (d623 * b[3] + d624 * b[4]) * u[2] +
+                (d633 * b[3] + d634 * b[4] + d635 * b[5]) * u[3] +
+                (d643 * b[3] + d644 * b[4] + d645 * b[5] + d646 * b[6]) * u[4] +
+                (d653 * b[3] + d654 * b[4] + d655 * b[5] + d656 * b[6] + d657 * b[7]) *
+                u[5] +
+                (
+                    d663 * b[3] +
                     d664 * b[4] +
                     d665 * b[5] +
                     d666 * b[6] +
                     d667 * b[7] +
-                    d668 * b[8]) * u[6] +
-                   (d675 * b[5] + d676 * b[6] + d677 * b[7] + d678 * b[8]) * u[7] +
-                   (d686 * b[6] + d687 * b[7] + d688 * b[8]) * u[8])
+                    d668 * b[8]
+                ) * u[6] +
+                (d675 * b[5] + d676 * b[6] + d677 * b[7] + d678 * b[8]) * u[7] +
+                (d686 * b[6] + d687 * b[7] + d688 * b[8]) * u[8]
+            )
 
-        dest[end] = α * ((d111 * b[end] + d112 * b[end - 1] + d113 * b[end - 2] +
-                      d114 * b[end - 3]) *
-                     u[end] +
-                     (d121 * b[end] + d123 * b[end - 2] + d124 * b[end - 3]) * u[end - 1] +
-                     (d131 * b[end] + d132 * b[end - 1] + d133 * b[end - 2] +
-                      d134 * b[end - 3]) *
-                     u[end - 2] +
-                     (d141 * b[end] + d143 * b[end - 2] + d144 * b[end - 3]) * u[end - 3] +
-                     (d153 * b[end - 2] + d154 * b[end - 3]) * u[end - 4] +
-                     (d163 * b[end - 2] + d164 * b[end - 3]) * u[end - 5])
-        dest[end - 1] = α *
-                        ((d211 * b[end] + d213 * b[end - 2] + d214 * b[end - 3]) * u[end] +
-                         (d221 * b[end] + d223 * b[end - 2] + d224 * b[end - 3]) *
-                         u[end - 1] +
-                         (d231 * b[end] + d233 * b[end - 2] + d234 * b[end - 3]) *
-                         u[end - 2] +
-                         (d241 * b[end] + d243 * b[end - 2] + d244 * b[end - 3]) *
-                         u[end - 3] +
-                         (d253 * b[end - 2] + d254 * b[end - 3]) * u[end - 4] +
-                         (d263 * b[end - 2] + d264 * b[end - 3]) * u[end - 5])
-        dest[end - 2] = α * ((d311 * b[end] + d312 * b[end - 1] + d313 * b[end - 2] +
-                          d314 * b[end - 3]) *
-                         u[end] +
-                         (d321 * b[end] + d323 * b[end - 2] + d324 * b[end - 3]) *
-                         u[end - 1] +
-                         (d331 * b[end] +
-                          d332 * b[end - 1] +
-                          d333 * b[end - 2] +
-                          d334 * b[end - 3] +
-                          d335 * b[end - 4]) * u[end - 2] +
-                         (d341 * b[end] + d343 * b[end - 2] + d344 * b[end - 3] +
-                          d345 * b[end - 4]) *
-                         u[end - 3] +
-                         (d353 * b[end - 2] + d354 * b[end - 3] + d355 * b[end - 4]) *
-                         u[end - 4] +
-                         (d363 * b[end - 2] + d364 * b[end - 3] + d365 * b[end - 4]) *
-                         u[end - 5])
-        dest[end - 3] = α *
-                        ((d411 * b[end] + d413 * b[end - 2] + d414 * b[end - 3]) * u[end] +
-                         (d421 * b[end] + d423 * b[end - 2] + d424 * b[end - 3]) *
-                         u[end - 1] +
-                         (d431 * b[end] + d433 * b[end - 2] + d434 * b[end - 3] +
-                          d435 * b[end - 4]) *
-                         u[end - 2] +
-                         (d441 * b[end] +
-                          d443 * b[end - 2] +
-                          d444 * b[end - 3] +
-                          d445 * b[end - 4] +
-                          d446 * b[end - 5]) * u[end - 3] +
-                         (d453 * b[end - 2] + d454 * b[end - 3] + d455 * b[end - 4] +
-                          d456 * b[end - 5]) *
-                         u[end - 4] +
-                         (d463 * b[end - 2] + d464 * b[end - 3] + d465 * b[end - 4] +
-                          d466 * b[end - 5]) *
-                         u[end - 5])
-        dest[end - 4] = α * ((d513 * b[end - 2] + d514 * b[end - 3]) * u[end] +
-                         (d523 * b[end - 2] + d524 * b[end - 3]) * u[end - 1] +
-                         (d533 * b[end - 2] + d534 * b[end - 3] + d535 * b[end - 4]) *
-                         u[end - 2] +
-                         (d543 * b[end - 2] + d544 * b[end - 3] + d545 * b[end - 4] +
-                          d546 * b[end - 5]) *
-                         u[end - 3] +
-                         (d553 * b[end - 2] +
-                          d554 * b[end - 3] +
-                          d555 * b[end - 4] +
-                          d556 * b[end - 5] +
-                          d557 * b[end - 6]) * u[end - 4] +
-                         (d563 * b[end - 2] +
-                          d564 * b[end - 3] +
-                          d565 * b[end - 4] +
-                          d566 * b[end - 5] +
-                          d567 * b[end - 6]) * u[end - 5] +
-                         (d575 * b[end - 4] + d576 * b[end - 5] + d577 * b[end - 6]) *
-                         u[end - 6])
-        dest[end - 5] = α * ((d613 * b[end - 2] + d614 * b[end - 3]) * u[end] +
-                         (d623 * b[end - 2] + d624 * b[end - 3]) * u[end - 1] +
-                         (d633 * b[end - 2] + d634 * b[end - 3] + d635 * b[end - 4]) *
-                         u[end - 2] +
-                         (d643 * b[end - 2] + d644 * b[end - 3] + d645 * b[end - 4] +
-                          d646 * b[end - 5]) *
-                         u[end - 3] +
-                         (d653 * b[end - 2] +
-                          d654 * b[end - 3] +
-                          d655 * b[end - 4] +
-                          d656 * b[end - 5] +
-                          d657 * b[end - 6]) * u[end - 4] +
-                         (d663 * b[end - 2] +
-                          d664 * b[end - 3] +
-                          d665 * b[end - 4] +
-                          d666 * b[end - 5] +
-                          d667 * b[end - 6] +
-                          d668 * b[end - 7]) * u[end - 5] +
-                         (d675 * b[end - 4] + d676 * b[end - 5] + d677 * b[end - 6] +
-                          d678 * b[end - 7]) *
-                         u[end - 6] +
-                         (d686 * b[end - 5] + d687 * b[end - 6] + d688 * b[end - 7]) *
-                         u[end - 7])
+
+        dest[end] =
+            α * (
+                (d111 * b[end] + d112 * b[end-1] + d113 * b[end-2] + d114 * b[end-3]) *
+                u[end] +
+                (d121 * b[end] + d123 * b[end-2] + d124 * b[end-3]) * u[end-1] +
+                (d131 * b[end] + d132 * b[end-1] + d133 * b[end-2] + d134 * b[end-3]) *
+                u[end-2] +
+                (d141 * b[end] + d143 * b[end-2] + d144 * b[end-3]) * u[end-3] +
+                (d153 * b[end-2] + d154 * b[end-3]) * u[end-4] +
+                (d163 * b[end-2] + d164 * b[end-3]) * u[end-5]
+            )
+        dest[end-1] =
+            α * (
+                (d211 * b[end] + d213 * b[end-2] + d214 * b[end-3]) * u[end] +
+                (d221 * b[end] + d223 * b[end-2] + d224 * b[end-3]) * u[end-1] +
+                (d231 * b[end] + d233 * b[end-2] + d234 * b[end-3]) * u[end-2] +
+                (d241 * b[end] + d243 * b[end-2] + d244 * b[end-3]) * u[end-3] +
+                (d253 * b[end-2] + d254 * b[end-3]) * u[end-4] +
+                (d263 * b[end-2] + d264 * b[end-3]) * u[end-5]
+            )
+        dest[end-2] =
+            α * (
+                (d311 * b[end] + d312 * b[end-1] + d313 * b[end-2] + d314 * b[end-3]) *
+                u[end] +
+                (d321 * b[end] + d323 * b[end-2] + d324 * b[end-3]) * u[end-1] +
+                (
+                    d331 * b[end] +
+                    d332 * b[end-1] +
+                    d333 * b[end-2] +
+                    d334 * b[end-3] +
+                    d335 * b[end-4]
+                ) * u[end-2] +
+                (d341 * b[end] + d343 * b[end-2] + d344 * b[end-3] + d345 * b[end-4]) *
+                u[end-3] +
+                (d353 * b[end-2] + d354 * b[end-3] + d355 * b[end-4]) * u[end-4] +
+                (d363 * b[end-2] + d364 * b[end-3] + d365 * b[end-4]) * u[end-5]
+            )
+        dest[end-3] =
+            α * (
+                (d411 * b[end] + d413 * b[end-2] + d414 * b[end-3]) * u[end] +
+                (d421 * b[end] + d423 * b[end-2] + d424 * b[end-3]) * u[end-1] +
+                (d431 * b[end] + d433 * b[end-2] + d434 * b[end-3] + d435 * b[end-4]) *
+                u[end-2] +
+                (
+                    d441 * b[end] +
+                    d443 * b[end-2] +
+                    d444 * b[end-3] +
+                    d445 * b[end-4] +
+                    d446 * b[end-5]
+                ) * u[end-3] +
+                (d453 * b[end-2] + d454 * b[end-3] + d455 * b[end-4] + d456 * b[end-5]) *
+                u[end-4] +
+                (d463 * b[end-2] + d464 * b[end-3] + d465 * b[end-4] + d466 * b[end-5]) *
+                u[end-5]
+            )
+        dest[end-4] =
+            α * (
+                (d513 * b[end-2] + d514 * b[end-3]) * u[end] +
+                (d523 * b[end-2] + d524 * b[end-3]) * u[end-1] +
+                (d533 * b[end-2] + d534 * b[end-3] + d535 * b[end-4]) * u[end-2] +
+                (d543 * b[end-2] + d544 * b[end-3] + d545 * b[end-4] + d546 * b[end-5]) *
+                u[end-3] +
+                (
+                    d553 * b[end-2] +
+                    d554 * b[end-3] +
+                    d555 * b[end-4] +
+                    d556 * b[end-5] +
+                    d557 * b[end-6]
+                ) * u[end-4] +
+                (
+                    d563 * b[end-2] +
+                    d564 * b[end-3] +
+                    d565 * b[end-4] +
+                    d566 * b[end-5] +
+                    d567 * b[end-6]
+                ) * u[end-5] +
+                (d575 * b[end-4] + d576 * b[end-5] + d577 * b[end-6]) * u[end-6]
+            )
+        dest[end-5] =
+            α * (
+                (d613 * b[end-2] + d614 * b[end-3]) * u[end] +
+                (d623 * b[end-2] + d624 * b[end-3]) * u[end-1] +
+                (d633 * b[end-2] + d634 * b[end-3] + d635 * b[end-4]) * u[end-2] +
+                (d643 * b[end-2] + d644 * b[end-3] + d645 * b[end-4] + d646 * b[end-5]) *
+                u[end-3] +
+                (
+                    d653 * b[end-2] +
+                    d654 * b[end-3] +
+                    d655 * b[end-4] +
+                    d656 * b[end-5] +
+                    d657 * b[end-6]
+                ) * u[end-4] +
+                (
+                    d663 * b[end-2] +
+                    d664 * b[end-3] +
+                    d665 * b[end-4] +
+                    d666 * b[end-5] +
+                    d667 * b[end-6] +
+                    d668 * b[end-7]
+                ) * u[end-5] +
+                (d675 * b[end-4] + d676 * b[end-5] + d677 * b[end-6] + d678 * b[end-7]) *
+                u[end-6] +
+                (d686 * b[end-5] + d687 * b[end-6] + d688 * b[end-7]) * u[end-7]
+            )
     end
 end
-function convolve_boundary_coefficients!(dest::AbstractVector,
-                                         cache::Mattsson2012Cache4,
-                                         u::AbstractVector,
-                                         b::AbstractVector,
-                                         α,
-                                         ::Union{FastMode, ThreadedMode})
+function convolve_boundary_coefficients!(
+    dest::AbstractVector,
+    cache::Mattsson2012Cache4,
+    u::AbstractVector,
+    b::AbstractVector,
+    α,
+    ::Union{FastMode,ThreadedMode},
+)
     @unpack d111,
     d112,
     d113,
@@ -1066,163 +1144,193 @@ function convolve_boundary_coefficients!(dest::AbstractVector,
         #b7 = b[7]
         #b8 = b[8]
 
-        dest[1] = α * ((d111 * b[1] + d112 * b[2] + d113 * b[3] + d114 * b[4]) * u[1] +
-                   (d121 * b[1] + d123 * b[3] + d124 * b[4]) * u[2] +
-                   (d131 * b[1] + d132 * b[2] + d133 * b[3] + d134 * b[4]) * u[3] +
-                   (d141 * b[1] + d143 * b[3] + d144 * b[4]) * u[4] +
-                   (d153 * b[3] + d154 * b[4]) * u[5] +
-                   (d163 * b[3] + d164 * b[4]) * u[6])
-        dest[2] = α * ((d211 * b[1] + d213 * b[3] + d214 * b[4]) * u[1] +
-                   (d221 * b[1] + d223 * b[3] + d224 * b[4]) * u[2] +
-                   (d231 * b[1] + d233 * b[3] + d234 * b[4]) * u[3] +
-                   (d241 * b[1] + d243 * b[3] + d244 * b[4]) * u[4] +
-                   (d253 * b[3] + d254 * b[4]) * u[5] +
-                   (d263 * b[3] + d264 * b[4]) * u[6])
-        dest[3] = α * ((d311 * b[1] + d312 * b[2] + d313 * b[3] + d314 * b[4]) * u[1] +
-                   (d321 * b[1] + d323 * b[3] + d324 * b[4]) * u[2] +
-                   (d331 * b[1] + d332 * b[2] + d333 * b[3] + d334 * b[4] + d335 * b[5]) *
-                   u[3] +
-                   (d341 * b[1] + d343 * b[3] + d344 * b[4] + d345 * b[5]) * u[4] +
-                   (d353 * b[3] + d354 * b[4] + d355 * b[5]) * u[5] +
-                   (d363 * b[3] + d364 * b[4] + d365 * b[5]) * u[6])
-        dest[4] = α * ((d411 * b[1] + d413 * b[3] + d414 * b[4]) * u[1] +
-                   (d421 * b[1] + d423 * b[3] + d424 * b[4]) * u[2] +
-                   (d431 * b[1] + d433 * b[3] + d434 * b[4] + d435 * b[5]) * u[3] +
-                   (d441 * b[1] + d443 * b[3] + d444 * b[4] + d445 * b[5] + d446 * b[6]) *
-                   u[4] +
-                   (d453 * b[3] + d454 * b[4] + d455 * b[5] + d456 * b[6]) * u[5] +
-                   (d463 * b[3] + d464 * b[4] + d465 * b[5] + d466 * b[6]) * u[6])
-        dest[5] = α * ((d513 * b[3] + d514 * b[4]) * u[1] +
-                   (d523 * b[3] + d524 * b[4]) * u[2] +
-                   (d533 * b[3] + d534 * b[4] + d535 * b[5]) * u[3] +
-                   (d543 * b[3] + d544 * b[4] + d545 * b[5] + d546 * b[6]) * u[4] +
-                   (d553 * b[3] + d554 * b[4] + d555 * b[5] + d556 * b[6] + d557 * b[7]) *
-                   u[5] +
-                   (d563 * b[3] + d564 * b[4] + d565 * b[5] + d566 * b[6] + d567 * b[7]) *
-                   u[6] +
-                   (d575 * b[5] + d576 * b[6] + d577 * b[7]) * u[7])
-        dest[6] = α * ((d613 * b[3] + d614 * b[4]) * u[1] +
-                   (d623 * b[3] + d624 * b[4]) * u[2] +
-                   (d633 * b[3] + d634 * b[4] + d635 * b[5]) * u[3] +
-                   (d643 * b[3] + d644 * b[4] + d645 * b[5] + d646 * b[6]) * u[4] +
-                   (d653 * b[3] + d654 * b[4] + d655 * b[5] + d656 * b[6] + d657 * b[7]) *
-                   u[5] +
-                   (d663 * b[3] +
+        dest[1] =
+            α * (
+                (d111 * b[1] + d112 * b[2] + d113 * b[3] + d114 * b[4]) * u[1] +
+                (d121 * b[1] + d123 * b[3] + d124 * b[4]) * u[2] +
+                (d131 * b[1] + d132 * b[2] + d133 * b[3] + d134 * b[4]) * u[3] +
+                (d141 * b[1] + d143 * b[3] + d144 * b[4]) * u[4] +
+                (d153 * b[3] + d154 * b[4]) * u[5] +
+                (d163 * b[3] + d164 * b[4]) * u[6]
+            )
+        dest[2] =
+            α * (
+                (d211 * b[1] + d213 * b[3] + d214 * b[4]) * u[1] +
+                (d221 * b[1] + d223 * b[3] + d224 * b[4]) * u[2] +
+                (d231 * b[1] + d233 * b[3] + d234 * b[4]) * u[3] +
+                (d241 * b[1] + d243 * b[3] + d244 * b[4]) * u[4] +
+                (d253 * b[3] + d254 * b[4]) * u[5] +
+                (d263 * b[3] + d264 * b[4]) * u[6]
+            )
+        dest[3] =
+            α * (
+                (d311 * b[1] + d312 * b[2] + d313 * b[3] + d314 * b[4]) * u[1] +
+                (d321 * b[1] + d323 * b[3] + d324 * b[4]) * u[2] +
+                (d331 * b[1] + d332 * b[2] + d333 * b[3] + d334 * b[4] + d335 * b[5]) *
+                u[3] +
+                (d341 * b[1] + d343 * b[3] + d344 * b[4] + d345 * b[5]) * u[4] +
+                (d353 * b[3] + d354 * b[4] + d355 * b[5]) * u[5] +
+                (d363 * b[3] + d364 * b[4] + d365 * b[5]) * u[6]
+            )
+        dest[4] =
+            α * (
+                (d411 * b[1] + d413 * b[3] + d414 * b[4]) * u[1] +
+                (d421 * b[1] + d423 * b[3] + d424 * b[4]) * u[2] +
+                (d431 * b[1] + d433 * b[3] + d434 * b[4] + d435 * b[5]) * u[3] +
+                (d441 * b[1] + d443 * b[3] + d444 * b[4] + d445 * b[5] + d446 * b[6]) *
+                u[4] +
+                (d453 * b[3] + d454 * b[4] + d455 * b[5] + d456 * b[6]) * u[5] +
+                (d463 * b[3] + d464 * b[4] + d465 * b[5] + d466 * b[6]) * u[6]
+            )
+        dest[5] =
+            α * (
+                (d513 * b[3] + d514 * b[4]) * u[1] +
+                (d523 * b[3] + d524 * b[4]) * u[2] +
+                (d533 * b[3] + d534 * b[4] + d535 * b[5]) * u[3] +
+                (d543 * b[3] + d544 * b[4] + d545 * b[5] + d546 * b[6]) * u[4] +
+                (d553 * b[3] + d554 * b[4] + d555 * b[5] + d556 * b[6] + d557 * b[7]) *
+                u[5] +
+                (d563 * b[3] + d564 * b[4] + d565 * b[5] + d566 * b[6] + d567 * b[7]) *
+                u[6] +
+                (d575 * b[5] + d576 * b[6] + d577 * b[7]) * u[7]
+            )
+        dest[6] =
+            α * (
+                (d613 * b[3] + d614 * b[4]) * u[1] +
+                (d623 * b[3] + d624 * b[4]) * u[2] +
+                (d633 * b[3] + d634 * b[4] + d635 * b[5]) * u[3] +
+                (d643 * b[3] + d644 * b[4] + d645 * b[5] + d646 * b[6]) * u[4] +
+                (d653 * b[3] + d654 * b[4] + d655 * b[5] + d656 * b[6] + d657 * b[7]) *
+                u[5] +
+                (
+                    d663 * b[3] +
                     d664 * b[4] +
                     d665 * b[5] +
                     d666 * b[6] +
                     d667 * b[7] +
-                    d668 * b[8]) * u[6] +
-                   (d675 * b[5] + d676 * b[6] + d677 * b[7] + d678 * b[8]) * u[7] +
-                   (d686 * b[6] + d687 * b[7] + d688 * b[8]) * u[8])
+                    d668 * b[8]
+                ) * u[6] +
+                (d675 * b[5] + d676 * b[6] + d677 * b[7] + d678 * b[8]) * u[7] +
+                (d686 * b[6] + d687 * b[7] + d688 * b[8]) * u[8]
+            )
 
-        dest[end] = α * ((d111 * b[end] + d112 * b[end - 1] + d113 * b[end - 2] +
-                      d114 * b[end - 3]) *
-                     u[end] +
-                     (d121 * b[end] + d123 * b[end - 2] + d124 * b[end - 3]) * u[end - 1] +
-                     (d131 * b[end] + d132 * b[end - 1] + d133 * b[end - 2] +
-                      d134 * b[end - 3]) *
-                     u[end - 2] +
-                     (d141 * b[end] + d143 * b[end - 2] + d144 * b[end - 3]) * u[end - 3] +
-                     (d153 * b[end - 2] + d154 * b[end - 3]) * u[end - 4] +
-                     (d163 * b[end - 2] + d164 * b[end - 3]) * u[end - 5])
-        dest[end - 1] = α *
-                        ((d211 * b[end] + d213 * b[end - 2] + d214 * b[end - 3]) * u[end] +
-                         (d221 * b[end] + d223 * b[end - 2] + d224 * b[end - 3]) *
-                         u[end - 1] +
-                         (d231 * b[end] + d233 * b[end - 2] + d234 * b[end - 3]) *
-                         u[end - 2] +
-                         (d241 * b[end] + d243 * b[end - 2] + d244 * b[end - 3]) *
-                         u[end - 3] +
-                         (d253 * b[end - 2] + d254 * b[end - 3]) * u[end - 4] +
-                         (d263 * b[end - 2] + d264 * b[end - 3]) * u[end - 5])
-        dest[end - 2] = α * ((d311 * b[end] + d312 * b[end - 1] + d313 * b[end - 2] +
-                          d314 * b[end - 3]) *
-                         u[end] +
-                         (d321 * b[end] + d323 * b[end - 2] + d324 * b[end - 3]) *
-                         u[end - 1] +
-                         (d331 * b[end] +
-                          d332 * b[end - 1] +
-                          d333 * b[end - 2] +
-                          d334 * b[end - 3] +
-                          d335 * b[end - 4]) * u[end - 2] +
-                         (d341 * b[end] + d343 * b[end - 2] + d344 * b[end - 3] +
-                          d345 * b[end - 4]) *
-                         u[end - 3] +
-                         (d353 * b[end - 2] + d354 * b[end - 3] + d355 * b[end - 4]) *
-                         u[end - 4] +
-                         (d363 * b[end - 2] + d364 * b[end - 3] + d365 * b[end - 4]) *
-                         u[end - 5])
-        dest[end - 3] = α *
-                        ((d411 * b[end] + d413 * b[end - 2] + d414 * b[end - 3]) * u[end] +
-                         (d421 * b[end] + d423 * b[end - 2] + d424 * b[end - 3]) *
-                         u[end - 1] +
-                         (d431 * b[end] + d433 * b[end - 2] + d434 * b[end - 3] +
-                          d435 * b[end - 4]) *
-                         u[end - 2] +
-                         (d441 * b[end] +
-                          d443 * b[end - 2] +
-                          d444 * b[end - 3] +
-                          d445 * b[end - 4] +
-                          d446 * b[end - 5]) * u[end - 3] +
-                         (d453 * b[end - 2] + d454 * b[end - 3] + d455 * b[end - 4] +
-                          d456 * b[end - 5]) *
-                         u[end - 4] +
-                         (d463 * b[end - 2] + d464 * b[end - 3] + d465 * b[end - 4] +
-                          d466 * b[end - 5]) *
-                         u[end - 5])
-        dest[end - 4] = α * ((d513 * b[end - 2] + d514 * b[end - 3]) * u[end] +
-                         (d523 * b[end - 2] + d524 * b[end - 3]) * u[end - 1] +
-                         (d533 * b[end - 2] + d534 * b[end - 3] + d535 * b[end - 4]) *
-                         u[end - 2] +
-                         (d543 * b[end - 2] + d544 * b[end - 3] + d545 * b[end - 4] +
-                          d546 * b[end - 5]) *
-                         u[end - 3] +
-                         (d553 * b[end - 2] +
-                          d554 * b[end - 3] +
-                          d555 * b[end - 4] +
-                          d556 * b[end - 5] +
-                          d557 * b[end - 6]) * u[end - 4] +
-                         (d563 * b[end - 2] +
-                          d564 * b[end - 3] +
-                          d565 * b[end - 4] +
-                          d566 * b[end - 5] +
-                          d567 * b[end - 6]) * u[end - 5] +
-                         (d575 * b[end - 4] + d576 * b[end - 5] + d577 * b[end - 6]) *
-                         u[end - 6])
-        dest[end - 5] = α * ((d613 * b[end - 2] + d614 * b[end - 3]) * u[end] +
-                         (d623 * b[end - 2] + d624 * b[end - 3]) * u[end - 1] +
-                         (d633 * b[end - 2] + d634 * b[end - 3] + d635 * b[end - 4]) *
-                         u[end - 2] +
-                         (d643 * b[end - 2] + d644 * b[end - 3] + d645 * b[end - 4] +
-                          d646 * b[end - 5]) *
-                         u[end - 3] +
-                         (d653 * b[end - 2] +
-                          d654 * b[end - 3] +
-                          d655 * b[end - 4] +
-                          d656 * b[end - 5] +
-                          d657 * b[end - 6]) * u[end - 4] +
-                         (d663 * b[end - 2] +
-                          d664 * b[end - 3] +
-                          d665 * b[end - 4] +
-                          d666 * b[end - 5] +
-                          d667 * b[end - 6] +
-                          d668 * b[end - 7]) * u[end - 5] +
-                         (d675 * b[end - 4] + d676 * b[end - 5] + d677 * b[end - 6] +
-                          d678 * b[end - 7]) *
-                         u[end - 6] +
-                         (d686 * b[end - 5] + d687 * b[end - 6] + d688 * b[end - 7]) *
-                         u[end - 7])
+
+        dest[end] =
+            α * (
+                (d111 * b[end] + d112 * b[end-1] + d113 * b[end-2] + d114 * b[end-3]) *
+                u[end] +
+                (d121 * b[end] + d123 * b[end-2] + d124 * b[end-3]) * u[end-1] +
+                (d131 * b[end] + d132 * b[end-1] + d133 * b[end-2] + d134 * b[end-3]) *
+                u[end-2] +
+                (d141 * b[end] + d143 * b[end-2] + d144 * b[end-3]) * u[end-3] +
+                (d153 * b[end-2] + d154 * b[end-3]) * u[end-4] +
+                (d163 * b[end-2] + d164 * b[end-3]) * u[end-5]
+            )
+        dest[end-1] =
+            α * (
+                (d211 * b[end] + d213 * b[end-2] + d214 * b[end-3]) * u[end] +
+                (d221 * b[end] + d223 * b[end-2] + d224 * b[end-3]) * u[end-1] +
+                (d231 * b[end] + d233 * b[end-2] + d234 * b[end-3]) * u[end-2] +
+                (d241 * b[end] + d243 * b[end-2] + d244 * b[end-3]) * u[end-3] +
+                (d253 * b[end-2] + d254 * b[end-3]) * u[end-4] +
+                (d263 * b[end-2] + d264 * b[end-3]) * u[end-5]
+            )
+        dest[end-2] =
+            α * (
+                (d311 * b[end] + d312 * b[end-1] + d313 * b[end-2] + d314 * b[end-3]) *
+                u[end] +
+                (d321 * b[end] + d323 * b[end-2] + d324 * b[end-3]) * u[end-1] +
+                (
+                    d331 * b[end] +
+                    d332 * b[end-1] +
+                    d333 * b[end-2] +
+                    d334 * b[end-3] +
+                    d335 * b[end-4]
+                ) * u[end-2] +
+                (d341 * b[end] + d343 * b[end-2] + d344 * b[end-3] + d345 * b[end-4]) *
+                u[end-3] +
+                (d353 * b[end-2] + d354 * b[end-3] + d355 * b[end-4]) * u[end-4] +
+                (d363 * b[end-2] + d364 * b[end-3] + d365 * b[end-4]) * u[end-5]
+            )
+        dest[end-3] =
+            α * (
+                (d411 * b[end] + d413 * b[end-2] + d414 * b[end-3]) * u[end] +
+                (d421 * b[end] + d423 * b[end-2] + d424 * b[end-3]) * u[end-1] +
+                (d431 * b[end] + d433 * b[end-2] + d434 * b[end-3] + d435 * b[end-4]) *
+                u[end-2] +
+                (
+                    d441 * b[end] +
+                    d443 * b[end-2] +
+                    d444 * b[end-3] +
+                    d445 * b[end-4] +
+                    d446 * b[end-5]
+                ) * u[end-3] +
+                (d453 * b[end-2] + d454 * b[end-3] + d455 * b[end-4] + d456 * b[end-5]) *
+                u[end-4] +
+                (d463 * b[end-2] + d464 * b[end-3] + d465 * b[end-4] + d466 * b[end-5]) *
+                u[end-5]
+            )
+        dest[end-4] =
+            α * (
+                (d513 * b[end-2] + d514 * b[end-3]) * u[end] +
+                (d523 * b[end-2] + d524 * b[end-3]) * u[end-1] +
+                (d533 * b[end-2] + d534 * b[end-3] + d535 * b[end-4]) * u[end-2] +
+                (d543 * b[end-2] + d544 * b[end-3] + d545 * b[end-4] + d546 * b[end-5]) *
+                u[end-3] +
+                (
+                    d553 * b[end-2] +
+                    d554 * b[end-3] +
+                    d555 * b[end-4] +
+                    d556 * b[end-5] +
+                    d557 * b[end-6]
+                ) * u[end-4] +
+                (
+                    d563 * b[end-2] +
+                    d564 * b[end-3] +
+                    d565 * b[end-4] +
+                    d566 * b[end-5] +
+                    d567 * b[end-6]
+                ) * u[end-5] +
+                (d575 * b[end-4] + d576 * b[end-5] + d577 * b[end-6]) * u[end-6]
+            )
+        dest[end-5] =
+            α * (
+                (d613 * b[end-2] + d614 * b[end-3]) * u[end] +
+                (d623 * b[end-2] + d624 * b[end-3]) * u[end-1] +
+                (d633 * b[end-2] + d634 * b[end-3] + d635 * b[end-4]) * u[end-2] +
+                (d643 * b[end-2] + d644 * b[end-3] + d645 * b[end-4] + d646 * b[end-5]) *
+                u[end-3] +
+                (
+                    d653 * b[end-2] +
+                    d654 * b[end-3] +
+                    d655 * b[end-4] +
+                    d656 * b[end-5] +
+                    d657 * b[end-6]
+                ) * u[end-4] +
+                (
+                    d663 * b[end-2] +
+                    d664 * b[end-3] +
+                    d665 * b[end-4] +
+                    d666 * b[end-5] +
+                    d667 * b[end-6] +
+                    d668 * b[end-7]
+                ) * u[end-5] +
+                (d675 * b[end-4] + d676 * b[end-5] + d677 * b[end-6] + d678 * b[end-7]) *
+                u[end-6] +
+                (d686 * b[end-5] + d687 * b[end-6] + d688 * b[end-7]) * u[end-7]
+            )
     end
 end
 
-function convolve_boundary_coefficients!(dest::AbstractVector,
-                                         cache::Mattsson2012Cache4,
-                                         u::AbstractVector,
-                                         b::AbstractVector,
-                                         α,
-                                         β,
-                                         ::SafeMode)
+function convolve_boundary_coefficients!(
+    dest::AbstractVector,
+    cache::Mattsson2012Cache4,
+    u::AbstractVector,
+    b::AbstractVector,
+    α,
+    β,
+    ::SafeMode,
+)
     @unpack d111,
     d112,
     d113,
@@ -1365,164 +1473,192 @@ function convolve_boundary_coefficients!(dest::AbstractVector,
         #b7 = b[7]
         #b8 = b[8]
 
-        dest[1] = α * ((d111 * b[1] + d112 * b[2] + d113 * b[3] + d114 * b[4]) * u[1] +
-                   (d121 * b[1] + d123 * b[3] + d124 * b[4]) * u[2] +
-                   (d131 * b[1] + d132 * b[2] + d133 * b[3] + d134 * b[4]) * u[3] +
-                   (d141 * b[1] + d143 * b[3] + d144 * b[4]) * u[4] +
-                   (d153 * b[3] + d154 * b[4]) * u[5] +
-                   (d163 * b[3] + d164 * b[4]) * u[6]) + β * dest[1]
-        dest[2] = α * ((d211 * b[1] + d213 * b[3] + d214 * b[4]) * u[1] +
-                   (d221 * b[1] + d223 * b[3] + d224 * b[4]) * u[2] +
-                   (d231 * b[1] + d233 * b[3] + d234 * b[4]) * u[3] +
-                   (d241 * b[1] + d243 * b[3] + d244 * b[4]) * u[4] +
-                   (d253 * b[3] + d254 * b[4]) * u[5] +
-                   (d263 * b[3] + d264 * b[4]) * u[6]) + β * dest[2]
-        dest[3] = α * ((d311 * b[1] + d312 * b[2] + d313 * b[3] + d314 * b[4]) * u[1] +
-                   (d321 * b[1] + d323 * b[3] + d324 * b[4]) * u[2] +
-                   (d331 * b[1] + d332 * b[2] + d333 * b[3] + d334 * b[4] + d335 * b[5]) *
-                   u[3] +
-                   (d341 * b[1] + d343 * b[3] + d344 * b[4] + d345 * b[5]) * u[4] +
-                   (d353 * b[3] + d354 * b[4] + d355 * b[5]) * u[5] +
-                   (d363 * b[3] + d364 * b[4] + d365 * b[5]) * u[6]) + β * dest[3]
-        dest[4] = α * ((d411 * b[1] + d413 * b[3] + d414 * b[4]) * u[1] +
-                   (d421 * b[1] + d423 * b[3] + d424 * b[4]) * u[2] +
-                   (d431 * b[1] + d433 * b[3] + d434 * b[4] + d435 * b[5]) * u[3] +
-                   (d441 * b[1] + d443 * b[3] + d444 * b[4] + d445 * b[5] + d446 * b[6]) *
-                   u[4] +
-                   (d453 * b[3] + d454 * b[4] + d455 * b[5] + d456 * b[6]) * u[5] +
-                   (d463 * b[3] + d464 * b[4] + d465 * b[5] + d466 * b[6]) * u[6]) +
-                  β * dest[4]
-        dest[5] = α * ((d513 * b[3] + d514 * b[4]) * u[1] +
-                   (d523 * b[3] + d524 * b[4]) * u[2] +
-                   (d533 * b[3] + d534 * b[4] + d535 * b[5]) * u[3] +
-                   (d543 * b[3] + d544 * b[4] + d545 * b[5] + d546 * b[6]) * u[4] +
-                   (d553 * b[3] + d554 * b[4] + d555 * b[5] + d556 * b[6] + d557 * b[7]) *
-                   u[5] +
-                   (d563 * b[3] + d564 * b[4] + d565 * b[5] + d566 * b[6] + d567 * b[7]) *
-                   u[6] +
-                   (d575 * b[5] + d576 * b[6] + d577 * b[7]) * u[7]) + β * dest[5]
-        dest[6] = α * ((d613 * b[3] + d614 * b[4]) * u[1] +
-                   (d623 * b[3] + d624 * b[4]) * u[2] +
-                   (d633 * b[3] + d634 * b[4] + d635 * b[5]) * u[3] +
-                   (d643 * b[3] + d644 * b[4] + d645 * b[5] + d646 * b[6]) * u[4] +
-                   (d653 * b[3] + d654 * b[4] + d655 * b[5] + d656 * b[6] + d657 * b[7]) *
-                   u[5] +
-                   (d663 * b[3] +
+        dest[1] =
+            α * (
+                (d111 * b[1] + d112 * b[2] + d113 * b[3] + d114 * b[4]) * u[1] +
+                (d121 * b[1] + d123 * b[3] + d124 * b[4]) * u[2] +
+                (d131 * b[1] + d132 * b[2] + d133 * b[3] + d134 * b[4]) * u[3] +
+                (d141 * b[1] + d143 * b[3] + d144 * b[4]) * u[4] +
+                (d153 * b[3] + d154 * b[4]) * u[5] +
+                (d163 * b[3] + d164 * b[4]) * u[6]
+            ) + β * dest[1]
+        dest[2] =
+            α * (
+                (d211 * b[1] + d213 * b[3] + d214 * b[4]) * u[1] +
+                (d221 * b[1] + d223 * b[3] + d224 * b[4]) * u[2] +
+                (d231 * b[1] + d233 * b[3] + d234 * b[4]) * u[3] +
+                (d241 * b[1] + d243 * b[3] + d244 * b[4]) * u[4] +
+                (d253 * b[3] + d254 * b[4]) * u[5] +
+                (d263 * b[3] + d264 * b[4]) * u[6]
+            ) + β * dest[2]
+        dest[3] =
+            α * (
+                (d311 * b[1] + d312 * b[2] + d313 * b[3] + d314 * b[4]) * u[1] +
+                (d321 * b[1] + d323 * b[3] + d324 * b[4]) * u[2] +
+                (d331 * b[1] + d332 * b[2] + d333 * b[3] + d334 * b[4] + d335 * b[5]) *
+                u[3] +
+                (d341 * b[1] + d343 * b[3] + d344 * b[4] + d345 * b[5]) * u[4] +
+                (d353 * b[3] + d354 * b[4] + d355 * b[5]) * u[5] +
+                (d363 * b[3] + d364 * b[4] + d365 * b[5]) * u[6]
+            ) + β * dest[3]
+        dest[4] =
+            α * (
+                (d411 * b[1] + d413 * b[3] + d414 * b[4]) * u[1] +
+                (d421 * b[1] + d423 * b[3] + d424 * b[4]) * u[2] +
+                (d431 * b[1] + d433 * b[3] + d434 * b[4] + d435 * b[5]) * u[3] +
+                (d441 * b[1] + d443 * b[3] + d444 * b[4] + d445 * b[5] + d446 * b[6]) *
+                u[4] +
+                (d453 * b[3] + d454 * b[4] + d455 * b[5] + d456 * b[6]) * u[5] +
+                (d463 * b[3] + d464 * b[4] + d465 * b[5] + d466 * b[6]) * u[6]
+            ) + β * dest[4]
+        dest[5] =
+            α * (
+                (d513 * b[3] + d514 * b[4]) * u[1] +
+                (d523 * b[3] + d524 * b[4]) * u[2] +
+                (d533 * b[3] + d534 * b[4] + d535 * b[5]) * u[3] +
+                (d543 * b[3] + d544 * b[4] + d545 * b[5] + d546 * b[6]) * u[4] +
+                (d553 * b[3] + d554 * b[4] + d555 * b[5] + d556 * b[6] + d557 * b[7]) *
+                u[5] +
+                (d563 * b[3] + d564 * b[4] + d565 * b[5] + d566 * b[6] + d567 * b[7]) *
+                u[6] +
+                (d575 * b[5] + d576 * b[6] + d577 * b[7]) * u[7]
+            ) + β * dest[5]
+        dest[6] =
+            α * (
+                (d613 * b[3] + d614 * b[4]) * u[1] +
+                (d623 * b[3] + d624 * b[4]) * u[2] +
+                (d633 * b[3] + d634 * b[4] + d635 * b[5]) * u[3] +
+                (d643 * b[3] + d644 * b[4] + d645 * b[5] + d646 * b[6]) * u[4] +
+                (d653 * b[3] + d654 * b[4] + d655 * b[5] + d656 * b[6] + d657 * b[7]) *
+                u[5] +
+                (
+                    d663 * b[3] +
                     d664 * b[4] +
                     d665 * b[5] +
                     d666 * b[6] +
                     d667 * b[7] +
-                    d668 * b[8]) * u[6] +
-                   (d675 * b[5] + d676 * b[6] + d677 * b[7] + d678 * b[8]) * u[7] +
-                   (d686 * b[6] + d687 * b[7] + d688 * b[8]) * u[8]) + β * dest[6]
+                    d668 * b[8]
+                ) * u[6] +
+                (d675 * b[5] + d676 * b[6] + d677 * b[7] + d678 * b[8]) * u[7] +
+                (d686 * b[6] + d687 * b[7] + d688 * b[8]) * u[8]
+            ) + β * dest[6]
 
-        dest[end] = α * ((d111 * b[end] + d112 * b[end - 1] + d113 * b[end - 2] +
-                      d114 * b[end - 3]) *
-                     u[end] +
-                     (d121 * b[end] + d123 * b[end - 2] + d124 * b[end - 3]) * u[end - 1] +
-                     (d131 * b[end] + d132 * b[end - 1] + d133 * b[end - 2] +
-                      d134 * b[end - 3]) *
-                     u[end - 2] +
-                     (d141 * b[end] + d143 * b[end - 2] + d144 * b[end - 3]) * u[end - 3] +
-                     (d153 * b[end - 2] + d154 * b[end - 3]) * u[end - 4] +
-                     (d163 * b[end - 2] + d164 * b[end - 3]) * u[end - 5]) + β * dest[end]
-        dest[end - 1] = α *
-                        ((d211 * b[end] + d213 * b[end - 2] + d214 * b[end - 3]) * u[end] +
-                         (d221 * b[end] + d223 * b[end - 2] + d224 * b[end - 3]) *
-                         u[end - 1] +
-                         (d231 * b[end] + d233 * b[end - 2] + d234 * b[end - 3]) *
-                         u[end - 2] +
-                         (d241 * b[end] + d243 * b[end - 2] + d244 * b[end - 3]) *
-                         u[end - 3] +
-                         (d253 * b[end - 2] + d254 * b[end - 3]) * u[end - 4] +
-                         (d263 * b[end - 2] + d264 * b[end - 3]) * u[end - 5]) +
-                        β * dest[end - 1]
-        dest[end - 2] = α * ((d311 * b[end] + d312 * b[end - 1] + d313 * b[end - 2] +
-                          d314 * b[end - 3]) *
-                         u[end] +
-                         (d321 * b[end] + d323 * b[end - 2] + d324 * b[end - 3]) *
-                         u[end - 1] +
-                         (d331 * b[end] +
-                          d332 * b[end - 1] +
-                          d333 * b[end - 2] +
-                          d334 * b[end - 3] +
-                          d335 * b[end - 4]) * u[end - 2] +
-                         (d341 * b[end] + d343 * b[end - 2] + d344 * b[end - 3] +
-                          d345 * b[end - 4]) *
-                         u[end - 3] +
-                         (d353 * b[end - 2] + d354 * b[end - 3] + d355 * b[end - 4]) *
-                         u[end - 4] +
-                         (d363 * b[end - 2] + d364 * b[end - 3] + d365 * b[end - 4]) *
-                         u[end - 5]) + β * dest[end - 2]
-        dest[end - 3] = α *
-                        ((d411 * b[end] + d413 * b[end - 2] + d414 * b[end - 3]) * u[end] +
-                         (d421 * b[end] + d423 * b[end - 2] + d424 * b[end - 3]) *
-                         u[end - 1] +
-                         (d431 * b[end] + d433 * b[end - 2] + d434 * b[end - 3] +
-                          d435 * b[end - 4]) *
-                         u[end - 2] +
-                         (d441 * b[end] +
-                          d443 * b[end - 2] +
-                          d444 * b[end - 3] +
-                          d445 * b[end - 4] +
-                          d446 * b[end - 5]) * u[end - 3] +
-                         (d453 * b[end - 2] + d454 * b[end - 3] + d455 * b[end - 4] +
-                          d456 * b[end - 5]) *
-                         u[end - 4] +
-                         (d463 * b[end - 2] + d464 * b[end - 3] + d465 * b[end - 4] +
-                          d466 * b[end - 5]) *
-                         u[end - 5]) + β * dest[end - 3]
-        dest[end - 4] = α * ((d513 * b[end - 2] + d514 * b[end - 3]) * u[end] +
-                         (d523 * b[end - 2] + d524 * b[end - 3]) * u[end - 1] +
-                         (d533 * b[end - 2] + d534 * b[end - 3] + d535 * b[end - 4]) *
-                         u[end - 2] +
-                         (d543 * b[end - 2] + d544 * b[end - 3] + d545 * b[end - 4] +
-                          d546 * b[end - 5]) *
-                         u[end - 3] +
-                         (d553 * b[end - 2] +
-                          d554 * b[end - 3] +
-                          d555 * b[end - 4] +
-                          d556 * b[end - 5] +
-                          d557 * b[end - 6]) * u[end - 4] +
-                         (d563 * b[end - 2] +
-                          d564 * b[end - 3] +
-                          d565 * b[end - 4] +
-                          d566 * b[end - 5] +
-                          d567 * b[end - 6]) * u[end - 5] +
-                         (d575 * b[end - 4] + d576 * b[end - 5] + d577 * b[end - 6]) *
-                         u[end - 6]) + β * dest[end - 4]
-        dest[end - 5] = α * ((d613 * b[end - 2] + d614 * b[end - 3]) * u[end] +
-                         (d623 * b[end - 2] + d624 * b[end - 3]) * u[end - 1] +
-                         (d633 * b[end - 2] + d634 * b[end - 3] + d635 * b[end - 4]) *
-                         u[end - 2] +
-                         (d643 * b[end - 2] + d644 * b[end - 3] + d645 * b[end - 4] +
-                          d646 * b[end - 5]) *
-                         u[end - 3] +
-                         (d653 * b[end - 2] +
-                          d654 * b[end - 3] +
-                          d655 * b[end - 4] +
-                          d656 * b[end - 5] +
-                          d657 * b[end - 6]) * u[end - 4] +
-                         (d663 * b[end - 2] +
-                          d664 * b[end - 3] +
-                          d665 * b[end - 4] +
-                          d666 * b[end - 5] +
-                          d667 * b[end - 6] +
-                          d668 * b[end - 7]) * u[end - 5] +
-                         (d675 * b[end - 4] + d676 * b[end - 5] + d677 * b[end - 6] +
-                          d678 * b[end - 7]) *
-                         u[end - 6] +
-                         (d686 * b[end - 5] + d687 * b[end - 6] + d688 * b[end - 7]) *
-                         u[end - 7]) + β * dest[end - 5]
+
+        dest[end] =
+            α * (
+                (d111 * b[end] + d112 * b[end-1] + d113 * b[end-2] + d114 * b[end-3]) *
+                u[end] +
+                (d121 * b[end] + d123 * b[end-2] + d124 * b[end-3]) * u[end-1] +
+                (d131 * b[end] + d132 * b[end-1] + d133 * b[end-2] + d134 * b[end-3]) *
+                u[end-2] +
+                (d141 * b[end] + d143 * b[end-2] + d144 * b[end-3]) * u[end-3] +
+                (d153 * b[end-2] + d154 * b[end-3]) * u[end-4] +
+                (d163 * b[end-2] + d164 * b[end-3]) * u[end-5]
+            ) + β * dest[end]
+        dest[end-1] =
+            α * (
+                (d211 * b[end] + d213 * b[end-2] + d214 * b[end-3]) * u[end] +
+                (d221 * b[end] + d223 * b[end-2] + d224 * b[end-3]) * u[end-1] +
+                (d231 * b[end] + d233 * b[end-2] + d234 * b[end-3]) * u[end-2] +
+                (d241 * b[end] + d243 * b[end-2] + d244 * b[end-3]) * u[end-3] +
+                (d253 * b[end-2] + d254 * b[end-3]) * u[end-4] +
+                (d263 * b[end-2] + d264 * b[end-3]) * u[end-5]
+            ) + β * dest[end-1]
+        dest[end-2] =
+            α * (
+                (d311 * b[end] + d312 * b[end-1] + d313 * b[end-2] + d314 * b[end-3]) *
+                u[end] +
+                (d321 * b[end] + d323 * b[end-2] + d324 * b[end-3]) * u[end-1] +
+                (
+                    d331 * b[end] +
+                    d332 * b[end-1] +
+                    d333 * b[end-2] +
+                    d334 * b[end-3] +
+                    d335 * b[end-4]
+                ) * u[end-2] +
+                (d341 * b[end] + d343 * b[end-2] + d344 * b[end-3] + d345 * b[end-4]) *
+                u[end-3] +
+                (d353 * b[end-2] + d354 * b[end-3] + d355 * b[end-4]) * u[end-4] +
+                (d363 * b[end-2] + d364 * b[end-3] + d365 * b[end-4]) * u[end-5]
+            ) + β * dest[end-2]
+        dest[end-3] =
+            α * (
+                (d411 * b[end] + d413 * b[end-2] + d414 * b[end-3]) * u[end] +
+                (d421 * b[end] + d423 * b[end-2] + d424 * b[end-3]) * u[end-1] +
+                (d431 * b[end] + d433 * b[end-2] + d434 * b[end-3] + d435 * b[end-4]) *
+                u[end-2] +
+                (
+                    d441 * b[end] +
+                    d443 * b[end-2] +
+                    d444 * b[end-3] +
+                    d445 * b[end-4] +
+                    d446 * b[end-5]
+                ) * u[end-3] +
+                (d453 * b[end-2] + d454 * b[end-3] + d455 * b[end-4] + d456 * b[end-5]) *
+                u[end-4] +
+                (d463 * b[end-2] + d464 * b[end-3] + d465 * b[end-4] + d466 * b[end-5]) *
+                u[end-5]
+            ) + β * dest[end-3]
+        dest[end-4] =
+            α * (
+                (d513 * b[end-2] + d514 * b[end-3]) * u[end] +
+                (d523 * b[end-2] + d524 * b[end-3]) * u[end-1] +
+                (d533 * b[end-2] + d534 * b[end-3] + d535 * b[end-4]) * u[end-2] +
+                (d543 * b[end-2] + d544 * b[end-3] + d545 * b[end-4] + d546 * b[end-5]) *
+                u[end-3] +
+                (
+                    d553 * b[end-2] +
+                    d554 * b[end-3] +
+                    d555 * b[end-4] +
+                    d556 * b[end-5] +
+                    d557 * b[end-6]
+                ) * u[end-4] +
+                (
+                    d563 * b[end-2] +
+                    d564 * b[end-3] +
+                    d565 * b[end-4] +
+                    d566 * b[end-5] +
+                    d567 * b[end-6]
+                ) * u[end-5] +
+                (d575 * b[end-4] + d576 * b[end-5] + d577 * b[end-6]) * u[end-6]
+            ) + β * dest[end-4]
+        dest[end-5] =
+            α * (
+                (d613 * b[end-2] + d614 * b[end-3]) * u[end] +
+                (d623 * b[end-2] + d624 * b[end-3]) * u[end-1] +
+                (d633 * b[end-2] + d634 * b[end-3] + d635 * b[end-4]) * u[end-2] +
+                (d643 * b[end-2] + d644 * b[end-3] + d645 * b[end-4] + d646 * b[end-5]) *
+                u[end-3] +
+                (
+                    d653 * b[end-2] +
+                    d654 * b[end-3] +
+                    d655 * b[end-4] +
+                    d656 * b[end-5] +
+                    d657 * b[end-6]
+                ) * u[end-4] +
+                (
+                    d663 * b[end-2] +
+                    d664 * b[end-3] +
+                    d665 * b[end-4] +
+                    d666 * b[end-5] +
+                    d667 * b[end-6] +
+                    d668 * b[end-7]
+                ) * u[end-5] +
+                (d675 * b[end-4] + d676 * b[end-5] + d677 * b[end-6] + d678 * b[end-7]) *
+                u[end-6] +
+                (d686 * b[end-5] + d687 * b[end-6] + d688 * b[end-7]) * u[end-7]
+            ) + β * dest[end-5]
     end
 end
-function convolve_boundary_coefficients!(dest::AbstractVector,
-                                         cache::Mattsson2012Cache4,
-                                         u::AbstractVector,
-                                         b::AbstractVector,
-                                         α,
-                                         β,
-                                         ::Union{FastMode, ThreadedMode})
+function convolve_boundary_coefficients!(
+    dest::AbstractVector,
+    cache::Mattsson2012Cache4,
+    u::AbstractVector,
+    b::AbstractVector,
+    α,
+    β,
+    ::Union{FastMode,ThreadedMode},
+)
     @unpack d111,
     d112,
     d113,
@@ -1665,155 +1801,181 @@ function convolve_boundary_coefficients!(dest::AbstractVector,
         #b7 = b[7]
         #b8 = b[8]
 
-        dest[1] = α * ((d111 * b[1] + d112 * b[2] + d113 * b[3] + d114 * b[4]) * u[1] +
-                   (d121 * b[1] + d123 * b[3] + d124 * b[4]) * u[2] +
-                   (d131 * b[1] + d132 * b[2] + d133 * b[3] + d134 * b[4]) * u[3] +
-                   (d141 * b[1] + d143 * b[3] + d144 * b[4]) * u[4] +
-                   (d153 * b[3] + d154 * b[4]) * u[5] +
-                   (d163 * b[3] + d164 * b[4]) * u[6]) + β * dest[1]
-        dest[2] = α * ((d211 * b[1] + d213 * b[3] + d214 * b[4]) * u[1] +
-                   (d221 * b[1] + d223 * b[3] + d224 * b[4]) * u[2] +
-                   (d231 * b[1] + d233 * b[3] + d234 * b[4]) * u[3] +
-                   (d241 * b[1] + d243 * b[3] + d244 * b[4]) * u[4] +
-                   (d253 * b[3] + d254 * b[4]) * u[5] +
-                   (d263 * b[3] + d264 * b[4]) * u[6]) + β * dest[2]
-        dest[3] = α * ((d311 * b[1] + d312 * b[2] + d313 * b[3] + d314 * b[4]) * u[1] +
-                   (d321 * b[1] + d323 * b[3] + d324 * b[4]) * u[2] +
-                   (d331 * b[1] + d332 * b[2] + d333 * b[3] + d334 * b[4] + d335 * b[5]) *
-                   u[3] +
-                   (d341 * b[1] + d343 * b[3] + d344 * b[4] + d345 * b[5]) * u[4] +
-                   (d353 * b[3] + d354 * b[4] + d355 * b[5]) * u[5] +
-                   (d363 * b[3] + d364 * b[4] + d365 * b[5]) * u[6]) + β * dest[3]
-        dest[4] = α * ((d411 * b[1] + d413 * b[3] + d414 * b[4]) * u[1] +
-                   (d421 * b[1] + d423 * b[3] + d424 * b[4]) * u[2] +
-                   (d431 * b[1] + d433 * b[3] + d434 * b[4] + d435 * b[5]) * u[3] +
-                   (d441 * b[1] + d443 * b[3] + d444 * b[4] + d445 * b[5] + d446 * b[6]) *
-                   u[4] +
-                   (d453 * b[3] + d454 * b[4] + d455 * b[5] + d456 * b[6]) * u[5] +
-                   (d463 * b[3] + d464 * b[4] + d465 * b[5] + d466 * b[6]) * u[6]) +
-                  β * dest[4]
-        dest[5] = α * ((d513 * b[3] + d514 * b[4]) * u[1] +
-                   (d523 * b[3] + d524 * b[4]) * u[2] +
-                   (d533 * b[3] + d534 * b[4] + d535 * b[5]) * u[3] +
-                   (d543 * b[3] + d544 * b[4] + d545 * b[5] + d546 * b[6]) * u[4] +
-                   (d553 * b[3] + d554 * b[4] + d555 * b[5] + d556 * b[6] + d557 * b[7]) *
-                   u[5] +
-                   (d563 * b[3] + d564 * b[4] + d565 * b[5] + d566 * b[6] + d567 * b[7]) *
-                   u[6] +
-                   (d575 * b[5] + d576 * b[6] + d577 * b[7]) * u[7]) + β * dest[5]
-        dest[6] = α * ((d613 * b[3] + d614 * b[4]) * u[1] +
-                   (d623 * b[3] + d624 * b[4]) * u[2] +
-                   (d633 * b[3] + d634 * b[4] + d635 * b[5]) * u[3] +
-                   (d643 * b[3] + d644 * b[4] + d645 * b[5] + d646 * b[6]) * u[4] +
-                   (d653 * b[3] + d654 * b[4] + d655 * b[5] + d656 * b[6] + d657 * b[7]) *
-                   u[5] +
-                   (d663 * b[3] +
+        dest[1] =
+            α * (
+                (d111 * b[1] + d112 * b[2] + d113 * b[3] + d114 * b[4]) * u[1] +
+                (d121 * b[1] + d123 * b[3] + d124 * b[4]) * u[2] +
+                (d131 * b[1] + d132 * b[2] + d133 * b[3] + d134 * b[4]) * u[3] +
+                (d141 * b[1] + d143 * b[3] + d144 * b[4]) * u[4] +
+                (d153 * b[3] + d154 * b[4]) * u[5] +
+                (d163 * b[3] + d164 * b[4]) * u[6]
+            ) + β * dest[1]
+        dest[2] =
+            α * (
+                (d211 * b[1] + d213 * b[3] + d214 * b[4]) * u[1] +
+                (d221 * b[1] + d223 * b[3] + d224 * b[4]) * u[2] +
+                (d231 * b[1] + d233 * b[3] + d234 * b[4]) * u[3] +
+                (d241 * b[1] + d243 * b[3] + d244 * b[4]) * u[4] +
+                (d253 * b[3] + d254 * b[4]) * u[5] +
+                (d263 * b[3] + d264 * b[4]) * u[6]
+            ) + β * dest[2]
+        dest[3] =
+            α * (
+                (d311 * b[1] + d312 * b[2] + d313 * b[3] + d314 * b[4]) * u[1] +
+                (d321 * b[1] + d323 * b[3] + d324 * b[4]) * u[2] +
+                (d331 * b[1] + d332 * b[2] + d333 * b[3] + d334 * b[4] + d335 * b[5]) *
+                u[3] +
+                (d341 * b[1] + d343 * b[3] + d344 * b[4] + d345 * b[5]) * u[4] +
+                (d353 * b[3] + d354 * b[4] + d355 * b[5]) * u[5] +
+                (d363 * b[3] + d364 * b[4] + d365 * b[5]) * u[6]
+            ) + β * dest[3]
+        dest[4] =
+            α * (
+                (d411 * b[1] + d413 * b[3] + d414 * b[4]) * u[1] +
+                (d421 * b[1] + d423 * b[3] + d424 * b[4]) * u[2] +
+                (d431 * b[1] + d433 * b[3] + d434 * b[4] + d435 * b[5]) * u[3] +
+                (d441 * b[1] + d443 * b[3] + d444 * b[4] + d445 * b[5] + d446 * b[6]) *
+                u[4] +
+                (d453 * b[3] + d454 * b[4] + d455 * b[5] + d456 * b[6]) * u[5] +
+                (d463 * b[3] + d464 * b[4] + d465 * b[5] + d466 * b[6]) * u[6]
+            ) + β * dest[4]
+        dest[5] =
+            α * (
+                (d513 * b[3] + d514 * b[4]) * u[1] +
+                (d523 * b[3] + d524 * b[4]) * u[2] +
+                (d533 * b[3] + d534 * b[4] + d535 * b[5]) * u[3] +
+                (d543 * b[3] + d544 * b[4] + d545 * b[5] + d546 * b[6]) * u[4] +
+                (d553 * b[3] + d554 * b[4] + d555 * b[5] + d556 * b[6] + d557 * b[7]) *
+                u[5] +
+                (d563 * b[3] + d564 * b[4] + d565 * b[5] + d566 * b[6] + d567 * b[7]) *
+                u[6] +
+                (d575 * b[5] + d576 * b[6] + d577 * b[7]) * u[7]
+            ) + β * dest[5]
+        dest[6] =
+            α * (
+                (d613 * b[3] + d614 * b[4]) * u[1] +
+                (d623 * b[3] + d624 * b[4]) * u[2] +
+                (d633 * b[3] + d634 * b[4] + d635 * b[5]) * u[3] +
+                (d643 * b[3] + d644 * b[4] + d645 * b[5] + d646 * b[6]) * u[4] +
+                (d653 * b[3] + d654 * b[4] + d655 * b[5] + d656 * b[6] + d657 * b[7]) *
+                u[5] +
+                (
+                    d663 * b[3] +
                     d664 * b[4] +
                     d665 * b[5] +
                     d666 * b[6] +
                     d667 * b[7] +
-                    d668 * b[8]) * u[6] +
-                   (d675 * b[5] + d676 * b[6] + d677 * b[7] + d678 * b[8]) * u[7] +
-                   (d686 * b[6] + d687 * b[7] + d688 * b[8]) * u[8]) + β * dest[6]
+                    d668 * b[8]
+                ) * u[6] +
+                (d675 * b[5] + d676 * b[6] + d677 * b[7] + d678 * b[8]) * u[7] +
+                (d686 * b[6] + d687 * b[7] + d688 * b[8]) * u[8]
+            ) + β * dest[6]
 
-        dest[end] = α * ((d111 * b[end] + d112 * b[end - 1] + d113 * b[end - 2] +
-                      d114 * b[end - 3]) *
-                     u[end] +
-                     (d121 * b[end] + d123 * b[end - 2] + d124 * b[end - 3]) * u[end - 1] +
-                     (d131 * b[end] + d132 * b[end - 1] + d133 * b[end - 2] +
-                      d134 * b[end - 3]) *
-                     u[end - 2] +
-                     (d141 * b[end] + d143 * b[end - 2] + d144 * b[end - 3]) * u[end - 3] +
-                     (d153 * b[end - 2] + d154 * b[end - 3]) * u[end - 4] +
-                     (d163 * b[end - 2] + d164 * b[end - 3]) * u[end - 5]) + β * dest[end]
-        dest[end - 1] = α *
-                        ((d211 * b[end] + d213 * b[end - 2] + d214 * b[end - 3]) * u[end] +
-                         (d221 * b[end] + d223 * b[end - 2] + d224 * b[end - 3]) *
-                         u[end - 1] +
-                         (d231 * b[end] + d233 * b[end - 2] + d234 * b[end - 3]) *
-                         u[end - 2] +
-                         (d241 * b[end] + d243 * b[end - 2] + d244 * b[end - 3]) *
-                         u[end - 3] +
-                         (d253 * b[end - 2] + d254 * b[end - 3]) * u[end - 4] +
-                         (d263 * b[end - 2] + d264 * b[end - 3]) * u[end - 5]) +
-                        β * dest[end - 1]
-        dest[end - 2] = α * ((d311 * b[end] + d312 * b[end - 1] + d313 * b[end - 2] +
-                          d314 * b[end - 3]) *
-                         u[end] +
-                         (d321 * b[end] + d323 * b[end - 2] + d324 * b[end - 3]) *
-                         u[end - 1] +
-                         (d331 * b[end] +
-                          d332 * b[end - 1] +
-                          d333 * b[end - 2] +
-                          d334 * b[end - 3] +
-                          d335 * b[end - 4]) * u[end - 2] +
-                         (d341 * b[end] + d343 * b[end - 2] + d344 * b[end - 3] +
-                          d345 * b[end - 4]) *
-                         u[end - 3] +
-                         (d353 * b[end - 2] + d354 * b[end - 3] + d355 * b[end - 4]) *
-                         u[end - 4] +
-                         (d363 * b[end - 2] + d364 * b[end - 3] + d365 * b[end - 4]) *
-                         u[end - 5]) + β * dest[end - 2]
-        dest[end - 3] = α *
-                        ((d411 * b[end] + d413 * b[end - 2] + d414 * b[end - 3]) * u[end] +
-                         (d421 * b[end] + d423 * b[end - 2] + d424 * b[end - 3]) *
-                         u[end - 1] +
-                         (d431 * b[end] + d433 * b[end - 2] + d434 * b[end - 3] +
-                          d435 * b[end - 4]) *
-                         u[end - 2] +
-                         (d441 * b[end] +
-                          d443 * b[end - 2] +
-                          d444 * b[end - 3] +
-                          d445 * b[end - 4] +
-                          d446 * b[end - 5]) * u[end - 3] +
-                         (d453 * b[end - 2] + d454 * b[end - 3] + d455 * b[end - 4] +
-                          d456 * b[end - 5]) *
-                         u[end - 4] +
-                         (d463 * b[end - 2] + d464 * b[end - 3] + d465 * b[end - 4] +
-                          d466 * b[end - 5]) *
-                         u[end - 5]) + β * dest[end - 3]
-        dest[end - 4] = α * ((d513 * b[end - 2] + d514 * b[end - 3]) * u[end] +
-                         (d523 * b[end - 2] + d524 * b[end - 3]) * u[end - 1] +
-                         (d533 * b[end - 2] + d534 * b[end - 3] + d535 * b[end - 4]) *
-                         u[end - 2] +
-                         (d543 * b[end - 2] + d544 * b[end - 3] + d545 * b[end - 4] +
-                          d546 * b[end - 5]) *
-                         u[end - 3] +
-                         (d553 * b[end - 2] +
-                          d554 * b[end - 3] +
-                          d555 * b[end - 4] +
-                          d556 * b[end - 5] +
-                          d557 * b[end - 6]) * u[end - 4] +
-                         (d563 * b[end - 2] +
-                          d564 * b[end - 3] +
-                          d565 * b[end - 4] +
-                          d566 * b[end - 5] +
-                          d567 * b[end - 6]) * u[end - 5] +
-                         (d575 * b[end - 4] + d576 * b[end - 5] + d577 * b[end - 6]) *
-                         u[end - 6]) + β * dest[end - 4]
-        dest[end - 5] = α * ((d613 * b[end - 2] + d614 * b[end - 3]) * u[end] +
-                         (d623 * b[end - 2] + d624 * b[end - 3]) * u[end - 1] +
-                         (d633 * b[end - 2] + d634 * b[end - 3] + d635 * b[end - 4]) *
-                         u[end - 2] +
-                         (d643 * b[end - 2] + d644 * b[end - 3] + d645 * b[end - 4] +
-                          d646 * b[end - 5]) *
-                         u[end - 3] +
-                         (d653 * b[end - 2] +
-                          d654 * b[end - 3] +
-                          d655 * b[end - 4] +
-                          d656 * b[end - 5] +
-                          d657 * b[end - 6]) * u[end - 4] +
-                         (d663 * b[end - 2] +
-                          d664 * b[end - 3] +
-                          d665 * b[end - 4] +
-                          d666 * b[end - 5] +
-                          d667 * b[end - 6] +
-                          d668 * b[end - 7]) * u[end - 5] +
-                         (d675 * b[end - 4] + d676 * b[end - 5] + d677 * b[end - 6] +
-                          d678 * b[end - 7]) *
-                         u[end - 6] +
-                         (d686 * b[end - 5] + d687 * b[end - 6] + d688 * b[end - 7]) *
-                         u[end - 7]) + β * dest[end - 5]
+
+        dest[end] =
+            α * (
+                (d111 * b[end] + d112 * b[end-1] + d113 * b[end-2] + d114 * b[end-3]) *
+                u[end] +
+                (d121 * b[end] + d123 * b[end-2] + d124 * b[end-3]) * u[end-1] +
+                (d131 * b[end] + d132 * b[end-1] + d133 * b[end-2] + d134 * b[end-3]) *
+                u[end-2] +
+                (d141 * b[end] + d143 * b[end-2] + d144 * b[end-3]) * u[end-3] +
+                (d153 * b[end-2] + d154 * b[end-3]) * u[end-4] +
+                (d163 * b[end-2] + d164 * b[end-3]) * u[end-5]
+            ) + β * dest[end]
+        dest[end-1] =
+            α * (
+                (d211 * b[end] + d213 * b[end-2] + d214 * b[end-3]) * u[end] +
+                (d221 * b[end] + d223 * b[end-2] + d224 * b[end-3]) * u[end-1] +
+                (d231 * b[end] + d233 * b[end-2] + d234 * b[end-3]) * u[end-2] +
+                (d241 * b[end] + d243 * b[end-2] + d244 * b[end-3]) * u[end-3] +
+                (d253 * b[end-2] + d254 * b[end-3]) * u[end-4] +
+                (d263 * b[end-2] + d264 * b[end-3]) * u[end-5]
+            ) + β * dest[end-1]
+        dest[end-2] =
+            α * (
+                (d311 * b[end] + d312 * b[end-1] + d313 * b[end-2] + d314 * b[end-3]) *
+                u[end] +
+                (d321 * b[end] + d323 * b[end-2] + d324 * b[end-3]) * u[end-1] +
+                (
+                    d331 * b[end] +
+                    d332 * b[end-1] +
+                    d333 * b[end-2] +
+                    d334 * b[end-3] +
+                    d335 * b[end-4]
+                ) * u[end-2] +
+                (d341 * b[end] + d343 * b[end-2] + d344 * b[end-3] + d345 * b[end-4]) *
+                u[end-3] +
+                (d353 * b[end-2] + d354 * b[end-3] + d355 * b[end-4]) * u[end-4] +
+                (d363 * b[end-2] + d364 * b[end-3] + d365 * b[end-4]) * u[end-5]
+            ) + β * dest[end-2]
+        dest[end-3] =
+            α * (
+                (d411 * b[end] + d413 * b[end-2] + d414 * b[end-3]) * u[end] +
+                (d421 * b[end] + d423 * b[end-2] + d424 * b[end-3]) * u[end-1] +
+                (d431 * b[end] + d433 * b[end-2] + d434 * b[end-3] + d435 * b[end-4]) *
+                u[end-2] +
+                (
+                    d441 * b[end] +
+                    d443 * b[end-2] +
+                    d444 * b[end-3] +
+                    d445 * b[end-4] +
+                    d446 * b[end-5]
+                ) * u[end-3] +
+                (d453 * b[end-2] + d454 * b[end-3] + d455 * b[end-4] + d456 * b[end-5]) *
+                u[end-4] +
+                (d463 * b[end-2] + d464 * b[end-3] + d465 * b[end-4] + d466 * b[end-5]) *
+                u[end-5]
+            ) + β * dest[end-3]
+        dest[end-4] =
+            α * (
+                (d513 * b[end-2] + d514 * b[end-3]) * u[end] +
+                (d523 * b[end-2] + d524 * b[end-3]) * u[end-1] +
+                (d533 * b[end-2] + d534 * b[end-3] + d535 * b[end-4]) * u[end-2] +
+                (d543 * b[end-2] + d544 * b[end-3] + d545 * b[end-4] + d546 * b[end-5]) *
+                u[end-3] +
+                (
+                    d553 * b[end-2] +
+                    d554 * b[end-3] +
+                    d555 * b[end-4] +
+                    d556 * b[end-5] +
+                    d557 * b[end-6]
+                ) * u[end-4] +
+                (
+                    d563 * b[end-2] +
+                    d564 * b[end-3] +
+                    d565 * b[end-4] +
+                    d566 * b[end-5] +
+                    d567 * b[end-6]
+                ) * u[end-5] +
+                (d575 * b[end-4] + d576 * b[end-5] + d577 * b[end-6]) * u[end-6]
+            ) + β * dest[end-4]
+        dest[end-5] =
+            α * (
+                (d613 * b[end-2] + d614 * b[end-3]) * u[end] +
+                (d623 * b[end-2] + d624 * b[end-3]) * u[end-1] +
+                (d633 * b[end-2] + d634 * b[end-3] + d635 * b[end-4]) * u[end-2] +
+                (d643 * b[end-2] + d644 * b[end-3] + d645 * b[end-4] + d646 * b[end-5]) *
+                u[end-3] +
+                (
+                    d653 * b[end-2] +
+                    d654 * b[end-3] +
+                    d655 * b[end-4] +
+                    d656 * b[end-5] +
+                    d657 * b[end-6]
+                ) * u[end-4] +
+                (
+                    d663 * b[end-2] +
+                    d664 * b[end-3] +
+                    d665 * b[end-4] +
+                    d666 * b[end-5] +
+                    d667 * b[end-6] +
+                    d668 * b[end-7]
+                ) * u[end-5] +
+                (d675 * b[end-4] + d676 * b[end-5] + d677 * b[end-6] + d678 * b[end-7]) *
+                u[end-6] +
+                (d686 * b[end-5] + d687 * b[end-6] + d688 * b[end-7]) * u[end-7]
+            ) + β * dest[end-5]
     end
 end
 
@@ -1832,27 +1994,31 @@ end
     di_0p2 = cache
 
     @inbounds begin
-        b_im2 = b[i - 2]
-        b_im1 = b[i - 1]
+        b_im2 = b[i-2]
+        b_im1 = b[i-1]
         b_i = b[i]
-        b_ip1 = b[i + 1]
-        b_ip2 = b[i + 2]
+        b_ip1 = b[i+1]
+        b_ip2 = b[i+2]
 
-        retval = ((dim2m2 * b_im2 + dim2m1 * b_im1 + dim2_0 * b_i) * u[i - 2] +
-                  (dim1m2 * b_im2 + dim1m1 * b_im1 + dim1_0 * b_i + dim1p1 * b_ip1) *
-                  u[i - 1] +
-                  (di_0m2 * b_im2 +
-                   di_0m1 * b_im1 +
-                   di_0_0 * b_i +
-                   di_0p1 * b_ip1 +
-                   di_0p2 * b_ip2) * u[i] +
-                  (dim1m2 * b_ip2 + dim1m1 * b_ip1 + dim1_0 * b_i + dim1p1 * b_im1) *
-                  u[i + 1] +
-                  (dim2m2 * b_ip2 + dim2m1 * b_ip1 + dim2_0 * b_i) * u[i + 2])
+        retval = (
+            (dim2m2 * b_im2 + dim2m1 * b_im1 + dim2_0 * b_i) * u[i-2] +
+            (dim1m2 * b_im2 + dim1m1 * b_im1 + dim1_0 * b_i + dim1p1 * b_ip1) * u[i-1] +
+            (
+                di_0m2 * b_im2 +
+                di_0m1 * b_im1 +
+                di_0_0 * b_i +
+                di_0p1 * b_ip1 +
+                di_0p2 * b_ip2
+            ) * u[i] +
+            (dim1m2 * b_ip2 + dim1m1 * b_ip1 + dim1_0 * b_i + dim1p1 * b_im1) * u[i+1] +
+            (dim2m2 * b_ip2 + dim2m1 * b_ip1 + dim2_0 * b_i) * u[i+2]
+        )
     end
 
     retval
 end
+
+
 
 struct Mattsson2012Cache6{T} <: AbstractCoefficientCache{T}
     # boundary coefficients
@@ -2328,6 +2494,7 @@ struct Mattsson2012Cache6{T} <: AbstractCoefficientCache{T}
     di_i_0_ip2::T
     di_i_0_ip3::T
 
+
     function Mattsson2012Cache6(::Type{T}) where {T}
         d010101 = T(3488579749432192834647 // 853062500000000000000)
         d010102 = T(-801487464472260200583 // 853062500000000000000)
@@ -2801,476 +2968,478 @@ struct Mattsson2012Cache6{T} <: AbstractCoefficientCache{T}
         di_i_0_ip2 = T(-1 // 8)
         di_i_0_ip3 = T(-1 // 180)
 
-        new{T}(d010101,
-               d010102,
-               d010103,
-               d010104,
-               d010105,
-               d010106,
-               d010107,
-               d010201,
-               d010203,
-               d010204,
-               d010205,
-               d010206,
-               d010207,
-               d010301,
-               d010302,
-               d010304,
-               d010305,
-               d010306,
-               d010307,
-               d010401,
-               d010402,
-               d010403,
-               d010405,
-               d010406,
-               d010407,
-               d010501,
-               d010502,
-               d010503,
-               d010504,
-               d010505,
-               d010506,
-               d010507,
-               d010601,
-               d010602,
-               d010603,
-               d010604,
-               d010605,
-               d010606,
-               d010607,
-               d010704,
-               d010705,
-               d010706,
-               d010707,
-               d010805,
-               d010806,
-               d010807,
-               d010905,
-               d010906,
-               d010907,
-               d020101,
-               d020103,
-               d020104,
-               d020105,
-               d020106,
-               d020107,
-               d020201,
-               d020203,
-               d020204,
-               d020205,
-               d020206,
-               d020207,
-               d020301,
-               d020304,
-               d020305,
-               d020306,
-               d020307,
-               d020401,
-               d020403,
-               d020405,
-               d020406,
-               d020407,
-               d020501,
-               d020503,
-               d020504,
-               d020505,
-               d020506,
-               d020507,
-               d020601,
-               d020603,
-               d020604,
-               d020605,
-               d020606,
-               d020607,
-               d020704,
-               d020705,
-               d020706,
-               d020707,
-               d020805,
-               d020806,
-               d020807,
-               d020905,
-               d020906,
-               d020907,
-               d030101,
-               d030102,
-               d030104,
-               d030105,
-               d030106,
-               d030107,
-               d030201,
-               d030204,
-               d030205,
-               d030206,
-               d030207,
-               d030301,
-               d030302,
-               d030304,
-               d030305,
-               d030306,
-               d030307,
-               d030401,
-               d030402,
-               d030405,
-               d030406,
-               d030407,
-               d030501,
-               d030502,
-               d030504,
-               d030505,
-               d030506,
-               d030507,
-               d030601,
-               d030602,
-               d030604,
-               d030605,
-               d030606,
-               d030607,
-               d030704,
-               d030705,
-               d030706,
-               d030707,
-               d030805,
-               d030806,
-               d030807,
-               d030905,
-               d030906,
-               d030907,
-               d040101,
-               d040102,
-               d040103,
-               d040105,
-               d040106,
-               d040107,
-               d040201,
-               d040203,
-               d040205,
-               d040206,
-               d040207,
-               d040301,
-               d040302,
-               d040305,
-               d040306,
-               d040307,
-               d040401,
-               d040402,
-               d040403,
-               d040405,
-               d040406,
-               d040407,
-               d040501,
-               d040502,
-               d040503,
-               d040505,
-               d040506,
-               d040507,
-               d040601,
-               d040602,
-               d040603,
-               d040605,
-               d040606,
-               d040607,
-               d040705,
-               d040706,
-               d040707,
-               d040805,
-               d040806,
-               d040807,
-               d040905,
-               d040906,
-               d040907,
-               d050101,
-               d050102,
-               d050103,
-               d050104,
-               d050105,
-               d050106,
-               d050107,
-               d050201,
-               d050203,
-               d050204,
-               d050205,
-               d050206,
-               d050207,
-               d050301,
-               d050302,
-               d050304,
-               d050305,
-               d050306,
-               d050307,
-               d050401,
-               d050402,
-               d050403,
-               d050405,
-               d050406,
-               d050407,
-               d050501,
-               d050502,
-               d050503,
-               d050504,
-               d050505,
-               d050506,
-               d050507,
-               d050508,
-               d050601,
-               d050602,
-               d050603,
-               d050604,
-               d050605,
-               d050606,
-               d050607,
-               d050608,
-               d050704,
-               d050705,
-               d050706,
-               d050707,
-               d050708,
-               d050805,
-               d050806,
-               d050807,
-               d050808,
-               d050905,
-               d050906,
-               d050907,
-               d050908,
-               d060101,
-               d060102,
-               d060103,
-               d060104,
-               d060105,
-               d060106,
-               d060107,
-               d060201,
-               d060203,
-               d060204,
-               d060205,
-               d060206,
-               d060207,
-               d060301,
-               d060302,
-               d060304,
-               d060305,
-               d060306,
-               d060307,
-               d060401,
-               d060402,
-               d060403,
-               d060405,
-               d060406,
-               d060407,
-               d060501,
-               d060502,
-               d060503,
-               d060504,
-               d060505,
-               d060506,
-               d060507,
-               d060508,
-               d060601,
-               d060602,
-               d060603,
-               d060604,
-               d060605,
-               d060606,
-               d060607,
-               d060608,
-               d060609,
-               d060704,
-               d060705,
-               d060706,
-               d060707,
-               d060708,
-               d060709,
-               d060805,
-               d060806,
-               d060807,
-               d060808,
-               d060809,
-               d060905,
-               d060906,
-               d060907,
-               d060908,
-               d060909,
-               d070104,
-               d070105,
-               d070106,
-               d070107,
-               d070204,
-               d070205,
-               d070206,
-               d070207,
-               d070304,
-               d070305,
-               d070306,
-               d070307,
-               d070405,
-               d070406,
-               d070407,
-               d070504,
-               d070505,
-               d070506,
-               d070507,
-               d070508,
-               d070604,
-               d070605,
-               d070606,
-               d070607,
-               d070608,
-               d070609,
-               d070704,
-               d070705,
-               d070706,
-               d070707,
-               d070708,
-               d070709,
-               d070710,
-               d070805,
-               d070806,
-               d070807,
-               d070808,
-               d070809,
-               d070810,
-               d070905,
-               d070906,
-               d070907,
-               d070908,
-               d070909,
-               d070910,
-               d071010,
-               d071007,
-               d071008,
-               d071009,
-               d080105,
-               d080106,
-               d080107,
-               d080205,
-               d080206,
-               d080207,
-               d080305,
-               d080306,
-               d080307,
-               d080405,
-               d080406,
-               d080407,
-               d080505,
-               d080506,
-               d080507,
-               d080508,
-               d080605,
-               d080606,
-               d080607,
-               d080608,
-               d080609,
-               d080705,
-               d080706,
-               d080707,
-               d080708,
-               d080709,
-               d080710,
-               d080805,
-               d080806,
-               d080807,
-               d080808,
-               d080809,
-               d080810,
-               d080811,
-               d080910,
-               d080911,
-               d080905,
-               d080906,
-               d080907,
-               d080908,
-               d080909,
-               d081010,
-               d081011,
-               d081007,
-               d081008,
-               d081009,
-               d081110,
-               d081111,
-               d081108,
-               d081109,
-               d090105,
-               d090106,
-               d090107,
-               d090205,
-               d090206,
-               d090207,
-               d090305,
-               d090306,
-               d090307,
-               d090405,
-               d090406,
-               d090407,
-               d090505,
-               d090506,
-               d090507,
-               d090508,
-               d090605,
-               d090606,
-               d090607,
-               d090608,
-               d090609,
-               d090705,
-               d090706,
-               d090707,
-               d090708,
-               d090709,
-               d090710,
-               d090810,
-               d090811,
-               d090805,
-               d090806,
-               d090807,
-               d090808,
-               d090809,
-               d090910,
-               d090911,
-               d090912,
-               d090905,
-               d090906,
-               d090907,
-               d090908,
-               d090909,
-               d091010,
-               d091011,
-               d091012,
-               d091007,
-               d091008,
-               d091009,
-               d091110,
-               d091111,
-               d091112,
-               d091108,
-               d091109,
-               d091210,
-               d091211,
-               d091212,
-               d091209,
-               di_im3_im3,
-               di_im3_im2,
-               di_im3_im1,
-               di_im3_i_0,
-               di_im2_im3,
-               di_im2_im2,
-               di_im2_im1,
-               di_im2_i_0,
-               di_im2_ip1,
-               di_im1_im3,
-               di_im1_im2,
-               di_im1_im1,
-               di_im1_i_0,
-               di_im1_ip1,
-               di_im1_ip2,
-               di_i_0_im3,
-               di_i_0_im2,
-               di_i_0_im1,
-               di_i_0_i_0,
-               di_i_0_ip1,
-               di_i_0_ip2,
-               di_i_0_ip3)
+        new{T}(
+            d010101,
+            d010102,
+            d010103,
+            d010104,
+            d010105,
+            d010106,
+            d010107,
+            d010201,
+            d010203,
+            d010204,
+            d010205,
+            d010206,
+            d010207,
+            d010301,
+            d010302,
+            d010304,
+            d010305,
+            d010306,
+            d010307,
+            d010401,
+            d010402,
+            d010403,
+            d010405,
+            d010406,
+            d010407,
+            d010501,
+            d010502,
+            d010503,
+            d010504,
+            d010505,
+            d010506,
+            d010507,
+            d010601,
+            d010602,
+            d010603,
+            d010604,
+            d010605,
+            d010606,
+            d010607,
+            d010704,
+            d010705,
+            d010706,
+            d010707,
+            d010805,
+            d010806,
+            d010807,
+            d010905,
+            d010906,
+            d010907,
+            d020101,
+            d020103,
+            d020104,
+            d020105,
+            d020106,
+            d020107,
+            d020201,
+            d020203,
+            d020204,
+            d020205,
+            d020206,
+            d020207,
+            d020301,
+            d020304,
+            d020305,
+            d020306,
+            d020307,
+            d020401,
+            d020403,
+            d020405,
+            d020406,
+            d020407,
+            d020501,
+            d020503,
+            d020504,
+            d020505,
+            d020506,
+            d020507,
+            d020601,
+            d020603,
+            d020604,
+            d020605,
+            d020606,
+            d020607,
+            d020704,
+            d020705,
+            d020706,
+            d020707,
+            d020805,
+            d020806,
+            d020807,
+            d020905,
+            d020906,
+            d020907,
+            d030101,
+            d030102,
+            d030104,
+            d030105,
+            d030106,
+            d030107,
+            d030201,
+            d030204,
+            d030205,
+            d030206,
+            d030207,
+            d030301,
+            d030302,
+            d030304,
+            d030305,
+            d030306,
+            d030307,
+            d030401,
+            d030402,
+            d030405,
+            d030406,
+            d030407,
+            d030501,
+            d030502,
+            d030504,
+            d030505,
+            d030506,
+            d030507,
+            d030601,
+            d030602,
+            d030604,
+            d030605,
+            d030606,
+            d030607,
+            d030704,
+            d030705,
+            d030706,
+            d030707,
+            d030805,
+            d030806,
+            d030807,
+            d030905,
+            d030906,
+            d030907,
+            d040101,
+            d040102,
+            d040103,
+            d040105,
+            d040106,
+            d040107,
+            d040201,
+            d040203,
+            d040205,
+            d040206,
+            d040207,
+            d040301,
+            d040302,
+            d040305,
+            d040306,
+            d040307,
+            d040401,
+            d040402,
+            d040403,
+            d040405,
+            d040406,
+            d040407,
+            d040501,
+            d040502,
+            d040503,
+            d040505,
+            d040506,
+            d040507,
+            d040601,
+            d040602,
+            d040603,
+            d040605,
+            d040606,
+            d040607,
+            d040705,
+            d040706,
+            d040707,
+            d040805,
+            d040806,
+            d040807,
+            d040905,
+            d040906,
+            d040907,
+            d050101,
+            d050102,
+            d050103,
+            d050104,
+            d050105,
+            d050106,
+            d050107,
+            d050201,
+            d050203,
+            d050204,
+            d050205,
+            d050206,
+            d050207,
+            d050301,
+            d050302,
+            d050304,
+            d050305,
+            d050306,
+            d050307,
+            d050401,
+            d050402,
+            d050403,
+            d050405,
+            d050406,
+            d050407,
+            d050501,
+            d050502,
+            d050503,
+            d050504,
+            d050505,
+            d050506,
+            d050507,
+            d050508,
+            d050601,
+            d050602,
+            d050603,
+            d050604,
+            d050605,
+            d050606,
+            d050607,
+            d050608,
+            d050704,
+            d050705,
+            d050706,
+            d050707,
+            d050708,
+            d050805,
+            d050806,
+            d050807,
+            d050808,
+            d050905,
+            d050906,
+            d050907,
+            d050908,
+            d060101,
+            d060102,
+            d060103,
+            d060104,
+            d060105,
+            d060106,
+            d060107,
+            d060201,
+            d060203,
+            d060204,
+            d060205,
+            d060206,
+            d060207,
+            d060301,
+            d060302,
+            d060304,
+            d060305,
+            d060306,
+            d060307,
+            d060401,
+            d060402,
+            d060403,
+            d060405,
+            d060406,
+            d060407,
+            d060501,
+            d060502,
+            d060503,
+            d060504,
+            d060505,
+            d060506,
+            d060507,
+            d060508,
+            d060601,
+            d060602,
+            d060603,
+            d060604,
+            d060605,
+            d060606,
+            d060607,
+            d060608,
+            d060609,
+            d060704,
+            d060705,
+            d060706,
+            d060707,
+            d060708,
+            d060709,
+            d060805,
+            d060806,
+            d060807,
+            d060808,
+            d060809,
+            d060905,
+            d060906,
+            d060907,
+            d060908,
+            d060909,
+            d070104,
+            d070105,
+            d070106,
+            d070107,
+            d070204,
+            d070205,
+            d070206,
+            d070207,
+            d070304,
+            d070305,
+            d070306,
+            d070307,
+            d070405,
+            d070406,
+            d070407,
+            d070504,
+            d070505,
+            d070506,
+            d070507,
+            d070508,
+            d070604,
+            d070605,
+            d070606,
+            d070607,
+            d070608,
+            d070609,
+            d070704,
+            d070705,
+            d070706,
+            d070707,
+            d070708,
+            d070709,
+            d070710,
+            d070805,
+            d070806,
+            d070807,
+            d070808,
+            d070809,
+            d070810,
+            d070905,
+            d070906,
+            d070907,
+            d070908,
+            d070909,
+            d070910,
+            d071010,
+            d071007,
+            d071008,
+            d071009,
+            d080105,
+            d080106,
+            d080107,
+            d080205,
+            d080206,
+            d080207,
+            d080305,
+            d080306,
+            d080307,
+            d080405,
+            d080406,
+            d080407,
+            d080505,
+            d080506,
+            d080507,
+            d080508,
+            d080605,
+            d080606,
+            d080607,
+            d080608,
+            d080609,
+            d080705,
+            d080706,
+            d080707,
+            d080708,
+            d080709,
+            d080710,
+            d080805,
+            d080806,
+            d080807,
+            d080808,
+            d080809,
+            d080810,
+            d080811,
+            d080910,
+            d080911,
+            d080905,
+            d080906,
+            d080907,
+            d080908,
+            d080909,
+            d081010,
+            d081011,
+            d081007,
+            d081008,
+            d081009,
+            d081110,
+            d081111,
+            d081108,
+            d081109,
+            d090105,
+            d090106,
+            d090107,
+            d090205,
+            d090206,
+            d090207,
+            d090305,
+            d090306,
+            d090307,
+            d090405,
+            d090406,
+            d090407,
+            d090505,
+            d090506,
+            d090507,
+            d090508,
+            d090605,
+            d090606,
+            d090607,
+            d090608,
+            d090609,
+            d090705,
+            d090706,
+            d090707,
+            d090708,
+            d090709,
+            d090710,
+            d090810,
+            d090811,
+            d090805,
+            d090806,
+            d090807,
+            d090808,
+            d090809,
+            d090910,
+            d090911,
+            d090912,
+            d090905,
+            d090906,
+            d090907,
+            d090908,
+            d090909,
+            d091010,
+            d091011,
+            d091012,
+            d091007,
+            d091008,
+            d091009,
+            d091110,
+            d091111,
+            d091112,
+            d091108,
+            d091109,
+            d091210,
+            d091211,
+            d091212,
+            d091209,
+            di_im3_im3,
+            di_im3_im2,
+            di_im3_im1,
+            di_im3_i_0,
+            di_im2_im3,
+            di_im2_im2,
+            di_im2_im1,
+            di_im2_i_0,
+            di_im2_ip1,
+            di_im1_im3,
+            di_im1_im2,
+            di_im1_im1,
+            di_im1_i_0,
+            di_im1_ip1,
+            di_im1_ip2,
+            di_i_0_im3,
+            di_i_0_im2,
+            di_i_0_im1,
+            di_i_0_i_0,
+            di_i_0_ip1,
+            di_i_0_ip2,
+            di_i_0_ip3,
+        )
     end
 end
 
@@ -3280,12 +3449,14 @@ Base.checkbounds(::Type{Bool}, u::AbstractVector, ::Mattsson2012Cache6) = length
 left_length(::Mattsson2012Cache6) = 9
 right_length(::Mattsson2012Cache6) = 9
 
-function convolve_boundary_coefficients!(dest::AbstractVector,
-                                         cache::Mattsson2012Cache6,
-                                         u::AbstractVector,
-                                         b::AbstractVector,
-                                         α,
-                                         ::SafeMode)
+function convolve_boundary_coefficients!(
+    dest::AbstractVector,
+    cache::Mattsson2012Cache6,
+    u::AbstractVector,
+    b::AbstractVector,
+    α,
+    ::SafeMode,
+)
     @unpack d010101,
     d010102,
     d010103,
@@ -3746,246 +3917,331 @@ function convolve_boundary_coefficients!(dest::AbstractVector,
         #b8 = b[8]
         #b9 = b[9]
 
-        dest[1] = α * ((d010101 * b[1] +
+        dest[1] =
+            α * (
+                (
+                    d010101 * b[1] +
                     d010102 * b[2] +
                     d010103 * b[3] +
                     d010104 * b[4] +
                     d010105 * b[5] +
                     d010106 * b[6] +
-                    d010107 * b[7]) * u[1] +
-                   (d010201 * b[1] +
+                    d010107 * b[7]
+                ) * u[1] +
+                (
+                    d010201 * b[1] +
                     d010203 * b[3] +
                     d010204 * b[4] +
                     d010205 * b[5] +
                     d010206 * b[6] +
-                    d010207 * b[7]) * u[2] +
-                   (d010301 * b[1] +
+                    d010207 * b[7]
+                ) * u[2] +
+                (
+                    d010301 * b[1] +
                     d010302 * b[2] +
                     d010304 * b[4] +
                     d010305 * b[5] +
                     d010306 * b[6] +
-                    d010307 * b[7]) * u[3] +
-                   (d010401 * b[1] +
+                    d010307 * b[7]
+                ) * u[3] +
+                (
+                    d010401 * b[1] +
                     d010402 * b[2] +
                     d010403 * b[3] +
                     d010405 * b[5] +
                     d010406 * b[6] +
-                    d010407 * b[7]) * u[4] +
-                   (d010501 * b[1] +
+                    d010407 * b[7]
+                ) * u[4] +
+                (
+                    d010501 * b[1] +
                     d010502 * b[2] +
                     d010503 * b[3] +
                     d010504 * b[4] +
                     d010505 * b[5] +
                     d010506 * b[6] +
-                    d010507 * b[7]) * u[5] +
-                   (d010601 * b[1] +
+                    d010507 * b[7]
+                ) * u[5] +
+                (
+                    d010601 * b[1] +
                     d010602 * b[2] +
                     d010603 * b[3] +
                     d010604 * b[4] +
                     d010605 * b[5] +
                     d010606 * b[6] +
-                    d010607 * b[7]) * u[6] +
-                   (d010704 * b[4] + d010705 * b[5] + d010706 * b[6] + d010707 * b[7]) *
-                   u[7] +
-                   (d010805 * b[5] + d010806 * b[6] + d010807 * b[7]) * u[8] +
-                   (d010905 * b[5] + d010906 * b[6] + d010907 * b[7]) * u[9])
-        dest[2] = α * ((d020101 * b[1] +
+                    d010607 * b[7]
+                ) * u[6] +
+                (d010704 * b[4] + d010705 * b[5] + d010706 * b[6] + d010707 * b[7]) * u[7] +
+                (d010805 * b[5] + d010806 * b[6] + d010807 * b[7]) * u[8] +
+                (d010905 * b[5] + d010906 * b[6] + d010907 * b[7]) * u[9]
+            )
+        dest[2] =
+            α * (
+                (
+                    d020101 * b[1] +
                     d020103 * b[3] +
                     d020104 * b[4] +
                     d020105 * b[5] +
                     d020106 * b[6] +
-                    d020107 * b[7]) * u[1] +
-                   (d020201 * b[1] +
+                    d020107 * b[7]
+                ) * u[1] +
+                (
+                    d020201 * b[1] +
                     d020203 * b[3] +
                     d020204 * b[4] +
                     d020205 * b[5] +
                     d020206 * b[6] +
-                    d020207 * b[7]) * u[2] +
-                   (d020301 * b[1] +
+                    d020207 * b[7]
+                ) * u[2] +
+                (
+                    d020301 * b[1] +
                     d020304 * b[4] +
                     d020305 * b[5] +
                     d020306 * b[6] +
-                    d020307 * b[7]) * u[3] +
-                   (d020401 * b[1] +
+                    d020307 * b[7]
+                ) * u[3] +
+                (
+                    d020401 * b[1] +
                     d020403 * b[3] +
                     d020405 * b[5] +
                     d020406 * b[6] +
-                    d020407 * b[7]) * u[4] +
-                   (d020501 * b[1] +
+                    d020407 * b[7]
+                ) * u[4] +
+                (
+                    d020501 * b[1] +
                     d020503 * b[3] +
                     d020504 * b[4] +
                     d020505 * b[5] +
                     d020506 * b[6] +
-                    d020507 * b[7]) * u[5] +
-                   (d020601 * b[1] +
+                    d020507 * b[7]
+                ) * u[5] +
+                (
+                    d020601 * b[1] +
                     d020603 * b[3] +
                     d020604 * b[4] +
                     d020605 * b[5] +
                     d020606 * b[6] +
-                    d020607 * b[7]) * u[6] +
-                   (d020704 * b[4] + d020705 * b[5] + d020706 * b[6] + d020707 * b[7]) *
-                   u[7] +
-                   (d020805 * b[5] + d020806 * b[6] + d020807 * b[7]) * u[8] +
-                   (d020905 * b[5] + d020906 * b[6] + d020907 * b[7]) * u[9])
-        dest[3] = α * ((d030101 * b[1] +
+                    d020607 * b[7]
+                ) * u[6] +
+                (d020704 * b[4] + d020705 * b[5] + d020706 * b[6] + d020707 * b[7]) * u[7] +
+                (d020805 * b[5] + d020806 * b[6] + d020807 * b[7]) * u[8] +
+                (d020905 * b[5] + d020906 * b[6] + d020907 * b[7]) * u[9]
+            )
+        dest[3] =
+            α * (
+                (
+                    d030101 * b[1] +
                     d030102 * b[2] +
                     d030104 * b[4] +
                     d030105 * b[5] +
                     d030106 * b[6] +
-                    d030107 * b[7]) * u[1] +
-                   (d030201 * b[1] +
+                    d030107 * b[7]
+                ) * u[1] +
+                (
+                    d030201 * b[1] +
                     d030204 * b[4] +
                     d030205 * b[5] +
                     d030206 * b[6] +
-                    d030207 * b[7]) * u[2] +
-                   (d030301 * b[1] +
+                    d030207 * b[7]
+                ) * u[2] +
+                (
+                    d030301 * b[1] +
                     d030302 * b[2] +
                     d030304 * b[4] +
                     d030305 * b[5] +
                     d030306 * b[6] +
-                    d030307 * b[7]) * u[3] +
-                   (d030401 * b[1] +
+                    d030307 * b[7]
+                ) * u[3] +
+                (
+                    d030401 * b[1] +
                     d030402 * b[2] +
                     d030405 * b[5] +
                     d030406 * b[6] +
-                    d030407 * b[7]) * u[4] +
-                   (d030501 * b[1] +
+                    d030407 * b[7]
+                ) * u[4] +
+                (
+                    d030501 * b[1] +
                     d030502 * b[2] +
                     d030504 * b[4] +
                     d030505 * b[5] +
                     d030506 * b[6] +
-                    d030507 * b[7]) * u[5] +
-                   (d030601 * b[1] +
+                    d030507 * b[7]
+                ) * u[5] +
+                (
+                    d030601 * b[1] +
                     d030602 * b[2] +
                     d030604 * b[4] +
                     d030605 * b[5] +
                     d030606 * b[6] +
-                    d030607 * b[7]) * u[6] +
-                   (d030704 * b[4] + d030705 * b[5] + d030706 * b[6] + d030707 * b[7]) *
-                   u[7] +
-                   (d030805 * b[5] + d030806 * b[6] + d030807 * b[7]) * u[8] +
-                   (d030905 * b[5] + d030906 * b[6] + d030907 * b[7]) * u[9])
-        dest[4] = α * ((d040101 * b[1] +
+                    d030607 * b[7]
+                ) * u[6] +
+                (d030704 * b[4] + d030705 * b[5] + d030706 * b[6] + d030707 * b[7]) * u[7] +
+                (d030805 * b[5] + d030806 * b[6] + d030807 * b[7]) * u[8] +
+                (d030905 * b[5] + d030906 * b[6] + d030907 * b[7]) * u[9]
+            )
+        dest[4] =
+            α * (
+                (
+                    d040101 * b[1] +
                     d040102 * b[2] +
                     d040103 * b[3] +
                     d040105 * b[5] +
                     d040106 * b[6] +
-                    d040107 * b[7]) * u[1] +
-                   (d040201 * b[1] +
+                    d040107 * b[7]
+                ) * u[1] +
+                (
+                    d040201 * b[1] +
                     d040203 * b[3] +
                     d040205 * b[5] +
                     d040206 * b[6] +
-                    d040207 * b[7]) * u[2] +
-                   (d040301 * b[1] +
+                    d040207 * b[7]
+                ) * u[2] +
+                (
+                    d040301 * b[1] +
                     d040302 * b[2] +
                     d040305 * b[5] +
                     d040306 * b[6] +
-                    d040307 * b[7]) * u[3] +
-                   (d040401 * b[1] +
+                    d040307 * b[7]
+                ) * u[3] +
+                (
+                    d040401 * b[1] +
                     d040402 * b[2] +
                     d040403 * b[3] +
                     d040405 * b[5] +
                     d040406 * b[6] +
-                    d040407 * b[7]) * u[4] +
-                   (d040501 * b[1] +
+                    d040407 * b[7]
+                ) * u[4] +
+                (
+                    d040501 * b[1] +
                     d040502 * b[2] +
                     d040503 * b[3] +
                     d040505 * b[5] +
                     d040506 * b[6] +
-                    d040507 * b[7]) * u[5] +
-                   (d040601 * b[1] +
+                    d040507 * b[7]
+                ) * u[5] +
+                (
+                    d040601 * b[1] +
                     d040602 * b[2] +
                     d040603 * b[3] +
                     d040605 * b[5] +
                     d040606 * b[6] +
-                    d040607 * b[7]) * u[6] +
-                   (d040705 * b[5] + d040706 * b[6] + d040707 * b[7]) * u[7] +
-                   (d040805 * b[5] + d040806 * b[6] + d040807 * b[7]) * u[8] +
-                   (d040905 * b[5] + d040906 * b[6] + d040907 * b[7]) * u[9])
-        dest[5] = α * ((d050101 * b[1] +
+                    d040607 * b[7]
+                ) * u[6] +
+                (d040705 * b[5] + d040706 * b[6] + d040707 * b[7]) * u[7] +
+                (d040805 * b[5] + d040806 * b[6] + d040807 * b[7]) * u[8] +
+                (d040905 * b[5] + d040906 * b[6] + d040907 * b[7]) * u[9]
+            )
+        dest[5] =
+            α * (
+                (
+                    d050101 * b[1] +
                     d050102 * b[2] +
                     d050103 * b[3] +
                     d050104 * b[4] +
                     d050105 * b[5] +
                     d050106 * b[6] +
-                    d050107 * b[7]) * u[1] +
-                   (d050201 * b[1] +
+                    d050107 * b[7]
+                ) * u[1] +
+                (
+                    d050201 * b[1] +
                     d050203 * b[3] +
                     d050204 * b[4] +
                     d050205 * b[5] +
                     d050206 * b[6] +
-                    d050207 * b[7]) * u[2] +
-                   (d050301 * b[1] +
+                    d050207 * b[7]
+                ) * u[2] +
+                (
+                    d050301 * b[1] +
                     d050302 * b[2] +
                     d050304 * b[4] +
                     d050305 * b[5] +
                     d050306 * b[6] +
-                    d050307 * b[7]) * u[3] +
-                   (d050401 * b[1] +
+                    d050307 * b[7]
+                ) * u[3] +
+                (
+                    d050401 * b[1] +
                     d050402 * b[2] +
                     d050403 * b[3] +
                     d050405 * b[5] +
                     d050406 * b[6] +
-                    d050407 * b[7]) * u[4] +
-                   (d050501 * b[1] +
+                    d050407 * b[7]
+                ) * u[4] +
+                (
+                    d050501 * b[1] +
                     d050502 * b[2] +
                     d050503 * b[3] +
                     d050504 * b[4] +
                     d050505 * b[5] +
                     d050506 * b[6] +
                     d050507 * b[7] +
-                    d050508 * b[8]) * u[5] +
-                   (d050601 * b[1] +
+                    d050508 * b[8]
+                ) * u[5] +
+                (
+                    d050601 * b[1] +
                     d050602 * b[2] +
                     d050603 * b[3] +
                     d050604 * b[4] +
                     d050605 * b[5] +
                     d050606 * b[6] +
                     d050607 * b[7] +
-                    d050608 * b[8]) * u[6] +
-                   (d050704 * b[4] +
+                    d050608 * b[8]
+                ) * u[6] +
+                (
+                    d050704 * b[4] +
                     d050705 * b[5] +
                     d050706 * b[6] +
                     d050707 * b[7] +
-                    d050708 * b[8]) * u[7] +
-                   (d050805 * b[5] + d050806 * b[6] + d050807 * b[7] + d050808 * b[8]) *
-                   u[8] +
-                   (d050905 * b[5] + d050906 * b[6] + d050907 * b[7] + d050908 * b[8]) *
-                   u[9])
-        dest[6] = α * ((d060101 * b[1] +
+                    d050708 * b[8]
+                ) * u[7] +
+                (d050805 * b[5] + d050806 * b[6] + d050807 * b[7] + d050808 * b[8]) * u[8] +
+                (d050905 * b[5] + d050906 * b[6] + d050907 * b[7] + d050908 * b[8]) * u[9]
+            )
+        dest[6] =
+            α * (
+                (
+                    d060101 * b[1] +
                     d060102 * b[2] +
                     d060103 * b[3] +
                     d060104 * b[4] +
                     d060105 * b[5] +
                     d060106 * b[6] +
-                    d060107 * b[7]) * u[1] +
-                   (d060201 * b[1] +
+                    d060107 * b[7]
+                ) * u[1] +
+                (
+                    d060201 * b[1] +
                     d060203 * b[3] +
                     d060204 * b[4] +
                     d060205 * b[5] +
                     d060206 * b[6] +
-                    d060207 * b[7]) * u[2] +
-                   (d060301 * b[1] +
+                    d060207 * b[7]
+                ) * u[2] +
+                (
+                    d060301 * b[1] +
                     d060302 * b[2] +
                     d060304 * b[4] +
                     d060305 * b[5] +
                     d060306 * b[6] +
-                    d060307 * b[7]) * u[3] +
-                   (d060401 * b[1] +
+                    d060307 * b[7]
+                ) * u[3] +
+                (
+                    d060401 * b[1] +
                     d060402 * b[2] +
                     d060403 * b[3] +
                     d060405 * b[5] +
                     d060406 * b[6] +
-                    d060407 * b[7]) * u[4] +
-                   (d060501 * b[1] +
+                    d060407 * b[7]
+                ) * u[4] +
+                (
+                    d060501 * b[1] +
                     d060502 * b[2] +
                     d060503 * b[3] +
                     d060504 * b[4] +
                     d060505 * b[5] +
                     d060506 * b[6] +
                     d060507 * b[7] +
-                    d060508 * b[8]) * u[5] +
-                   (d060601 * b[1] +
+                    d060508 * b[8]
+                ) * u[5] +
+                (
+                    d060601 * b[1] +
                     d060602 * b[2] +
                     d060603 * b[3] +
                     d060604 * b[4] +
@@ -3993,584 +4249,777 @@ function convolve_boundary_coefficients!(dest::AbstractVector,
                     d060606 * b[6] +
                     d060607 * b[7] +
                     d060608 * b[8] +
-                    d060609 * b[9]) * u[6] +
-                   (d060704 * b[4] +
+                    d060609 * b[9]
+                ) * u[6] +
+                (
+                    d060704 * b[4] +
                     d060705 * b[5] +
                     d060706 * b[6] +
                     d060707 * b[7] +
                     d060708 * b[8] +
-                    d060709 * b[9]) * u[7] +
-                   (d060805 * b[5] +
+                    d060709 * b[9]
+                ) * u[7] +
+                (
+                    d060805 * b[5] +
                     d060806 * b[6] +
                     d060807 * b[7] +
                     d060808 * b[8] +
-                    d060809 * b[9]) * u[8] +
-                   (d060905 * b[5] +
+                    d060809 * b[9]
+                ) * u[8] +
+                (
+                    d060905 * b[5] +
                     d060906 * b[6] +
                     d060907 * b[7] +
                     d060908 * b[8] +
-                    d060909 * b[9]) * u[9])
-        dest[7] = α * ((d070104 * b[4] + d070105 * b[5] + d070106 * b[6] + d070107 * b[7]) *
-                   u[1] +
-                   (d070204 * b[4] + d070205 * b[5] + d070206 * b[6] + d070207 * b[7]) *
-                   u[2] +
-                   (d070304 * b[4] + d070305 * b[5] + d070306 * b[6] + d070307 * b[7]) *
-                   u[3] +
-                   (d070405 * b[5] + d070406 * b[6] + d070407 * b[7]) * u[4] +
-                   (d070504 * b[4] +
+                    d060909 * b[9]
+                ) * u[9]
+            )
+        dest[7] =
+            α * (
+                (d070104 * b[4] + d070105 * b[5] + d070106 * b[6] + d070107 * b[7]) * u[1] +
+                (d070204 * b[4] + d070205 * b[5] + d070206 * b[6] + d070207 * b[7]) * u[2] +
+                (d070304 * b[4] + d070305 * b[5] + d070306 * b[6] + d070307 * b[7]) * u[3] +
+                (d070405 * b[5] + d070406 * b[6] + d070407 * b[7]) * u[4] +
+                (
+                    d070504 * b[4] +
                     d070505 * b[5] +
                     d070506 * b[6] +
                     d070507 * b[7] +
-                    d070508 * b[8]) * u[5] +
-                   (d070604 * b[4] +
+                    d070508 * b[8]
+                ) * u[5] +
+                (
+                    d070604 * b[4] +
                     d070605 * b[5] +
                     d070606 * b[6] +
                     d070607 * b[7] +
                     d070608 * b[8] +
-                    d070609 * b[9]) * u[6] +
-                   (d070704 * b[4] +
+                    d070609 * b[9]
+                ) * u[6] +
+                (
+                    d070704 * b[4] +
                     d070705 * b[5] +
                     d070706 * b[6] +
                     d070707 * b[7] +
                     d070708 * b[8] +
                     d070709 * b[9] +
-                    d070710 * b[10]) * u[7] +
-                   (d070805 * b[5] +
+                    d070710 * b[10]
+                ) * u[7] +
+                (
+                    d070805 * b[5] +
                     d070806 * b[6] +
                     d070807 * b[7] +
                     d070808 * b[8] +
                     d070809 * b[9] +
-                    d070810 * b[10]) * u[8] +
-                   (d070905 * b[5] +
+                    d070810 * b[10]
+                ) * u[8] +
+                (
+                    d070905 * b[5] +
                     d070906 * b[6] +
                     d070907 * b[7] +
                     d070908 * b[8] +
                     d070909 * b[9] +
-                    d070910 * b[10]) * u[9] +
-                   (d071010 * b[10] + d071007 * b[7] + d071008 * b[8] + d071009 * b[9]) *
-                   u[10])
-        dest[8] = α * ((d080105 * b[5] + d080106 * b[6] + d080107 * b[7]) * u[1] +
-                   (d080205 * b[5] + d080206 * b[6] + d080207 * b[7]) * u[2] +
-                   (d080305 * b[5] + d080306 * b[6] + d080307 * b[7]) * u[3] +
-                   (d080405 * b[5] + d080406 * b[6] + d080407 * b[7]) * u[4] +
-                   (d080505 * b[5] + d080506 * b[6] + d080507 * b[7] + d080508 * b[8]) *
-                   u[5] +
-                   (d080605 * b[5] +
+                    d070910 * b[10]
+                ) * u[9] +
+                (d071010 * b[10] + d071007 * b[7] + d071008 * b[8] + d071009 * b[9]) * u[10]
+            )
+        dest[8] =
+            α * (
+                (d080105 * b[5] + d080106 * b[6] + d080107 * b[7]) * u[1] +
+                (d080205 * b[5] + d080206 * b[6] + d080207 * b[7]) * u[2] +
+                (d080305 * b[5] + d080306 * b[6] + d080307 * b[7]) * u[3] +
+                (d080405 * b[5] + d080406 * b[6] + d080407 * b[7]) * u[4] +
+                (d080505 * b[5] + d080506 * b[6] + d080507 * b[7] + d080508 * b[8]) * u[5] +
+                (
+                    d080605 * b[5] +
                     d080606 * b[6] +
                     d080607 * b[7] +
                     d080608 * b[8] +
-                    d080609 * b[9]) * u[6] +
-                   (d080705 * b[5] +
+                    d080609 * b[9]
+                ) * u[6] +
+                (
+                    d080705 * b[5] +
                     d080706 * b[6] +
                     d080707 * b[7] +
                     d080708 * b[8] +
                     d080709 * b[9] +
-                    d080710 * b[10]) * u[7] +
-                   (d080805 * b[5] +
+                    d080710 * b[10]
+                ) * u[7] +
+                (
+                    d080805 * b[5] +
                     d080806 * b[6] +
                     d080807 * b[7] +
                     d080808 * b[8] +
                     d080809 * b[9] +
                     d080810 * b[10] +
-                    d080811 * b[11]) * u[8] +
-                   (d080910 * b[10] +
+                    d080811 * b[11]
+                ) * u[8] +
+                (
+                    d080910 * b[10] +
                     d080911 * b[11] +
                     d080905 * b[5] +
                     d080906 * b[6] +
                     d080907 * b[7] +
                     d080908 * b[8] +
-                    d080909 * b[9]) * u[9] +
-                   (d081010 * b[10] +
+                    d080909 * b[9]
+                ) * u[9] +
+                (
+                    d081010 * b[10] +
                     d081011 * b[11] +
                     d081007 * b[7] +
                     d081008 * b[8] +
-                    d081009 * b[9]) * u[10] +
-                   (d081110 * b[10] + d081111 * b[11] + d081108 * b[8] + d081109 * b[9]) *
-                   u[11])
-        dest[9] = α * ((d090105 * b[5] + d090106 * b[6] + d090107 * b[7]) * u[1] +
-                   (d090205 * b[5] + d090206 * b[6] + d090207 * b[7]) * u[2] +
-                   (d090305 * b[5] + d090306 * b[6] + d090307 * b[7]) * u[3] +
-                   (d090405 * b[5] + d090406 * b[6] + d090407 * b[7]) * u[4] +
-                   (d090505 * b[5] + d090506 * b[6] + d090507 * b[7] + d090508 * b[8]) *
-                   u[5] +
-                   (d090605 * b[5] +
+                    d081009 * b[9]
+                ) * u[10] +
+                (d081110 * b[10] + d081111 * b[11] + d081108 * b[8] + d081109 * b[9]) *
+                u[11]
+            )
+        dest[9] =
+            α * (
+                (d090105 * b[5] + d090106 * b[6] + d090107 * b[7]) * u[1] +
+                (d090205 * b[5] + d090206 * b[6] + d090207 * b[7]) * u[2] +
+                (d090305 * b[5] + d090306 * b[6] + d090307 * b[7]) * u[3] +
+                (d090405 * b[5] + d090406 * b[6] + d090407 * b[7]) * u[4] +
+                (d090505 * b[5] + d090506 * b[6] + d090507 * b[7] + d090508 * b[8]) * u[5] +
+                (
+                    d090605 * b[5] +
                     d090606 * b[6] +
                     d090607 * b[7] +
                     d090608 * b[8] +
-                    d090609 * b[9]) * u[6] +
-                   (d090705 * b[5] +
+                    d090609 * b[9]
+                ) * u[6] +
+                (
+                    d090705 * b[5] +
                     d090706 * b[6] +
                     d090707 * b[7] +
                     d090708 * b[8] +
                     d090709 * b[9] +
-                    d090710 * b[10]) * u[7] +
-                   (d090810 * b[10] +
+                    d090710 * b[10]
+                ) * u[7] +
+                (
+                    d090810 * b[10] +
                     d090811 * b[11] +
                     d090805 * b[5] +
                     d090806 * b[6] +
                     d090807 * b[7] +
                     d090808 * b[8] +
-                    d090809 * b[9]) * u[8] +
-                   (d090910 * b[10] +
+                    d090809 * b[9]
+                ) * u[8] +
+                (
+                    d090910 * b[10] +
                     d090911 * b[11] +
                     d090912 * b[12] +
                     d090905 * b[5] +
                     d090906 * b[6] +
                     d090907 * b[7] +
                     d090908 * b[8] +
-                    d090909 * b[9]) * u[9] +
-                   (d091010 * b[10] +
+                    d090909 * b[9]
+                ) * u[9] +
+                (
+                    d091010 * b[10] +
                     d091011 * b[11] +
                     d091012 * b[12] +
                     d091007 * b[7] +
                     d091008 * b[8] +
-                    d091009 * b[9]) * u[10] +
-                   (d091110 * b[10] +
+                    d091009 * b[9]
+                ) * u[10] +
+                (
+                    d091110 * b[10] +
                     d091111 * b[11] +
                     d091112 * b[12] +
                     d091108 * b[8] +
-                    d091109 * b[9]) * u[11] +
-                   (d091210 * b[10] + d091211 * b[11] + d091212 * b[12] + d091209 * b[9]) *
-                   u[12])
+                    d091109 * b[9]
+                ) * u[11] +
+                (d091210 * b[10] + d091211 * b[11] + d091212 * b[12] + d091209 * b[9]) *
+                u[12]
+            )
 
-        dest[end] = α * ((d010101 * b[end] +
-                      d010102 * b[end - 1] +
-                      d010103 * b[end - 2] +
-                      d010104 * b[end - 3] +
-                      d010105 * b[end - 4] +
-                      d010106 * b[end - 5] +
-                      d010107 * b[end - 6]) * u[end] +
-                     (d010201 * b[end] +
-                      d010203 * b[end - 2] +
-                      d010204 * b[end - 3] +
-                      d010205 * b[end - 4] +
-                      d010206 * b[end - 5] +
-                      d010207 * b[end - 6]) * u[end - 1] +
-                     (d010301 * b[end] +
-                      d010302 * b[end - 1] +
-                      d010304 * b[end - 3] +
-                      d010305 * b[end - 4] +
-                      d010306 * b[end - 5] +
-                      d010307 * b[end - 6]) * u[end - 2] +
-                     (d010401 * b[end] +
-                      d010402 * b[end - 1] +
-                      d010403 * b[end - 2] +
-                      d010405 * b[end - 4] +
-                      d010406 * b[end - 5] +
-                      d010407 * b[end - 6]) * u[end - 3] +
-                     (d010501 * b[end] +
-                      d010502 * b[end - 1] +
-                      d010503 * b[end - 2] +
-                      d010504 * b[end - 3] +
-                      d010505 * b[end - 4] +
-                      d010506 * b[end - 5] +
-                      d010507 * b[end - 6]) * u[end - 4] +
-                     (d010601 * b[end] +
-                      d010602 * b[end - 1] +
-                      d010603 * b[end - 2] +
-                      d010604 * b[end - 3] +
-                      d010605 * b[end - 4] +
-                      d010606 * b[end - 5] +
-                      d010607 * b[end - 6]) * u[end - 5] +
-                     (d010704 * b[end - 3] +
-                      d010705 * b[end - 4] +
-                      d010706 * b[end - 5] +
-                      d010707 * b[end - 6]) * u[end - 6] +
-                     (d010805 * b[end - 4] + d010806 * b[end - 5] + d010807 * b[end - 6]) *
-                     u[end - 7] +
-                     (d010905 * b[end - 4] + d010906 * b[end - 5] + d010907 * b[end - 6]) *
-                     u[end - 8])
-        dest[end - 1] = α * ((d020101 * b[end] +
-                          d020103 * b[end - 2] +
-                          d020104 * b[end - 3] +
-                          d020105 * b[end - 4] +
-                          d020106 * b[end - 5] +
-                          d020107 * b[end - 6]) * u[end] +
-                         (d020201 * b[end] +
-                          d020203 * b[end - 2] +
-                          d020204 * b[end - 3] +
-                          d020205 * b[end - 4] +
-                          d020206 * b[end - 5] +
-                          d020207 * b[end - 6]) * u[end - 1] +
-                         (d020301 * b[end] +
-                          d020304 * b[end - 3] +
-                          d020305 * b[end - 4] +
-                          d020306 * b[end - 5] +
-                          d020307 * b[end - 6]) * u[end - 2] +
-                         (d020401 * b[end] +
-                          d020403 * b[end - 2] +
-                          d020405 * b[end - 4] +
-                          d020406 * b[end - 5] +
-                          d020407 * b[end - 6]) * u[end - 3] +
-                         (d020501 * b[end] +
-                          d020503 * b[end - 2] +
-                          d020504 * b[end - 3] +
-                          d020505 * b[end - 4] +
-                          d020506 * b[end - 5] +
-                          d020507 * b[end - 6]) * u[end - 4] +
-                         (d020601 * b[end] +
-                          d020603 * b[end - 2] +
-                          d020604 * b[end - 3] +
-                          d020605 * b[end - 4] +
-                          d020606 * b[end - 5] +
-                          d020607 * b[end - 6]) * u[end - 5] +
-                         (d020704 * b[end - 3] +
-                          d020705 * b[end - 4] +
-                          d020706 * b[end - 5] +
-                          d020707 * b[end - 6]) * u[end - 6] +
-                         (d020805 * b[end - 4] + d020806 * b[end - 5] +
-                          d020807 * b[end - 6]) * u[end - 7] +
-                         (d020905 * b[end - 4] + d020906 * b[end - 5] +
-                          d020907 * b[end - 6]) * u[end - 8])
-        dest[end - 2] = α * ((d030101 * b[end] +
-                          d030102 * b[end - 1] +
-                          d030104 * b[end - 3] +
-                          d030105 * b[end - 4] +
-                          d030106 * b[end - 5] +
-                          d030107 * b[end - 6]) * u[end] +
-                         (d030201 * b[end] +
-                          d030204 * b[end - 3] +
-                          d030205 * b[end - 4] +
-                          d030206 * b[end - 5] +
-                          d030207 * b[end - 6]) * u[end - 1] +
-                         (d030301 * b[end] +
-                          d030302 * b[end - 1] +
-                          d030304 * b[end - 3] +
-                          d030305 * b[end - 4] +
-                          d030306 * b[end - 5] +
-                          d030307 * b[end - 6]) * u[end - 2] +
-                         (d030401 * b[end] +
-                          d030402 * b[end - 1] +
-                          d030405 * b[end - 4] +
-                          d030406 * b[end - 5] +
-                          d030407 * b[end - 6]) * u[end - 3] +
-                         (d030501 * b[end] +
-                          d030502 * b[end - 1] +
-                          d030504 * b[end - 3] +
-                          d030505 * b[end - 4] +
-                          d030506 * b[end - 5] +
-                          d030507 * b[end - 6]) * u[end - 4] +
-                         (d030601 * b[end] +
-                          d030602 * b[end - 1] +
-                          d030604 * b[end - 3] +
-                          d030605 * b[end - 4] +
-                          d030606 * b[end - 5] +
-                          d030607 * b[end - 6]) * u[end - 5] +
-                         (d030704 * b[end - 3] +
-                          d030705 * b[end - 4] +
-                          d030706 * b[end - 5] +
-                          d030707 * b[end - 6]) * u[end - 6] +
-                         (d030805 * b[end - 4] + d030806 * b[end - 5] +
-                          d030807 * b[end - 6]) * u[end - 7] +
-                         (d030905 * b[end - 4] + d030906 * b[end - 5] +
-                          d030907 * b[end - 6]) * u[end - 8])
-        dest[end - 3] = α * ((d040101 * b[end] +
-                          d040102 * b[end - 1] +
-                          d040103 * b[end - 2] +
-                          d040105 * b[end - 4] +
-                          d040106 * b[end - 5] +
-                          d040107 * b[end - 6]) * u[end] +
-                         (d040201 * b[end] +
-                          d040203 * b[end - 2] +
-                          d040205 * b[end - 4] +
-                          d040206 * b[end - 5] +
-                          d040207 * b[end - 6]) * u[end - 1] +
-                         (d040301 * b[end] +
-                          d040302 * b[end - 1] +
-                          d040305 * b[end - 4] +
-                          d040306 * b[end - 5] +
-                          d040307 * b[end - 6]) * u[end - 2] +
-                         (d040401 * b[end] +
-                          d040402 * b[end - 1] +
-                          d040403 * b[end - 2] +
-                          d040405 * b[end - 4] +
-                          d040406 * b[end - 5] +
-                          d040407 * b[end - 6]) * u[end - 3] +
-                         (d040501 * b[end] +
-                          d040502 * b[end - 1] +
-                          d040503 * b[end - 2] +
-                          d040505 * b[end - 4] +
-                          d040506 * b[end - 5] +
-                          d040507 * b[end - 6]) * u[end - 4] +
-                         (d040601 * b[end] +
-                          d040602 * b[end - 1] +
-                          d040603 * b[end - 2] +
-                          d040605 * b[end - 4] +
-                          d040606 * b[end - 5] +
-                          d040607 * b[end - 6]) * u[end - 5] +
-                         (d040705 * b[end - 4] + d040706 * b[end - 5] +
-                          d040707 * b[end - 6]) * u[end - 6] +
-                         (d040805 * b[end - 4] + d040806 * b[end - 5] +
-                          d040807 * b[end - 6]) * u[end - 7] +
-                         (d040905 * b[end - 4] + d040906 * b[end - 5] +
-                          d040907 * b[end - 6]) * u[end - 8])
-        dest[end - 4] = α * ((d050101 * b[end] +
-                          d050102 * b[end - 1] +
-                          d050103 * b[end - 2] +
-                          d050104 * b[end - 3] +
-                          d050105 * b[end - 4] +
-                          d050106 * b[end - 5] +
-                          d050107 * b[end - 6]) * u[end] +
-                         (d050201 * b[end] +
-                          d050203 * b[end - 2] +
-                          d050204 * b[end - 3] +
-                          d050205 * b[end - 4] +
-                          d050206 * b[end - 5] +
-                          d050207 * b[end - 6]) * u[end - 1] +
-                         (d050301 * b[end] +
-                          d050302 * b[end - 1] +
-                          d050304 * b[end - 3] +
-                          d050305 * b[end - 4] +
-                          d050306 * b[end - 5] +
-                          d050307 * b[end - 6]) * u[end - 2] +
-                         (d050401 * b[end] +
-                          d050402 * b[end - 1] +
-                          d050403 * b[end - 2] +
-                          d050405 * b[end - 4] +
-                          d050406 * b[end - 5] +
-                          d050407 * b[end - 6]) * u[end - 3] +
-                         (d050501 * b[end] +
-                          d050502 * b[end - 1] +
-                          d050503 * b[end - 2] +
-                          d050504 * b[end - 3] +
-                          d050505 * b[end - 4] +
-                          d050506 * b[end - 5] +
-                          d050507 * b[end - 6] +
-                          d050508 * b[end - 7]) * u[end - 4] +
-                         (d050601 * b[end] +
-                          d050602 * b[end - 1] +
-                          d050603 * b[end - 2] +
-                          d050604 * b[end - 3] +
-                          d050605 * b[end - 4] +
-                          d050606 * b[end - 5] +
-                          d050607 * b[end - 6] +
-                          d050608 * b[end - 7]) * u[end - 5] +
-                         (d050704 * b[end - 3] +
-                          d050705 * b[end - 4] +
-                          d050706 * b[end - 5] +
-                          d050707 * b[end - 6] +
-                          d050708 * b[end - 7]) * u[end - 6] +
-                         (d050805 * b[end - 4] +
-                          d050806 * b[end - 5] +
-                          d050807 * b[end - 6] +
-                          d050808 * b[end - 7]) * u[end - 7] +
-                         (d050905 * b[end - 4] +
-                          d050906 * b[end - 5] +
-                          d050907 * b[end - 6] +
-                          d050908 * b[end - 7]) * u[end - 8])
-        dest[end - 5] = α * ((d060101 * b[end] +
-                          d060102 * b[end - 1] +
-                          d060103 * b[end - 2] +
-                          d060104 * b[end - 3] +
-                          d060105 * b[end - 4] +
-                          d060106 * b[end - 5] +
-                          d060107 * b[end - 6]) * u[end] +
-                         (d060201 * b[end] +
-                          d060203 * b[end - 2] +
-                          d060204 * b[end - 3] +
-                          d060205 * b[end - 4] +
-                          d060206 * b[end - 5] +
-                          d060207 * b[end - 6]) * u[end - 1] +
-                         (d060301 * b[end] +
-                          d060302 * b[end - 1] +
-                          d060304 * b[end - 3] +
-                          d060305 * b[end - 4] +
-                          d060306 * b[end - 5] +
-                          d060307 * b[end - 6]) * u[end - 2] +
-                         (d060401 * b[end] +
-                          d060402 * b[end - 1] +
-                          d060403 * b[end - 2] +
-                          d060405 * b[end - 4] +
-                          d060406 * b[end - 5] +
-                          d060407 * b[end - 6]) * u[end - 3] +
-                         (d060501 * b[end] +
-                          d060502 * b[end - 1] +
-                          d060503 * b[end - 2] +
-                          d060504 * b[end - 3] +
-                          d060505 * b[end - 4] +
-                          d060506 * b[end - 5] +
-                          d060507 * b[end - 6] +
-                          d060508 * b[end - 7]) * u[end - 4] +
-                         (d060601 * b[end] +
-                          d060602 * b[end - 1] +
-                          d060603 * b[end - 2] +
-                          d060604 * b[end - 3] +
-                          d060605 * b[end - 4] +
-                          d060606 * b[end - 5] +
-                          d060607 * b[end - 6] +
-                          d060608 * b[end - 7] +
-                          d060609 * b[end - 8]) * u[end - 5] +
-                         (d060704 * b[end - 3] +
-                          d060705 * b[end - 4] +
-                          d060706 * b[end - 5] +
-                          d060707 * b[end - 6] +
-                          d060708 * b[end - 7] +
-                          d060709 * b[end - 8]) * u[end - 6] +
-                         (d060805 * b[end - 4] +
-                          d060806 * b[end - 5] +
-                          d060807 * b[end - 6] +
-                          d060808 * b[end - 7] +
-                          d060809 * b[end - 8]) * u[end - 7] +
-                         (d060905 * b[end - 4] +
-                          d060906 * b[end - 5] +
-                          d060907 * b[end - 6] +
-                          d060908 * b[end - 7] +
-                          d060909 * b[end - 8]) * u[end - 8])
-        dest[end - 6] = α * ((d070104 * b[end - 3] +
-                          d070105 * b[end - 4] +
-                          d070106 * b[end - 5] +
-                          d070107 * b[end - 6]) * u[end] +
-                         (d070204 * b[end - 3] +
-                          d070205 * b[end - 4] +
-                          d070206 * b[end - 5] +
-                          d070207 * b[end - 6]) * u[end - 1] +
-                         (d070304 * b[end - 3] +
-                          d070305 * b[end - 4] +
-                          d070306 * b[end - 5] +
-                          d070307 * b[end - 6]) * u[end - 2] +
-                         (d070405 * b[end - 4] + d070406 * b[end - 5] +
-                          d070407 * b[end - 6]) * u[end - 3] +
-                         (d070504 * b[end - 3] +
-                          d070505 * b[end - 4] +
-                          d070506 * b[end - 5] +
-                          d070507 * b[end - 6] +
-                          d070508 * b[end - 7]) * u[end - 4] +
-                         (d070604 * b[end - 3] +
-                          d070605 * b[end - 4] +
-                          d070606 * b[end - 5] +
-                          d070607 * b[end - 6] +
-                          d070608 * b[end - 7] +
-                          d070609 * b[end - 8]) * u[end - 5] +
-                         (d070704 * b[end - 3] +
-                          d070705 * b[end - 4] +
-                          d070706 * b[end - 5] +
-                          d070707 * b[end - 6] +
-                          d070708 * b[end - 7] +
-                          d070709 * b[end - 8] +
-                          d070710 * b[end - 9]) * u[end - 6] +
-                         (d070805 * b[end - 4] +
-                          d070806 * b[end - 5] +
-                          d070807 * b[end - 6] +
-                          d070808 * b[end - 7] +
-                          d070809 * b[end - 8] +
-                          d070810 * b[end - 9]) * u[end - 7] +
-                         (d070905 * b[end - 4] +
-                          d070906 * b[end - 5] +
-                          d070907 * b[end - 6] +
-                          d070908 * b[end - 7] +
-                          d070909 * b[end - 8] +
-                          d070910 * b[end - 9]) * u[end - 8] +
-                         (d071010 * b[end - 9] +
-                          d071007 * b[end - 6] +
-                          d071008 * b[end - 7] +
-                          d071009 * b[end - 8]) * u[end - 9])
-        dest[end - 7] = α * ((d080105 * b[end - 4] + d080106 * b[end - 5] +
-                          d080107 * b[end - 6]) * u[end] +
-                         (d080205 * b[end - 4] + d080206 * b[end - 5] +
-                          d080207 * b[end - 6]) * u[end - 1] +
-                         (d080305 * b[end - 4] + d080306 * b[end - 5] +
-                          d080307 * b[end - 6]) * u[end - 2] +
-                         (d080405 * b[end - 4] + d080406 * b[end - 5] +
-                          d080407 * b[end - 6]) * u[end - 3] +
-                         (d080505 * b[end - 4] +
-                          d080506 * b[end - 5] +
-                          d080507 * b[end - 6] +
-                          d080508 * b[end - 7]) * u[end - 4] +
-                         (d080605 * b[end - 4] +
-                          d080606 * b[end - 5] +
-                          d080607 * b[end - 6] +
-                          d080608 * b[end - 7] +
-                          d080609 * b[end - 8]) * u[end - 5] +
-                         (d080705 * b[end - 4] +
-                          d080706 * b[end - 5] +
-                          d080707 * b[end - 6] +
-                          d080708 * b[end - 7] +
-                          d080709 * b[end - 8] +
-                          d080710 * b[end - 9]) * u[end - 6] +
-                         (d080805 * b[end - 4] +
-                          d080806 * b[end - 5] +
-                          d080807 * b[end - 6] +
-                          d080808 * b[end - 7] +
-                          d080809 * b[end - 8] +
-                          d080810 * b[end - 9] +
-                          d080811 * b[end - 10]) * u[end - 7] +
-                         (d080910 * b[end - 9] +
-                          d080911 * b[end - 10] +
-                          d080905 * b[end - 4] +
-                          d080906 * b[end - 5] +
-                          d080907 * b[end - 6] +
-                          d080908 * b[end - 7] +
-                          d080909 * b[end - 8]) * u[end - 8] +
-                         (d081010 * b[end - 9] +
-                          d081011 * b[end - 10] +
-                          d081007 * b[end - 6] +
-                          d081008 * b[end - 7] +
-                          d081009 * b[end - 8]) * u[end - 9] +
-                         (d081110 * b[end - 9] +
-                          d081111 * b[end - 10] +
-                          d081108 * b[end - 7] +
-                          d081109 * b[end - 8]) * u[end - 10])
-        dest[end - 8] = α * ((d090105 * b[end - 4] + d090106 * b[end - 5] +
-                          d090107 * b[end - 6]) * u[end] +
-                         (d090205 * b[end - 4] + d090206 * b[end - 5] +
-                          d090207 * b[end - 6]) * u[end - 1] +
-                         (d090305 * b[end - 4] + d090306 * b[end - 5] +
-                          d090307 * b[end - 6]) * u[end - 2] +
-                         (d090405 * b[end - 4] + d090406 * b[end - 5] +
-                          d090407 * b[end - 6]) * u[end - 3] +
-                         (d090505 * b[end - 4] +
-                          d090506 * b[end - 5] +
-                          d090507 * b[end - 6] +
-                          d090508 * b[end - 7]) * u[end - 4] +
-                         (d090605 * b[end - 4] +
-                          d090606 * b[end - 5] +
-                          d090607 * b[end - 6] +
-                          d090608 * b[end - 7] +
-                          d090609 * b[end - 8]) * u[end - 5] +
-                         (d090705 * b[end - 4] +
-                          d090706 * b[end - 5] +
-                          d090707 * b[end - 6] +
-                          d090708 * b[end - 7] +
-                          d090709 * b[end - 8] +
-                          d090710 * b[end - 9]) * u[end - 6] +
-                         (d090810 * b[end - 9] +
-                          d090811 * b[end - 10] +
-                          d090805 * b[end - 4] +
-                          d090806 * b[end - 5] +
-                          d090807 * b[end - 6] +
-                          d090808 * b[end - 7] +
-                          d090809 * b[end - 8]) * u[end - 7] +
-                         (d090910 * b[end - 9] +
-                          d090911 * b[end - 10] +
-                          d090912 * b[end - 11] +
-                          d090905 * b[end - 4] +
-                          d090906 * b[end - 5] +
-                          d090907 * b[end - 6] +
-                          d090908 * b[end - 7] +
-                          d090909 * b[end - 8]) * u[end - 8] +
-                         (d091010 * b[end - 9] +
-                          d091011 * b[end - 10] +
-                          d091012 * b[end - 11] +
-                          d091007 * b[end - 6] +
-                          d091008 * b[end - 7] +
-                          d091009 * b[end - 8]) * u[end - 9] +
-                         (d091110 * b[end - 9] +
-                          d091111 * b[end - 10] +
-                          d091112 * b[end - 11] +
-                          d091108 * b[end - 7] +
-                          d091109 * b[end - 8]) * u[end - 10] +
-                         (d091210 * b[end - 9] +
-                          d091211 * b[end - 10] +
-                          d091212 * b[end - 11] +
-                          d091209 * b[end - 8]) * u[end - 11])
+
+        dest[end] =
+            α * (
+                (
+                    d010101 * b[end] +
+                    d010102 * b[end-1] +
+                    d010103 * b[end-2] +
+                    d010104 * b[end-3] +
+                    d010105 * b[end-4] +
+                    d010106 * b[end-5] +
+                    d010107 * b[end-6]
+                ) * u[end] +
+                (
+                    d010201 * b[end] +
+                    d010203 * b[end-2] +
+                    d010204 * b[end-3] +
+                    d010205 * b[end-4] +
+                    d010206 * b[end-5] +
+                    d010207 * b[end-6]
+                ) * u[end-1] +
+                (
+                    d010301 * b[end] +
+                    d010302 * b[end-1] +
+                    d010304 * b[end-3] +
+                    d010305 * b[end-4] +
+                    d010306 * b[end-5] +
+                    d010307 * b[end-6]
+                ) * u[end-2] +
+                (
+                    d010401 * b[end] +
+                    d010402 * b[end-1] +
+                    d010403 * b[end-2] +
+                    d010405 * b[end-4] +
+                    d010406 * b[end-5] +
+                    d010407 * b[end-6]
+                ) * u[end-3] +
+                (
+                    d010501 * b[end] +
+                    d010502 * b[end-1] +
+                    d010503 * b[end-2] +
+                    d010504 * b[end-3] +
+                    d010505 * b[end-4] +
+                    d010506 * b[end-5] +
+                    d010507 * b[end-6]
+                ) * u[end-4] +
+                (
+                    d010601 * b[end] +
+                    d010602 * b[end-1] +
+                    d010603 * b[end-2] +
+                    d010604 * b[end-3] +
+                    d010605 * b[end-4] +
+                    d010606 * b[end-5] +
+                    d010607 * b[end-6]
+                ) * u[end-5] +
+                (
+                    d010704 * b[end-3] +
+                    d010705 * b[end-4] +
+                    d010706 * b[end-5] +
+                    d010707 * b[end-6]
+                ) * u[end-6] +
+                (d010805 * b[end-4] + d010806 * b[end-5] + d010807 * b[end-6]) * u[end-7] +
+                (d010905 * b[end-4] + d010906 * b[end-5] + d010907 * b[end-6]) * u[end-8]
+            )
+        dest[end-1] =
+            α * (
+                (
+                    d020101 * b[end] +
+                    d020103 * b[end-2] +
+                    d020104 * b[end-3] +
+                    d020105 * b[end-4] +
+                    d020106 * b[end-5] +
+                    d020107 * b[end-6]
+                ) * u[end] +
+                (
+                    d020201 * b[end] +
+                    d020203 * b[end-2] +
+                    d020204 * b[end-3] +
+                    d020205 * b[end-4] +
+                    d020206 * b[end-5] +
+                    d020207 * b[end-6]
+                ) * u[end-1] +
+                (
+                    d020301 * b[end] +
+                    d020304 * b[end-3] +
+                    d020305 * b[end-4] +
+                    d020306 * b[end-5] +
+                    d020307 * b[end-6]
+                ) * u[end-2] +
+                (
+                    d020401 * b[end] +
+                    d020403 * b[end-2] +
+                    d020405 * b[end-4] +
+                    d020406 * b[end-5] +
+                    d020407 * b[end-6]
+                ) * u[end-3] +
+                (
+                    d020501 * b[end] +
+                    d020503 * b[end-2] +
+                    d020504 * b[end-3] +
+                    d020505 * b[end-4] +
+                    d020506 * b[end-5] +
+                    d020507 * b[end-6]
+                ) * u[end-4] +
+                (
+                    d020601 * b[end] +
+                    d020603 * b[end-2] +
+                    d020604 * b[end-3] +
+                    d020605 * b[end-4] +
+                    d020606 * b[end-5] +
+                    d020607 * b[end-6]
+                ) * u[end-5] +
+                (
+                    d020704 * b[end-3] +
+                    d020705 * b[end-4] +
+                    d020706 * b[end-5] +
+                    d020707 * b[end-6]
+                ) * u[end-6] +
+                (d020805 * b[end-4] + d020806 * b[end-5] + d020807 * b[end-6]) * u[end-7] +
+                (d020905 * b[end-4] + d020906 * b[end-5] + d020907 * b[end-6]) * u[end-8]
+            )
+        dest[end-2] =
+            α * (
+                (
+                    d030101 * b[end] +
+                    d030102 * b[end-1] +
+                    d030104 * b[end-3] +
+                    d030105 * b[end-4] +
+                    d030106 * b[end-5] +
+                    d030107 * b[end-6]
+                ) * u[end] +
+                (
+                    d030201 * b[end] +
+                    d030204 * b[end-3] +
+                    d030205 * b[end-4] +
+                    d030206 * b[end-5] +
+                    d030207 * b[end-6]
+                ) * u[end-1] +
+                (
+                    d030301 * b[end] +
+                    d030302 * b[end-1] +
+                    d030304 * b[end-3] +
+                    d030305 * b[end-4] +
+                    d030306 * b[end-5] +
+                    d030307 * b[end-6]
+                ) * u[end-2] +
+                (
+                    d030401 * b[end] +
+                    d030402 * b[end-1] +
+                    d030405 * b[end-4] +
+                    d030406 * b[end-5] +
+                    d030407 * b[end-6]
+                ) * u[end-3] +
+                (
+                    d030501 * b[end] +
+                    d030502 * b[end-1] +
+                    d030504 * b[end-3] +
+                    d030505 * b[end-4] +
+                    d030506 * b[end-5] +
+                    d030507 * b[end-6]
+                ) * u[end-4] +
+                (
+                    d030601 * b[end] +
+                    d030602 * b[end-1] +
+                    d030604 * b[end-3] +
+                    d030605 * b[end-4] +
+                    d030606 * b[end-5] +
+                    d030607 * b[end-6]
+                ) * u[end-5] +
+                (
+                    d030704 * b[end-3] +
+                    d030705 * b[end-4] +
+                    d030706 * b[end-5] +
+                    d030707 * b[end-6]
+                ) * u[end-6] +
+                (d030805 * b[end-4] + d030806 * b[end-5] + d030807 * b[end-6]) * u[end-7] +
+                (d030905 * b[end-4] + d030906 * b[end-5] + d030907 * b[end-6]) * u[end-8]
+            )
+        dest[end-3] =
+            α * (
+                (
+                    d040101 * b[end] +
+                    d040102 * b[end-1] +
+                    d040103 * b[end-2] +
+                    d040105 * b[end-4] +
+                    d040106 * b[end-5] +
+                    d040107 * b[end-6]
+                ) * u[end] +
+                (
+                    d040201 * b[end] +
+                    d040203 * b[end-2] +
+                    d040205 * b[end-4] +
+                    d040206 * b[end-5] +
+                    d040207 * b[end-6]
+                ) * u[end-1] +
+                (
+                    d040301 * b[end] +
+                    d040302 * b[end-1] +
+                    d040305 * b[end-4] +
+                    d040306 * b[end-5] +
+                    d040307 * b[end-6]
+                ) * u[end-2] +
+                (
+                    d040401 * b[end] +
+                    d040402 * b[end-1] +
+                    d040403 * b[end-2] +
+                    d040405 * b[end-4] +
+                    d040406 * b[end-5] +
+                    d040407 * b[end-6]
+                ) * u[end-3] +
+                (
+                    d040501 * b[end] +
+                    d040502 * b[end-1] +
+                    d040503 * b[end-2] +
+                    d040505 * b[end-4] +
+                    d040506 * b[end-5] +
+                    d040507 * b[end-6]
+                ) * u[end-4] +
+                (
+                    d040601 * b[end] +
+                    d040602 * b[end-1] +
+                    d040603 * b[end-2] +
+                    d040605 * b[end-4] +
+                    d040606 * b[end-5] +
+                    d040607 * b[end-6]
+                ) * u[end-5] +
+                (d040705 * b[end-4] + d040706 * b[end-5] + d040707 * b[end-6]) * u[end-6] +
+                (d040805 * b[end-4] + d040806 * b[end-5] + d040807 * b[end-6]) * u[end-7] +
+                (d040905 * b[end-4] + d040906 * b[end-5] + d040907 * b[end-6]) * u[end-8]
+            )
+        dest[end-4] =
+            α * (
+                (
+                    d050101 * b[end] +
+                    d050102 * b[end-1] +
+                    d050103 * b[end-2] +
+                    d050104 * b[end-3] +
+                    d050105 * b[end-4] +
+                    d050106 * b[end-5] +
+                    d050107 * b[end-6]
+                ) * u[end] +
+                (
+                    d050201 * b[end] +
+                    d050203 * b[end-2] +
+                    d050204 * b[end-3] +
+                    d050205 * b[end-4] +
+                    d050206 * b[end-5] +
+                    d050207 * b[end-6]
+                ) * u[end-1] +
+                (
+                    d050301 * b[end] +
+                    d050302 * b[end-1] +
+                    d050304 * b[end-3] +
+                    d050305 * b[end-4] +
+                    d050306 * b[end-5] +
+                    d050307 * b[end-6]
+                ) * u[end-2] +
+                (
+                    d050401 * b[end] +
+                    d050402 * b[end-1] +
+                    d050403 * b[end-2] +
+                    d050405 * b[end-4] +
+                    d050406 * b[end-5] +
+                    d050407 * b[end-6]
+                ) * u[end-3] +
+                (
+                    d050501 * b[end] +
+                    d050502 * b[end-1] +
+                    d050503 * b[end-2] +
+                    d050504 * b[end-3] +
+                    d050505 * b[end-4] +
+                    d050506 * b[end-5] +
+                    d050507 * b[end-6] +
+                    d050508 * b[end-7]
+                ) * u[end-4] +
+                (
+                    d050601 * b[end] +
+                    d050602 * b[end-1] +
+                    d050603 * b[end-2] +
+                    d050604 * b[end-3] +
+                    d050605 * b[end-4] +
+                    d050606 * b[end-5] +
+                    d050607 * b[end-6] +
+                    d050608 * b[end-7]
+                ) * u[end-5] +
+                (
+                    d050704 * b[end-3] +
+                    d050705 * b[end-4] +
+                    d050706 * b[end-5] +
+                    d050707 * b[end-6] +
+                    d050708 * b[end-7]
+                ) * u[end-6] +
+                (
+                    d050805 * b[end-4] +
+                    d050806 * b[end-5] +
+                    d050807 * b[end-6] +
+                    d050808 * b[end-7]
+                ) * u[end-7] +
+                (
+                    d050905 * b[end-4] +
+                    d050906 * b[end-5] +
+                    d050907 * b[end-6] +
+                    d050908 * b[end-7]
+                ) * u[end-8]
+            )
+        dest[end-5] =
+            α * (
+                (
+                    d060101 * b[end] +
+                    d060102 * b[end-1] +
+                    d060103 * b[end-2] +
+                    d060104 * b[end-3] +
+                    d060105 * b[end-4] +
+                    d060106 * b[end-5] +
+                    d060107 * b[end-6]
+                ) * u[end] +
+                (
+                    d060201 * b[end] +
+                    d060203 * b[end-2] +
+                    d060204 * b[end-3] +
+                    d060205 * b[end-4] +
+                    d060206 * b[end-5] +
+                    d060207 * b[end-6]
+                ) * u[end-1] +
+                (
+                    d060301 * b[end] +
+                    d060302 * b[end-1] +
+                    d060304 * b[end-3] +
+                    d060305 * b[end-4] +
+                    d060306 * b[end-5] +
+                    d060307 * b[end-6]
+                ) * u[end-2] +
+                (
+                    d060401 * b[end] +
+                    d060402 * b[end-1] +
+                    d060403 * b[end-2] +
+                    d060405 * b[end-4] +
+                    d060406 * b[end-5] +
+                    d060407 * b[end-6]
+                ) * u[end-3] +
+                (
+                    d060501 * b[end] +
+                    d060502 * b[end-1] +
+                    d060503 * b[end-2] +
+                    d060504 * b[end-3] +
+                    d060505 * b[end-4] +
+                    d060506 * b[end-5] +
+                    d060507 * b[end-6] +
+                    d060508 * b[end-7]
+                ) * u[end-4] +
+                (
+                    d060601 * b[end] +
+                    d060602 * b[end-1] +
+                    d060603 * b[end-2] +
+                    d060604 * b[end-3] +
+                    d060605 * b[end-4] +
+                    d060606 * b[end-5] +
+                    d060607 * b[end-6] +
+                    d060608 * b[end-7] +
+                    d060609 * b[end-8]
+                ) * u[end-5] +
+                (
+                    d060704 * b[end-3] +
+                    d060705 * b[end-4] +
+                    d060706 * b[end-5] +
+                    d060707 * b[end-6] +
+                    d060708 * b[end-7] +
+                    d060709 * b[end-8]
+                ) * u[end-6] +
+                (
+                    d060805 * b[end-4] +
+                    d060806 * b[end-5] +
+                    d060807 * b[end-6] +
+                    d060808 * b[end-7] +
+                    d060809 * b[end-8]
+                ) * u[end-7] +
+                (
+                    d060905 * b[end-4] +
+                    d060906 * b[end-5] +
+                    d060907 * b[end-6] +
+                    d060908 * b[end-7] +
+                    d060909 * b[end-8]
+                ) * u[end-8]
+            )
+        dest[end-6] =
+            α * (
+                (
+                    d070104 * b[end-3] +
+                    d070105 * b[end-4] +
+                    d070106 * b[end-5] +
+                    d070107 * b[end-6]
+                ) * u[end] +
+                (
+                    d070204 * b[end-3] +
+                    d070205 * b[end-4] +
+                    d070206 * b[end-5] +
+                    d070207 * b[end-6]
+                ) * u[end-1] +
+                (
+                    d070304 * b[end-3] +
+                    d070305 * b[end-4] +
+                    d070306 * b[end-5] +
+                    d070307 * b[end-6]
+                ) * u[end-2] +
+                (d070405 * b[end-4] + d070406 * b[end-5] + d070407 * b[end-6]) * u[end-3] +
+                (
+                    d070504 * b[end-3] +
+                    d070505 * b[end-4] +
+                    d070506 * b[end-5] +
+                    d070507 * b[end-6] +
+                    d070508 * b[end-7]
+                ) * u[end-4] +
+                (
+                    d070604 * b[end-3] +
+                    d070605 * b[end-4] +
+                    d070606 * b[end-5] +
+                    d070607 * b[end-6] +
+                    d070608 * b[end-7] +
+                    d070609 * b[end-8]
+                ) * u[end-5] +
+                (
+                    d070704 * b[end-3] +
+                    d070705 * b[end-4] +
+                    d070706 * b[end-5] +
+                    d070707 * b[end-6] +
+                    d070708 * b[end-7] +
+                    d070709 * b[end-8] +
+                    d070710 * b[end-9]
+                ) * u[end-6] +
+                (
+                    d070805 * b[end-4] +
+                    d070806 * b[end-5] +
+                    d070807 * b[end-6] +
+                    d070808 * b[end-7] +
+                    d070809 * b[end-8] +
+                    d070810 * b[end-9]
+                ) * u[end-7] +
+                (
+                    d070905 * b[end-4] +
+                    d070906 * b[end-5] +
+                    d070907 * b[end-6] +
+                    d070908 * b[end-7] +
+                    d070909 * b[end-8] +
+                    d070910 * b[end-9]
+                ) * u[end-8] +
+                (
+                    d071010 * b[end-9] +
+                    d071007 * b[end-6] +
+                    d071008 * b[end-7] +
+                    d071009 * b[end-8]
+                ) * u[end-9]
+            )
+        dest[end-7] =
+            α * (
+                (d080105 * b[end-4] + d080106 * b[end-5] + d080107 * b[end-6]) * u[end] +
+                (d080205 * b[end-4] + d080206 * b[end-5] + d080207 * b[end-6]) * u[end-1] +
+                (d080305 * b[end-4] + d080306 * b[end-5] + d080307 * b[end-6]) * u[end-2] +
+                (d080405 * b[end-4] + d080406 * b[end-5] + d080407 * b[end-6]) * u[end-3] +
+                (
+                    d080505 * b[end-4] +
+                    d080506 * b[end-5] +
+                    d080507 * b[end-6] +
+                    d080508 * b[end-7]
+                ) * u[end-4] +
+                (
+                    d080605 * b[end-4] +
+                    d080606 * b[end-5] +
+                    d080607 * b[end-6] +
+                    d080608 * b[end-7] +
+                    d080609 * b[end-8]
+                ) * u[end-5] +
+                (
+                    d080705 * b[end-4] +
+                    d080706 * b[end-5] +
+                    d080707 * b[end-6] +
+                    d080708 * b[end-7] +
+                    d080709 * b[end-8] +
+                    d080710 * b[end-9]
+                ) * u[end-6] +
+                (
+                    d080805 * b[end-4] +
+                    d080806 * b[end-5] +
+                    d080807 * b[end-6] +
+                    d080808 * b[end-7] +
+                    d080809 * b[end-8] +
+                    d080810 * b[end-9] +
+                    d080811 * b[end-10]
+                ) * u[end-7] +
+                (
+                    d080910 * b[end-9] +
+                    d080911 * b[end-10] +
+                    d080905 * b[end-4] +
+                    d080906 * b[end-5] +
+                    d080907 * b[end-6] +
+                    d080908 * b[end-7] +
+                    d080909 * b[end-8]
+                ) * u[end-8] +
+                (
+                    d081010 * b[end-9] +
+                    d081011 * b[end-10] +
+                    d081007 * b[end-6] +
+                    d081008 * b[end-7] +
+                    d081009 * b[end-8]
+                ) * u[end-9] +
+                (
+                    d081110 * b[end-9] +
+                    d081111 * b[end-10] +
+                    d081108 * b[end-7] +
+                    d081109 * b[end-8]
+                ) * u[end-10]
+            )
+        dest[end-8] =
+            α * (
+                (d090105 * b[end-4] + d090106 * b[end-5] + d090107 * b[end-6]) * u[end] +
+                (d090205 * b[end-4] + d090206 * b[end-5] + d090207 * b[end-6]) * u[end-1] +
+                (d090305 * b[end-4] + d090306 * b[end-5] + d090307 * b[end-6]) * u[end-2] +
+                (d090405 * b[end-4] + d090406 * b[end-5] + d090407 * b[end-6]) * u[end-3] +
+                (
+                    d090505 * b[end-4] +
+                    d090506 * b[end-5] +
+                    d090507 * b[end-6] +
+                    d090508 * b[end-7]
+                ) * u[end-4] +
+                (
+                    d090605 * b[end-4] +
+                    d090606 * b[end-5] +
+                    d090607 * b[end-6] +
+                    d090608 * b[end-7] +
+                    d090609 * b[end-8]
+                ) * u[end-5] +
+                (
+                    d090705 * b[end-4] +
+                    d090706 * b[end-5] +
+                    d090707 * b[end-6] +
+                    d090708 * b[end-7] +
+                    d090709 * b[end-8] +
+                    d090710 * b[end-9]
+                ) * u[end-6] +
+                (
+                    d090810 * b[end-9] +
+                    d090811 * b[end-10] +
+                    d090805 * b[end-4] +
+                    d090806 * b[end-5] +
+                    d090807 * b[end-6] +
+                    d090808 * b[end-7] +
+                    d090809 * b[end-8]
+                ) * u[end-7] +
+                (
+                    d090910 * b[end-9] +
+                    d090911 * b[end-10] +
+                    d090912 * b[end-11] +
+                    d090905 * b[end-4] +
+                    d090906 * b[end-5] +
+                    d090907 * b[end-6] +
+                    d090908 * b[end-7] +
+                    d090909 * b[end-8]
+                ) * u[end-8] +
+                (
+                    d091010 * b[end-9] +
+                    d091011 * b[end-10] +
+                    d091012 * b[end-11] +
+                    d091007 * b[end-6] +
+                    d091008 * b[end-7] +
+                    d091009 * b[end-8]
+                ) * u[end-9] +
+                (
+                    d091110 * b[end-9] +
+                    d091111 * b[end-10] +
+                    d091112 * b[end-11] +
+                    d091108 * b[end-7] +
+                    d091109 * b[end-8]
+                ) * u[end-10] +
+                (
+                    d091210 * b[end-9] +
+                    d091211 * b[end-10] +
+                    d091212 * b[end-11] +
+                    d091209 * b[end-8]
+                ) * u[end-11]
+            )
     end
 end
-function convolve_boundary_coefficients!(dest::AbstractVector,
-                                         cache::Mattsson2012Cache6,
-                                         u::AbstractVector,
-                                         b::AbstractVector,
-                                         α,
-                                         ::Union{FastMode, ThreadedMode})
+function convolve_boundary_coefficients!(
+    dest::AbstractVector,
+    cache::Mattsson2012Cache6,
+    u::AbstractVector,
+    b::AbstractVector,
+    α,
+    ::Union{FastMode,ThreadedMode},
+)
     @unpack d010101,
     d010102,
     d010103,
@@ -5031,246 +5480,331 @@ function convolve_boundary_coefficients!(dest::AbstractVector,
         #b8 = b[8]
         #b9 = b[9]
 
-        dest[1] = α * ((d010101 * b[1] +
+        dest[1] =
+            α * (
+                (
+                    d010101 * b[1] +
                     d010102 * b[2] +
                     d010103 * b[3] +
                     d010104 * b[4] +
                     d010105 * b[5] +
                     d010106 * b[6] +
-                    d010107 * b[7]) * u[1] +
-                   (d010201 * b[1] +
+                    d010107 * b[7]
+                ) * u[1] +
+                (
+                    d010201 * b[1] +
                     d010203 * b[3] +
                     d010204 * b[4] +
                     d010205 * b[5] +
                     d010206 * b[6] +
-                    d010207 * b[7]) * u[2] +
-                   (d010301 * b[1] +
+                    d010207 * b[7]
+                ) * u[2] +
+                (
+                    d010301 * b[1] +
                     d010302 * b[2] +
                     d010304 * b[4] +
                     d010305 * b[5] +
                     d010306 * b[6] +
-                    d010307 * b[7]) * u[3] +
-                   (d010401 * b[1] +
+                    d010307 * b[7]
+                ) * u[3] +
+                (
+                    d010401 * b[1] +
                     d010402 * b[2] +
                     d010403 * b[3] +
                     d010405 * b[5] +
                     d010406 * b[6] +
-                    d010407 * b[7]) * u[4] +
-                   (d010501 * b[1] +
+                    d010407 * b[7]
+                ) * u[4] +
+                (
+                    d010501 * b[1] +
                     d010502 * b[2] +
                     d010503 * b[3] +
                     d010504 * b[4] +
                     d010505 * b[5] +
                     d010506 * b[6] +
-                    d010507 * b[7]) * u[5] +
-                   (d010601 * b[1] +
+                    d010507 * b[7]
+                ) * u[5] +
+                (
+                    d010601 * b[1] +
                     d010602 * b[2] +
                     d010603 * b[3] +
                     d010604 * b[4] +
                     d010605 * b[5] +
                     d010606 * b[6] +
-                    d010607 * b[7]) * u[6] +
-                   (d010704 * b[4] + d010705 * b[5] + d010706 * b[6] + d010707 * b[7]) *
-                   u[7] +
-                   (d010805 * b[5] + d010806 * b[6] + d010807 * b[7]) * u[8] +
-                   (d010905 * b[5] + d010906 * b[6] + d010907 * b[7]) * u[9])
-        dest[2] = α * ((d020101 * b[1] +
+                    d010607 * b[7]
+                ) * u[6] +
+                (d010704 * b[4] + d010705 * b[5] + d010706 * b[6] + d010707 * b[7]) * u[7] +
+                (d010805 * b[5] + d010806 * b[6] + d010807 * b[7]) * u[8] +
+                (d010905 * b[5] + d010906 * b[6] + d010907 * b[7]) * u[9]
+            )
+        dest[2] =
+            α * (
+                (
+                    d020101 * b[1] +
                     d020103 * b[3] +
                     d020104 * b[4] +
                     d020105 * b[5] +
                     d020106 * b[6] +
-                    d020107 * b[7]) * u[1] +
-                   (d020201 * b[1] +
+                    d020107 * b[7]
+                ) * u[1] +
+                (
+                    d020201 * b[1] +
                     d020203 * b[3] +
                     d020204 * b[4] +
                     d020205 * b[5] +
                     d020206 * b[6] +
-                    d020207 * b[7]) * u[2] +
-                   (d020301 * b[1] +
+                    d020207 * b[7]
+                ) * u[2] +
+                (
+                    d020301 * b[1] +
                     d020304 * b[4] +
                     d020305 * b[5] +
                     d020306 * b[6] +
-                    d020307 * b[7]) * u[3] +
-                   (d020401 * b[1] +
+                    d020307 * b[7]
+                ) * u[3] +
+                (
+                    d020401 * b[1] +
                     d020403 * b[3] +
                     d020405 * b[5] +
                     d020406 * b[6] +
-                    d020407 * b[7]) * u[4] +
-                   (d020501 * b[1] +
+                    d020407 * b[7]
+                ) * u[4] +
+                (
+                    d020501 * b[1] +
                     d020503 * b[3] +
                     d020504 * b[4] +
                     d020505 * b[5] +
                     d020506 * b[6] +
-                    d020507 * b[7]) * u[5] +
-                   (d020601 * b[1] +
+                    d020507 * b[7]
+                ) * u[5] +
+                (
+                    d020601 * b[1] +
                     d020603 * b[3] +
                     d020604 * b[4] +
                     d020605 * b[5] +
                     d020606 * b[6] +
-                    d020607 * b[7]) * u[6] +
-                   (d020704 * b[4] + d020705 * b[5] + d020706 * b[6] + d020707 * b[7]) *
-                   u[7] +
-                   (d020805 * b[5] + d020806 * b[6] + d020807 * b[7]) * u[8] +
-                   (d020905 * b[5] + d020906 * b[6] + d020907 * b[7]) * u[9])
-        dest[3] = α * ((d030101 * b[1] +
+                    d020607 * b[7]
+                ) * u[6] +
+                (d020704 * b[4] + d020705 * b[5] + d020706 * b[6] + d020707 * b[7]) * u[7] +
+                (d020805 * b[5] + d020806 * b[6] + d020807 * b[7]) * u[8] +
+                (d020905 * b[5] + d020906 * b[6] + d020907 * b[7]) * u[9]
+            )
+        dest[3] =
+            α * (
+                (
+                    d030101 * b[1] +
                     d030102 * b[2] +
                     d030104 * b[4] +
                     d030105 * b[5] +
                     d030106 * b[6] +
-                    d030107 * b[7]) * u[1] +
-                   (d030201 * b[1] +
+                    d030107 * b[7]
+                ) * u[1] +
+                (
+                    d030201 * b[1] +
                     d030204 * b[4] +
                     d030205 * b[5] +
                     d030206 * b[6] +
-                    d030207 * b[7]) * u[2] +
-                   (d030301 * b[1] +
+                    d030207 * b[7]
+                ) * u[2] +
+                (
+                    d030301 * b[1] +
                     d030302 * b[2] +
                     d030304 * b[4] +
                     d030305 * b[5] +
                     d030306 * b[6] +
-                    d030307 * b[7]) * u[3] +
-                   (d030401 * b[1] +
+                    d030307 * b[7]
+                ) * u[3] +
+                (
+                    d030401 * b[1] +
                     d030402 * b[2] +
                     d030405 * b[5] +
                     d030406 * b[6] +
-                    d030407 * b[7]) * u[4] +
-                   (d030501 * b[1] +
+                    d030407 * b[7]
+                ) * u[4] +
+                (
+                    d030501 * b[1] +
                     d030502 * b[2] +
                     d030504 * b[4] +
                     d030505 * b[5] +
                     d030506 * b[6] +
-                    d030507 * b[7]) * u[5] +
-                   (d030601 * b[1] +
+                    d030507 * b[7]
+                ) * u[5] +
+                (
+                    d030601 * b[1] +
                     d030602 * b[2] +
                     d030604 * b[4] +
                     d030605 * b[5] +
                     d030606 * b[6] +
-                    d030607 * b[7]) * u[6] +
-                   (d030704 * b[4] + d030705 * b[5] + d030706 * b[6] + d030707 * b[7]) *
-                   u[7] +
-                   (d030805 * b[5] + d030806 * b[6] + d030807 * b[7]) * u[8] +
-                   (d030905 * b[5] + d030906 * b[6] + d030907 * b[7]) * u[9])
-        dest[4] = α * ((d040101 * b[1] +
+                    d030607 * b[7]
+                ) * u[6] +
+                (d030704 * b[4] + d030705 * b[5] + d030706 * b[6] + d030707 * b[7]) * u[7] +
+                (d030805 * b[5] + d030806 * b[6] + d030807 * b[7]) * u[8] +
+                (d030905 * b[5] + d030906 * b[6] + d030907 * b[7]) * u[9]
+            )
+        dest[4] =
+            α * (
+                (
+                    d040101 * b[1] +
                     d040102 * b[2] +
                     d040103 * b[3] +
                     d040105 * b[5] +
                     d040106 * b[6] +
-                    d040107 * b[7]) * u[1] +
-                   (d040201 * b[1] +
+                    d040107 * b[7]
+                ) * u[1] +
+                (
+                    d040201 * b[1] +
                     d040203 * b[3] +
                     d040205 * b[5] +
                     d040206 * b[6] +
-                    d040207 * b[7]) * u[2] +
-                   (d040301 * b[1] +
+                    d040207 * b[7]
+                ) * u[2] +
+                (
+                    d040301 * b[1] +
                     d040302 * b[2] +
                     d040305 * b[5] +
                     d040306 * b[6] +
-                    d040307 * b[7]) * u[3] +
-                   (d040401 * b[1] +
+                    d040307 * b[7]
+                ) * u[3] +
+                (
+                    d040401 * b[1] +
                     d040402 * b[2] +
                     d040403 * b[3] +
                     d040405 * b[5] +
                     d040406 * b[6] +
-                    d040407 * b[7]) * u[4] +
-                   (d040501 * b[1] +
+                    d040407 * b[7]
+                ) * u[4] +
+                (
+                    d040501 * b[1] +
                     d040502 * b[2] +
                     d040503 * b[3] +
                     d040505 * b[5] +
                     d040506 * b[6] +
-                    d040507 * b[7]) * u[5] +
-                   (d040601 * b[1] +
+                    d040507 * b[7]
+                ) * u[5] +
+                (
+                    d040601 * b[1] +
                     d040602 * b[2] +
                     d040603 * b[3] +
                     d040605 * b[5] +
                     d040606 * b[6] +
-                    d040607 * b[7]) * u[6] +
-                   (d040705 * b[5] + d040706 * b[6] + d040707 * b[7]) * u[7] +
-                   (d040805 * b[5] + d040806 * b[6] + d040807 * b[7]) * u[8] +
-                   (d040905 * b[5] + d040906 * b[6] + d040907 * b[7]) * u[9])
-        dest[5] = α * ((d050101 * b[1] +
+                    d040607 * b[7]
+                ) * u[6] +
+                (d040705 * b[5] + d040706 * b[6] + d040707 * b[7]) * u[7] +
+                (d040805 * b[5] + d040806 * b[6] + d040807 * b[7]) * u[8] +
+                (d040905 * b[5] + d040906 * b[6] + d040907 * b[7]) * u[9]
+            )
+        dest[5] =
+            α * (
+                (
+                    d050101 * b[1] +
                     d050102 * b[2] +
                     d050103 * b[3] +
                     d050104 * b[4] +
                     d050105 * b[5] +
                     d050106 * b[6] +
-                    d050107 * b[7]) * u[1] +
-                   (d050201 * b[1] +
+                    d050107 * b[7]
+                ) * u[1] +
+                (
+                    d050201 * b[1] +
                     d050203 * b[3] +
                     d050204 * b[4] +
                     d050205 * b[5] +
                     d050206 * b[6] +
-                    d050207 * b[7]) * u[2] +
-                   (d050301 * b[1] +
+                    d050207 * b[7]
+                ) * u[2] +
+                (
+                    d050301 * b[1] +
                     d050302 * b[2] +
                     d050304 * b[4] +
                     d050305 * b[5] +
                     d050306 * b[6] +
-                    d050307 * b[7]) * u[3] +
-                   (d050401 * b[1] +
+                    d050307 * b[7]
+                ) * u[3] +
+                (
+                    d050401 * b[1] +
                     d050402 * b[2] +
                     d050403 * b[3] +
                     d050405 * b[5] +
                     d050406 * b[6] +
-                    d050407 * b[7]) * u[4] +
-                   (d050501 * b[1] +
+                    d050407 * b[7]
+                ) * u[4] +
+                (
+                    d050501 * b[1] +
                     d050502 * b[2] +
                     d050503 * b[3] +
                     d050504 * b[4] +
                     d050505 * b[5] +
                     d050506 * b[6] +
                     d050507 * b[7] +
-                    d050508 * b[8]) * u[5] +
-                   (d050601 * b[1] +
+                    d050508 * b[8]
+                ) * u[5] +
+                (
+                    d050601 * b[1] +
                     d050602 * b[2] +
                     d050603 * b[3] +
                     d050604 * b[4] +
                     d050605 * b[5] +
                     d050606 * b[6] +
                     d050607 * b[7] +
-                    d050608 * b[8]) * u[6] +
-                   (d050704 * b[4] +
+                    d050608 * b[8]
+                ) * u[6] +
+                (
+                    d050704 * b[4] +
                     d050705 * b[5] +
                     d050706 * b[6] +
                     d050707 * b[7] +
-                    d050708 * b[8]) * u[7] +
-                   (d050805 * b[5] + d050806 * b[6] + d050807 * b[7] + d050808 * b[8]) *
-                   u[8] +
-                   (d050905 * b[5] + d050906 * b[6] + d050907 * b[7] + d050908 * b[8]) *
-                   u[9])
-        dest[6] = α * ((d060101 * b[1] +
+                    d050708 * b[8]
+                ) * u[7] +
+                (d050805 * b[5] + d050806 * b[6] + d050807 * b[7] + d050808 * b[8]) * u[8] +
+                (d050905 * b[5] + d050906 * b[6] + d050907 * b[7] + d050908 * b[8]) * u[9]
+            )
+        dest[6] =
+            α * (
+                (
+                    d060101 * b[1] +
                     d060102 * b[2] +
                     d060103 * b[3] +
                     d060104 * b[4] +
                     d060105 * b[5] +
                     d060106 * b[6] +
-                    d060107 * b[7]) * u[1] +
-                   (d060201 * b[1] +
+                    d060107 * b[7]
+                ) * u[1] +
+                (
+                    d060201 * b[1] +
                     d060203 * b[3] +
                     d060204 * b[4] +
                     d060205 * b[5] +
                     d060206 * b[6] +
-                    d060207 * b[7]) * u[2] +
-                   (d060301 * b[1] +
+                    d060207 * b[7]
+                ) * u[2] +
+                (
+                    d060301 * b[1] +
                     d060302 * b[2] +
                     d060304 * b[4] +
                     d060305 * b[5] +
                     d060306 * b[6] +
-                    d060307 * b[7]) * u[3] +
-                   (d060401 * b[1] +
+                    d060307 * b[7]
+                ) * u[3] +
+                (
+                    d060401 * b[1] +
                     d060402 * b[2] +
                     d060403 * b[3] +
                     d060405 * b[5] +
                     d060406 * b[6] +
-                    d060407 * b[7]) * u[4] +
-                   (d060501 * b[1] +
+                    d060407 * b[7]
+                ) * u[4] +
+                (
+                    d060501 * b[1] +
                     d060502 * b[2] +
                     d060503 * b[3] +
                     d060504 * b[4] +
                     d060505 * b[5] +
                     d060506 * b[6] +
                     d060507 * b[7] +
-                    d060508 * b[8]) * u[5] +
-                   (d060601 * b[1] +
+                    d060508 * b[8]
+                ) * u[5] +
+                (
+                    d060601 * b[1] +
                     d060602 * b[2] +
                     d060603 * b[3] +
                     d060604 * b[4] +
@@ -5278,586 +5812,779 @@ function convolve_boundary_coefficients!(dest::AbstractVector,
                     d060606 * b[6] +
                     d060607 * b[7] +
                     d060608 * b[8] +
-                    d060609 * b[9]) * u[6] +
-                   (d060704 * b[4] +
+                    d060609 * b[9]
+                ) * u[6] +
+                (
+                    d060704 * b[4] +
                     d060705 * b[5] +
                     d060706 * b[6] +
                     d060707 * b[7] +
                     d060708 * b[8] +
-                    d060709 * b[9]) * u[7] +
-                   (d060805 * b[5] +
+                    d060709 * b[9]
+                ) * u[7] +
+                (
+                    d060805 * b[5] +
                     d060806 * b[6] +
                     d060807 * b[7] +
                     d060808 * b[8] +
-                    d060809 * b[9]) * u[8] +
-                   (d060905 * b[5] +
+                    d060809 * b[9]
+                ) * u[8] +
+                (
+                    d060905 * b[5] +
                     d060906 * b[6] +
                     d060907 * b[7] +
                     d060908 * b[8] +
-                    d060909 * b[9]) * u[9])
-        dest[7] = α * ((d070104 * b[4] + d070105 * b[5] + d070106 * b[6] + d070107 * b[7]) *
-                   u[1] +
-                   (d070204 * b[4] + d070205 * b[5] + d070206 * b[6] + d070207 * b[7]) *
-                   u[2] +
-                   (d070304 * b[4] + d070305 * b[5] + d070306 * b[6] + d070307 * b[7]) *
-                   u[3] +
-                   (d070405 * b[5] + d070406 * b[6] + d070407 * b[7]) * u[4] +
-                   (d070504 * b[4] +
+                    d060909 * b[9]
+                ) * u[9]
+            )
+        dest[7] =
+            α * (
+                (d070104 * b[4] + d070105 * b[5] + d070106 * b[6] + d070107 * b[7]) * u[1] +
+                (d070204 * b[4] + d070205 * b[5] + d070206 * b[6] + d070207 * b[7]) * u[2] +
+                (d070304 * b[4] + d070305 * b[5] + d070306 * b[6] + d070307 * b[7]) * u[3] +
+                (d070405 * b[5] + d070406 * b[6] + d070407 * b[7]) * u[4] +
+                (
+                    d070504 * b[4] +
                     d070505 * b[5] +
                     d070506 * b[6] +
                     d070507 * b[7] +
-                    d070508 * b[8]) * u[5] +
-                   (d070604 * b[4] +
+                    d070508 * b[8]
+                ) * u[5] +
+                (
+                    d070604 * b[4] +
                     d070605 * b[5] +
                     d070606 * b[6] +
                     d070607 * b[7] +
                     d070608 * b[8] +
-                    d070609 * b[9]) * u[6] +
-                   (d070704 * b[4] +
+                    d070609 * b[9]
+                ) * u[6] +
+                (
+                    d070704 * b[4] +
                     d070705 * b[5] +
                     d070706 * b[6] +
                     d070707 * b[7] +
                     d070708 * b[8] +
                     d070709 * b[9] +
-                    d070710 * b[10]) * u[7] +
-                   (d070805 * b[5] +
+                    d070710 * b[10]
+                ) * u[7] +
+                (
+                    d070805 * b[5] +
                     d070806 * b[6] +
                     d070807 * b[7] +
                     d070808 * b[8] +
                     d070809 * b[9] +
-                    d070810 * b[10]) * u[8] +
-                   (d070905 * b[5] +
+                    d070810 * b[10]
+                ) * u[8] +
+                (
+                    d070905 * b[5] +
                     d070906 * b[6] +
                     d070907 * b[7] +
                     d070908 * b[8] +
                     d070909 * b[9] +
-                    d070910 * b[10]) * u[9] +
-                   (d071010 * b[10] + d071007 * b[7] + d071008 * b[8] + d071009 * b[9]) *
-                   u[10])
-        dest[8] = α * ((d080105 * b[5] + d080106 * b[6] + d080107 * b[7]) * u[1] +
-                   (d080205 * b[5] + d080206 * b[6] + d080207 * b[7]) * u[2] +
-                   (d080305 * b[5] + d080306 * b[6] + d080307 * b[7]) * u[3] +
-                   (d080405 * b[5] + d080406 * b[6] + d080407 * b[7]) * u[4] +
-                   (d080505 * b[5] + d080506 * b[6] + d080507 * b[7] + d080508 * b[8]) *
-                   u[5] +
-                   (d080605 * b[5] +
+                    d070910 * b[10]
+                ) * u[9] +
+                (d071010 * b[10] + d071007 * b[7] + d071008 * b[8] + d071009 * b[9]) * u[10]
+            )
+        dest[8] =
+            α * (
+                (d080105 * b[5] + d080106 * b[6] + d080107 * b[7]) * u[1] +
+                (d080205 * b[5] + d080206 * b[6] + d080207 * b[7]) * u[2] +
+                (d080305 * b[5] + d080306 * b[6] + d080307 * b[7]) * u[3] +
+                (d080405 * b[5] + d080406 * b[6] + d080407 * b[7]) * u[4] +
+                (d080505 * b[5] + d080506 * b[6] + d080507 * b[7] + d080508 * b[8]) * u[5] +
+                (
+                    d080605 * b[5] +
                     d080606 * b[6] +
                     d080607 * b[7] +
                     d080608 * b[8] +
-                    d080609 * b[9]) * u[6] +
-                   (d080705 * b[5] +
+                    d080609 * b[9]
+                ) * u[6] +
+                (
+                    d080705 * b[5] +
                     d080706 * b[6] +
                     d080707 * b[7] +
                     d080708 * b[8] +
                     d080709 * b[9] +
-                    d080710 * b[10]) * u[7] +
-                   (d080805 * b[5] +
+                    d080710 * b[10]
+                ) * u[7] +
+                (
+                    d080805 * b[5] +
                     d080806 * b[6] +
                     d080807 * b[7] +
                     d080808 * b[8] +
                     d080809 * b[9] +
                     d080810 * b[10] +
-                    d080811 * b[11]) * u[8] +
-                   (d080910 * b[10] +
+                    d080811 * b[11]
+                ) * u[8] +
+                (
+                    d080910 * b[10] +
                     d080911 * b[11] +
                     d080905 * b[5] +
                     d080906 * b[6] +
                     d080907 * b[7] +
                     d080908 * b[8] +
-                    d080909 * b[9]) * u[9] +
-                   (d081010 * b[10] +
+                    d080909 * b[9]
+                ) * u[9] +
+                (
+                    d081010 * b[10] +
                     d081011 * b[11] +
                     d081007 * b[7] +
                     d081008 * b[8] +
-                    d081009 * b[9]) * u[10] +
-                   (d081110 * b[10] + d081111 * b[11] + d081108 * b[8] + d081109 * b[9]) *
-                   u[11])
-        dest[9] = α * ((d090105 * b[5] + d090106 * b[6] + d090107 * b[7]) * u[1] +
-                   (d090205 * b[5] + d090206 * b[6] + d090207 * b[7]) * u[2] +
-                   (d090305 * b[5] + d090306 * b[6] + d090307 * b[7]) * u[3] +
-                   (d090405 * b[5] + d090406 * b[6] + d090407 * b[7]) * u[4] +
-                   (d090505 * b[5] + d090506 * b[6] + d090507 * b[7] + d090508 * b[8]) *
-                   u[5] +
-                   (d090605 * b[5] +
+                    d081009 * b[9]
+                ) * u[10] +
+                (d081110 * b[10] + d081111 * b[11] + d081108 * b[8] + d081109 * b[9]) *
+                u[11]
+            )
+        dest[9] =
+            α * (
+                (d090105 * b[5] + d090106 * b[6] + d090107 * b[7]) * u[1] +
+                (d090205 * b[5] + d090206 * b[6] + d090207 * b[7]) * u[2] +
+                (d090305 * b[5] + d090306 * b[6] + d090307 * b[7]) * u[3] +
+                (d090405 * b[5] + d090406 * b[6] + d090407 * b[7]) * u[4] +
+                (d090505 * b[5] + d090506 * b[6] + d090507 * b[7] + d090508 * b[8]) * u[5] +
+                (
+                    d090605 * b[5] +
                     d090606 * b[6] +
                     d090607 * b[7] +
                     d090608 * b[8] +
-                    d090609 * b[9]) * u[6] +
-                   (d090705 * b[5] +
+                    d090609 * b[9]
+                ) * u[6] +
+                (
+                    d090705 * b[5] +
                     d090706 * b[6] +
                     d090707 * b[7] +
                     d090708 * b[8] +
                     d090709 * b[9] +
-                    d090710 * b[10]) * u[7] +
-                   (d090810 * b[10] +
+                    d090710 * b[10]
+                ) * u[7] +
+                (
+                    d090810 * b[10] +
                     d090811 * b[11] +
                     d090805 * b[5] +
                     d090806 * b[6] +
                     d090807 * b[7] +
                     d090808 * b[8] +
-                    d090809 * b[9]) * u[8] +
-                   (d090910 * b[10] +
+                    d090809 * b[9]
+                ) * u[8] +
+                (
+                    d090910 * b[10] +
                     d090911 * b[11] +
                     d090912 * b[12] +
                     d090905 * b[5] +
                     d090906 * b[6] +
                     d090907 * b[7] +
                     d090908 * b[8] +
-                    d090909 * b[9]) * u[9] +
-                   (d091010 * b[10] +
+                    d090909 * b[9]
+                ) * u[9] +
+                (
+                    d091010 * b[10] +
                     d091011 * b[11] +
                     d091012 * b[12] +
                     d091007 * b[7] +
                     d091008 * b[8] +
-                    d091009 * b[9]) * u[10] +
-                   (d091110 * b[10] +
+                    d091009 * b[9]
+                ) * u[10] +
+                (
+                    d091110 * b[10] +
                     d091111 * b[11] +
                     d091112 * b[12] +
                     d091108 * b[8] +
-                    d091109 * b[9]) * u[11] +
-                   (d091210 * b[10] + d091211 * b[11] + d091212 * b[12] + d091209 * b[9]) *
-                   u[12])
+                    d091109 * b[9]
+                ) * u[11] +
+                (d091210 * b[10] + d091211 * b[11] + d091212 * b[12] + d091209 * b[9]) *
+                u[12]
+            )
 
-        dest[end] = α * ((d010101 * b[end] +
-                      d010102 * b[end - 1] +
-                      d010103 * b[end - 2] +
-                      d010104 * b[end - 3] +
-                      d010105 * b[end - 4] +
-                      d010106 * b[end - 5] +
-                      d010107 * b[end - 6]) * u[end] +
-                     (d010201 * b[end] +
-                      d010203 * b[end - 2] +
-                      d010204 * b[end - 3] +
-                      d010205 * b[end - 4] +
-                      d010206 * b[end - 5] +
-                      d010207 * b[end - 6]) * u[end - 1] +
-                     (d010301 * b[end] +
-                      d010302 * b[end - 1] +
-                      d010304 * b[end - 3] +
-                      d010305 * b[end - 4] +
-                      d010306 * b[end - 5] +
-                      d010307 * b[end - 6]) * u[end - 2] +
-                     (d010401 * b[end] +
-                      d010402 * b[end - 1] +
-                      d010403 * b[end - 2] +
-                      d010405 * b[end - 4] +
-                      d010406 * b[end - 5] +
-                      d010407 * b[end - 6]) * u[end - 3] +
-                     (d010501 * b[end] +
-                      d010502 * b[end - 1] +
-                      d010503 * b[end - 2] +
-                      d010504 * b[end - 3] +
-                      d010505 * b[end - 4] +
-                      d010506 * b[end - 5] +
-                      d010507 * b[end - 6]) * u[end - 4] +
-                     (d010601 * b[end] +
-                      d010602 * b[end - 1] +
-                      d010603 * b[end - 2] +
-                      d010604 * b[end - 3] +
-                      d010605 * b[end - 4] +
-                      d010606 * b[end - 5] +
-                      d010607 * b[end - 6]) * u[end - 5] +
-                     (d010704 * b[end - 3] +
-                      d010705 * b[end - 4] +
-                      d010706 * b[end - 5] +
-                      d010707 * b[end - 6]) * u[end - 6] +
-                     (d010805 * b[end - 4] + d010806 * b[end - 5] + d010807 * b[end - 6]) *
-                     u[end - 7] +
-                     (d010905 * b[end - 4] + d010906 * b[end - 5] + d010907 * b[end - 6]) *
-                     u[end - 8])
-        dest[end - 1] = α * ((d020101 * b[end] +
-                          d020103 * b[end - 2] +
-                          d020104 * b[end - 3] +
-                          d020105 * b[end - 4] +
-                          d020106 * b[end - 5] +
-                          d020107 * b[end - 6]) * u[end] +
-                         (d020201 * b[end] +
-                          d020203 * b[end - 2] +
-                          d020204 * b[end - 3] +
-                          d020205 * b[end - 4] +
-                          d020206 * b[end - 5] +
-                          d020207 * b[end - 6]) * u[end - 1] +
-                         (d020301 * b[end] +
-                          d020304 * b[end - 3] +
-                          d020305 * b[end - 4] +
-                          d020306 * b[end - 5] +
-                          d020307 * b[end - 6]) * u[end - 2] +
-                         (d020401 * b[end] +
-                          d020403 * b[end - 2] +
-                          d020405 * b[end - 4] +
-                          d020406 * b[end - 5] +
-                          d020407 * b[end - 6]) * u[end - 3] +
-                         (d020501 * b[end] +
-                          d020503 * b[end - 2] +
-                          d020504 * b[end - 3] +
-                          d020505 * b[end - 4] +
-                          d020506 * b[end - 5] +
-                          d020507 * b[end - 6]) * u[end - 4] +
-                         (d020601 * b[end] +
-                          d020603 * b[end - 2] +
-                          d020604 * b[end - 3] +
-                          d020605 * b[end - 4] +
-                          d020606 * b[end - 5] +
-                          d020607 * b[end - 6]) * u[end - 5] +
-                         (d020704 * b[end - 3] +
-                          d020705 * b[end - 4] +
-                          d020706 * b[end - 5] +
-                          d020707 * b[end - 6]) * u[end - 6] +
-                         (d020805 * b[end - 4] + d020806 * b[end - 5] +
-                          d020807 * b[end - 6]) * u[end - 7] +
-                         (d020905 * b[end - 4] + d020906 * b[end - 5] +
-                          d020907 * b[end - 6]) * u[end - 8])
-        dest[end - 2] = α * ((d030101 * b[end] +
-                          d030102 * b[end - 1] +
-                          d030104 * b[end - 3] +
-                          d030105 * b[end - 4] +
-                          d030106 * b[end - 5] +
-                          d030107 * b[end - 6]) * u[end] +
-                         (d030201 * b[end] +
-                          d030204 * b[end - 3] +
-                          d030205 * b[end - 4] +
-                          d030206 * b[end - 5] +
-                          d030207 * b[end - 6]) * u[end - 1] +
-                         (d030301 * b[end] +
-                          d030302 * b[end - 1] +
-                          d030304 * b[end - 3] +
-                          d030305 * b[end - 4] +
-                          d030306 * b[end - 5] +
-                          d030307 * b[end - 6]) * u[end - 2] +
-                         (d030401 * b[end] +
-                          d030402 * b[end - 1] +
-                          d030405 * b[end - 4] +
-                          d030406 * b[end - 5] +
-                          d030407 * b[end - 6]) * u[end - 3] +
-                         (d030501 * b[end] +
-                          d030502 * b[end - 1] +
-                          d030504 * b[end - 3] +
-                          d030505 * b[end - 4] +
-                          d030506 * b[end - 5] +
-                          d030507 * b[end - 6]) * u[end - 4] +
-                         (d030601 * b[end] +
-                          d030602 * b[end - 1] +
-                          d030604 * b[end - 3] +
-                          d030605 * b[end - 4] +
-                          d030606 * b[end - 5] +
-                          d030607 * b[end - 6]) * u[end - 5] +
-                         (d030704 * b[end - 3] +
-                          d030705 * b[end - 4] +
-                          d030706 * b[end - 5] +
-                          d030707 * b[end - 6]) * u[end - 6] +
-                         (d030805 * b[end - 4] + d030806 * b[end - 5] +
-                          d030807 * b[end - 6]) * u[end - 7] +
-                         (d030905 * b[end - 4] + d030906 * b[end - 5] +
-                          d030907 * b[end - 6]) * u[end - 8])
-        dest[end - 3] = α * ((d040101 * b[end] +
-                          d040102 * b[end - 1] +
-                          d040103 * b[end - 2] +
-                          d040105 * b[end - 4] +
-                          d040106 * b[end - 5] +
-                          d040107 * b[end - 6]) * u[end] +
-                         (d040201 * b[end] +
-                          d040203 * b[end - 2] +
-                          d040205 * b[end - 4] +
-                          d040206 * b[end - 5] +
-                          d040207 * b[end - 6]) * u[end - 1] +
-                         (d040301 * b[end] +
-                          d040302 * b[end - 1] +
-                          d040305 * b[end - 4] +
-                          d040306 * b[end - 5] +
-                          d040307 * b[end - 6]) * u[end - 2] +
-                         (d040401 * b[end] +
-                          d040402 * b[end - 1] +
-                          d040403 * b[end - 2] +
-                          d040405 * b[end - 4] +
-                          d040406 * b[end - 5] +
-                          d040407 * b[end - 6]) * u[end - 3] +
-                         (d040501 * b[end] +
-                          d040502 * b[end - 1] +
-                          d040503 * b[end - 2] +
-                          d040505 * b[end - 4] +
-                          d040506 * b[end - 5] +
-                          d040507 * b[end - 6]) * u[end - 4] +
-                         (d040601 * b[end] +
-                          d040602 * b[end - 1] +
-                          d040603 * b[end - 2] +
-                          d040605 * b[end - 4] +
-                          d040606 * b[end - 5] +
-                          d040607 * b[end - 6]) * u[end - 5] +
-                         (d040705 * b[end - 4] + d040706 * b[end - 5] +
-                          d040707 * b[end - 6]) * u[end - 6] +
-                         (d040805 * b[end - 4] + d040806 * b[end - 5] +
-                          d040807 * b[end - 6]) * u[end - 7] +
-                         (d040905 * b[end - 4] + d040906 * b[end - 5] +
-                          d040907 * b[end - 6]) * u[end - 8])
-        dest[end - 4] = α * ((d050101 * b[end] +
-                          d050102 * b[end - 1] +
-                          d050103 * b[end - 2] +
-                          d050104 * b[end - 3] +
-                          d050105 * b[end - 4] +
-                          d050106 * b[end - 5] +
-                          d050107 * b[end - 6]) * u[end] +
-                         (d050201 * b[end] +
-                          d050203 * b[end - 2] +
-                          d050204 * b[end - 3] +
-                          d050205 * b[end - 4] +
-                          d050206 * b[end - 5] +
-                          d050207 * b[end - 6]) * u[end - 1] +
-                         (d050301 * b[end] +
-                          d050302 * b[end - 1] +
-                          d050304 * b[end - 3] +
-                          d050305 * b[end - 4] +
-                          d050306 * b[end - 5] +
-                          d050307 * b[end - 6]) * u[end - 2] +
-                         (d050401 * b[end] +
-                          d050402 * b[end - 1] +
-                          d050403 * b[end - 2] +
-                          d050405 * b[end - 4] +
-                          d050406 * b[end - 5] +
-                          d050407 * b[end - 6]) * u[end - 3] +
-                         (d050501 * b[end] +
-                          d050502 * b[end - 1] +
-                          d050503 * b[end - 2] +
-                          d050504 * b[end - 3] +
-                          d050505 * b[end - 4] +
-                          d050506 * b[end - 5] +
-                          d050507 * b[end - 6] +
-                          d050508 * b[end - 7]) * u[end - 4] +
-                         (d050601 * b[end] +
-                          d050602 * b[end - 1] +
-                          d050603 * b[end - 2] +
-                          d050604 * b[end - 3] +
-                          d050605 * b[end - 4] +
-                          d050606 * b[end - 5] +
-                          d050607 * b[end - 6] +
-                          d050608 * b[end - 7]) * u[end - 5] +
-                         (d050704 * b[end - 3] +
-                          d050705 * b[end - 4] +
-                          d050706 * b[end - 5] +
-                          d050707 * b[end - 6] +
-                          d050708 * b[end - 7]) * u[end - 6] +
-                         (d050805 * b[end - 4] +
-                          d050806 * b[end - 5] +
-                          d050807 * b[end - 6] +
-                          d050808 * b[end - 7]) * u[end - 7] +
-                         (d050905 * b[end - 4] +
-                          d050906 * b[end - 5] +
-                          d050907 * b[end - 6] +
-                          d050908 * b[end - 7]) * u[end - 8])
-        dest[end - 5] = α * ((d060101 * b[end] +
-                          d060102 * b[end - 1] +
-                          d060103 * b[end - 2] +
-                          d060104 * b[end - 3] +
-                          d060105 * b[end - 4] +
-                          d060106 * b[end - 5] +
-                          d060107 * b[end - 6]) * u[end] +
-                         (d060201 * b[end] +
-                          d060203 * b[end - 2] +
-                          d060204 * b[end - 3] +
-                          d060205 * b[end - 4] +
-                          d060206 * b[end - 5] +
-                          d060207 * b[end - 6]) * u[end - 1] +
-                         (d060301 * b[end] +
-                          d060302 * b[end - 1] +
-                          d060304 * b[end - 3] +
-                          d060305 * b[end - 4] +
-                          d060306 * b[end - 5] +
-                          d060307 * b[end - 6]) * u[end - 2] +
-                         (d060401 * b[end] +
-                          d060402 * b[end - 1] +
-                          d060403 * b[end - 2] +
-                          d060405 * b[end - 4] +
-                          d060406 * b[end - 5] +
-                          d060407 * b[end - 6]) * u[end - 3] +
-                         (d060501 * b[end] +
-                          d060502 * b[end - 1] +
-                          d060503 * b[end - 2] +
-                          d060504 * b[end - 3] +
-                          d060505 * b[end - 4] +
-                          d060506 * b[end - 5] +
-                          d060507 * b[end - 6] +
-                          d060508 * b[end - 7]) * u[end - 4] +
-                         (d060601 * b[end] +
-                          d060602 * b[end - 1] +
-                          d060603 * b[end - 2] +
-                          d060604 * b[end - 3] +
-                          d060605 * b[end - 4] +
-                          d060606 * b[end - 5] +
-                          d060607 * b[end - 6] +
-                          d060608 * b[end - 7] +
-                          d060609 * b[end - 8]) * u[end - 5] +
-                         (d060704 * b[end - 3] +
-                          d060705 * b[end - 4] +
-                          d060706 * b[end - 5] +
-                          d060707 * b[end - 6] +
-                          d060708 * b[end - 7] +
-                          d060709 * b[end - 8]) * u[end - 6] +
-                         (d060805 * b[end - 4] +
-                          d060806 * b[end - 5] +
-                          d060807 * b[end - 6] +
-                          d060808 * b[end - 7] +
-                          d060809 * b[end - 8]) * u[end - 7] +
-                         (d060905 * b[end - 4] +
-                          d060906 * b[end - 5] +
-                          d060907 * b[end - 6] +
-                          d060908 * b[end - 7] +
-                          d060909 * b[end - 8]) * u[end - 8])
-        dest[end - 6] = α * ((d070104 * b[end - 3] +
-                          d070105 * b[end - 4] +
-                          d070106 * b[end - 5] +
-                          d070107 * b[end - 6]) * u[end] +
-                         (d070204 * b[end - 3] +
-                          d070205 * b[end - 4] +
-                          d070206 * b[end - 5] +
-                          d070207 * b[end - 6]) * u[end - 1] +
-                         (d070304 * b[end - 3] +
-                          d070305 * b[end - 4] +
-                          d070306 * b[end - 5] +
-                          d070307 * b[end - 6]) * u[end - 2] +
-                         (d070405 * b[end - 4] + d070406 * b[end - 5] +
-                          d070407 * b[end - 6]) * u[end - 3] +
-                         (d070504 * b[end - 3] +
-                          d070505 * b[end - 4] +
-                          d070506 * b[end - 5] +
-                          d070507 * b[end - 6] +
-                          d070508 * b[end - 7]) * u[end - 4] +
-                         (d070604 * b[end - 3] +
-                          d070605 * b[end - 4] +
-                          d070606 * b[end - 5] +
-                          d070607 * b[end - 6] +
-                          d070608 * b[end - 7] +
-                          d070609 * b[end - 8]) * u[end - 5] +
-                         (d070704 * b[end - 3] +
-                          d070705 * b[end - 4] +
-                          d070706 * b[end - 5] +
-                          d070707 * b[end - 6] +
-                          d070708 * b[end - 7] +
-                          d070709 * b[end - 8] +
-                          d070710 * b[end - 9]) * u[end - 6] +
-                         (d070805 * b[end - 4] +
-                          d070806 * b[end - 5] +
-                          d070807 * b[end - 6] +
-                          d070808 * b[end - 7] +
-                          d070809 * b[end - 8] +
-                          d070810 * b[end - 9]) * u[end - 7] +
-                         (d070905 * b[end - 4] +
-                          d070906 * b[end - 5] +
-                          d070907 * b[end - 6] +
-                          d070908 * b[end - 7] +
-                          d070909 * b[end - 8] +
-                          d070910 * b[end - 9]) * u[end - 8] +
-                         (d071010 * b[end - 9] +
-                          d071007 * b[end - 6] +
-                          d071008 * b[end - 7] +
-                          d071009 * b[end - 8]) * u[end - 9])
-        dest[end - 7] = α * ((d080105 * b[end - 4] + d080106 * b[end - 5] +
-                          d080107 * b[end - 6]) * u[end] +
-                         (d080205 * b[end - 4] + d080206 * b[end - 5] +
-                          d080207 * b[end - 6]) * u[end - 1] +
-                         (d080305 * b[end - 4] + d080306 * b[end - 5] +
-                          d080307 * b[end - 6]) * u[end - 2] +
-                         (d080405 * b[end - 4] + d080406 * b[end - 5] +
-                          d080407 * b[end - 6]) * u[end - 3] +
-                         (d080505 * b[end - 4] +
-                          d080506 * b[end - 5] +
-                          d080507 * b[end - 6] +
-                          d080508 * b[end - 7]) * u[end - 4] +
-                         (d080605 * b[end - 4] +
-                          d080606 * b[end - 5] +
-                          d080607 * b[end - 6] +
-                          d080608 * b[end - 7] +
-                          d080609 * b[end - 8]) * u[end - 5] +
-                         (d080705 * b[end - 4] +
-                          d080706 * b[end - 5] +
-                          d080707 * b[end - 6] +
-                          d080708 * b[end - 7] +
-                          d080709 * b[end - 8] +
-                          d080710 * b[end - 9]) * u[end - 6] +
-                         (d080805 * b[end - 4] +
-                          d080806 * b[end - 5] +
-                          d080807 * b[end - 6] +
-                          d080808 * b[end - 7] +
-                          d080809 * b[end - 8] +
-                          d080810 * b[end - 9] +
-                          d080811 * b[end - 10]) * u[end - 7] +
-                         (d080910 * b[end - 9] +
-                          d080911 * b[end - 10] +
-                          d080905 * b[end - 4] +
-                          d080906 * b[end - 5] +
-                          d080907 * b[end - 6] +
-                          d080908 * b[end - 7] +
-                          d080909 * b[end - 8]) * u[end - 8] +
-                         (d081010 * b[end - 9] +
-                          d081011 * b[end - 10] +
-                          d081007 * b[end - 6] +
-                          d081008 * b[end - 7] +
-                          d081009 * b[end - 8]) * u[end - 9] +
-                         (d081110 * b[end - 9] +
-                          d081111 * b[end - 10] +
-                          d081108 * b[end - 7] +
-                          d081109 * b[end - 8]) * u[end - 10])
-        dest[end - 8] = α * ((d090105 * b[end - 4] + d090106 * b[end - 5] +
-                          d090107 * b[end - 6]) * u[end] +
-                         (d090205 * b[end - 4] + d090206 * b[end - 5] +
-                          d090207 * b[end - 6]) * u[end - 1] +
-                         (d090305 * b[end - 4] + d090306 * b[end - 5] +
-                          d090307 * b[end - 6]) * u[end - 2] +
-                         (d090405 * b[end - 4] + d090406 * b[end - 5] +
-                          d090407 * b[end - 6]) * u[end - 3] +
-                         (d090505 * b[end - 4] +
-                          d090506 * b[end - 5] +
-                          d090507 * b[end - 6] +
-                          d090508 * b[end - 7]) * u[end - 4] +
-                         (d090605 * b[end - 4] +
-                          d090606 * b[end - 5] +
-                          d090607 * b[end - 6] +
-                          d090608 * b[end - 7] +
-                          d090609 * b[end - 8]) * u[end - 5] +
-                         (d090705 * b[end - 4] +
-                          d090706 * b[end - 5] +
-                          d090707 * b[end - 6] +
-                          d090708 * b[end - 7] +
-                          d090709 * b[end - 8] +
-                          d090710 * b[end - 9]) * u[end - 6] +
-                         (d090810 * b[end - 9] +
-                          d090811 * b[end - 10] +
-                          d090805 * b[end - 4] +
-                          d090806 * b[end - 5] +
-                          d090807 * b[end - 6] +
-                          d090808 * b[end - 7] +
-                          d090809 * b[end - 8]) * u[end - 7] +
-                         (d090910 * b[end - 9] +
-                          d090911 * b[end - 10] +
-                          d090912 * b[end - 11] +
-                          d090905 * b[end - 4] +
-                          d090906 * b[end - 5] +
-                          d090907 * b[end - 6] +
-                          d090908 * b[end - 7] +
-                          d090909 * b[end - 8]) * u[end - 8] +
-                         (d091010 * b[end - 9] +
-                          d091011 * b[end - 10] +
-                          d091012 * b[end - 11] +
-                          d091007 * b[end - 6] +
-                          d091008 * b[end - 7] +
-                          d091009 * b[end - 8]) * u[end - 9] +
-                         (d091110 * b[end - 9] +
-                          d091111 * b[end - 10] +
-                          d091112 * b[end - 11] +
-                          d091108 * b[end - 7] +
-                          d091109 * b[end - 8]) * u[end - 10] +
-                         (d091210 * b[end - 9] +
-                          d091211 * b[end - 10] +
-                          d091212 * b[end - 11] +
-                          d091209 * b[end - 8]) * u[end - 11])
+
+        dest[end] =
+            α * (
+                (
+                    d010101 * b[end] +
+                    d010102 * b[end-1] +
+                    d010103 * b[end-2] +
+                    d010104 * b[end-3] +
+                    d010105 * b[end-4] +
+                    d010106 * b[end-5] +
+                    d010107 * b[end-6]
+                ) * u[end] +
+                (
+                    d010201 * b[end] +
+                    d010203 * b[end-2] +
+                    d010204 * b[end-3] +
+                    d010205 * b[end-4] +
+                    d010206 * b[end-5] +
+                    d010207 * b[end-6]
+                ) * u[end-1] +
+                (
+                    d010301 * b[end] +
+                    d010302 * b[end-1] +
+                    d010304 * b[end-3] +
+                    d010305 * b[end-4] +
+                    d010306 * b[end-5] +
+                    d010307 * b[end-6]
+                ) * u[end-2] +
+                (
+                    d010401 * b[end] +
+                    d010402 * b[end-1] +
+                    d010403 * b[end-2] +
+                    d010405 * b[end-4] +
+                    d010406 * b[end-5] +
+                    d010407 * b[end-6]
+                ) * u[end-3] +
+                (
+                    d010501 * b[end] +
+                    d010502 * b[end-1] +
+                    d010503 * b[end-2] +
+                    d010504 * b[end-3] +
+                    d010505 * b[end-4] +
+                    d010506 * b[end-5] +
+                    d010507 * b[end-6]
+                ) * u[end-4] +
+                (
+                    d010601 * b[end] +
+                    d010602 * b[end-1] +
+                    d010603 * b[end-2] +
+                    d010604 * b[end-3] +
+                    d010605 * b[end-4] +
+                    d010606 * b[end-5] +
+                    d010607 * b[end-6]
+                ) * u[end-5] +
+                (
+                    d010704 * b[end-3] +
+                    d010705 * b[end-4] +
+                    d010706 * b[end-5] +
+                    d010707 * b[end-6]
+                ) * u[end-6] +
+                (d010805 * b[end-4] + d010806 * b[end-5] + d010807 * b[end-6]) * u[end-7] +
+                (d010905 * b[end-4] + d010906 * b[end-5] + d010907 * b[end-6]) * u[end-8]
+            )
+        dest[end-1] =
+            α * (
+                (
+                    d020101 * b[end] +
+                    d020103 * b[end-2] +
+                    d020104 * b[end-3] +
+                    d020105 * b[end-4] +
+                    d020106 * b[end-5] +
+                    d020107 * b[end-6]
+                ) * u[end] +
+                (
+                    d020201 * b[end] +
+                    d020203 * b[end-2] +
+                    d020204 * b[end-3] +
+                    d020205 * b[end-4] +
+                    d020206 * b[end-5] +
+                    d020207 * b[end-6]
+                ) * u[end-1] +
+                (
+                    d020301 * b[end] +
+                    d020304 * b[end-3] +
+                    d020305 * b[end-4] +
+                    d020306 * b[end-5] +
+                    d020307 * b[end-6]
+                ) * u[end-2] +
+                (
+                    d020401 * b[end] +
+                    d020403 * b[end-2] +
+                    d020405 * b[end-4] +
+                    d020406 * b[end-5] +
+                    d020407 * b[end-6]
+                ) * u[end-3] +
+                (
+                    d020501 * b[end] +
+                    d020503 * b[end-2] +
+                    d020504 * b[end-3] +
+                    d020505 * b[end-4] +
+                    d020506 * b[end-5] +
+                    d020507 * b[end-6]
+                ) * u[end-4] +
+                (
+                    d020601 * b[end] +
+                    d020603 * b[end-2] +
+                    d020604 * b[end-3] +
+                    d020605 * b[end-4] +
+                    d020606 * b[end-5] +
+                    d020607 * b[end-6]
+                ) * u[end-5] +
+                (
+                    d020704 * b[end-3] +
+                    d020705 * b[end-4] +
+                    d020706 * b[end-5] +
+                    d020707 * b[end-6]
+                ) * u[end-6] +
+                (d020805 * b[end-4] + d020806 * b[end-5] + d020807 * b[end-6]) * u[end-7] +
+                (d020905 * b[end-4] + d020906 * b[end-5] + d020907 * b[end-6]) * u[end-8]
+            )
+        dest[end-2] =
+            α * (
+                (
+                    d030101 * b[end] +
+                    d030102 * b[end-1] +
+                    d030104 * b[end-3] +
+                    d030105 * b[end-4] +
+                    d030106 * b[end-5] +
+                    d030107 * b[end-6]
+                ) * u[end] +
+                (
+                    d030201 * b[end] +
+                    d030204 * b[end-3] +
+                    d030205 * b[end-4] +
+                    d030206 * b[end-5] +
+                    d030207 * b[end-6]
+                ) * u[end-1] +
+                (
+                    d030301 * b[end] +
+                    d030302 * b[end-1] +
+                    d030304 * b[end-3] +
+                    d030305 * b[end-4] +
+                    d030306 * b[end-5] +
+                    d030307 * b[end-6]
+                ) * u[end-2] +
+                (
+                    d030401 * b[end] +
+                    d030402 * b[end-1] +
+                    d030405 * b[end-4] +
+                    d030406 * b[end-5] +
+                    d030407 * b[end-6]
+                ) * u[end-3] +
+                (
+                    d030501 * b[end] +
+                    d030502 * b[end-1] +
+                    d030504 * b[end-3] +
+                    d030505 * b[end-4] +
+                    d030506 * b[end-5] +
+                    d030507 * b[end-6]
+                ) * u[end-4] +
+                (
+                    d030601 * b[end] +
+                    d030602 * b[end-1] +
+                    d030604 * b[end-3] +
+                    d030605 * b[end-4] +
+                    d030606 * b[end-5] +
+                    d030607 * b[end-6]
+                ) * u[end-5] +
+                (
+                    d030704 * b[end-3] +
+                    d030705 * b[end-4] +
+                    d030706 * b[end-5] +
+                    d030707 * b[end-6]
+                ) * u[end-6] +
+                (d030805 * b[end-4] + d030806 * b[end-5] + d030807 * b[end-6]) * u[end-7] +
+                (d030905 * b[end-4] + d030906 * b[end-5] + d030907 * b[end-6]) * u[end-8]
+            )
+        dest[end-3] =
+            α * (
+                (
+                    d040101 * b[end] +
+                    d040102 * b[end-1] +
+                    d040103 * b[end-2] +
+                    d040105 * b[end-4] +
+                    d040106 * b[end-5] +
+                    d040107 * b[end-6]
+                ) * u[end] +
+                (
+                    d040201 * b[end] +
+                    d040203 * b[end-2] +
+                    d040205 * b[end-4] +
+                    d040206 * b[end-5] +
+                    d040207 * b[end-6]
+                ) * u[end-1] +
+                (
+                    d040301 * b[end] +
+                    d040302 * b[end-1] +
+                    d040305 * b[end-4] +
+                    d040306 * b[end-5] +
+                    d040307 * b[end-6]
+                ) * u[end-2] +
+                (
+                    d040401 * b[end] +
+                    d040402 * b[end-1] +
+                    d040403 * b[end-2] +
+                    d040405 * b[end-4] +
+                    d040406 * b[end-5] +
+                    d040407 * b[end-6]
+                ) * u[end-3] +
+                (
+                    d040501 * b[end] +
+                    d040502 * b[end-1] +
+                    d040503 * b[end-2] +
+                    d040505 * b[end-4] +
+                    d040506 * b[end-5] +
+                    d040507 * b[end-6]
+                ) * u[end-4] +
+                (
+                    d040601 * b[end] +
+                    d040602 * b[end-1] +
+                    d040603 * b[end-2] +
+                    d040605 * b[end-4] +
+                    d040606 * b[end-5] +
+                    d040607 * b[end-6]
+                ) * u[end-5] +
+                (d040705 * b[end-4] + d040706 * b[end-5] + d040707 * b[end-6]) * u[end-6] +
+                (d040805 * b[end-4] + d040806 * b[end-5] + d040807 * b[end-6]) * u[end-7] +
+                (d040905 * b[end-4] + d040906 * b[end-5] + d040907 * b[end-6]) * u[end-8]
+            )
+        dest[end-4] =
+            α * (
+                (
+                    d050101 * b[end] +
+                    d050102 * b[end-1] +
+                    d050103 * b[end-2] +
+                    d050104 * b[end-3] +
+                    d050105 * b[end-4] +
+                    d050106 * b[end-5] +
+                    d050107 * b[end-6]
+                ) * u[end] +
+                (
+                    d050201 * b[end] +
+                    d050203 * b[end-2] +
+                    d050204 * b[end-3] +
+                    d050205 * b[end-4] +
+                    d050206 * b[end-5] +
+                    d050207 * b[end-6]
+                ) * u[end-1] +
+                (
+                    d050301 * b[end] +
+                    d050302 * b[end-1] +
+                    d050304 * b[end-3] +
+                    d050305 * b[end-4] +
+                    d050306 * b[end-5] +
+                    d050307 * b[end-6]
+                ) * u[end-2] +
+                (
+                    d050401 * b[end] +
+                    d050402 * b[end-1] +
+                    d050403 * b[end-2] +
+                    d050405 * b[end-4] +
+                    d050406 * b[end-5] +
+                    d050407 * b[end-6]
+                ) * u[end-3] +
+                (
+                    d050501 * b[end] +
+                    d050502 * b[end-1] +
+                    d050503 * b[end-2] +
+                    d050504 * b[end-3] +
+                    d050505 * b[end-4] +
+                    d050506 * b[end-5] +
+                    d050507 * b[end-6] +
+                    d050508 * b[end-7]
+                ) * u[end-4] +
+                (
+                    d050601 * b[end] +
+                    d050602 * b[end-1] +
+                    d050603 * b[end-2] +
+                    d050604 * b[end-3] +
+                    d050605 * b[end-4] +
+                    d050606 * b[end-5] +
+                    d050607 * b[end-6] +
+                    d050608 * b[end-7]
+                ) * u[end-5] +
+                (
+                    d050704 * b[end-3] +
+                    d050705 * b[end-4] +
+                    d050706 * b[end-5] +
+                    d050707 * b[end-6] +
+                    d050708 * b[end-7]
+                ) * u[end-6] +
+                (
+                    d050805 * b[end-4] +
+                    d050806 * b[end-5] +
+                    d050807 * b[end-6] +
+                    d050808 * b[end-7]
+                ) * u[end-7] +
+                (
+                    d050905 * b[end-4] +
+                    d050906 * b[end-5] +
+                    d050907 * b[end-6] +
+                    d050908 * b[end-7]
+                ) * u[end-8]
+            )
+        dest[end-5] =
+            α * (
+                (
+                    d060101 * b[end] +
+                    d060102 * b[end-1] +
+                    d060103 * b[end-2] +
+                    d060104 * b[end-3] +
+                    d060105 * b[end-4] +
+                    d060106 * b[end-5] +
+                    d060107 * b[end-6]
+                ) * u[end] +
+                (
+                    d060201 * b[end] +
+                    d060203 * b[end-2] +
+                    d060204 * b[end-3] +
+                    d060205 * b[end-4] +
+                    d060206 * b[end-5] +
+                    d060207 * b[end-6]
+                ) * u[end-1] +
+                (
+                    d060301 * b[end] +
+                    d060302 * b[end-1] +
+                    d060304 * b[end-3] +
+                    d060305 * b[end-4] +
+                    d060306 * b[end-5] +
+                    d060307 * b[end-6]
+                ) * u[end-2] +
+                (
+                    d060401 * b[end] +
+                    d060402 * b[end-1] +
+                    d060403 * b[end-2] +
+                    d060405 * b[end-4] +
+                    d060406 * b[end-5] +
+                    d060407 * b[end-6]
+                ) * u[end-3] +
+                (
+                    d060501 * b[end] +
+                    d060502 * b[end-1] +
+                    d060503 * b[end-2] +
+                    d060504 * b[end-3] +
+                    d060505 * b[end-4] +
+                    d060506 * b[end-5] +
+                    d060507 * b[end-6] +
+                    d060508 * b[end-7]
+                ) * u[end-4] +
+                (
+                    d060601 * b[end] +
+                    d060602 * b[end-1] +
+                    d060603 * b[end-2] +
+                    d060604 * b[end-3] +
+                    d060605 * b[end-4] +
+                    d060606 * b[end-5] +
+                    d060607 * b[end-6] +
+                    d060608 * b[end-7] +
+                    d060609 * b[end-8]
+                ) * u[end-5] +
+                (
+                    d060704 * b[end-3] +
+                    d060705 * b[end-4] +
+                    d060706 * b[end-5] +
+                    d060707 * b[end-6] +
+                    d060708 * b[end-7] +
+                    d060709 * b[end-8]
+                ) * u[end-6] +
+                (
+                    d060805 * b[end-4] +
+                    d060806 * b[end-5] +
+                    d060807 * b[end-6] +
+                    d060808 * b[end-7] +
+                    d060809 * b[end-8]
+                ) * u[end-7] +
+                (
+                    d060905 * b[end-4] +
+                    d060906 * b[end-5] +
+                    d060907 * b[end-6] +
+                    d060908 * b[end-7] +
+                    d060909 * b[end-8]
+                ) * u[end-8]
+            )
+        dest[end-6] =
+            α * (
+                (
+                    d070104 * b[end-3] +
+                    d070105 * b[end-4] +
+                    d070106 * b[end-5] +
+                    d070107 * b[end-6]
+                ) * u[end] +
+                (
+                    d070204 * b[end-3] +
+                    d070205 * b[end-4] +
+                    d070206 * b[end-5] +
+                    d070207 * b[end-6]
+                ) * u[end-1] +
+                (
+                    d070304 * b[end-3] +
+                    d070305 * b[end-4] +
+                    d070306 * b[end-5] +
+                    d070307 * b[end-6]
+                ) * u[end-2] +
+                (d070405 * b[end-4] + d070406 * b[end-5] + d070407 * b[end-6]) * u[end-3] +
+                (
+                    d070504 * b[end-3] +
+                    d070505 * b[end-4] +
+                    d070506 * b[end-5] +
+                    d070507 * b[end-6] +
+                    d070508 * b[end-7]
+                ) * u[end-4] +
+                (
+                    d070604 * b[end-3] +
+                    d070605 * b[end-4] +
+                    d070606 * b[end-5] +
+                    d070607 * b[end-6] +
+                    d070608 * b[end-7] +
+                    d070609 * b[end-8]
+                ) * u[end-5] +
+                (
+                    d070704 * b[end-3] +
+                    d070705 * b[end-4] +
+                    d070706 * b[end-5] +
+                    d070707 * b[end-6] +
+                    d070708 * b[end-7] +
+                    d070709 * b[end-8] +
+                    d070710 * b[end-9]
+                ) * u[end-6] +
+                (
+                    d070805 * b[end-4] +
+                    d070806 * b[end-5] +
+                    d070807 * b[end-6] +
+                    d070808 * b[end-7] +
+                    d070809 * b[end-8] +
+                    d070810 * b[end-9]
+                ) * u[end-7] +
+                (
+                    d070905 * b[end-4] +
+                    d070906 * b[end-5] +
+                    d070907 * b[end-6] +
+                    d070908 * b[end-7] +
+                    d070909 * b[end-8] +
+                    d070910 * b[end-9]
+                ) * u[end-8] +
+                (
+                    d071010 * b[end-9] +
+                    d071007 * b[end-6] +
+                    d071008 * b[end-7] +
+                    d071009 * b[end-8]
+                ) * u[end-9]
+            )
+        dest[end-7] =
+            α * (
+                (d080105 * b[end-4] + d080106 * b[end-5] + d080107 * b[end-6]) * u[end] +
+                (d080205 * b[end-4] + d080206 * b[end-5] + d080207 * b[end-6]) * u[end-1] +
+                (d080305 * b[end-4] + d080306 * b[end-5] + d080307 * b[end-6]) * u[end-2] +
+                (d080405 * b[end-4] + d080406 * b[end-5] + d080407 * b[end-6]) * u[end-3] +
+                (
+                    d080505 * b[end-4] +
+                    d080506 * b[end-5] +
+                    d080507 * b[end-6] +
+                    d080508 * b[end-7]
+                ) * u[end-4] +
+                (
+                    d080605 * b[end-4] +
+                    d080606 * b[end-5] +
+                    d080607 * b[end-6] +
+                    d080608 * b[end-7] +
+                    d080609 * b[end-8]
+                ) * u[end-5] +
+                (
+                    d080705 * b[end-4] +
+                    d080706 * b[end-5] +
+                    d080707 * b[end-6] +
+                    d080708 * b[end-7] +
+                    d080709 * b[end-8] +
+                    d080710 * b[end-9]
+                ) * u[end-6] +
+                (
+                    d080805 * b[end-4] +
+                    d080806 * b[end-5] +
+                    d080807 * b[end-6] +
+                    d080808 * b[end-7] +
+                    d080809 * b[end-8] +
+                    d080810 * b[end-9] +
+                    d080811 * b[end-10]
+                ) * u[end-7] +
+                (
+                    d080910 * b[end-9] +
+                    d080911 * b[end-10] +
+                    d080905 * b[end-4] +
+                    d080906 * b[end-5] +
+                    d080907 * b[end-6] +
+                    d080908 * b[end-7] +
+                    d080909 * b[end-8]
+                ) * u[end-8] +
+                (
+                    d081010 * b[end-9] +
+                    d081011 * b[end-10] +
+                    d081007 * b[end-6] +
+                    d081008 * b[end-7] +
+                    d081009 * b[end-8]
+                ) * u[end-9] +
+                (
+                    d081110 * b[end-9] +
+                    d081111 * b[end-10] +
+                    d081108 * b[end-7] +
+                    d081109 * b[end-8]
+                ) * u[end-10]
+            )
+        dest[end-8] =
+            α * (
+                (d090105 * b[end-4] + d090106 * b[end-5] + d090107 * b[end-6]) * u[end] +
+                (d090205 * b[end-4] + d090206 * b[end-5] + d090207 * b[end-6]) * u[end-1] +
+                (d090305 * b[end-4] + d090306 * b[end-5] + d090307 * b[end-6]) * u[end-2] +
+                (d090405 * b[end-4] + d090406 * b[end-5] + d090407 * b[end-6]) * u[end-3] +
+                (
+                    d090505 * b[end-4] +
+                    d090506 * b[end-5] +
+                    d090507 * b[end-6] +
+                    d090508 * b[end-7]
+                ) * u[end-4] +
+                (
+                    d090605 * b[end-4] +
+                    d090606 * b[end-5] +
+                    d090607 * b[end-6] +
+                    d090608 * b[end-7] +
+                    d090609 * b[end-8]
+                ) * u[end-5] +
+                (
+                    d090705 * b[end-4] +
+                    d090706 * b[end-5] +
+                    d090707 * b[end-6] +
+                    d090708 * b[end-7] +
+                    d090709 * b[end-8] +
+                    d090710 * b[end-9]
+                ) * u[end-6] +
+                (
+                    d090810 * b[end-9] +
+                    d090811 * b[end-10] +
+                    d090805 * b[end-4] +
+                    d090806 * b[end-5] +
+                    d090807 * b[end-6] +
+                    d090808 * b[end-7] +
+                    d090809 * b[end-8]
+                ) * u[end-7] +
+                (
+                    d090910 * b[end-9] +
+                    d090911 * b[end-10] +
+                    d090912 * b[end-11] +
+                    d090905 * b[end-4] +
+                    d090906 * b[end-5] +
+                    d090907 * b[end-6] +
+                    d090908 * b[end-7] +
+                    d090909 * b[end-8]
+                ) * u[end-8] +
+                (
+                    d091010 * b[end-9] +
+                    d091011 * b[end-10] +
+                    d091012 * b[end-11] +
+                    d091007 * b[end-6] +
+                    d091008 * b[end-7] +
+                    d091009 * b[end-8]
+                ) * u[end-9] +
+                (
+                    d091110 * b[end-9] +
+                    d091111 * b[end-10] +
+                    d091112 * b[end-11] +
+                    d091108 * b[end-7] +
+                    d091109 * b[end-8]
+                ) * u[end-10] +
+                (
+                    d091210 * b[end-9] +
+                    d091211 * b[end-10] +
+                    d091212 * b[end-11] +
+                    d091209 * b[end-8]
+                ) * u[end-11]
+            )
     end
 end
 
-function convolve_boundary_coefficients!(dest::AbstractVector,
-                                         cache::Mattsson2012Cache6,
-                                         u::AbstractVector,
-                                         b::AbstractVector,
-                                         α,
-                                         β,
-                                         ::SafeMode)
+function convolve_boundary_coefficients!(
+    dest::AbstractVector,
+    cache::Mattsson2012Cache6,
+    u::AbstractVector,
+    b::AbstractVector,
+    α,
+    β,
+    ::SafeMode,
+)
     @unpack d010101,
     d010102,
     d010103,
@@ -6318,246 +7045,331 @@ function convolve_boundary_coefficients!(dest::AbstractVector,
         #b8 = b[8]
         #b9 = b[9]
 
-        dest[1] = α * ((d010101 * b[1] +
+        dest[1] =
+            α * (
+                (
+                    d010101 * b[1] +
                     d010102 * b[2] +
                     d010103 * b[3] +
                     d010104 * b[4] +
                     d010105 * b[5] +
                     d010106 * b[6] +
-                    d010107 * b[7]) * u[1] +
-                   (d010201 * b[1] +
+                    d010107 * b[7]
+                ) * u[1] +
+                (
+                    d010201 * b[1] +
                     d010203 * b[3] +
                     d010204 * b[4] +
                     d010205 * b[5] +
                     d010206 * b[6] +
-                    d010207 * b[7]) * u[2] +
-                   (d010301 * b[1] +
+                    d010207 * b[7]
+                ) * u[2] +
+                (
+                    d010301 * b[1] +
                     d010302 * b[2] +
                     d010304 * b[4] +
                     d010305 * b[5] +
                     d010306 * b[6] +
-                    d010307 * b[7]) * u[3] +
-                   (d010401 * b[1] +
+                    d010307 * b[7]
+                ) * u[3] +
+                (
+                    d010401 * b[1] +
                     d010402 * b[2] +
                     d010403 * b[3] +
                     d010405 * b[5] +
                     d010406 * b[6] +
-                    d010407 * b[7]) * u[4] +
-                   (d010501 * b[1] +
+                    d010407 * b[7]
+                ) * u[4] +
+                (
+                    d010501 * b[1] +
                     d010502 * b[2] +
                     d010503 * b[3] +
                     d010504 * b[4] +
                     d010505 * b[5] +
                     d010506 * b[6] +
-                    d010507 * b[7]) * u[5] +
-                   (d010601 * b[1] +
+                    d010507 * b[7]
+                ) * u[5] +
+                (
+                    d010601 * b[1] +
                     d010602 * b[2] +
                     d010603 * b[3] +
                     d010604 * b[4] +
                     d010605 * b[5] +
                     d010606 * b[6] +
-                    d010607 * b[7]) * u[6] +
-                   (d010704 * b[4] + d010705 * b[5] + d010706 * b[6] + d010707 * b[7]) *
-                   u[7] +
-                   (d010805 * b[5] + d010806 * b[6] + d010807 * b[7]) * u[8] +
-                   (d010905 * b[5] + d010906 * b[6] + d010907 * b[7]) * u[9]) + β * dest[1]
-        dest[2] = α * ((d020101 * b[1] +
+                    d010607 * b[7]
+                ) * u[6] +
+                (d010704 * b[4] + d010705 * b[5] + d010706 * b[6] + d010707 * b[7]) * u[7] +
+                (d010805 * b[5] + d010806 * b[6] + d010807 * b[7]) * u[8] +
+                (d010905 * b[5] + d010906 * b[6] + d010907 * b[7]) * u[9]
+            ) + β * dest[1]
+        dest[2] =
+            α * (
+                (
+                    d020101 * b[1] +
                     d020103 * b[3] +
                     d020104 * b[4] +
                     d020105 * b[5] +
                     d020106 * b[6] +
-                    d020107 * b[7]) * u[1] +
-                   (d020201 * b[1] +
+                    d020107 * b[7]
+                ) * u[1] +
+                (
+                    d020201 * b[1] +
                     d020203 * b[3] +
                     d020204 * b[4] +
                     d020205 * b[5] +
                     d020206 * b[6] +
-                    d020207 * b[7]) * u[2] +
-                   (d020301 * b[1] +
+                    d020207 * b[7]
+                ) * u[2] +
+                (
+                    d020301 * b[1] +
                     d020304 * b[4] +
                     d020305 * b[5] +
                     d020306 * b[6] +
-                    d020307 * b[7]) * u[3] +
-                   (d020401 * b[1] +
+                    d020307 * b[7]
+                ) * u[3] +
+                (
+                    d020401 * b[1] +
                     d020403 * b[3] +
                     d020405 * b[5] +
                     d020406 * b[6] +
-                    d020407 * b[7]) * u[4] +
-                   (d020501 * b[1] +
+                    d020407 * b[7]
+                ) * u[4] +
+                (
+                    d020501 * b[1] +
                     d020503 * b[3] +
                     d020504 * b[4] +
                     d020505 * b[5] +
                     d020506 * b[6] +
-                    d020507 * b[7]) * u[5] +
-                   (d020601 * b[1] +
+                    d020507 * b[7]
+                ) * u[5] +
+                (
+                    d020601 * b[1] +
                     d020603 * b[3] +
                     d020604 * b[4] +
                     d020605 * b[5] +
                     d020606 * b[6] +
-                    d020607 * b[7]) * u[6] +
-                   (d020704 * b[4] + d020705 * b[5] + d020706 * b[6] + d020707 * b[7]) *
-                   u[7] +
-                   (d020805 * b[5] + d020806 * b[6] + d020807 * b[7]) * u[8] +
-                   (d020905 * b[5] + d020906 * b[6] + d020907 * b[7]) * u[9]) + β * dest[2]
-        dest[3] = α * ((d030101 * b[1] +
+                    d020607 * b[7]
+                ) * u[6] +
+                (d020704 * b[4] + d020705 * b[5] + d020706 * b[6] + d020707 * b[7]) * u[7] +
+                (d020805 * b[5] + d020806 * b[6] + d020807 * b[7]) * u[8] +
+                (d020905 * b[5] + d020906 * b[6] + d020907 * b[7]) * u[9]
+            ) + β * dest[2]
+        dest[3] =
+            α * (
+                (
+                    d030101 * b[1] +
                     d030102 * b[2] +
                     d030104 * b[4] +
                     d030105 * b[5] +
                     d030106 * b[6] +
-                    d030107 * b[7]) * u[1] +
-                   (d030201 * b[1] +
+                    d030107 * b[7]
+                ) * u[1] +
+                (
+                    d030201 * b[1] +
                     d030204 * b[4] +
                     d030205 * b[5] +
                     d030206 * b[6] +
-                    d030207 * b[7]) * u[2] +
-                   (d030301 * b[1] +
+                    d030207 * b[7]
+                ) * u[2] +
+                (
+                    d030301 * b[1] +
                     d030302 * b[2] +
                     d030304 * b[4] +
                     d030305 * b[5] +
                     d030306 * b[6] +
-                    d030307 * b[7]) * u[3] +
-                   (d030401 * b[1] +
+                    d030307 * b[7]
+                ) * u[3] +
+                (
+                    d030401 * b[1] +
                     d030402 * b[2] +
                     d030405 * b[5] +
                     d030406 * b[6] +
-                    d030407 * b[7]) * u[4] +
-                   (d030501 * b[1] +
+                    d030407 * b[7]
+                ) * u[4] +
+                (
+                    d030501 * b[1] +
                     d030502 * b[2] +
                     d030504 * b[4] +
                     d030505 * b[5] +
                     d030506 * b[6] +
-                    d030507 * b[7]) * u[5] +
-                   (d030601 * b[1] +
+                    d030507 * b[7]
+                ) * u[5] +
+                (
+                    d030601 * b[1] +
                     d030602 * b[2] +
                     d030604 * b[4] +
                     d030605 * b[5] +
                     d030606 * b[6] +
-                    d030607 * b[7]) * u[6] +
-                   (d030704 * b[4] + d030705 * b[5] + d030706 * b[6] + d030707 * b[7]) *
-                   u[7] +
-                   (d030805 * b[5] + d030806 * b[6] + d030807 * b[7]) * u[8] +
-                   (d030905 * b[5] + d030906 * b[6] + d030907 * b[7]) * u[9]) + β * dest[3]
-        dest[4] = α * ((d040101 * b[1] +
+                    d030607 * b[7]
+                ) * u[6] +
+                (d030704 * b[4] + d030705 * b[5] + d030706 * b[6] + d030707 * b[7]) * u[7] +
+                (d030805 * b[5] + d030806 * b[6] + d030807 * b[7]) * u[8] +
+                (d030905 * b[5] + d030906 * b[6] + d030907 * b[7]) * u[9]
+            ) + β * dest[3]
+        dest[4] =
+            α * (
+                (
+                    d040101 * b[1] +
                     d040102 * b[2] +
                     d040103 * b[3] +
                     d040105 * b[5] +
                     d040106 * b[6] +
-                    d040107 * b[7]) * u[1] +
-                   (d040201 * b[1] +
+                    d040107 * b[7]
+                ) * u[1] +
+                (
+                    d040201 * b[1] +
                     d040203 * b[3] +
                     d040205 * b[5] +
                     d040206 * b[6] +
-                    d040207 * b[7]) * u[2] +
-                   (d040301 * b[1] +
+                    d040207 * b[7]
+                ) * u[2] +
+                (
+                    d040301 * b[1] +
                     d040302 * b[2] +
                     d040305 * b[5] +
                     d040306 * b[6] +
-                    d040307 * b[7]) * u[3] +
-                   (d040401 * b[1] +
+                    d040307 * b[7]
+                ) * u[3] +
+                (
+                    d040401 * b[1] +
                     d040402 * b[2] +
                     d040403 * b[3] +
                     d040405 * b[5] +
                     d040406 * b[6] +
-                    d040407 * b[7]) * u[4] +
-                   (d040501 * b[1] +
+                    d040407 * b[7]
+                ) * u[4] +
+                (
+                    d040501 * b[1] +
                     d040502 * b[2] +
                     d040503 * b[3] +
                     d040505 * b[5] +
                     d040506 * b[6] +
-                    d040507 * b[7]) * u[5] +
-                   (d040601 * b[1] +
+                    d040507 * b[7]
+                ) * u[5] +
+                (
+                    d040601 * b[1] +
                     d040602 * b[2] +
                     d040603 * b[3] +
                     d040605 * b[5] +
                     d040606 * b[6] +
-                    d040607 * b[7]) * u[6] +
-                   (d040705 * b[5] + d040706 * b[6] + d040707 * b[7]) * u[7] +
-                   (d040805 * b[5] + d040806 * b[6] + d040807 * b[7]) * u[8] +
-                   (d040905 * b[5] + d040906 * b[6] + d040907 * b[7]) * u[9]) + β * dest[4]
-        dest[5] = α * ((d050101 * b[1] +
+                    d040607 * b[7]
+                ) * u[6] +
+                (d040705 * b[5] + d040706 * b[6] + d040707 * b[7]) * u[7] +
+                (d040805 * b[5] + d040806 * b[6] + d040807 * b[7]) * u[8] +
+                (d040905 * b[5] + d040906 * b[6] + d040907 * b[7]) * u[9]
+            ) + β * dest[4]
+        dest[5] =
+            α * (
+                (
+                    d050101 * b[1] +
                     d050102 * b[2] +
                     d050103 * b[3] +
                     d050104 * b[4] +
                     d050105 * b[5] +
                     d050106 * b[6] +
-                    d050107 * b[7]) * u[1] +
-                   (d050201 * b[1] +
+                    d050107 * b[7]
+                ) * u[1] +
+                (
+                    d050201 * b[1] +
                     d050203 * b[3] +
                     d050204 * b[4] +
                     d050205 * b[5] +
                     d050206 * b[6] +
-                    d050207 * b[7]) * u[2] +
-                   (d050301 * b[1] +
+                    d050207 * b[7]
+                ) * u[2] +
+                (
+                    d050301 * b[1] +
                     d050302 * b[2] +
                     d050304 * b[4] +
                     d050305 * b[5] +
                     d050306 * b[6] +
-                    d050307 * b[7]) * u[3] +
-                   (d050401 * b[1] +
+                    d050307 * b[7]
+                ) * u[3] +
+                (
+                    d050401 * b[1] +
                     d050402 * b[2] +
                     d050403 * b[3] +
                     d050405 * b[5] +
                     d050406 * b[6] +
-                    d050407 * b[7]) * u[4] +
-                   (d050501 * b[1] +
+                    d050407 * b[7]
+                ) * u[4] +
+                (
+                    d050501 * b[1] +
                     d050502 * b[2] +
                     d050503 * b[3] +
                     d050504 * b[4] +
                     d050505 * b[5] +
                     d050506 * b[6] +
                     d050507 * b[7] +
-                    d050508 * b[8]) * u[5] +
-                   (d050601 * b[1] +
+                    d050508 * b[8]
+                ) * u[5] +
+                (
+                    d050601 * b[1] +
                     d050602 * b[2] +
                     d050603 * b[3] +
                     d050604 * b[4] +
                     d050605 * b[5] +
                     d050606 * b[6] +
                     d050607 * b[7] +
-                    d050608 * b[8]) * u[6] +
-                   (d050704 * b[4] +
+                    d050608 * b[8]
+                ) * u[6] +
+                (
+                    d050704 * b[4] +
                     d050705 * b[5] +
                     d050706 * b[6] +
                     d050707 * b[7] +
-                    d050708 * b[8]) * u[7] +
-                   (d050805 * b[5] + d050806 * b[6] + d050807 * b[7] + d050808 * b[8]) *
-                   u[8] +
-                   (d050905 * b[5] + d050906 * b[6] + d050907 * b[7] + d050908 * b[8]) *
-                   u[9]) + β * dest[5]
-        dest[6] = α * ((d060101 * b[1] +
+                    d050708 * b[8]
+                ) * u[7] +
+                (d050805 * b[5] + d050806 * b[6] + d050807 * b[7] + d050808 * b[8]) * u[8] +
+                (d050905 * b[5] + d050906 * b[6] + d050907 * b[7] + d050908 * b[8]) * u[9]
+            ) + β * dest[5]
+        dest[6] =
+            α * (
+                (
+                    d060101 * b[1] +
                     d060102 * b[2] +
                     d060103 * b[3] +
                     d060104 * b[4] +
                     d060105 * b[5] +
                     d060106 * b[6] +
-                    d060107 * b[7]) * u[1] +
-                   (d060201 * b[1] +
+                    d060107 * b[7]
+                ) * u[1] +
+                (
+                    d060201 * b[1] +
                     d060203 * b[3] +
                     d060204 * b[4] +
                     d060205 * b[5] +
                     d060206 * b[6] +
-                    d060207 * b[7]) * u[2] +
-                   (d060301 * b[1] +
+                    d060207 * b[7]
+                ) * u[2] +
+                (
+                    d060301 * b[1] +
                     d060302 * b[2] +
                     d060304 * b[4] +
                     d060305 * b[5] +
                     d060306 * b[6] +
-                    d060307 * b[7]) * u[3] +
-                   (d060401 * b[1] +
+                    d060307 * b[7]
+                ) * u[3] +
+                (
+                    d060401 * b[1] +
                     d060402 * b[2] +
                     d060403 * b[3] +
                     d060405 * b[5] +
                     d060406 * b[6] +
-                    d060407 * b[7]) * u[4] +
-                   (d060501 * b[1] +
+                    d060407 * b[7]
+                ) * u[4] +
+                (
+                    d060501 * b[1] +
                     d060502 * b[2] +
                     d060503 * b[3] +
                     d060504 * b[4] +
                     d060505 * b[5] +
                     d060506 * b[6] +
                     d060507 * b[7] +
-                    d060508 * b[8]) * u[5] +
-                   (d060601 * b[1] +
+                    d060508 * b[8]
+                ) * u[5] +
+                (
+                    d060601 * b[1] +
                     d060602 * b[2] +
                     d060603 * b[3] +
                     d060604 * b[4] +
@@ -6565,586 +7377,778 @@ function convolve_boundary_coefficients!(dest::AbstractVector,
                     d060606 * b[6] +
                     d060607 * b[7] +
                     d060608 * b[8] +
-                    d060609 * b[9]) * u[6] +
-                   (d060704 * b[4] +
+                    d060609 * b[9]
+                ) * u[6] +
+                (
+                    d060704 * b[4] +
                     d060705 * b[5] +
                     d060706 * b[6] +
                     d060707 * b[7] +
                     d060708 * b[8] +
-                    d060709 * b[9]) * u[7] +
-                   (d060805 * b[5] +
+                    d060709 * b[9]
+                ) * u[7] +
+                (
+                    d060805 * b[5] +
                     d060806 * b[6] +
                     d060807 * b[7] +
                     d060808 * b[8] +
-                    d060809 * b[9]) * u[8] +
-                   (d060905 * b[5] +
+                    d060809 * b[9]
+                ) * u[8] +
+                (
+                    d060905 * b[5] +
                     d060906 * b[6] +
                     d060907 * b[7] +
                     d060908 * b[8] +
-                    d060909 * b[9]) * u[9]) + β * dest[6]
-        dest[7] = α *
-                  ((d070104 * b[4] + d070105 * b[5] + d070106 * b[6] + d070107 * b[7]) *
-                   u[1] +
-                   (d070204 * b[4] + d070205 * b[5] + d070206 * b[6] + d070207 * b[7]) *
-                   u[2] +
-                   (d070304 * b[4] + d070305 * b[5] + d070306 * b[6] + d070307 * b[7]) *
-                   u[3] +
-                   (d070405 * b[5] + d070406 * b[6] + d070407 * b[7]) * u[4] +
-                   (d070504 * b[4] +
+                    d060909 * b[9]
+                ) * u[9]
+            ) + β * dest[6]
+        dest[7] =
+            α * (
+                (d070104 * b[4] + d070105 * b[5] + d070106 * b[6] + d070107 * b[7]) * u[1] +
+                (d070204 * b[4] + d070205 * b[5] + d070206 * b[6] + d070207 * b[7]) * u[2] +
+                (d070304 * b[4] + d070305 * b[5] + d070306 * b[6] + d070307 * b[7]) * u[3] +
+                (d070405 * b[5] + d070406 * b[6] + d070407 * b[7]) * u[4] +
+                (
+                    d070504 * b[4] +
                     d070505 * b[5] +
                     d070506 * b[6] +
                     d070507 * b[7] +
-                    d070508 * b[8]) * u[5] +
-                   (d070604 * b[4] +
+                    d070508 * b[8]
+                ) * u[5] +
+                (
+                    d070604 * b[4] +
                     d070605 * b[5] +
                     d070606 * b[6] +
                     d070607 * b[7] +
                     d070608 * b[8] +
-                    d070609 * b[9]) * u[6] +
-                   (d070704 * b[4] +
+                    d070609 * b[9]
+                ) * u[6] +
+                (
+                    d070704 * b[4] +
                     d070705 * b[5] +
                     d070706 * b[6] +
                     d070707 * b[7] +
                     d070708 * b[8] +
                     d070709 * b[9] +
-                    d070710 * b[10]) * u[7] +
-                   (d070805 * b[5] +
+                    d070710 * b[10]
+                ) * u[7] +
+                (
+                    d070805 * b[5] +
                     d070806 * b[6] +
                     d070807 * b[7] +
                     d070808 * b[8] +
                     d070809 * b[9] +
-                    d070810 * b[10]) * u[8] +
-                   (d070905 * b[5] +
+                    d070810 * b[10]
+                ) * u[8] +
+                (
+                    d070905 * b[5] +
                     d070906 * b[6] +
                     d070907 * b[7] +
                     d070908 * b[8] +
                     d070909 * b[9] +
-                    d070910 * b[10]) * u[9] +
-                   (d071010 * b[10] + d071007 * b[7] + d071008 * b[8] + d071009 * b[9]) *
-                   u[10]) + β * dest[7]
-        dest[8] = α * ((d080105 * b[5] + d080106 * b[6] + d080107 * b[7]) * u[1] +
-                   (d080205 * b[5] + d080206 * b[6] + d080207 * b[7]) * u[2] +
-                   (d080305 * b[5] + d080306 * b[6] + d080307 * b[7]) * u[3] +
-                   (d080405 * b[5] + d080406 * b[6] + d080407 * b[7]) * u[4] +
-                   (d080505 * b[5] + d080506 * b[6] + d080507 * b[7] + d080508 * b[8]) *
-                   u[5] +
-                   (d080605 * b[5] +
+                    d070910 * b[10]
+                ) * u[9] +
+                (d071010 * b[10] + d071007 * b[7] + d071008 * b[8] + d071009 * b[9]) * u[10]
+            ) + β * dest[7]
+        dest[8] =
+            α * (
+                (d080105 * b[5] + d080106 * b[6] + d080107 * b[7]) * u[1] +
+                (d080205 * b[5] + d080206 * b[6] + d080207 * b[7]) * u[2] +
+                (d080305 * b[5] + d080306 * b[6] + d080307 * b[7]) * u[3] +
+                (d080405 * b[5] + d080406 * b[6] + d080407 * b[7]) * u[4] +
+                (d080505 * b[5] + d080506 * b[6] + d080507 * b[7] + d080508 * b[8]) * u[5] +
+                (
+                    d080605 * b[5] +
                     d080606 * b[6] +
                     d080607 * b[7] +
                     d080608 * b[8] +
-                    d080609 * b[9]) * u[6] +
-                   (d080705 * b[5] +
+                    d080609 * b[9]
+                ) * u[6] +
+                (
+                    d080705 * b[5] +
                     d080706 * b[6] +
                     d080707 * b[7] +
                     d080708 * b[8] +
                     d080709 * b[9] +
-                    d080710 * b[10]) * u[7] +
-                   (d080805 * b[5] +
+                    d080710 * b[10]
+                ) * u[7] +
+                (
+                    d080805 * b[5] +
                     d080806 * b[6] +
                     d080807 * b[7] +
                     d080808 * b[8] +
                     d080809 * b[9] +
                     d080810 * b[10] +
-                    d080811 * b[11]) * u[8] +
-                   (d080910 * b[10] +
+                    d080811 * b[11]
+                ) * u[8] +
+                (
+                    d080910 * b[10] +
                     d080911 * b[11] +
                     d080905 * b[5] +
                     d080906 * b[6] +
                     d080907 * b[7] +
                     d080908 * b[8] +
-                    d080909 * b[9]) * u[9] +
-                   (d081010 * b[10] +
+                    d080909 * b[9]
+                ) * u[9] +
+                (
+                    d081010 * b[10] +
                     d081011 * b[11] +
                     d081007 * b[7] +
                     d081008 * b[8] +
-                    d081009 * b[9]) * u[10] +
-                   (d081110 * b[10] + d081111 * b[11] + d081108 * b[8] + d081109 * b[9]) *
-                   u[11]) + β * dest[8]
-        dest[9] = α * ((d090105 * b[5] + d090106 * b[6] + d090107 * b[7]) * u[1] +
-                   (d090205 * b[5] + d090206 * b[6] + d090207 * b[7]) * u[2] +
-                   (d090305 * b[5] + d090306 * b[6] + d090307 * b[7]) * u[3] +
-                   (d090405 * b[5] + d090406 * b[6] + d090407 * b[7]) * u[4] +
-                   (d090505 * b[5] + d090506 * b[6] + d090507 * b[7] + d090508 * b[8]) *
-                   u[5] +
-                   (d090605 * b[5] +
+                    d081009 * b[9]
+                ) * u[10] +
+                (d081110 * b[10] + d081111 * b[11] + d081108 * b[8] + d081109 * b[9]) *
+                u[11]
+            ) + β * dest[8]
+        dest[9] =
+            α * (
+                (d090105 * b[5] + d090106 * b[6] + d090107 * b[7]) * u[1] +
+                (d090205 * b[5] + d090206 * b[6] + d090207 * b[7]) * u[2] +
+                (d090305 * b[5] + d090306 * b[6] + d090307 * b[7]) * u[3] +
+                (d090405 * b[5] + d090406 * b[6] + d090407 * b[7]) * u[4] +
+                (d090505 * b[5] + d090506 * b[6] + d090507 * b[7] + d090508 * b[8]) * u[5] +
+                (
+                    d090605 * b[5] +
                     d090606 * b[6] +
                     d090607 * b[7] +
                     d090608 * b[8] +
-                    d090609 * b[9]) * u[6] +
-                   (d090705 * b[5] +
+                    d090609 * b[9]
+                ) * u[6] +
+                (
+                    d090705 * b[5] +
                     d090706 * b[6] +
                     d090707 * b[7] +
                     d090708 * b[8] +
                     d090709 * b[9] +
-                    d090710 * b[10]) * u[7] +
-                   (d090810 * b[10] +
+                    d090710 * b[10]
+                ) * u[7] +
+                (
+                    d090810 * b[10] +
                     d090811 * b[11] +
                     d090805 * b[5] +
                     d090806 * b[6] +
                     d090807 * b[7] +
                     d090808 * b[8] +
-                    d090809 * b[9]) * u[8] +
-                   (d090910 * b[10] +
+                    d090809 * b[9]
+                ) * u[8] +
+                (
+                    d090910 * b[10] +
                     d090911 * b[11] +
                     d090912 * b[12] +
                     d090905 * b[5] +
                     d090906 * b[6] +
                     d090907 * b[7] +
                     d090908 * b[8] +
-                    d090909 * b[9]) * u[9] +
-                   (d091010 * b[10] +
+                    d090909 * b[9]
+                ) * u[9] +
+                (
+                    d091010 * b[10] +
                     d091011 * b[11] +
                     d091012 * b[12] +
                     d091007 * b[7] +
                     d091008 * b[8] +
-                    d091009 * b[9]) * u[10] +
-                   (d091110 * b[10] +
+                    d091009 * b[9]
+                ) * u[10] +
+                (
+                    d091110 * b[10] +
                     d091111 * b[11] +
                     d091112 * b[12] +
                     d091108 * b[8] +
-                    d091109 * b[9]) * u[11] +
-                   (d091210 * b[10] + d091211 * b[11] + d091212 * b[12] + d091209 * b[9]) *
-                   u[12]) + β * dest[9]
+                    d091109 * b[9]
+                ) * u[11] +
+                (d091210 * b[10] + d091211 * b[11] + d091212 * b[12] + d091209 * b[9]) *
+                u[12]
+            ) + β * dest[9]
 
-        dest[end] = α * ((d010101 * b[end] +
-                      d010102 * b[end - 1] +
-                      d010103 * b[end - 2] +
-                      d010104 * b[end - 3] +
-                      d010105 * b[end - 4] +
-                      d010106 * b[end - 5] +
-                      d010107 * b[end - 6]) * u[end] +
-                     (d010201 * b[end] +
-                      d010203 * b[end - 2] +
-                      d010204 * b[end - 3] +
-                      d010205 * b[end - 4] +
-                      d010206 * b[end - 5] +
-                      d010207 * b[end - 6]) * u[end - 1] +
-                     (d010301 * b[end] +
-                      d010302 * b[end - 1] +
-                      d010304 * b[end - 3] +
-                      d010305 * b[end - 4] +
-                      d010306 * b[end - 5] +
-                      d010307 * b[end - 6]) * u[end - 2] +
-                     (d010401 * b[end] +
-                      d010402 * b[end - 1] +
-                      d010403 * b[end - 2] +
-                      d010405 * b[end - 4] +
-                      d010406 * b[end - 5] +
-                      d010407 * b[end - 6]) * u[end - 3] +
-                     (d010501 * b[end] +
-                      d010502 * b[end - 1] +
-                      d010503 * b[end - 2] +
-                      d010504 * b[end - 3] +
-                      d010505 * b[end - 4] +
-                      d010506 * b[end - 5] +
-                      d010507 * b[end - 6]) * u[end - 4] +
-                     (d010601 * b[end] +
-                      d010602 * b[end - 1] +
-                      d010603 * b[end - 2] +
-                      d010604 * b[end - 3] +
-                      d010605 * b[end - 4] +
-                      d010606 * b[end - 5] +
-                      d010607 * b[end - 6]) * u[end - 5] +
-                     (d010704 * b[end - 3] +
-                      d010705 * b[end - 4] +
-                      d010706 * b[end - 5] +
-                      d010707 * b[end - 6]) * u[end - 6] +
-                     (d010805 * b[end - 4] + d010806 * b[end - 5] + d010807 * b[end - 6]) *
-                     u[end - 7] +
-                     (d010905 * b[end - 4] + d010906 * b[end - 5] + d010907 * b[end - 6]) *
-                     u[end - 8]) + β * dest[end]
-        dest[end - 1] = α * ((d020101 * b[end] +
-                          d020103 * b[end - 2] +
-                          d020104 * b[end - 3] +
-                          d020105 * b[end - 4] +
-                          d020106 * b[end - 5] +
-                          d020107 * b[end - 6]) * u[end] +
-                         (d020201 * b[end] +
-                          d020203 * b[end - 2] +
-                          d020204 * b[end - 3] +
-                          d020205 * b[end - 4] +
-                          d020206 * b[end - 5] +
-                          d020207 * b[end - 6]) * u[end - 1] +
-                         (d020301 * b[end] +
-                          d020304 * b[end - 3] +
-                          d020305 * b[end - 4] +
-                          d020306 * b[end - 5] +
-                          d020307 * b[end - 6]) * u[end - 2] +
-                         (d020401 * b[end] +
-                          d020403 * b[end - 2] +
-                          d020405 * b[end - 4] +
-                          d020406 * b[end - 5] +
-                          d020407 * b[end - 6]) * u[end - 3] +
-                         (d020501 * b[end] +
-                          d020503 * b[end - 2] +
-                          d020504 * b[end - 3] +
-                          d020505 * b[end - 4] +
-                          d020506 * b[end - 5] +
-                          d020507 * b[end - 6]) * u[end - 4] +
-                         (d020601 * b[end] +
-                          d020603 * b[end - 2] +
-                          d020604 * b[end - 3] +
-                          d020605 * b[end - 4] +
-                          d020606 * b[end - 5] +
-                          d020607 * b[end - 6]) * u[end - 5] +
-                         (d020704 * b[end - 3] +
-                          d020705 * b[end - 4] +
-                          d020706 * b[end - 5] +
-                          d020707 * b[end - 6]) * u[end - 6] +
-                         (d020805 * b[end - 4] + d020806 * b[end - 5] +
-                          d020807 * b[end - 6]) * u[end - 7] +
-                         (d020905 * b[end - 4] + d020906 * b[end - 5] +
-                          d020907 * b[end - 6]) * u[end - 8]) + β * dest[end - 1]
-        dest[end - 2] = α * ((d030101 * b[end] +
-                          d030102 * b[end - 1] +
-                          d030104 * b[end - 3] +
-                          d030105 * b[end - 4] +
-                          d030106 * b[end - 5] +
-                          d030107 * b[end - 6]) * u[end] +
-                         (d030201 * b[end] +
-                          d030204 * b[end - 3] +
-                          d030205 * b[end - 4] +
-                          d030206 * b[end - 5] +
-                          d030207 * b[end - 6]) * u[end - 1] +
-                         (d030301 * b[end] +
-                          d030302 * b[end - 1] +
-                          d030304 * b[end - 3] +
-                          d030305 * b[end - 4] +
-                          d030306 * b[end - 5] +
-                          d030307 * b[end - 6]) * u[end - 2] +
-                         (d030401 * b[end] +
-                          d030402 * b[end - 1] +
-                          d030405 * b[end - 4] +
-                          d030406 * b[end - 5] +
-                          d030407 * b[end - 6]) * u[end - 3] +
-                         (d030501 * b[end] +
-                          d030502 * b[end - 1] +
-                          d030504 * b[end - 3] +
-                          d030505 * b[end - 4] +
-                          d030506 * b[end - 5] +
-                          d030507 * b[end - 6]) * u[end - 4] +
-                         (d030601 * b[end] +
-                          d030602 * b[end - 1] +
-                          d030604 * b[end - 3] +
-                          d030605 * b[end - 4] +
-                          d030606 * b[end - 5] +
-                          d030607 * b[end - 6]) * u[end - 5] +
-                         (d030704 * b[end - 3] +
-                          d030705 * b[end - 4] +
-                          d030706 * b[end - 5] +
-                          d030707 * b[end - 6]) * u[end - 6] +
-                         (d030805 * b[end - 4] + d030806 * b[end - 5] +
-                          d030807 * b[end - 6]) * u[end - 7] +
-                         (d030905 * b[end - 4] + d030906 * b[end - 5] +
-                          d030907 * b[end - 6]) * u[end - 8]) + β * dest[end - 2]
-        dest[end - 3] = α * ((d040101 * b[end] +
-                          d040102 * b[end - 1] +
-                          d040103 * b[end - 2] +
-                          d040105 * b[end - 4] +
-                          d040106 * b[end - 5] +
-                          d040107 * b[end - 6]) * u[end] +
-                         (d040201 * b[end] +
-                          d040203 * b[end - 2] +
-                          d040205 * b[end - 4] +
-                          d040206 * b[end - 5] +
-                          d040207 * b[end - 6]) * u[end - 1] +
-                         (d040301 * b[end] +
-                          d040302 * b[end - 1] +
-                          d040305 * b[end - 4] +
-                          d040306 * b[end - 5] +
-                          d040307 * b[end - 6]) * u[end - 2] +
-                         (d040401 * b[end] +
-                          d040402 * b[end - 1] +
-                          d040403 * b[end - 2] +
-                          d040405 * b[end - 4] +
-                          d040406 * b[end - 5] +
-                          d040407 * b[end - 6]) * u[end - 3] +
-                         (d040501 * b[end] +
-                          d040502 * b[end - 1] +
-                          d040503 * b[end - 2] +
-                          d040505 * b[end - 4] +
-                          d040506 * b[end - 5] +
-                          d040507 * b[end - 6]) * u[end - 4] +
-                         (d040601 * b[end] +
-                          d040602 * b[end - 1] +
-                          d040603 * b[end - 2] +
-                          d040605 * b[end - 4] +
-                          d040606 * b[end - 5] +
-                          d040607 * b[end - 6]) * u[end - 5] +
-                         (d040705 * b[end - 4] + d040706 * b[end - 5] +
-                          d040707 * b[end - 6]) * u[end - 6] +
-                         (d040805 * b[end - 4] + d040806 * b[end - 5] +
-                          d040807 * b[end - 6]) * u[end - 7] +
-                         (d040905 * b[end - 4] + d040906 * b[end - 5] +
-                          d040907 * b[end - 6]) * u[end - 8]) + β * dest[end - 3]
-        dest[end - 4] = α * ((d050101 * b[end] +
-                          d050102 * b[end - 1] +
-                          d050103 * b[end - 2] +
-                          d050104 * b[end - 3] +
-                          d050105 * b[end - 4] +
-                          d050106 * b[end - 5] +
-                          d050107 * b[end - 6]) * u[end] +
-                         (d050201 * b[end] +
-                          d050203 * b[end - 2] +
-                          d050204 * b[end - 3] +
-                          d050205 * b[end - 4] +
-                          d050206 * b[end - 5] +
-                          d050207 * b[end - 6]) * u[end - 1] +
-                         (d050301 * b[end] +
-                          d050302 * b[end - 1] +
-                          d050304 * b[end - 3] +
-                          d050305 * b[end - 4] +
-                          d050306 * b[end - 5] +
-                          d050307 * b[end - 6]) * u[end - 2] +
-                         (d050401 * b[end] +
-                          d050402 * b[end - 1] +
-                          d050403 * b[end - 2] +
-                          d050405 * b[end - 4] +
-                          d050406 * b[end - 5] +
-                          d050407 * b[end - 6]) * u[end - 3] +
-                         (d050501 * b[end] +
-                          d050502 * b[end - 1] +
-                          d050503 * b[end - 2] +
-                          d050504 * b[end - 3] +
-                          d050505 * b[end - 4] +
-                          d050506 * b[end - 5] +
-                          d050507 * b[end - 6] +
-                          d050508 * b[end - 7]) * u[end - 4] +
-                         (d050601 * b[end] +
-                          d050602 * b[end - 1] +
-                          d050603 * b[end - 2] +
-                          d050604 * b[end - 3] +
-                          d050605 * b[end - 4] +
-                          d050606 * b[end - 5] +
-                          d050607 * b[end - 6] +
-                          d050608 * b[end - 7]) * u[end - 5] +
-                         (d050704 * b[end - 3] +
-                          d050705 * b[end - 4] +
-                          d050706 * b[end - 5] +
-                          d050707 * b[end - 6] +
-                          d050708 * b[end - 7]) * u[end - 6] +
-                         (d050805 * b[end - 4] +
-                          d050806 * b[end - 5] +
-                          d050807 * b[end - 6] +
-                          d050808 * b[end - 7]) * u[end - 7] +
-                         (d050905 * b[end - 4] +
-                          d050906 * b[end - 5] +
-                          d050907 * b[end - 6] +
-                          d050908 * b[end - 7]) * u[end - 8]) + β * dest[end - 4]
-        dest[end - 5] = α * ((d060101 * b[end] +
-                          d060102 * b[end - 1] +
-                          d060103 * b[end - 2] +
-                          d060104 * b[end - 3] +
-                          d060105 * b[end - 4] +
-                          d060106 * b[end - 5] +
-                          d060107 * b[end - 6]) * u[end] +
-                         (d060201 * b[end] +
-                          d060203 * b[end - 2] +
-                          d060204 * b[end - 3] +
-                          d060205 * b[end - 4] +
-                          d060206 * b[end - 5] +
-                          d060207 * b[end - 6]) * u[end - 1] +
-                         (d060301 * b[end] +
-                          d060302 * b[end - 1] +
-                          d060304 * b[end - 3] +
-                          d060305 * b[end - 4] +
-                          d060306 * b[end - 5] +
-                          d060307 * b[end - 6]) * u[end - 2] +
-                         (d060401 * b[end] +
-                          d060402 * b[end - 1] +
-                          d060403 * b[end - 2] +
-                          d060405 * b[end - 4] +
-                          d060406 * b[end - 5] +
-                          d060407 * b[end - 6]) * u[end - 3] +
-                         (d060501 * b[end] +
-                          d060502 * b[end - 1] +
-                          d060503 * b[end - 2] +
-                          d060504 * b[end - 3] +
-                          d060505 * b[end - 4] +
-                          d060506 * b[end - 5] +
-                          d060507 * b[end - 6] +
-                          d060508 * b[end - 7]) * u[end - 4] +
-                         (d060601 * b[end] +
-                          d060602 * b[end - 1] +
-                          d060603 * b[end - 2] +
-                          d060604 * b[end - 3] +
-                          d060605 * b[end - 4] +
-                          d060606 * b[end - 5] +
-                          d060607 * b[end - 6] +
-                          d060608 * b[end - 7] +
-                          d060609 * b[end - 8]) * u[end - 5] +
-                         (d060704 * b[end - 3] +
-                          d060705 * b[end - 4] +
-                          d060706 * b[end - 5] +
-                          d060707 * b[end - 6] +
-                          d060708 * b[end - 7] +
-                          d060709 * b[end - 8]) * u[end - 6] +
-                         (d060805 * b[end - 4] +
-                          d060806 * b[end - 5] +
-                          d060807 * b[end - 6] +
-                          d060808 * b[end - 7] +
-                          d060809 * b[end - 8]) * u[end - 7] +
-                         (d060905 * b[end - 4] +
-                          d060906 * b[end - 5] +
-                          d060907 * b[end - 6] +
-                          d060908 * b[end - 7] +
-                          d060909 * b[end - 8]) * u[end - 8]) + β * dest[end - 5]
-        dest[end - 6] = α * ((d070104 * b[end - 3] +
-                          d070105 * b[end - 4] +
-                          d070106 * b[end - 5] +
-                          d070107 * b[end - 6]) * u[end] +
-                         (d070204 * b[end - 3] +
-                          d070205 * b[end - 4] +
-                          d070206 * b[end - 5] +
-                          d070207 * b[end - 6]) * u[end - 1] +
-                         (d070304 * b[end - 3] +
-                          d070305 * b[end - 4] +
-                          d070306 * b[end - 5] +
-                          d070307 * b[end - 6]) * u[end - 2] +
-                         (d070405 * b[end - 4] + d070406 * b[end - 5] +
-                          d070407 * b[end - 6]) * u[end - 3] +
-                         (d070504 * b[end - 3] +
-                          d070505 * b[end - 4] +
-                          d070506 * b[end - 5] +
-                          d070507 * b[end - 6] +
-                          d070508 * b[end - 7]) * u[end - 4] +
-                         (d070604 * b[end - 3] +
-                          d070605 * b[end - 4] +
-                          d070606 * b[end - 5] +
-                          d070607 * b[end - 6] +
-                          d070608 * b[end - 7] +
-                          d070609 * b[end - 8]) * u[end - 5] +
-                         (d070704 * b[end - 3] +
-                          d070705 * b[end - 4] +
-                          d070706 * b[end - 5] +
-                          d070707 * b[end - 6] +
-                          d070708 * b[end - 7] +
-                          d070709 * b[end - 8] +
-                          d070710 * b[end - 9]) * u[end - 6] +
-                         (d070805 * b[end - 4] +
-                          d070806 * b[end - 5] +
-                          d070807 * b[end - 6] +
-                          d070808 * b[end - 7] +
-                          d070809 * b[end - 8] +
-                          d070810 * b[end - 9]) * u[end - 7] +
-                         (d070905 * b[end - 4] +
-                          d070906 * b[end - 5] +
-                          d070907 * b[end - 6] +
-                          d070908 * b[end - 7] +
-                          d070909 * b[end - 8] +
-                          d070910 * b[end - 9]) * u[end - 8] +
-                         (d071010 * b[end - 9] +
-                          d071007 * b[end - 6] +
-                          d071008 * b[end - 7] +
-                          d071009 * b[end - 8]) * u[end - 9]) + β * dest[end - 6]
-        dest[end - 7] = α * ((d080105 * b[end - 4] + d080106 * b[end - 5] +
-                          d080107 * b[end - 6]) * u[end] +
-                         (d080205 * b[end - 4] + d080206 * b[end - 5] +
-                          d080207 * b[end - 6]) * u[end - 1] +
-                         (d080305 * b[end - 4] + d080306 * b[end - 5] +
-                          d080307 * b[end - 6]) * u[end - 2] +
-                         (d080405 * b[end - 4] + d080406 * b[end - 5] +
-                          d080407 * b[end - 6]) * u[end - 3] +
-                         (d080505 * b[end - 4] +
-                          d080506 * b[end - 5] +
-                          d080507 * b[end - 6] +
-                          d080508 * b[end - 7]) * u[end - 4] +
-                         (d080605 * b[end - 4] +
-                          d080606 * b[end - 5] +
-                          d080607 * b[end - 6] +
-                          d080608 * b[end - 7] +
-                          d080609 * b[end - 8]) * u[end - 5] +
-                         (d080705 * b[end - 4] +
-                          d080706 * b[end - 5] +
-                          d080707 * b[end - 6] +
-                          d080708 * b[end - 7] +
-                          d080709 * b[end - 8] +
-                          d080710 * b[end - 9]) * u[end - 6] +
-                         (d080805 * b[end - 4] +
-                          d080806 * b[end - 5] +
-                          d080807 * b[end - 6] +
-                          d080808 * b[end - 7] +
-                          d080809 * b[end - 8] +
-                          d080810 * b[end - 9] +
-                          d080811 * b[end - 10]) * u[end - 7] +
-                         (d080910 * b[end - 9] +
-                          d080911 * b[end - 10] +
-                          d080905 * b[end - 4] +
-                          d080906 * b[end - 5] +
-                          d080907 * b[end - 6] +
-                          d080908 * b[end - 7] +
-                          d080909 * b[end - 8]) * u[end - 8] +
-                         (d081010 * b[end - 9] +
-                          d081011 * b[end - 10] +
-                          d081007 * b[end - 6] +
-                          d081008 * b[end - 7] +
-                          d081009 * b[end - 8]) * u[end - 9] +
-                         (d081110 * b[end - 9] +
-                          d081111 * b[end - 10] +
-                          d081108 * b[end - 7] +
-                          d081109 * b[end - 8]) * u[end - 10]) + β * dest[end - 7]
-        dest[end - 8] = α * ((d090105 * b[end - 4] + d090106 * b[end - 5] +
-                          d090107 * b[end - 6]) * u[end] +
-                         (d090205 * b[end - 4] + d090206 * b[end - 5] +
-                          d090207 * b[end - 6]) * u[end - 1] +
-                         (d090305 * b[end - 4] + d090306 * b[end - 5] +
-                          d090307 * b[end - 6]) * u[end - 2] +
-                         (d090405 * b[end - 4] + d090406 * b[end - 5] +
-                          d090407 * b[end - 6]) * u[end - 3] +
-                         (d090505 * b[end - 4] +
-                          d090506 * b[end - 5] +
-                          d090507 * b[end - 6] +
-                          d090508 * b[end - 7]) * u[end - 4] +
-                         (d090605 * b[end - 4] +
-                          d090606 * b[end - 5] +
-                          d090607 * b[end - 6] +
-                          d090608 * b[end - 7] +
-                          d090609 * b[end - 8]) * u[end - 5] +
-                         (d090705 * b[end - 4] +
-                          d090706 * b[end - 5] +
-                          d090707 * b[end - 6] +
-                          d090708 * b[end - 7] +
-                          d090709 * b[end - 8] +
-                          d090710 * b[end - 9]) * u[end - 6] +
-                         (d090810 * b[end - 9] +
-                          d090811 * b[end - 10] +
-                          d090805 * b[end - 4] +
-                          d090806 * b[end - 5] +
-                          d090807 * b[end - 6] +
-                          d090808 * b[end - 7] +
-                          d090809 * b[end - 8]) * u[end - 7] +
-                         (d090910 * b[end - 9] +
-                          d090911 * b[end - 10] +
-                          d090912 * b[end - 11] +
-                          d090905 * b[end - 4] +
-                          d090906 * b[end - 5] +
-                          d090907 * b[end - 6] +
-                          d090908 * b[end - 7] +
-                          d090909 * b[end - 8]) * u[end - 8] +
-                         (d091010 * b[end - 9] +
-                          d091011 * b[end - 10] +
-                          d091012 * b[end - 11] +
-                          d091007 * b[end - 6] +
-                          d091008 * b[end - 7] +
-                          d091009 * b[end - 8]) * u[end - 9] +
-                         (d091110 * b[end - 9] +
-                          d091111 * b[end - 10] +
-                          d091112 * b[end - 11] +
-                          d091108 * b[end - 7] +
-                          d091109 * b[end - 8]) * u[end - 10] +
-                         (d091210 * b[end - 9] +
-                          d091211 * b[end - 10] +
-                          d091212 * b[end - 11] +
-                          d091209 * b[end - 8]) * u[end - 11]) + β * dest[end - 8]
+
+        dest[end] =
+            α * (
+                (
+                    d010101 * b[end] +
+                    d010102 * b[end-1] +
+                    d010103 * b[end-2] +
+                    d010104 * b[end-3] +
+                    d010105 * b[end-4] +
+                    d010106 * b[end-5] +
+                    d010107 * b[end-6]
+                ) * u[end] +
+                (
+                    d010201 * b[end] +
+                    d010203 * b[end-2] +
+                    d010204 * b[end-3] +
+                    d010205 * b[end-4] +
+                    d010206 * b[end-5] +
+                    d010207 * b[end-6]
+                ) * u[end-1] +
+                (
+                    d010301 * b[end] +
+                    d010302 * b[end-1] +
+                    d010304 * b[end-3] +
+                    d010305 * b[end-4] +
+                    d010306 * b[end-5] +
+                    d010307 * b[end-6]
+                ) * u[end-2] +
+                (
+                    d010401 * b[end] +
+                    d010402 * b[end-1] +
+                    d010403 * b[end-2] +
+                    d010405 * b[end-4] +
+                    d010406 * b[end-5] +
+                    d010407 * b[end-6]
+                ) * u[end-3] +
+                (
+                    d010501 * b[end] +
+                    d010502 * b[end-1] +
+                    d010503 * b[end-2] +
+                    d010504 * b[end-3] +
+                    d010505 * b[end-4] +
+                    d010506 * b[end-5] +
+                    d010507 * b[end-6]
+                ) * u[end-4] +
+                (
+                    d010601 * b[end] +
+                    d010602 * b[end-1] +
+                    d010603 * b[end-2] +
+                    d010604 * b[end-3] +
+                    d010605 * b[end-4] +
+                    d010606 * b[end-5] +
+                    d010607 * b[end-6]
+                ) * u[end-5] +
+                (
+                    d010704 * b[end-3] +
+                    d010705 * b[end-4] +
+                    d010706 * b[end-5] +
+                    d010707 * b[end-6]
+                ) * u[end-6] +
+                (d010805 * b[end-4] + d010806 * b[end-5] + d010807 * b[end-6]) * u[end-7] +
+                (d010905 * b[end-4] + d010906 * b[end-5] + d010907 * b[end-6]) * u[end-8]
+            ) + β * dest[end]
+        dest[end-1] =
+            α * (
+                (
+                    d020101 * b[end] +
+                    d020103 * b[end-2] +
+                    d020104 * b[end-3] +
+                    d020105 * b[end-4] +
+                    d020106 * b[end-5] +
+                    d020107 * b[end-6]
+                ) * u[end] +
+                (
+                    d020201 * b[end] +
+                    d020203 * b[end-2] +
+                    d020204 * b[end-3] +
+                    d020205 * b[end-4] +
+                    d020206 * b[end-5] +
+                    d020207 * b[end-6]
+                ) * u[end-1] +
+                (
+                    d020301 * b[end] +
+                    d020304 * b[end-3] +
+                    d020305 * b[end-4] +
+                    d020306 * b[end-5] +
+                    d020307 * b[end-6]
+                ) * u[end-2] +
+                (
+                    d020401 * b[end] +
+                    d020403 * b[end-2] +
+                    d020405 * b[end-4] +
+                    d020406 * b[end-5] +
+                    d020407 * b[end-6]
+                ) * u[end-3] +
+                (
+                    d020501 * b[end] +
+                    d020503 * b[end-2] +
+                    d020504 * b[end-3] +
+                    d020505 * b[end-4] +
+                    d020506 * b[end-5] +
+                    d020507 * b[end-6]
+                ) * u[end-4] +
+                (
+                    d020601 * b[end] +
+                    d020603 * b[end-2] +
+                    d020604 * b[end-3] +
+                    d020605 * b[end-4] +
+                    d020606 * b[end-5] +
+                    d020607 * b[end-6]
+                ) * u[end-5] +
+                (
+                    d020704 * b[end-3] +
+                    d020705 * b[end-4] +
+                    d020706 * b[end-5] +
+                    d020707 * b[end-6]
+                ) * u[end-6] +
+                (d020805 * b[end-4] + d020806 * b[end-5] + d020807 * b[end-6]) * u[end-7] +
+                (d020905 * b[end-4] + d020906 * b[end-5] + d020907 * b[end-6]) * u[end-8]
+            ) + β * dest[end-1]
+        dest[end-2] =
+            α * (
+                (
+                    d030101 * b[end] +
+                    d030102 * b[end-1] +
+                    d030104 * b[end-3] +
+                    d030105 * b[end-4] +
+                    d030106 * b[end-5] +
+                    d030107 * b[end-6]
+                ) * u[end] +
+                (
+                    d030201 * b[end] +
+                    d030204 * b[end-3] +
+                    d030205 * b[end-4] +
+                    d030206 * b[end-5] +
+                    d030207 * b[end-6]
+                ) * u[end-1] +
+                (
+                    d030301 * b[end] +
+                    d030302 * b[end-1] +
+                    d030304 * b[end-3] +
+                    d030305 * b[end-4] +
+                    d030306 * b[end-5] +
+                    d030307 * b[end-6]
+                ) * u[end-2] +
+                (
+                    d030401 * b[end] +
+                    d030402 * b[end-1] +
+                    d030405 * b[end-4] +
+                    d030406 * b[end-5] +
+                    d030407 * b[end-6]
+                ) * u[end-3] +
+                (
+                    d030501 * b[end] +
+                    d030502 * b[end-1] +
+                    d030504 * b[end-3] +
+                    d030505 * b[end-4] +
+                    d030506 * b[end-5] +
+                    d030507 * b[end-6]
+                ) * u[end-4] +
+                (
+                    d030601 * b[end] +
+                    d030602 * b[end-1] +
+                    d030604 * b[end-3] +
+                    d030605 * b[end-4] +
+                    d030606 * b[end-5] +
+                    d030607 * b[end-6]
+                ) * u[end-5] +
+                (
+                    d030704 * b[end-3] +
+                    d030705 * b[end-4] +
+                    d030706 * b[end-5] +
+                    d030707 * b[end-6]
+                ) * u[end-6] +
+                (d030805 * b[end-4] + d030806 * b[end-5] + d030807 * b[end-6]) * u[end-7] +
+                (d030905 * b[end-4] + d030906 * b[end-5] + d030907 * b[end-6]) * u[end-8]
+            ) + β * dest[end-2]
+        dest[end-3] =
+            α * (
+                (
+                    d040101 * b[end] +
+                    d040102 * b[end-1] +
+                    d040103 * b[end-2] +
+                    d040105 * b[end-4] +
+                    d040106 * b[end-5] +
+                    d040107 * b[end-6]
+                ) * u[end] +
+                (
+                    d040201 * b[end] +
+                    d040203 * b[end-2] +
+                    d040205 * b[end-4] +
+                    d040206 * b[end-5] +
+                    d040207 * b[end-6]
+                ) * u[end-1] +
+                (
+                    d040301 * b[end] +
+                    d040302 * b[end-1] +
+                    d040305 * b[end-4] +
+                    d040306 * b[end-5] +
+                    d040307 * b[end-6]
+                ) * u[end-2] +
+                (
+                    d040401 * b[end] +
+                    d040402 * b[end-1] +
+                    d040403 * b[end-2] +
+                    d040405 * b[end-4] +
+                    d040406 * b[end-5] +
+                    d040407 * b[end-6]
+                ) * u[end-3] +
+                (
+                    d040501 * b[end] +
+                    d040502 * b[end-1] +
+                    d040503 * b[end-2] +
+                    d040505 * b[end-4] +
+                    d040506 * b[end-5] +
+                    d040507 * b[end-6]
+                ) * u[end-4] +
+                (
+                    d040601 * b[end] +
+                    d040602 * b[end-1] +
+                    d040603 * b[end-2] +
+                    d040605 * b[end-4] +
+                    d040606 * b[end-5] +
+                    d040607 * b[end-6]
+                ) * u[end-5] +
+                (d040705 * b[end-4] + d040706 * b[end-5] + d040707 * b[end-6]) * u[end-6] +
+                (d040805 * b[end-4] + d040806 * b[end-5] + d040807 * b[end-6]) * u[end-7] +
+                (d040905 * b[end-4] + d040906 * b[end-5] + d040907 * b[end-6]) * u[end-8]
+            ) + β * dest[end-3]
+        dest[end-4] =
+            α * (
+                (
+                    d050101 * b[end] +
+                    d050102 * b[end-1] +
+                    d050103 * b[end-2] +
+                    d050104 * b[end-3] +
+                    d050105 * b[end-4] +
+                    d050106 * b[end-5] +
+                    d050107 * b[end-6]
+                ) * u[end] +
+                (
+                    d050201 * b[end] +
+                    d050203 * b[end-2] +
+                    d050204 * b[end-3] +
+                    d050205 * b[end-4] +
+                    d050206 * b[end-5] +
+                    d050207 * b[end-6]
+                ) * u[end-1] +
+                (
+                    d050301 * b[end] +
+                    d050302 * b[end-1] +
+                    d050304 * b[end-3] +
+                    d050305 * b[end-4] +
+                    d050306 * b[end-5] +
+                    d050307 * b[end-6]
+                ) * u[end-2] +
+                (
+                    d050401 * b[end] +
+                    d050402 * b[end-1] +
+                    d050403 * b[end-2] +
+                    d050405 * b[end-4] +
+                    d050406 * b[end-5] +
+                    d050407 * b[end-6]
+                ) * u[end-3] +
+                (
+                    d050501 * b[end] +
+                    d050502 * b[end-1] +
+                    d050503 * b[end-2] +
+                    d050504 * b[end-3] +
+                    d050505 * b[end-4] +
+                    d050506 * b[end-5] +
+                    d050507 * b[end-6] +
+                    d050508 * b[end-7]
+                ) * u[end-4] +
+                (
+                    d050601 * b[end] +
+                    d050602 * b[end-1] +
+                    d050603 * b[end-2] +
+                    d050604 * b[end-3] +
+                    d050605 * b[end-4] +
+                    d050606 * b[end-5] +
+                    d050607 * b[end-6] +
+                    d050608 * b[end-7]
+                ) * u[end-5] +
+                (
+                    d050704 * b[end-3] +
+                    d050705 * b[end-4] +
+                    d050706 * b[end-5] +
+                    d050707 * b[end-6] +
+                    d050708 * b[end-7]
+                ) * u[end-6] +
+                (
+                    d050805 * b[end-4] +
+                    d050806 * b[end-5] +
+                    d050807 * b[end-6] +
+                    d050808 * b[end-7]
+                ) * u[end-7] +
+                (
+                    d050905 * b[end-4] +
+                    d050906 * b[end-5] +
+                    d050907 * b[end-6] +
+                    d050908 * b[end-7]
+                ) * u[end-8]
+            ) + β * dest[end-4]
+        dest[end-5] =
+            α * (
+                (
+                    d060101 * b[end] +
+                    d060102 * b[end-1] +
+                    d060103 * b[end-2] +
+                    d060104 * b[end-3] +
+                    d060105 * b[end-4] +
+                    d060106 * b[end-5] +
+                    d060107 * b[end-6]
+                ) * u[end] +
+                (
+                    d060201 * b[end] +
+                    d060203 * b[end-2] +
+                    d060204 * b[end-3] +
+                    d060205 * b[end-4] +
+                    d060206 * b[end-5] +
+                    d060207 * b[end-6]
+                ) * u[end-1] +
+                (
+                    d060301 * b[end] +
+                    d060302 * b[end-1] +
+                    d060304 * b[end-3] +
+                    d060305 * b[end-4] +
+                    d060306 * b[end-5] +
+                    d060307 * b[end-6]
+                ) * u[end-2] +
+                (
+                    d060401 * b[end] +
+                    d060402 * b[end-1] +
+                    d060403 * b[end-2] +
+                    d060405 * b[end-4] +
+                    d060406 * b[end-5] +
+                    d060407 * b[end-6]
+                ) * u[end-3] +
+                (
+                    d060501 * b[end] +
+                    d060502 * b[end-1] +
+                    d060503 * b[end-2] +
+                    d060504 * b[end-3] +
+                    d060505 * b[end-4] +
+                    d060506 * b[end-5] +
+                    d060507 * b[end-6] +
+                    d060508 * b[end-7]
+                ) * u[end-4] +
+                (
+                    d060601 * b[end] +
+                    d060602 * b[end-1] +
+                    d060603 * b[end-2] +
+                    d060604 * b[end-3] +
+                    d060605 * b[end-4] +
+                    d060606 * b[end-5] +
+                    d060607 * b[end-6] +
+                    d060608 * b[end-7] +
+                    d060609 * b[end-8]
+                ) * u[end-5] +
+                (
+                    d060704 * b[end-3] +
+                    d060705 * b[end-4] +
+                    d060706 * b[end-5] +
+                    d060707 * b[end-6] +
+                    d060708 * b[end-7] +
+                    d060709 * b[end-8]
+                ) * u[end-6] +
+                (
+                    d060805 * b[end-4] +
+                    d060806 * b[end-5] +
+                    d060807 * b[end-6] +
+                    d060808 * b[end-7] +
+                    d060809 * b[end-8]
+                ) * u[end-7] +
+                (
+                    d060905 * b[end-4] +
+                    d060906 * b[end-5] +
+                    d060907 * b[end-6] +
+                    d060908 * b[end-7] +
+                    d060909 * b[end-8]
+                ) * u[end-8]
+            ) + β * dest[end-5]
+        dest[end-6] =
+            α * (
+                (
+                    d070104 * b[end-3] +
+                    d070105 * b[end-4] +
+                    d070106 * b[end-5] +
+                    d070107 * b[end-6]
+                ) * u[end] +
+                (
+                    d070204 * b[end-3] +
+                    d070205 * b[end-4] +
+                    d070206 * b[end-5] +
+                    d070207 * b[end-6]
+                ) * u[end-1] +
+                (
+                    d070304 * b[end-3] +
+                    d070305 * b[end-4] +
+                    d070306 * b[end-5] +
+                    d070307 * b[end-6]
+                ) * u[end-2] +
+                (d070405 * b[end-4] + d070406 * b[end-5] + d070407 * b[end-6]) * u[end-3] +
+                (
+                    d070504 * b[end-3] +
+                    d070505 * b[end-4] +
+                    d070506 * b[end-5] +
+                    d070507 * b[end-6] +
+                    d070508 * b[end-7]
+                ) * u[end-4] +
+                (
+                    d070604 * b[end-3] +
+                    d070605 * b[end-4] +
+                    d070606 * b[end-5] +
+                    d070607 * b[end-6] +
+                    d070608 * b[end-7] +
+                    d070609 * b[end-8]
+                ) * u[end-5] +
+                (
+                    d070704 * b[end-3] +
+                    d070705 * b[end-4] +
+                    d070706 * b[end-5] +
+                    d070707 * b[end-6] +
+                    d070708 * b[end-7] +
+                    d070709 * b[end-8] +
+                    d070710 * b[end-9]
+                ) * u[end-6] +
+                (
+                    d070805 * b[end-4] +
+                    d070806 * b[end-5] +
+                    d070807 * b[end-6] +
+                    d070808 * b[end-7] +
+                    d070809 * b[end-8] +
+                    d070810 * b[end-9]
+                ) * u[end-7] +
+                (
+                    d070905 * b[end-4] +
+                    d070906 * b[end-5] +
+                    d070907 * b[end-6] +
+                    d070908 * b[end-7] +
+                    d070909 * b[end-8] +
+                    d070910 * b[end-9]
+                ) * u[end-8] +
+                (
+                    d071010 * b[end-9] +
+                    d071007 * b[end-6] +
+                    d071008 * b[end-7] +
+                    d071009 * b[end-8]
+                ) * u[end-9]
+            ) + β * dest[end-6]
+        dest[end-7] =
+            α * (
+                (d080105 * b[end-4] + d080106 * b[end-5] + d080107 * b[end-6]) * u[end] +
+                (d080205 * b[end-4] + d080206 * b[end-5] + d080207 * b[end-6]) * u[end-1] +
+                (d080305 * b[end-4] + d080306 * b[end-5] + d080307 * b[end-6]) * u[end-2] +
+                (d080405 * b[end-4] + d080406 * b[end-5] + d080407 * b[end-6]) * u[end-3] +
+                (
+                    d080505 * b[end-4] +
+                    d080506 * b[end-5] +
+                    d080507 * b[end-6] +
+                    d080508 * b[end-7]
+                ) * u[end-4] +
+                (
+                    d080605 * b[end-4] +
+                    d080606 * b[end-5] +
+                    d080607 * b[end-6] +
+                    d080608 * b[end-7] +
+                    d080609 * b[end-8]
+                ) * u[end-5] +
+                (
+                    d080705 * b[end-4] +
+                    d080706 * b[end-5] +
+                    d080707 * b[end-6] +
+                    d080708 * b[end-7] +
+                    d080709 * b[end-8] +
+                    d080710 * b[end-9]
+                ) * u[end-6] +
+                (
+                    d080805 * b[end-4] +
+                    d080806 * b[end-5] +
+                    d080807 * b[end-6] +
+                    d080808 * b[end-7] +
+                    d080809 * b[end-8] +
+                    d080810 * b[end-9] +
+                    d080811 * b[end-10]
+                ) * u[end-7] +
+                (
+                    d080910 * b[end-9] +
+                    d080911 * b[end-10] +
+                    d080905 * b[end-4] +
+                    d080906 * b[end-5] +
+                    d080907 * b[end-6] +
+                    d080908 * b[end-7] +
+                    d080909 * b[end-8]
+                ) * u[end-8] +
+                (
+                    d081010 * b[end-9] +
+                    d081011 * b[end-10] +
+                    d081007 * b[end-6] +
+                    d081008 * b[end-7] +
+                    d081009 * b[end-8]
+                ) * u[end-9] +
+                (
+                    d081110 * b[end-9] +
+                    d081111 * b[end-10] +
+                    d081108 * b[end-7] +
+                    d081109 * b[end-8]
+                ) * u[end-10]
+            ) + β * dest[end-7]
+        dest[end-8] =
+            α * (
+                (d090105 * b[end-4] + d090106 * b[end-5] + d090107 * b[end-6]) * u[end] +
+                (d090205 * b[end-4] + d090206 * b[end-5] + d090207 * b[end-6]) * u[end-1] +
+                (d090305 * b[end-4] + d090306 * b[end-5] + d090307 * b[end-6]) * u[end-2] +
+                (d090405 * b[end-4] + d090406 * b[end-5] + d090407 * b[end-6]) * u[end-3] +
+                (
+                    d090505 * b[end-4] +
+                    d090506 * b[end-5] +
+                    d090507 * b[end-6] +
+                    d090508 * b[end-7]
+                ) * u[end-4] +
+                (
+                    d090605 * b[end-4] +
+                    d090606 * b[end-5] +
+                    d090607 * b[end-6] +
+                    d090608 * b[end-7] +
+                    d090609 * b[end-8]
+                ) * u[end-5] +
+                (
+                    d090705 * b[end-4] +
+                    d090706 * b[end-5] +
+                    d090707 * b[end-6] +
+                    d090708 * b[end-7] +
+                    d090709 * b[end-8] +
+                    d090710 * b[end-9]
+                ) * u[end-6] +
+                (
+                    d090810 * b[end-9] +
+                    d090811 * b[end-10] +
+                    d090805 * b[end-4] +
+                    d090806 * b[end-5] +
+                    d090807 * b[end-6] +
+                    d090808 * b[end-7] +
+                    d090809 * b[end-8]
+                ) * u[end-7] +
+                (
+                    d090910 * b[end-9] +
+                    d090911 * b[end-10] +
+                    d090912 * b[end-11] +
+                    d090905 * b[end-4] +
+                    d090906 * b[end-5] +
+                    d090907 * b[end-6] +
+                    d090908 * b[end-7] +
+                    d090909 * b[end-8]
+                ) * u[end-8] +
+                (
+                    d091010 * b[end-9] +
+                    d091011 * b[end-10] +
+                    d091012 * b[end-11] +
+                    d091007 * b[end-6] +
+                    d091008 * b[end-7] +
+                    d091009 * b[end-8]
+                ) * u[end-9] +
+                (
+                    d091110 * b[end-9] +
+                    d091111 * b[end-10] +
+                    d091112 * b[end-11] +
+                    d091108 * b[end-7] +
+                    d091109 * b[end-8]
+                ) * u[end-10] +
+                (
+                    d091210 * b[end-9] +
+                    d091211 * b[end-10] +
+                    d091212 * b[end-11] +
+                    d091209 * b[end-8]
+                ) * u[end-11]
+            ) + β * dest[end-8]
     end
 end
-function convolve_boundary_coefficients!(dest::AbstractVector,
-                                         cache::Mattsson2012Cache6,
-                                         u::AbstractVector,
-                                         b::AbstractVector,
-                                         α,
-                                         β,
-                                         ::Union{FastMode, ThreadedMode})
+function convolve_boundary_coefficients!(
+    dest::AbstractVector,
+    cache::Mattsson2012Cache6,
+    u::AbstractVector,
+    b::AbstractVector,
+    α,
+    β,
+    ::Union{FastMode,ThreadedMode},
+)
     @unpack d010101,
     d010102,
     d010103,
@@ -7605,246 +8609,331 @@ function convolve_boundary_coefficients!(dest::AbstractVector,
         #b8 = b[8]
         #b9 = b[9]
 
-        dest[1] = α * ((d010101 * b[1] +
+        dest[1] =
+            α * (
+                (
+                    d010101 * b[1] +
                     d010102 * b[2] +
                     d010103 * b[3] +
                     d010104 * b[4] +
                     d010105 * b[5] +
                     d010106 * b[6] +
-                    d010107 * b[7]) * u[1] +
-                   (d010201 * b[1] +
+                    d010107 * b[7]
+                ) * u[1] +
+                (
+                    d010201 * b[1] +
                     d010203 * b[3] +
                     d010204 * b[4] +
                     d010205 * b[5] +
                     d010206 * b[6] +
-                    d010207 * b[7]) * u[2] +
-                   (d010301 * b[1] +
+                    d010207 * b[7]
+                ) * u[2] +
+                (
+                    d010301 * b[1] +
                     d010302 * b[2] +
                     d010304 * b[4] +
                     d010305 * b[5] +
                     d010306 * b[6] +
-                    d010307 * b[7]) * u[3] +
-                   (d010401 * b[1] +
+                    d010307 * b[7]
+                ) * u[3] +
+                (
+                    d010401 * b[1] +
                     d010402 * b[2] +
                     d010403 * b[3] +
                     d010405 * b[5] +
                     d010406 * b[6] +
-                    d010407 * b[7]) * u[4] +
-                   (d010501 * b[1] +
+                    d010407 * b[7]
+                ) * u[4] +
+                (
+                    d010501 * b[1] +
                     d010502 * b[2] +
                     d010503 * b[3] +
                     d010504 * b[4] +
                     d010505 * b[5] +
                     d010506 * b[6] +
-                    d010507 * b[7]) * u[5] +
-                   (d010601 * b[1] +
+                    d010507 * b[7]
+                ) * u[5] +
+                (
+                    d010601 * b[1] +
                     d010602 * b[2] +
                     d010603 * b[3] +
                     d010604 * b[4] +
                     d010605 * b[5] +
                     d010606 * b[6] +
-                    d010607 * b[7]) * u[6] +
-                   (d010704 * b[4] + d010705 * b[5] + d010706 * b[6] + d010707 * b[7]) *
-                   u[7] +
-                   (d010805 * b[5] + d010806 * b[6] + d010807 * b[7]) * u[8] +
-                   (d010905 * b[5] + d010906 * b[6] + d010907 * b[7]) * u[9]) + β * dest[1]
-        dest[2] = α * ((d020101 * b[1] +
+                    d010607 * b[7]
+                ) * u[6] +
+                (d010704 * b[4] + d010705 * b[5] + d010706 * b[6] + d010707 * b[7]) * u[7] +
+                (d010805 * b[5] + d010806 * b[6] + d010807 * b[7]) * u[8] +
+                (d010905 * b[5] + d010906 * b[6] + d010907 * b[7]) * u[9]
+            ) + β * dest[1]
+        dest[2] =
+            α * (
+                (
+                    d020101 * b[1] +
                     d020103 * b[3] +
                     d020104 * b[4] +
                     d020105 * b[5] +
                     d020106 * b[6] +
-                    d020107 * b[7]) * u[1] +
-                   (d020201 * b[1] +
+                    d020107 * b[7]
+                ) * u[1] +
+                (
+                    d020201 * b[1] +
                     d020203 * b[3] +
                     d020204 * b[4] +
                     d020205 * b[5] +
                     d020206 * b[6] +
-                    d020207 * b[7]) * u[2] +
-                   (d020301 * b[1] +
+                    d020207 * b[7]
+                ) * u[2] +
+                (
+                    d020301 * b[1] +
                     d020304 * b[4] +
                     d020305 * b[5] +
                     d020306 * b[6] +
-                    d020307 * b[7]) * u[3] +
-                   (d020401 * b[1] +
+                    d020307 * b[7]
+                ) * u[3] +
+                (
+                    d020401 * b[1] +
                     d020403 * b[3] +
                     d020405 * b[5] +
                     d020406 * b[6] +
-                    d020407 * b[7]) * u[4] +
-                   (d020501 * b[1] +
+                    d020407 * b[7]
+                ) * u[4] +
+                (
+                    d020501 * b[1] +
                     d020503 * b[3] +
                     d020504 * b[4] +
                     d020505 * b[5] +
                     d020506 * b[6] +
-                    d020507 * b[7]) * u[5] +
-                   (d020601 * b[1] +
+                    d020507 * b[7]
+                ) * u[5] +
+                (
+                    d020601 * b[1] +
                     d020603 * b[3] +
                     d020604 * b[4] +
                     d020605 * b[5] +
                     d020606 * b[6] +
-                    d020607 * b[7]) * u[6] +
-                   (d020704 * b[4] + d020705 * b[5] + d020706 * b[6] + d020707 * b[7]) *
-                   u[7] +
-                   (d020805 * b[5] + d020806 * b[6] + d020807 * b[7]) * u[8] +
-                   (d020905 * b[5] + d020906 * b[6] + d020907 * b[7]) * u[9]) + β * dest[2]
-        dest[3] = α * ((d030101 * b[1] +
+                    d020607 * b[7]
+                ) * u[6] +
+                (d020704 * b[4] + d020705 * b[5] + d020706 * b[6] + d020707 * b[7]) * u[7] +
+                (d020805 * b[5] + d020806 * b[6] + d020807 * b[7]) * u[8] +
+                (d020905 * b[5] + d020906 * b[6] + d020907 * b[7]) * u[9]
+            ) + β * dest[2]
+        dest[3] =
+            α * (
+                (
+                    d030101 * b[1] +
                     d030102 * b[2] +
                     d030104 * b[4] +
                     d030105 * b[5] +
                     d030106 * b[6] +
-                    d030107 * b[7]) * u[1] +
-                   (d030201 * b[1] +
+                    d030107 * b[7]
+                ) * u[1] +
+                (
+                    d030201 * b[1] +
                     d030204 * b[4] +
                     d030205 * b[5] +
                     d030206 * b[6] +
-                    d030207 * b[7]) * u[2] +
-                   (d030301 * b[1] +
+                    d030207 * b[7]
+                ) * u[2] +
+                (
+                    d030301 * b[1] +
                     d030302 * b[2] +
                     d030304 * b[4] +
                     d030305 * b[5] +
                     d030306 * b[6] +
-                    d030307 * b[7]) * u[3] +
-                   (d030401 * b[1] +
+                    d030307 * b[7]
+                ) * u[3] +
+                (
+                    d030401 * b[1] +
                     d030402 * b[2] +
                     d030405 * b[5] +
                     d030406 * b[6] +
-                    d030407 * b[7]) * u[4] +
-                   (d030501 * b[1] +
+                    d030407 * b[7]
+                ) * u[4] +
+                (
+                    d030501 * b[1] +
                     d030502 * b[2] +
                     d030504 * b[4] +
                     d030505 * b[5] +
                     d030506 * b[6] +
-                    d030507 * b[7]) * u[5] +
-                   (d030601 * b[1] +
+                    d030507 * b[7]
+                ) * u[5] +
+                (
+                    d030601 * b[1] +
                     d030602 * b[2] +
                     d030604 * b[4] +
                     d030605 * b[5] +
                     d030606 * b[6] +
-                    d030607 * b[7]) * u[6] +
-                   (d030704 * b[4] + d030705 * b[5] + d030706 * b[6] + d030707 * b[7]) *
-                   u[7] +
-                   (d030805 * b[5] + d030806 * b[6] + d030807 * b[7]) * u[8] +
-                   (d030905 * b[5] + d030906 * b[6] + d030907 * b[7]) * u[9]) + β * dest[3]
-        dest[4] = α * ((d040101 * b[1] +
+                    d030607 * b[7]
+                ) * u[6] +
+                (d030704 * b[4] + d030705 * b[5] + d030706 * b[6] + d030707 * b[7]) * u[7] +
+                (d030805 * b[5] + d030806 * b[6] + d030807 * b[7]) * u[8] +
+                (d030905 * b[5] + d030906 * b[6] + d030907 * b[7]) * u[9]
+            ) + β * dest[3]
+        dest[4] =
+            α * (
+                (
+                    d040101 * b[1] +
                     d040102 * b[2] +
                     d040103 * b[3] +
                     d040105 * b[5] +
                     d040106 * b[6] +
-                    d040107 * b[7]) * u[1] +
-                   (d040201 * b[1] +
+                    d040107 * b[7]
+                ) * u[1] +
+                (
+                    d040201 * b[1] +
                     d040203 * b[3] +
                     d040205 * b[5] +
                     d040206 * b[6] +
-                    d040207 * b[7]) * u[2] +
-                   (d040301 * b[1] +
+                    d040207 * b[7]
+                ) * u[2] +
+                (
+                    d040301 * b[1] +
                     d040302 * b[2] +
                     d040305 * b[5] +
                     d040306 * b[6] +
-                    d040307 * b[7]) * u[3] +
-                   (d040401 * b[1] +
+                    d040307 * b[7]
+                ) * u[3] +
+                (
+                    d040401 * b[1] +
                     d040402 * b[2] +
                     d040403 * b[3] +
                     d040405 * b[5] +
                     d040406 * b[6] +
-                    d040407 * b[7]) * u[4] +
-                   (d040501 * b[1] +
+                    d040407 * b[7]
+                ) * u[4] +
+                (
+                    d040501 * b[1] +
                     d040502 * b[2] +
                     d040503 * b[3] +
                     d040505 * b[5] +
                     d040506 * b[6] +
-                    d040507 * b[7]) * u[5] +
-                   (d040601 * b[1] +
+                    d040507 * b[7]
+                ) * u[5] +
+                (
+                    d040601 * b[1] +
                     d040602 * b[2] +
                     d040603 * b[3] +
                     d040605 * b[5] +
                     d040606 * b[6] +
-                    d040607 * b[7]) * u[6] +
-                   (d040705 * b[5] + d040706 * b[6] + d040707 * b[7]) * u[7] +
-                   (d040805 * b[5] + d040806 * b[6] + d040807 * b[7]) * u[8] +
-                   (d040905 * b[5] + d040906 * b[6] + d040907 * b[7]) * u[9]) + β * dest[4]
-        dest[5] = α * ((d050101 * b[1] +
+                    d040607 * b[7]
+                ) * u[6] +
+                (d040705 * b[5] + d040706 * b[6] + d040707 * b[7]) * u[7] +
+                (d040805 * b[5] + d040806 * b[6] + d040807 * b[7]) * u[8] +
+                (d040905 * b[5] + d040906 * b[6] + d040907 * b[7]) * u[9]
+            ) + β * dest[4]
+        dest[5] =
+            α * (
+                (
+                    d050101 * b[1] +
                     d050102 * b[2] +
                     d050103 * b[3] +
                     d050104 * b[4] +
                     d050105 * b[5] +
                     d050106 * b[6] +
-                    d050107 * b[7]) * u[1] +
-                   (d050201 * b[1] +
+                    d050107 * b[7]
+                ) * u[1] +
+                (
+                    d050201 * b[1] +
                     d050203 * b[3] +
                     d050204 * b[4] +
                     d050205 * b[5] +
                     d050206 * b[6] +
-                    d050207 * b[7]) * u[2] +
-                   (d050301 * b[1] +
+                    d050207 * b[7]
+                ) * u[2] +
+                (
+                    d050301 * b[1] +
                     d050302 * b[2] +
                     d050304 * b[4] +
                     d050305 * b[5] +
                     d050306 * b[6] +
-                    d050307 * b[7]) * u[3] +
-                   (d050401 * b[1] +
+                    d050307 * b[7]
+                ) * u[3] +
+                (
+                    d050401 * b[1] +
                     d050402 * b[2] +
                     d050403 * b[3] +
                     d050405 * b[5] +
                     d050406 * b[6] +
-                    d050407 * b[7]) * u[4] +
-                   (d050501 * b[1] +
+                    d050407 * b[7]
+                ) * u[4] +
+                (
+                    d050501 * b[1] +
                     d050502 * b[2] +
                     d050503 * b[3] +
                     d050504 * b[4] +
                     d050505 * b[5] +
                     d050506 * b[6] +
                     d050507 * b[7] +
-                    d050508 * b[8]) * u[5] +
-                   (d050601 * b[1] +
+                    d050508 * b[8]
+                ) * u[5] +
+                (
+                    d050601 * b[1] +
                     d050602 * b[2] +
                     d050603 * b[3] +
                     d050604 * b[4] +
                     d050605 * b[5] +
                     d050606 * b[6] +
                     d050607 * b[7] +
-                    d050608 * b[8]) * u[6] +
-                   (d050704 * b[4] +
+                    d050608 * b[8]
+                ) * u[6] +
+                (
+                    d050704 * b[4] +
                     d050705 * b[5] +
                     d050706 * b[6] +
                     d050707 * b[7] +
-                    d050708 * b[8]) * u[7] +
-                   (d050805 * b[5] + d050806 * b[6] + d050807 * b[7] + d050808 * b[8]) *
-                   u[8] +
-                   (d050905 * b[5] + d050906 * b[6] + d050907 * b[7] + d050908 * b[8]) *
-                   u[9]) + β * dest[5]
-        dest[6] = α * ((d060101 * b[1] +
+                    d050708 * b[8]
+                ) * u[7] +
+                (d050805 * b[5] + d050806 * b[6] + d050807 * b[7] + d050808 * b[8]) * u[8] +
+                (d050905 * b[5] + d050906 * b[6] + d050907 * b[7] + d050908 * b[8]) * u[9]
+            ) + β * dest[5]
+        dest[6] =
+            α * (
+                (
+                    d060101 * b[1] +
                     d060102 * b[2] +
                     d060103 * b[3] +
                     d060104 * b[4] +
                     d060105 * b[5] +
                     d060106 * b[6] +
-                    d060107 * b[7]) * u[1] +
-                   (d060201 * b[1] +
+                    d060107 * b[7]
+                ) * u[1] +
+                (
+                    d060201 * b[1] +
                     d060203 * b[3] +
                     d060204 * b[4] +
                     d060205 * b[5] +
                     d060206 * b[6] +
-                    d060207 * b[7]) * u[2] +
-                   (d060301 * b[1] +
+                    d060207 * b[7]
+                ) * u[2] +
+                (
+                    d060301 * b[1] +
                     d060302 * b[2] +
                     d060304 * b[4] +
                     d060305 * b[5] +
                     d060306 * b[6] +
-                    d060307 * b[7]) * u[3] +
-                   (d060401 * b[1] +
+                    d060307 * b[7]
+                ) * u[3] +
+                (
+                    d060401 * b[1] +
                     d060402 * b[2] +
                     d060403 * b[3] +
                     d060405 * b[5] +
                     d060406 * b[6] +
-                    d060407 * b[7]) * u[4] +
-                   (d060501 * b[1] +
+                    d060407 * b[7]
+                ) * u[4] +
+                (
+                    d060501 * b[1] +
                     d060502 * b[2] +
                     d060503 * b[3] +
                     d060504 * b[4] +
                     d060505 * b[5] +
                     d060506 * b[6] +
                     d060507 * b[7] +
-                    d060508 * b[8]) * u[5] +
-                   (d060601 * b[1] +
+                    d060508 * b[8]
+                ) * u[5] +
+                (
+                    d060601 * b[1] +
                     d060602 * b[2] +
                     d060603 * b[3] +
                     d060604 * b[4] +
@@ -7852,577 +8941,767 @@ function convolve_boundary_coefficients!(dest::AbstractVector,
                     d060606 * b[6] +
                     d060607 * b[7] +
                     d060608 * b[8] +
-                    d060609 * b[9]) * u[6] +
-                   (d060704 * b[4] +
+                    d060609 * b[9]
+                ) * u[6] +
+                (
+                    d060704 * b[4] +
                     d060705 * b[5] +
                     d060706 * b[6] +
                     d060707 * b[7] +
                     d060708 * b[8] +
-                    d060709 * b[9]) * u[7] +
-                   (d060805 * b[5] +
+                    d060709 * b[9]
+                ) * u[7] +
+                (
+                    d060805 * b[5] +
                     d060806 * b[6] +
                     d060807 * b[7] +
                     d060808 * b[8] +
-                    d060809 * b[9]) * u[8] +
-                   (d060905 * b[5] +
+                    d060809 * b[9]
+                ) * u[8] +
+                (
+                    d060905 * b[5] +
                     d060906 * b[6] +
                     d060907 * b[7] +
                     d060908 * b[8] +
-                    d060909 * b[9]) * u[9]) + β * dest[6]
-        dest[7] = α *
-                  ((d070104 * b[4] + d070105 * b[5] + d070106 * b[6] + d070107 * b[7]) *
-                   u[1] +
-                   (d070204 * b[4] + d070205 * b[5] + d070206 * b[6] + d070207 * b[7]) *
-                   u[2] +
-                   (d070304 * b[4] + d070305 * b[5] + d070306 * b[6] + d070307 * b[7]) *
-                   u[3] +
-                   (d070405 * b[5] + d070406 * b[6] + d070407 * b[7]) * u[4] +
-                   (d070504 * b[4] +
+                    d060909 * b[9]
+                ) * u[9]
+            ) + β * dest[6]
+        dest[7] =
+            α * (
+                (d070104 * b[4] + d070105 * b[5] + d070106 * b[6] + d070107 * b[7]) * u[1] +
+                (d070204 * b[4] + d070205 * b[5] + d070206 * b[6] + d070207 * b[7]) * u[2] +
+                (d070304 * b[4] + d070305 * b[5] + d070306 * b[6] + d070307 * b[7]) * u[3] +
+                (d070405 * b[5] + d070406 * b[6] + d070407 * b[7]) * u[4] +
+                (
+                    d070504 * b[4] +
                     d070505 * b[5] +
                     d070506 * b[6] +
                     d070507 * b[7] +
-                    d070508 * b[8]) * u[5] +
-                   (d070604 * b[4] +
+                    d070508 * b[8]
+                ) * u[5] +
+                (
+                    d070604 * b[4] +
                     d070605 * b[5] +
                     d070606 * b[6] +
                     d070607 * b[7] +
                     d070608 * b[8] +
-                    d070609 * b[9]) * u[6] +
-                   (d070704 * b[4] +
+                    d070609 * b[9]
+                ) * u[6] +
+                (
+                    d070704 * b[4] +
                     d070705 * b[5] +
                     d070706 * b[6] +
                     d070707 * b[7] +
                     d070708 * b[8] +
                     d070709 * b[9] +
-                    d070710 * b[10]) * u[7] +
-                   (d070805 * b[5] +
+                    d070710 * b[10]
+                ) * u[7] +
+                (
+                    d070805 * b[5] +
                     d070806 * b[6] +
                     d070807 * b[7] +
                     d070808 * b[8] +
                     d070809 * b[9] +
-                    d070810 * b[10]) * u[8] +
-                   (d070905 * b[5] +
+                    d070810 * b[10]
+                ) * u[8] +
+                (
+                    d070905 * b[5] +
                     d070906 * b[6] +
                     d070907 * b[7] +
                     d070908 * b[8] +
                     d070909 * b[9] +
-                    d070910 * b[10]) * u[9] +
-                   (d071010 * b[10] + d071007 * b[7] + d071008 * b[8] + d071009 * b[9]) *
-                   u[10]) + β * dest[7]
-        dest[8] = α * ((d080105 * b[5] + d080106 * b[6] + d080107 * b[7]) * u[1] +
-                   (d080205 * b[5] + d080206 * b[6] + d080207 * b[7]) * u[2] +
-                   (d080305 * b[5] + d080306 * b[6] + d080307 * b[7]) * u[3] +
-                   (d080405 * b[5] + d080406 * b[6] + d080407 * b[7]) * u[4] +
-                   (d080505 * b[5] + d080506 * b[6] + d080507 * b[7] + d080508 * b[8]) *
-                   u[5] +
-                   (d080605 * b[5] +
+                    d070910 * b[10]
+                ) * u[9] +
+                (d071010 * b[10] + d071007 * b[7] + d071008 * b[8] + d071009 * b[9]) * u[10]
+            ) + β * dest[7]
+        dest[8] =
+            α * (
+                (d080105 * b[5] + d080106 * b[6] + d080107 * b[7]) * u[1] +
+                (d080205 * b[5] + d080206 * b[6] + d080207 * b[7]) * u[2] +
+                (d080305 * b[5] + d080306 * b[6] + d080307 * b[7]) * u[3] +
+                (d080405 * b[5] + d080406 * b[6] + d080407 * b[7]) * u[4] +
+                (d080505 * b[5] + d080506 * b[6] + d080507 * b[7] + d080508 * b[8]) * u[5] +
+                (
+                    d080605 * b[5] +
                     d080606 * b[6] +
                     d080607 * b[7] +
                     d080608 * b[8] +
-                    d080609 * b[9]) * u[6] +
-                   (d080705 * b[5] +
+                    d080609 * b[9]
+                ) * u[6] +
+                (
+                    d080705 * b[5] +
                     d080706 * b[6] +
                     d080707 * b[7] +
                     d080708 * b[8] +
                     d080709 * b[9] +
-                    d080710 * b[10]) * u[7] +
-                   (d080805 * b[5] +
+                    d080710 * b[10]
+                ) * u[7] +
+                (
+                    d080805 * b[5] +
                     d080806 * b[6] +
                     d080807 * b[7] +
                     d080808 * b[8] +
                     d080809 * b[9] +
                     d080810 * b[10] +
-                    d080811 * b[11]) * u[8] +
-                   (d080910 * b[10] +
+                    d080811 * b[11]
+                ) * u[8] +
+                (
+                    d080910 * b[10] +
                     d080911 * b[11] +
                     d080905 * b[5] +
                     d080906 * b[6] +
                     d080907 * b[7] +
                     d080908 * b[8] +
-                    d080909 * b[9]) * u[9] +
-                   (d081010 * b[10] +
+                    d080909 * b[9]
+                ) * u[9] +
+                (
+                    d081010 * b[10] +
                     d081011 * b[11] +
                     d081007 * b[7] +
                     d081008 * b[8] +
-                    d081009 * b[9]) * u[10] +
-                   (d081110 * b[10] + d081111 * b[11] + d081108 * b[8] + d081109 * b[9]) *
-                   u[11]) + β * dest[8]
-        dest[9] = α * ((d090105 * b[5] + d090106 * b[6] + d090107 * b[7]) * u[1] +
-                   (d090205 * b[5] + d090206 * b[6] + d090207 * b[7]) * u[2] +
-                   (d090305 * b[5] + d090306 * b[6] + d090307 * b[7]) * u[3] +
-                   (d090405 * b[5] + d090406 * b[6] + d090407 * b[7]) * u[4] +
-                   (d090505 * b[5] + d090506 * b[6] + d090507 * b[7] + d090508 * b[8]) *
-                   u[5] +
-                   (d090605 * b[5] +
+                    d081009 * b[9]
+                ) * u[10] +
+                (d081110 * b[10] + d081111 * b[11] + d081108 * b[8] + d081109 * b[9]) *
+                u[11]
+            ) + β * dest[8]
+        dest[9] =
+            α * (
+                (d090105 * b[5] + d090106 * b[6] + d090107 * b[7]) * u[1] +
+                (d090205 * b[5] + d090206 * b[6] + d090207 * b[7]) * u[2] +
+                (d090305 * b[5] + d090306 * b[6] + d090307 * b[7]) * u[3] +
+                (d090405 * b[5] + d090406 * b[6] + d090407 * b[7]) * u[4] +
+                (d090505 * b[5] + d090506 * b[6] + d090507 * b[7] + d090508 * b[8]) * u[5] +
+                (
+                    d090605 * b[5] +
                     d090606 * b[6] +
                     d090607 * b[7] +
                     d090608 * b[8] +
-                    d090609 * b[9]) * u[6] +
-                   (d090705 * b[5] +
+                    d090609 * b[9]
+                ) * u[6] +
+                (
+                    d090705 * b[5] +
                     d090706 * b[6] +
                     d090707 * b[7] +
                     d090708 * b[8] +
                     d090709 * b[9] +
-                    d090710 * b[10]) * u[7] +
-                   (d090810 * b[10] +
+                    d090710 * b[10]
+                ) * u[7] +
+                (
+                    d090810 * b[10] +
                     d090811 * b[11] +
                     d090805 * b[5] +
                     d090806 * b[6] +
                     d090807 * b[7] +
                     d090808 * b[8] +
-                    d090809 * b[9]) * u[8] +
-                   (d090910 * b[10] +
+                    d090809 * b[9]
+                ) * u[8] +
+                (
+                    d090910 * b[10] +
                     d090911 * b[11] +
                     d090912 * b[12] +
                     d090905 * b[5] +
                     d090906 * b[6] +
                     d090907 * b[7] +
                     d090908 * b[8] +
-                    d090909 * b[9]) * u[9] +
-                   (d091010 * b[10] +
+                    d090909 * b[9]
+                ) * u[9] +
+                (
+                    d091010 * b[10] +
                     d091011 * b[11] +
                     d091012 * b[12] +
                     d091007 * b[7] +
                     d091008 * b[8] +
-                    d091009 * b[9]) * u[10] +
-                   (d091110 * b[10] +
+                    d091009 * b[9]
+                ) * u[10] +
+                (
+                    d091110 * b[10] +
                     d091111 * b[11] +
                     d091112 * b[12] +
                     d091108 * b[8] +
-                    d091109 * b[9]) * u[11] +
-                   (d091210 * b[10] + d091211 * b[11] + d091212 * b[12] + d091209 * b[9]) *
-                   u[12]) + β * dest[9]
+                    d091109 * b[9]
+                ) * u[11] +
+                (d091210 * b[10] + d091211 * b[11] + d091212 * b[12] + d091209 * b[9]) *
+                u[12]
+            ) + β * dest[9]
 
-        dest[end] = α * ((d010101 * b[end] +
-                      d010102 * b[end - 1] +
-                      d010103 * b[end - 2] +
-                      d010104 * b[end - 3] +
-                      d010105 * b[end - 4] +
-                      d010106 * b[end - 5] +
-                      d010107 * b[end - 6]) * u[end] +
-                     (d010201 * b[end] +
-                      d010203 * b[end - 2] +
-                      d010204 * b[end - 3] +
-                      d010205 * b[end - 4] +
-                      d010206 * b[end - 5] +
-                      d010207 * b[end - 6]) * u[end - 1] +
-                     (d010301 * b[end] +
-                      d010302 * b[end - 1] +
-                      d010304 * b[end - 3] +
-                      d010305 * b[end - 4] +
-                      d010306 * b[end - 5] +
-                      d010307 * b[end - 6]) * u[end - 2] +
-                     (d010401 * b[end] +
-                      d010402 * b[end - 1] +
-                      d010403 * b[end - 2] +
-                      d010405 * b[end - 4] +
-                      d010406 * b[end - 5] +
-                      d010407 * b[end - 6]) * u[end - 3] +
-                     (d010501 * b[end] +
-                      d010502 * b[end - 1] +
-                      d010503 * b[end - 2] +
-                      d010504 * b[end - 3] +
-                      d010505 * b[end - 4] +
-                      d010506 * b[end - 5] +
-                      d010507 * b[end - 6]) * u[end - 4] +
-                     (d010601 * b[end] +
-                      d010602 * b[end - 1] +
-                      d010603 * b[end - 2] +
-                      d010604 * b[end - 3] +
-                      d010605 * b[end - 4] +
-                      d010606 * b[end - 5] +
-                      d010607 * b[end - 6]) * u[end - 5] +
-                     (d010704 * b[end - 3] +
-                      d010705 * b[end - 4] +
-                      d010706 * b[end - 5] +
-                      d010707 * b[end - 6]) * u[end - 6] +
-                     (d010805 * b[end - 4] + d010806 * b[end - 5] + d010807 * b[end - 6]) *
-                     u[end - 7] +
-                     (d010905 * b[end - 4] + d010906 * b[end - 5] + d010907 * b[end - 6]) *
-                     u[end - 8]) + β * dest[end]
-        dest[end - 1] = α * ((d020101 * b[end] +
-                          d020103 * b[end - 2] +
-                          d020104 * b[end - 3] +
-                          d020105 * b[end - 4] +
-                          d020106 * b[end - 5] +
-                          d020107 * b[end - 6]) * u[end] +
-                         (d020201 * b[end] +
-                          d020203 * b[end - 2] +
-                          d020204 * b[end - 3] +
-                          d020205 * b[end - 4] +
-                          d020206 * b[end - 5] +
-                          d020207 * b[end - 6]) * u[end - 1] +
-                         (d020301 * b[end] +
-                          d020304 * b[end - 3] +
-                          d020305 * b[end - 4] +
-                          d020306 * b[end - 5] +
-                          d020307 * b[end - 6]) * u[end - 2] +
-                         (d020401 * b[end] +
-                          d020403 * b[end - 2] +
-                          d020405 * b[end - 4] +
-                          d020406 * b[end - 5] +
-                          d020407 * b[end - 6]) * u[end - 3] +
-                         (d020501 * b[end] +
-                          d020503 * b[end - 2] +
-                          d020504 * b[end - 3] +
-                          d020505 * b[end - 4] +
-                          d020506 * b[end - 5] +
-                          d020507 * b[end - 6]) * u[end - 4] +
-                         (d020601 * b[end] +
-                          d020603 * b[end - 2] +
-                          d020604 * b[end - 3] +
-                          d020605 * b[end - 4] +
-                          d020606 * b[end - 5] +
-                          d020607 * b[end - 6]) * u[end - 5] +
-                         (d020704 * b[end - 3] +
-                          d020705 * b[end - 4] +
-                          d020706 * b[end - 5] +
-                          d020707 * b[end - 6]) * u[end - 6] +
-                         (d020805 * b[end - 4] + d020806 * b[end - 5] +
-                          d020807 * b[end - 6]) * u[end - 7] +
-                         (d020905 * b[end - 4] + d020906 * b[end - 5] +
-                          d020907 * b[end - 6]) * u[end - 8]) + β * dest[end - 1]
-        dest[end - 2] = α * ((d030101 * b[end] +
-                          d030102 * b[end - 1] +
-                          d030104 * b[end - 3] +
-                          d030105 * b[end - 4] +
-                          d030106 * b[end - 5] +
-                          d030107 * b[end - 6]) * u[end] +
-                         (d030201 * b[end] +
-                          d030204 * b[end - 3] +
-                          d030205 * b[end - 4] +
-                          d030206 * b[end - 5] +
-                          d030207 * b[end - 6]) * u[end - 1] +
-                         (d030301 * b[end] +
-                          d030302 * b[end - 1] +
-                          d030304 * b[end - 3] +
-                          d030305 * b[end - 4] +
-                          d030306 * b[end - 5] +
-                          d030307 * b[end - 6]) * u[end - 2] +
-                         (d030401 * b[end] +
-                          d030402 * b[end - 1] +
-                          d030405 * b[end - 4] +
-                          d030406 * b[end - 5] +
-                          d030407 * b[end - 6]) * u[end - 3] +
-                         (d030501 * b[end] +
-                          d030502 * b[end - 1] +
-                          d030504 * b[end - 3] +
-                          d030505 * b[end - 4] +
-                          d030506 * b[end - 5] +
-                          d030507 * b[end - 6]) * u[end - 4] +
-                         (d030601 * b[end] +
-                          d030602 * b[end - 1] +
-                          d030604 * b[end - 3] +
-                          d030605 * b[end - 4] +
-                          d030606 * b[end - 5] +
-                          d030607 * b[end - 6]) * u[end - 5] +
-                         (d030704 * b[end - 3] +
-                          d030705 * b[end - 4] +
-                          d030706 * b[end - 5] +
-                          d030707 * b[end - 6]) * u[end - 6] +
-                         (d030805 * b[end - 4] + d030806 * b[end - 5] +
-                          d030807 * b[end - 6]) * u[end - 7] +
-                         (d030905 * b[end - 4] + d030906 * b[end - 5] +
-                          d030907 * b[end - 6]) * u[end - 8]) + β * dest[end - 2]
-        dest[end - 3] = α * ((d040101 * b[end] +
-                          d040102 * b[end - 1] +
-                          d040103 * b[end - 2] +
-                          d040105 * b[end - 4] +
-                          d040106 * b[end - 5] +
-                          d040107 * b[end - 6]) * u[end] +
-                         (d040201 * b[end] +
-                          d040203 * b[end - 2] +
-                          d040205 * b[end - 4] +
-                          d040206 * b[end - 5] +
-                          d040207 * b[end - 6]) * u[end - 1] +
-                         (d040301 * b[end] +
-                          d040302 * b[end - 1] +
-                          d040305 * b[end - 4] +
-                          d040306 * b[end - 5] +
-                          d040307 * b[end - 6]) * u[end - 2] +
-                         (d040401 * b[end] +
-                          d040402 * b[end - 1] +
-                          d040403 * b[end - 2] +
-                          d040405 * b[end - 4] +
-                          d040406 * b[end - 5] +
-                          d040407 * b[end - 6]) * u[end - 3] +
-                         (d040501 * b[end] +
-                          d040502 * b[end - 1] +
-                          d040503 * b[end - 2] +
-                          d040505 * b[end - 4] +
-                          d040506 * b[end - 5] +
-                          d040507 * b[end - 6]) * u[end - 4] +
-                         (d040601 * b[end] +
-                          d040602 * b[end - 1] +
-                          d040603 * b[end - 2] +
-                          d040605 * b[end - 4] +
-                          d040606 * b[end - 5] +
-                          d040607 * b[end - 6]) * u[end - 5] +
-                         (d040705 * b[end - 4] + d040706 * b[end - 5] +
-                          d040707 * b[end - 6]) * u[end - 6] +
-                         (d040805 * b[end - 4] + d040806 * b[end - 5] +
-                          d040807 * b[end - 6]) * u[end - 7] +
-                         (d040905 * b[end - 4] + d040906 * b[end - 5] +
-                          d040907 * b[end - 6]) * u[end - 8]) + β * dest[end - 3]
-        dest[end - 4] = α * ((d050101 * b[end] +
-                          d050102 * b[end - 1] +
-                          d050103 * b[end - 2] +
-                          d050104 * b[end - 3] +
-                          d050105 * b[end - 4] +
-                          d050106 * b[end - 5] +
-                          d050107 * b[end - 6]) * u[end] +
-                         (d050201 * b[end] +
-                          d050203 * b[end - 2] +
-                          d050204 * b[end - 3] +
-                          d050205 * b[end - 4] +
-                          d050206 * b[end - 5] +
-                          d050207 * b[end - 6]) * u[end - 1] +
-                         (d050301 * b[end] +
-                          d050302 * b[end - 1] +
-                          d050304 * b[end - 3] +
-                          d050305 * b[end - 4] +
-                          d050306 * b[end - 5] +
-                          d050307 * b[end - 6]) * u[end - 2] +
-                         (d050401 * b[end] +
-                          d050402 * b[end - 1] +
-                          d050403 * b[end - 2] +
-                          d050405 * b[end - 4] +
-                          d050406 * b[end - 5] +
-                          d050407 * b[end - 6]) * u[end - 3] +
-                         (d050501 * b[end] +
-                          d050502 * b[end - 1] +
-                          d050503 * b[end - 2] +
-                          d050504 * b[end - 3] +
-                          d050505 * b[end - 4] +
-                          d050506 * b[end - 5] +
-                          d050507 * b[end - 6] +
-                          d050508 * b[end - 7]) * u[end - 4] +
-                         (d050601 * b[end] +
-                          d050602 * b[end - 1] +
-                          d050603 * b[end - 2] +
-                          d050604 * b[end - 3] +
-                          d050605 * b[end - 4] +
-                          d050606 * b[end - 5] +
-                          d050607 * b[end - 6] +
-                          d050608 * b[end - 7]) * u[end - 5] +
-                         (d050704 * b[end - 3] +
-                          d050705 * b[end - 4] +
-                          d050706 * b[end - 5] +
-                          d050707 * b[end - 6] +
-                          d050708 * b[end - 7]) * u[end - 6] +
-                         (d050805 * b[end - 4] +
-                          d050806 * b[end - 5] +
-                          d050807 * b[end - 6] +
-                          d050808 * b[end - 7]) * u[end - 7] +
-                         (d050905 * b[end - 4] +
-                          d050906 * b[end - 5] +
-                          d050907 * b[end - 6] +
-                          d050908 * b[end - 7]) * u[end - 8]) + β * dest[end - 4]
-        dest[end - 5] = α * ((d060101 * b[end] +
-                          d060102 * b[end - 1] +
-                          d060103 * b[end - 2] +
-                          d060104 * b[end - 3] +
-                          d060105 * b[end - 4] +
-                          d060106 * b[end - 5] +
-                          d060107 * b[end - 6]) * u[end] +
-                         (d060201 * b[end] +
-                          d060203 * b[end - 2] +
-                          d060204 * b[end - 3] +
-                          d060205 * b[end - 4] +
-                          d060206 * b[end - 5] +
-                          d060207 * b[end - 6]) * u[end - 1] +
-                         (d060301 * b[end] +
-                          d060302 * b[end - 1] +
-                          d060304 * b[end - 3] +
-                          d060305 * b[end - 4] +
-                          d060306 * b[end - 5] +
-                          d060307 * b[end - 6]) * u[end - 2] +
-                         (d060401 * b[end] +
-                          d060402 * b[end - 1] +
-                          d060403 * b[end - 2] +
-                          d060405 * b[end - 4] +
-                          d060406 * b[end - 5] +
-                          d060407 * b[end - 6]) * u[end - 3] +
-                         (d060501 * b[end] +
-                          d060502 * b[end - 1] +
-                          d060503 * b[end - 2] +
-                          d060504 * b[end - 3] +
-                          d060505 * b[end - 4] +
-                          d060506 * b[end - 5] +
-                          d060507 * b[end - 6] +
-                          d060508 * b[end - 7]) * u[end - 4] +
-                         (d060601 * b[end] +
-                          d060602 * b[end - 1] +
-                          d060603 * b[end - 2] +
-                          d060604 * b[end - 3] +
-                          d060605 * b[end - 4] +
-                          d060606 * b[end - 5] +
-                          d060607 * b[end - 6] +
-                          d060608 * b[end - 7] +
-                          d060609 * b[end - 8]) * u[end - 5] +
-                         (d060704 * b[end - 3] +
-                          d060705 * b[end - 4] +
-                          d060706 * b[end - 5] +
-                          d060707 * b[end - 6] +
-                          d060708 * b[end - 7] +
-                          d060709 * b[end - 8]) * u[end - 6] +
-                         (d060805 * b[end - 4] +
-                          d060806 * b[end - 5] +
-                          d060807 * b[end - 6] +
-                          d060808 * b[end - 7] +
-                          d060809 * b[end - 8]) * u[end - 7] +
-                         (d060905 * b[end - 4] +
-                          d060906 * b[end - 5] +
-                          d060907 * b[end - 6] +
-                          d060908 * b[end - 7] +
-                          d060909 * b[end - 8]) * u[end - 8]) + β * dest[end - 5]
-        dest[end - 6] = α * ((d070104 * b[end - 3] +
-                          d070105 * b[end - 4] +
-                          d070106 * b[end - 5] +
-                          d070107 * b[end - 6]) * u[end] +
-                         (d070204 * b[end - 3] +
-                          d070205 * b[end - 4] +
-                          d070206 * b[end - 5] +
-                          d070207 * b[end - 6]) * u[end - 1] +
-                         (d070304 * b[end - 3] +
-                          d070305 * b[end - 4] +
-                          d070306 * b[end - 5] +
-                          d070307 * b[end - 6]) * u[end - 2] +
-                         (d070405 * b[end - 4] + d070406 * b[end - 5] +
-                          d070407 * b[end - 6]) * u[end - 3] +
-                         (d070504 * b[end - 3] +
-                          d070505 * b[end - 4] +
-                          d070506 * b[end - 5] +
-                          d070507 * b[end - 6] +
-                          d070508 * b[end - 7]) * u[end - 4] +
-                         (d070604 * b[end - 3] +
-                          d070605 * b[end - 4] +
-                          d070606 * b[end - 5] +
-                          d070607 * b[end - 6] +
-                          d070608 * b[end - 7] +
-                          d070609 * b[end - 8]) * u[end - 5] +
-                         (d070704 * b[end - 3] +
-                          d070705 * b[end - 4] +
-                          d070706 * b[end - 5] +
-                          d070707 * b[end - 6] +
-                          d070708 * b[end - 7] +
-                          d070709 * b[end - 8] +
-                          d070710 * b[end - 9]) * u[end - 6] +
-                         (d070805 * b[end - 4] +
-                          d070806 * b[end - 5] +
-                          d070807 * b[end - 6] +
-                          d070808 * b[end - 7] +
-                          d070809 * b[end - 8] +
-                          d070810 * b[end - 9]) * u[end - 7] +
-                         (d070905 * b[end - 4] +
-                          d070906 * b[end - 5] +
-                          d070907 * b[end - 6] +
-                          d070908 * b[end - 7] +
-                          d070909 * b[end - 8] +
-                          d070910 * b[end - 9]) * u[end - 8] +
-                         (d071010 * b[end - 9] +
-                          d071007 * b[end - 6] +
-                          d071008 * b[end - 7] +
-                          d071009 * b[end - 8]) * u[end - 9]) + β * dest[end - 6]
-        dest[end - 7] = α * ((d080105 * b[end - 4] + d080106 * b[end - 5] +
-                          d080107 * b[end - 6]) * u[end] +
-                         (d080205 * b[end - 4] + d080206 * b[end - 5] +
-                          d080207 * b[end - 6]) * u[end - 1] +
-                         (d080305 * b[end - 4] + d080306 * b[end - 5] +
-                          d080307 * b[end - 6]) * u[end - 2] +
-                         (d080405 * b[end - 4] + d080406 * b[end - 5] +
-                          d080407 * b[end - 6]) * u[end - 3] +
-                         (d080505 * b[end - 4] +
-                          d080506 * b[end - 5] +
-                          d080507 * b[end - 6] +
-                          d080508 * b[end - 7]) * u[end - 4] +
-                         (d080605 * b[end - 4] +
-                          d080606 * b[end - 5] +
-                          d080607 * b[end - 6] +
-                          d080608 * b[end - 7] +
-                          d080609 * b[end - 8]) * u[end - 5] +
-                         (d080705 * b[end - 4] +
-                          d080706 * b[end - 5] +
-                          d080707 * b[end - 6] +
-                          d080708 * b[end - 7] +
-                          d080709 * b[end - 8] +
-                          d080710 * b[end - 9]) * u[end - 6] +
-                         (d080805 * b[end - 4] +
-                          d080806 * b[end - 5] +
-                          d080807 * b[end - 6] +
-                          d080808 * b[end - 7] +
-                          d080809 * b[end - 8] +
-                          d080810 * b[end - 9] +
-                          d080811 * b[end - 10]) * u[end - 7] +
-                         (d080910 * b[end - 9] +
-                          d080911 * b[end - 10] +
-                          d080905 * b[end - 4] +
-                          d080906 * b[end - 5] +
-                          d080907 * b[end - 6] +
-                          d080908 * b[end - 7] +
-                          d080909 * b[end - 8]) * u[end - 8] +
-                         (d081010 * b[end - 9] +
-                          d081011 * b[end - 10] +
-                          d081007 * b[end - 6] +
-                          d081008 * b[end - 7] +
-                          d081009 * b[end - 8]) * u[end - 9] +
-                         (d081110 * b[end - 9] +
-                          d081111 * b[end - 10] +
-                          d081108 * b[end - 7] +
-                          d081109 * b[end - 8]) * u[end - 10]) + β * dest[end - 7]
-        dest[end - 8] = α * ((d090105 * b[end - 4] + d090106 * b[end - 5] +
-                          d090107 * b[end - 6]) * u[end] +
-                         (d090205 * b[end - 4] + d090206 * b[end - 5] +
-                          d090207 * b[end - 6]) * u[end - 1] +
-                         (d090305 * b[end - 4] + d090306 * b[end - 5] +
-                          d090307 * b[end - 6]) * u[end - 2] +
-                         (d090405 * b[end - 4] + d090406 * b[end - 5] +
-                          d090407 * b[end - 6]) * u[end - 3] +
-                         (d090505 * b[end - 4] +
-                          d090506 * b[end - 5] +
-                          d090507 * b[end - 6] +
-                          d090508 * b[end - 7]) * u[end - 4] +
-                         (d090605 * b[end - 4] +
-                          d090606 * b[end - 5] +
-                          d090607 * b[end - 6] +
-                          d090608 * b[end - 7] +
-                          d090609 * b[end - 8]) * u[end - 5] +
-                         (d090705 * b[end - 4] +
-                          d090706 * b[end - 5] +
-                          d090707 * b[end - 6] +
-                          d090708 * b[end - 7] +
-                          d090709 * b[end - 8] +
-                          d090710 * b[end - 9]) * u[end - 6] +
-                         (d090810 * b[end - 9] +
-                          d090811 * b[end - 10] +
-                          d090805 * b[end - 4] +
-                          d090806 * b[end - 5] +
-                          d090807 * b[end - 6] +
-                          d090808 * b[end - 7] +
-                          d090809 * b[end - 8]) * u[end - 7] +
-                         (d090910 * b[end - 9] +
-                          d090911 * b[end - 10] +
-                          d090912 * b[end - 11] +
-                          d090905 * b[end - 4] +
-                          d090906 * b[end - 5] +
-                          d090907 * b[end - 6] +
-                          d090908 * b[end - 7] +
-                          d090909 * b[end - 8]) * u[end - 8] +
-                         (d091010 * b[end - 9] +
-                          d091011 * b[end - 10] +
-                          d091012 * b[end - 11] +
-                          d091007 * b[end - 6] +
-                          d091008 * b[end - 7] +
-                          d091009 * b[end - 8]) * u[end - 9] +
-                         (d091110 * b[end - 9] +
-                          d091111 * b[end - 10] +
-                          d091112 * b[end - 11] +
-                          d091108 * b[end - 7] +
-                          d091109 * b[end - 8]) * u[end - 10] +
-                         (d091210 * b[end - 9] +
-                          d091211 * b[end - 10] +
-                          d091212 * b[end - 11] +
-                          d091209 * b[end - 8]) * u[end - 11]) + β * dest[end - 8]
+
+        dest[end] =
+            α * (
+                (
+                    d010101 * b[end] +
+                    d010102 * b[end-1] +
+                    d010103 * b[end-2] +
+                    d010104 * b[end-3] +
+                    d010105 * b[end-4] +
+                    d010106 * b[end-5] +
+                    d010107 * b[end-6]
+                ) * u[end] +
+                (
+                    d010201 * b[end] +
+                    d010203 * b[end-2] +
+                    d010204 * b[end-3] +
+                    d010205 * b[end-4] +
+                    d010206 * b[end-5] +
+                    d010207 * b[end-6]
+                ) * u[end-1] +
+                (
+                    d010301 * b[end] +
+                    d010302 * b[end-1] +
+                    d010304 * b[end-3] +
+                    d010305 * b[end-4] +
+                    d010306 * b[end-5] +
+                    d010307 * b[end-6]
+                ) * u[end-2] +
+                (
+                    d010401 * b[end] +
+                    d010402 * b[end-1] +
+                    d010403 * b[end-2] +
+                    d010405 * b[end-4] +
+                    d010406 * b[end-5] +
+                    d010407 * b[end-6]
+                ) * u[end-3] +
+                (
+                    d010501 * b[end] +
+                    d010502 * b[end-1] +
+                    d010503 * b[end-2] +
+                    d010504 * b[end-3] +
+                    d010505 * b[end-4] +
+                    d010506 * b[end-5] +
+                    d010507 * b[end-6]
+                ) * u[end-4] +
+                (
+                    d010601 * b[end] +
+                    d010602 * b[end-1] +
+                    d010603 * b[end-2] +
+                    d010604 * b[end-3] +
+                    d010605 * b[end-4] +
+                    d010606 * b[end-5] +
+                    d010607 * b[end-6]
+                ) * u[end-5] +
+                (
+                    d010704 * b[end-3] +
+                    d010705 * b[end-4] +
+                    d010706 * b[end-5] +
+                    d010707 * b[end-6]
+                ) * u[end-6] +
+                (d010805 * b[end-4] + d010806 * b[end-5] + d010807 * b[end-6]) * u[end-7] +
+                (d010905 * b[end-4] + d010906 * b[end-5] + d010907 * b[end-6]) * u[end-8]
+            ) + β * dest[end]
+        dest[end-1] =
+            α * (
+                (
+                    d020101 * b[end] +
+                    d020103 * b[end-2] +
+                    d020104 * b[end-3] +
+                    d020105 * b[end-4] +
+                    d020106 * b[end-5] +
+                    d020107 * b[end-6]
+                ) * u[end] +
+                (
+                    d020201 * b[end] +
+                    d020203 * b[end-2] +
+                    d020204 * b[end-3] +
+                    d020205 * b[end-4] +
+                    d020206 * b[end-5] +
+                    d020207 * b[end-6]
+                ) * u[end-1] +
+                (
+                    d020301 * b[end] +
+                    d020304 * b[end-3] +
+                    d020305 * b[end-4] +
+                    d020306 * b[end-5] +
+                    d020307 * b[end-6]
+                ) * u[end-2] +
+                (
+                    d020401 * b[end] +
+                    d020403 * b[end-2] +
+                    d020405 * b[end-4] +
+                    d020406 * b[end-5] +
+                    d020407 * b[end-6]
+                ) * u[end-3] +
+                (
+                    d020501 * b[end] +
+                    d020503 * b[end-2] +
+                    d020504 * b[end-3] +
+                    d020505 * b[end-4] +
+                    d020506 * b[end-5] +
+                    d020507 * b[end-6]
+                ) * u[end-4] +
+                (
+                    d020601 * b[end] +
+                    d020603 * b[end-2] +
+                    d020604 * b[end-3] +
+                    d020605 * b[end-4] +
+                    d020606 * b[end-5] +
+                    d020607 * b[end-6]
+                ) * u[end-5] +
+                (
+                    d020704 * b[end-3] +
+                    d020705 * b[end-4] +
+                    d020706 * b[end-5] +
+                    d020707 * b[end-6]
+                ) * u[end-6] +
+                (d020805 * b[end-4] + d020806 * b[end-5] + d020807 * b[end-6]) * u[end-7] +
+                (d020905 * b[end-4] + d020906 * b[end-5] + d020907 * b[end-6]) * u[end-8]
+            ) + β * dest[end-1]
+        dest[end-2] =
+            α * (
+                (
+                    d030101 * b[end] +
+                    d030102 * b[end-1] +
+                    d030104 * b[end-3] +
+                    d030105 * b[end-4] +
+                    d030106 * b[end-5] +
+                    d030107 * b[end-6]
+                ) * u[end] +
+                (
+                    d030201 * b[end] +
+                    d030204 * b[end-3] +
+                    d030205 * b[end-4] +
+                    d030206 * b[end-5] +
+                    d030207 * b[end-6]
+                ) * u[end-1] +
+                (
+                    d030301 * b[end] +
+                    d030302 * b[end-1] +
+                    d030304 * b[end-3] +
+                    d030305 * b[end-4] +
+                    d030306 * b[end-5] +
+                    d030307 * b[end-6]
+                ) * u[end-2] +
+                (
+                    d030401 * b[end] +
+                    d030402 * b[end-1] +
+                    d030405 * b[end-4] +
+                    d030406 * b[end-5] +
+                    d030407 * b[end-6]
+                ) * u[end-3] +
+                (
+                    d030501 * b[end] +
+                    d030502 * b[end-1] +
+                    d030504 * b[end-3] +
+                    d030505 * b[end-4] +
+                    d030506 * b[end-5] +
+                    d030507 * b[end-6]
+                ) * u[end-4] +
+                (
+                    d030601 * b[end] +
+                    d030602 * b[end-1] +
+                    d030604 * b[end-3] +
+                    d030605 * b[end-4] +
+                    d030606 * b[end-5] +
+                    d030607 * b[end-6]
+                ) * u[end-5] +
+                (
+                    d030704 * b[end-3] +
+                    d030705 * b[end-4] +
+                    d030706 * b[end-5] +
+                    d030707 * b[end-6]
+                ) * u[end-6] +
+                (d030805 * b[end-4] + d030806 * b[end-5] + d030807 * b[end-6]) * u[end-7] +
+                (d030905 * b[end-4] + d030906 * b[end-5] + d030907 * b[end-6]) * u[end-8]
+            ) + β * dest[end-2]
+        dest[end-3] =
+            α * (
+                (
+                    d040101 * b[end] +
+                    d040102 * b[end-1] +
+                    d040103 * b[end-2] +
+                    d040105 * b[end-4] +
+                    d040106 * b[end-5] +
+                    d040107 * b[end-6]
+                ) * u[end] +
+                (
+                    d040201 * b[end] +
+                    d040203 * b[end-2] +
+                    d040205 * b[end-4] +
+                    d040206 * b[end-5] +
+                    d040207 * b[end-6]
+                ) * u[end-1] +
+                (
+                    d040301 * b[end] +
+                    d040302 * b[end-1] +
+                    d040305 * b[end-4] +
+                    d040306 * b[end-5] +
+                    d040307 * b[end-6]
+                ) * u[end-2] +
+                (
+                    d040401 * b[end] +
+                    d040402 * b[end-1] +
+                    d040403 * b[end-2] +
+                    d040405 * b[end-4] +
+                    d040406 * b[end-5] +
+                    d040407 * b[end-6]
+                ) * u[end-3] +
+                (
+                    d040501 * b[end] +
+                    d040502 * b[end-1] +
+                    d040503 * b[end-2] +
+                    d040505 * b[end-4] +
+                    d040506 * b[end-5] +
+                    d040507 * b[end-6]
+                ) * u[end-4] +
+                (
+                    d040601 * b[end] +
+                    d040602 * b[end-1] +
+                    d040603 * b[end-2] +
+                    d040605 * b[end-4] +
+                    d040606 * b[end-5] +
+                    d040607 * b[end-6]
+                ) * u[end-5] +
+                (d040705 * b[end-4] + d040706 * b[end-5] + d040707 * b[end-6]) * u[end-6] +
+                (d040805 * b[end-4] + d040806 * b[end-5] + d040807 * b[end-6]) * u[end-7] +
+                (d040905 * b[end-4] + d040906 * b[end-5] + d040907 * b[end-6]) * u[end-8]
+            ) + β * dest[end-3]
+        dest[end-4] =
+            α * (
+                (
+                    d050101 * b[end] +
+                    d050102 * b[end-1] +
+                    d050103 * b[end-2] +
+                    d050104 * b[end-3] +
+                    d050105 * b[end-4] +
+                    d050106 * b[end-5] +
+                    d050107 * b[end-6]
+                ) * u[end] +
+                (
+                    d050201 * b[end] +
+                    d050203 * b[end-2] +
+                    d050204 * b[end-3] +
+                    d050205 * b[end-4] +
+                    d050206 * b[end-5] +
+                    d050207 * b[end-6]
+                ) * u[end-1] +
+                (
+                    d050301 * b[end] +
+                    d050302 * b[end-1] +
+                    d050304 * b[end-3] +
+                    d050305 * b[end-4] +
+                    d050306 * b[end-5] +
+                    d050307 * b[end-6]
+                ) * u[end-2] +
+                (
+                    d050401 * b[end] +
+                    d050402 * b[end-1] +
+                    d050403 * b[end-2] +
+                    d050405 * b[end-4] +
+                    d050406 * b[end-5] +
+                    d050407 * b[end-6]
+                ) * u[end-3] +
+                (
+                    d050501 * b[end] +
+                    d050502 * b[end-1] +
+                    d050503 * b[end-2] +
+                    d050504 * b[end-3] +
+                    d050505 * b[end-4] +
+                    d050506 * b[end-5] +
+                    d050507 * b[end-6] +
+                    d050508 * b[end-7]
+                ) * u[end-4] +
+                (
+                    d050601 * b[end] +
+                    d050602 * b[end-1] +
+                    d050603 * b[end-2] +
+                    d050604 * b[end-3] +
+                    d050605 * b[end-4] +
+                    d050606 * b[end-5] +
+                    d050607 * b[end-6] +
+                    d050608 * b[end-7]
+                ) * u[end-5] +
+                (
+                    d050704 * b[end-3] +
+                    d050705 * b[end-4] +
+                    d050706 * b[end-5] +
+                    d050707 * b[end-6] +
+                    d050708 * b[end-7]
+                ) * u[end-6] +
+                (
+                    d050805 * b[end-4] +
+                    d050806 * b[end-5] +
+                    d050807 * b[end-6] +
+                    d050808 * b[end-7]
+                ) * u[end-7] +
+                (
+                    d050905 * b[end-4] +
+                    d050906 * b[end-5] +
+                    d050907 * b[end-6] +
+                    d050908 * b[end-7]
+                ) * u[end-8]
+            ) + β * dest[end-4]
+        dest[end-5] =
+            α * (
+                (
+                    d060101 * b[end] +
+                    d060102 * b[end-1] +
+                    d060103 * b[end-2] +
+                    d060104 * b[end-3] +
+                    d060105 * b[end-4] +
+                    d060106 * b[end-5] +
+                    d060107 * b[end-6]
+                ) * u[end] +
+                (
+                    d060201 * b[end] +
+                    d060203 * b[end-2] +
+                    d060204 * b[end-3] +
+                    d060205 * b[end-4] +
+                    d060206 * b[end-5] +
+                    d060207 * b[end-6]
+                ) * u[end-1] +
+                (
+                    d060301 * b[end] +
+                    d060302 * b[end-1] +
+                    d060304 * b[end-3] +
+                    d060305 * b[end-4] +
+                    d060306 * b[end-5] +
+                    d060307 * b[end-6]
+                ) * u[end-2] +
+                (
+                    d060401 * b[end] +
+                    d060402 * b[end-1] +
+                    d060403 * b[end-2] +
+                    d060405 * b[end-4] +
+                    d060406 * b[end-5] +
+                    d060407 * b[end-6]
+                ) * u[end-3] +
+                (
+                    d060501 * b[end] +
+                    d060502 * b[end-1] +
+                    d060503 * b[end-2] +
+                    d060504 * b[end-3] +
+                    d060505 * b[end-4] +
+                    d060506 * b[end-5] +
+                    d060507 * b[end-6] +
+                    d060508 * b[end-7]
+                ) * u[end-4] +
+                (
+                    d060601 * b[end] +
+                    d060602 * b[end-1] +
+                    d060603 * b[end-2] +
+                    d060604 * b[end-3] +
+                    d060605 * b[end-4] +
+                    d060606 * b[end-5] +
+                    d060607 * b[end-6] +
+                    d060608 * b[end-7] +
+                    d060609 * b[end-8]
+                ) * u[end-5] +
+                (
+                    d060704 * b[end-3] +
+                    d060705 * b[end-4] +
+                    d060706 * b[end-5] +
+                    d060707 * b[end-6] +
+                    d060708 * b[end-7] +
+                    d060709 * b[end-8]
+                ) * u[end-6] +
+                (
+                    d060805 * b[end-4] +
+                    d060806 * b[end-5] +
+                    d060807 * b[end-6] +
+                    d060808 * b[end-7] +
+                    d060809 * b[end-8]
+                ) * u[end-7] +
+                (
+                    d060905 * b[end-4] +
+                    d060906 * b[end-5] +
+                    d060907 * b[end-6] +
+                    d060908 * b[end-7] +
+                    d060909 * b[end-8]
+                ) * u[end-8]
+            ) + β * dest[end-5]
+        dest[end-6] =
+            α * (
+                (
+                    d070104 * b[end-3] +
+                    d070105 * b[end-4] +
+                    d070106 * b[end-5] +
+                    d070107 * b[end-6]
+                ) * u[end] +
+                (
+                    d070204 * b[end-3] +
+                    d070205 * b[end-4] +
+                    d070206 * b[end-5] +
+                    d070207 * b[end-6]
+                ) * u[end-1] +
+                (
+                    d070304 * b[end-3] +
+                    d070305 * b[end-4] +
+                    d070306 * b[end-5] +
+                    d070307 * b[end-6]
+                ) * u[end-2] +
+                (d070405 * b[end-4] + d070406 * b[end-5] + d070407 * b[end-6]) * u[end-3] +
+                (
+                    d070504 * b[end-3] +
+                    d070505 * b[end-4] +
+                    d070506 * b[end-5] +
+                    d070507 * b[end-6] +
+                    d070508 * b[end-7]
+                ) * u[end-4] +
+                (
+                    d070604 * b[end-3] +
+                    d070605 * b[end-4] +
+                    d070606 * b[end-5] +
+                    d070607 * b[end-6] +
+                    d070608 * b[end-7] +
+                    d070609 * b[end-8]
+                ) * u[end-5] +
+                (
+                    d070704 * b[end-3] +
+                    d070705 * b[end-4] +
+                    d070706 * b[end-5] +
+                    d070707 * b[end-6] +
+                    d070708 * b[end-7] +
+                    d070709 * b[end-8] +
+                    d070710 * b[end-9]
+                ) * u[end-6] +
+                (
+                    d070805 * b[end-4] +
+                    d070806 * b[end-5] +
+                    d070807 * b[end-6] +
+                    d070808 * b[end-7] +
+                    d070809 * b[end-8] +
+                    d070810 * b[end-9]
+                ) * u[end-7] +
+                (
+                    d070905 * b[end-4] +
+                    d070906 * b[end-5] +
+                    d070907 * b[end-6] +
+                    d070908 * b[end-7] +
+                    d070909 * b[end-8] +
+                    d070910 * b[end-9]
+                ) * u[end-8] +
+                (
+                    d071010 * b[end-9] +
+                    d071007 * b[end-6] +
+                    d071008 * b[end-7] +
+                    d071009 * b[end-8]
+                ) * u[end-9]
+            ) + β * dest[end-6]
+        dest[end-7] =
+            α * (
+                (d080105 * b[end-4] + d080106 * b[end-5] + d080107 * b[end-6]) * u[end] +
+                (d080205 * b[end-4] + d080206 * b[end-5] + d080207 * b[end-6]) * u[end-1] +
+                (d080305 * b[end-4] + d080306 * b[end-5] + d080307 * b[end-6]) * u[end-2] +
+                (d080405 * b[end-4] + d080406 * b[end-5] + d080407 * b[end-6]) * u[end-3] +
+                (
+                    d080505 * b[end-4] +
+                    d080506 * b[end-5] +
+                    d080507 * b[end-6] +
+                    d080508 * b[end-7]
+                ) * u[end-4] +
+                (
+                    d080605 * b[end-4] +
+                    d080606 * b[end-5] +
+                    d080607 * b[end-6] +
+                    d080608 * b[end-7] +
+                    d080609 * b[end-8]
+                ) * u[end-5] +
+                (
+                    d080705 * b[end-4] +
+                    d080706 * b[end-5] +
+                    d080707 * b[end-6] +
+                    d080708 * b[end-7] +
+                    d080709 * b[end-8] +
+                    d080710 * b[end-9]
+                ) * u[end-6] +
+                (
+                    d080805 * b[end-4] +
+                    d080806 * b[end-5] +
+                    d080807 * b[end-6] +
+                    d080808 * b[end-7] +
+                    d080809 * b[end-8] +
+                    d080810 * b[end-9] +
+                    d080811 * b[end-10]
+                ) * u[end-7] +
+                (
+                    d080910 * b[end-9] +
+                    d080911 * b[end-10] +
+                    d080905 * b[end-4] +
+                    d080906 * b[end-5] +
+                    d080907 * b[end-6] +
+                    d080908 * b[end-7] +
+                    d080909 * b[end-8]
+                ) * u[end-8] +
+                (
+                    d081010 * b[end-9] +
+                    d081011 * b[end-10] +
+                    d081007 * b[end-6] +
+                    d081008 * b[end-7] +
+                    d081009 * b[end-8]
+                ) * u[end-9] +
+                (
+                    d081110 * b[end-9] +
+                    d081111 * b[end-10] +
+                    d081108 * b[end-7] +
+                    d081109 * b[end-8]
+                ) * u[end-10]
+            ) + β * dest[end-7]
+        dest[end-8] =
+            α * (
+                (d090105 * b[end-4] + d090106 * b[end-5] + d090107 * b[end-6]) * u[end] +
+                (d090205 * b[end-4] + d090206 * b[end-5] + d090207 * b[end-6]) * u[end-1] +
+                (d090305 * b[end-4] + d090306 * b[end-5] + d090307 * b[end-6]) * u[end-2] +
+                (d090405 * b[end-4] + d090406 * b[end-5] + d090407 * b[end-6]) * u[end-3] +
+                (
+                    d090505 * b[end-4] +
+                    d090506 * b[end-5] +
+                    d090507 * b[end-6] +
+                    d090508 * b[end-7]
+                ) * u[end-4] +
+                (
+                    d090605 * b[end-4] +
+                    d090606 * b[end-5] +
+                    d090607 * b[end-6] +
+                    d090608 * b[end-7] +
+                    d090609 * b[end-8]
+                ) * u[end-5] +
+                (
+                    d090705 * b[end-4] +
+                    d090706 * b[end-5] +
+                    d090707 * b[end-6] +
+                    d090708 * b[end-7] +
+                    d090709 * b[end-8] +
+                    d090710 * b[end-9]
+                ) * u[end-6] +
+                (
+                    d090810 * b[end-9] +
+                    d090811 * b[end-10] +
+                    d090805 * b[end-4] +
+                    d090806 * b[end-5] +
+                    d090807 * b[end-6] +
+                    d090808 * b[end-7] +
+                    d090809 * b[end-8]
+                ) * u[end-7] +
+                (
+                    d090910 * b[end-9] +
+                    d090911 * b[end-10] +
+                    d090912 * b[end-11] +
+                    d090905 * b[end-4] +
+                    d090906 * b[end-5] +
+                    d090907 * b[end-6] +
+                    d090908 * b[end-7] +
+                    d090909 * b[end-8]
+                ) * u[end-8] +
+                (
+                    d091010 * b[end-9] +
+                    d091011 * b[end-10] +
+                    d091012 * b[end-11] +
+                    d091007 * b[end-6] +
+                    d091008 * b[end-7] +
+                    d091009 * b[end-8]
+                ) * u[end-9] +
+                (
+                    d091110 * b[end-9] +
+                    d091111 * b[end-10] +
+                    d091112 * b[end-11] +
+                    d091108 * b[end-7] +
+                    d091109 * b[end-8]
+                ) * u[end-10] +
+                (
+                    d091210 * b[end-9] +
+                    d091211 * b[end-10] +
+                    d091212 * b[end-11] +
+                    d091209 * b[end-8]
+                ) * u[end-11]
+            ) + β * dest[end-8]
     end
 end
 
@@ -8451,51 +9730,67 @@ end
     di_i_0_ip3 = cache
 
     @inbounds begin
-        b_im3 = b[i - 3]
-        b_im2 = b[i - 2]
-        b_im1 = b[i - 1]
+        b_im3 = b[i-3]
+        b_im2 = b[i-2]
+        b_im1 = b[i-1]
         b_i_0 = b[i]
-        b_ip1 = b[i + 1]
-        b_ip2 = b[i + 2]
-        b_ip3 = b[i + 3]
+        b_ip1 = b[i+1]
+        b_ip2 = b[i+2]
+        b_ip3 = b[i+3]
 
-        retval = ((di_im3_im3 * b_im3 +
-                   di_im3_im2 * b_im2 +
-                   di_im3_im1 * b_im1 +
-                   di_im3_i_0 * b_i_0) * u[i - 3] +
-                  (di_im2_im3 * b_im3 +
-                   di_im2_im2 * b_im2 +
-                   di_im2_im1 * b_im1 +
-                   di_im2_i_0 * b_i_0 +
-                   di_im2_ip1 * b_ip1) * u[i - 2] +
-                  (di_im1_im3 * b_im3 +
-                   di_im1_im2 * b_im2 +
-                   di_im1_im1 * b_im1 +
-                   di_im1_i_0 * b_i_0 +
-                   di_im1_ip1 * b_ip1 +
-                   di_im1_ip2 * b_ip2) * u[i - 1] +
-                  (di_i_0_im3 * b_im3 +
-                   di_i_0_im2 * b_im2 +
-                   di_i_0_im1 * b_im1 +
-                   di_i_0_i_0 * b_i_0 +
-                   di_i_0_ip1 * b_ip1 +
-                   di_i_0_ip2 * b_ip2 +
-                   di_i_0_ip3 * b_ip3) * u[i] +
-                  (di_im1_im3 * b_ip3 +
-                   di_im1_im2 * b_ip2 +
-                   di_im1_im1 * b_ip1 +
-                   di_im1_i_0 * b_i_0 +
-                   di_im1_ip1 * b_im1 +
-                   di_im1_ip2 * b_im2) * u[i + 1] +
-                  (di_im2_im3 * b_ip3 +
-                   di_im2_im2 * b_ip2 +
-                   di_im2_im1 * b_ip1 +
-                   di_im2_i_0 * b_i_0 +
-                   di_im2_ip1 * b_im1) * u[i + 2] +
-                  (di_im3_im3 * b_ip3 +
-                   di_im3_im2 * b_ip2 +
-                   di_im3_im1 * b_ip1 +
-                   di_im3_i_0 * b_i_0) * u[i + 3])
+        retval = (
+            (
+                di_im3_im3 * b_im3 +
+                di_im3_im2 * b_im2 +
+                di_im3_im1 * b_im1 +
+                di_im3_i_0 * b_i_0
+            ) * u[i-3] +
+            (
+                di_im2_im3 * b_im3 +
+                di_im2_im2 * b_im2 +
+                di_im2_im1 * b_im1 +
+                di_im2_i_0 * b_i_0 +
+                di_im2_ip1 * b_ip1
+            ) * u[i-2] +
+            (
+                di_im1_im3 * b_im3 +
+                di_im1_im2 * b_im2 +
+                di_im1_im1 * b_im1 +
+                di_im1_i_0 * b_i_0 +
+                di_im1_ip1 * b_ip1 +
+                di_im1_ip2 * b_ip2
+            ) * u[i-1] +
+            (
+                di_i_0_im3 * b_im3 +
+                di_i_0_im2 * b_im2 +
+                di_i_0_im1 * b_im1 +
+                di_i_0_i_0 * b_i_0 +
+                di_i_0_ip1 * b_ip1 +
+                di_i_0_ip2 * b_ip2 +
+                di_i_0_ip3 * b_ip3
+            ) * u[i] +
+            (
+                di_im1_im3 * b_ip3 +
+                di_im1_im2 * b_ip2 +
+                di_im1_im1 * b_ip1 +
+                di_im1_i_0 * b_i_0 +
+                di_im1_ip1 * b_im1 +
+                di_im1_ip2 * b_im2
+            ) * u[i+1] +
+            (
+                di_im2_im3 * b_ip3 +
+                di_im2_im2 * b_ip2 +
+                di_im2_im1 * b_ip1 +
+                di_im2_i_0 * b_i_0 +
+                di_im2_ip1 * b_im1
+            ) * u[i+2] +
+            (
+                di_im3_im3 * b_ip3 +
+                di_im3_im2 * b_ip2 +
+                di_im3_im1 * b_ip1 +
+                di_im3_i_0 * b_i_0
+            ) * u[i+3]
+        )
     end
 
     retval

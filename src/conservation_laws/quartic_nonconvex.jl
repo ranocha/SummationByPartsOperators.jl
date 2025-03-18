@@ -10,53 +10,55 @@ with periodic boundary conditions.
 or `nothing`, and `split_form::Union{Val(true), Val(false)}` determines whether
 the canonical split form or the conservative form is used.
 """
-@auto_hash_equals struct QuarticNonconvexPeriodicSemidiscretization{T,
-                                                                    Derivative <:
-                                                                    AbstractDerivativeOperator{T},
-                                                                    Dissipation,
-                                                                    SplitForm <:
-                                                                    Union{Val{false},
-                                                                          Val{true}}} <:
-                         AbstractSemidiscretization
+@auto_hash_equals struct QuarticNonconvexPeriodicSemidiscretization{
+    T,
+    Derivative<:AbstractDerivativeOperator{T},
+    Dissipation,
+    SplitForm<:Union{Val{false},Val{true}},
+} <: AbstractSemidiscretization
     derivative::Derivative
     dissipation::Dissipation
     tmp1::Vector{T}
     tmp2::Vector{T}
     split_form::SplitForm
 
-    function QuarticNonconvexPeriodicSemidiscretization(derivative::Derivative,
-                                                        dissipation::Dissipation,
-                                                        split_form::SplitForm = Val{false}()) where {
-                                                                                                     T,
-                                                                                                     Derivative <:
-                                                                                                     AbstractDerivativeOperator{T},
-                                                                                                     Dissipation,
-                                                                                                     SplitForm <:
-                                                                                                     Union{Val{false},
-                                                                                                           Val{true}}
-                                                                                                     }
+    function QuarticNonconvexPeriodicSemidiscretization(
+        derivative::Derivative,
+        dissipation::Dissipation,
+        split_form::SplitForm = Val{false}(),
+    ) where {
+        T,
+        Derivative<:AbstractDerivativeOperator{T},
+        Dissipation,
+        SplitForm<:Union{Val{false},Val{true}},
+    }
         if dissipation !== nothing
-            @argcheck size(derivative)==size(dissipation) DimensionMismatch
-            @argcheck grid(derivative)==grid(dissipation) ArgumentError
+            @argcheck size(derivative) == size(dissipation) DimensionMismatch
+            @argcheck grid(derivative) == grid(dissipation) ArgumentError
         end
         N = size(derivative, 2)
         tmp1 = Array{T}(undef, N)
         tmp2 = Array{T}(undef, N)
-        new{T, Derivative, Dissipation, SplitForm}(derivative,
-                                                   dissipation,
-                                                   tmp1,
-                                                   tmp2,
-                                                   split_form)
+        new{T,Derivative,Dissipation,SplitForm}(
+            derivative,
+            dissipation,
+            tmp1,
+            tmp2,
+            split_form,
+        )
     end
 end
+
 
 function Base.show(io::IO, semi::QuarticNonconvexPeriodicSemidiscretization)
     if get(io, :compact, false)
         print(io, "Semidiscretization of the quartic nonconvex conservation law (periodic)")
     else
         print(io, "Semidiscretization of the quartic nonconvex conservation law\n")
-        print(io,
-              "  \$ \\partial_t u(t,x) + \\partial_x ( u(t,x)^4 - 10 u(t,x)^2 + 3 u(t,x) ) = 0 \$ \n")
+        print(
+            io,
+            "  \$ \\partial_t u(t,x) + \\partial_x ( u(t,x)^4 - 10 u(t,x)^2 + 3 u(t,x) ) = 0 \$ \n",
+        )
         print(io, "with periodic boundaries using")
         if semi.split_form == Val{true}()
             print(io, " a split form and: \n")
@@ -67,6 +69,7 @@ function Base.show(io::IO, semi::QuarticNonconvexPeriodicSemidiscretization)
         print(io, semi.dissipation)
     end
 end
+
 
 function (disc::QuarticNonconvexPeriodicSemidiscretization)(du, u, p, t)
     @unpack tmp1, tmp2, derivative, dissipation, split_form = disc

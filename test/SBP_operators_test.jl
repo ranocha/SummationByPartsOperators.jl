@@ -2,16 +2,18 @@ using Test
 using LinearAlgebra
 using SummationByPartsOperators
 
-D_test_list = (MattssonNordström2004(),
-               MattssonSvärdNordström2004(),
-               MattssonSvärdShoeybi2008(),
-               Mattsson2014(),
-               MattssonAlmquistCarpenter2014Extended(),
-               MattssonAlmquistCarpenter2014Optimal(),
-               MattssonAlmquistVanDerWeide2018Minimal(),
-               MattssonAlmquistVanDerWeide2018Accurate(),
-               DienerDorbandSchnetterTiglio2007(),
-               SharanBradyLivescu2022(1 // 2, 2 // 3))
+D_test_list = (
+    MattssonNordström2004(),
+    MattssonSvärdNordström2004(),
+    MattssonSvärdShoeybi2008(),
+    Mattsson2014(),
+    MattssonAlmquistCarpenter2014Extended(),
+    MattssonAlmquistCarpenter2014Optimal(),
+    MattssonAlmquistVanDerWeide2018Minimal(),
+    MattssonAlmquistVanDerWeide2018Accurate(),
+    DienerDorbandSchnetterTiglio2007(),
+    SharanBradyLivescu2022(1 // 2, 2 // 3),
+)
 
 # Accuracy tests of first derivative operators.
 for source in D_test_list, T in (Float32, Float64)
@@ -38,7 +40,10 @@ for source in D_test_list, T in (Float32, Float64)
         x2 = x1 .* x1
         x3 = x2 .* x1
         res = fill(zero(eltype(x0)), length(x0))
-        inner_indices = (length(D.coefficients.left_boundary) + 1):(length(res) - length(D.coefficients.left_boundary) - 1)
+        inner_indices =
+            length(D.coefficients.left_boundary)+1:length(
+                res,
+            )-length(D.coefficients.left_boundary)-1
         @test derivative_order(D) == der_order
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == false
@@ -75,12 +80,13 @@ for source in D_test_list, T in (Float32, Float64)
         u = sinpi.(x1)
         v = copy(u)
         scale_by_mass_matrix!(v, D)
-        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]),
-                                                             D)
+        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin+1):(end-1)]), D)
         @test v ≈ M * u
         scale_by_inverse_mass_matrix!(v, D)
-        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]),
-                                                                     D)
+        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(
+            @view(v[(begin+1):(end-1)]),
+            D,
+        )
         @test v ≈ u
     end
 
@@ -105,7 +111,10 @@ for source in D_test_list, T in (Float32, Float64)
         x6 = x3 .* x3
         x7 = x4 .* x3
         res = fill(zero(eltype(x0)), length(x0))
-        inner_indices = (length(D.coefficients.left_boundary) + 1):(length(res) - length(D.coefficients.left_boundary) - 1)
+        inner_indices =
+            length(D.coefficients.left_boundary)+1:length(
+                res,
+            )-length(D.coefficients.left_boundary)-1
         @test derivative_order(D) == der_order
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == false
@@ -152,12 +161,13 @@ for source in D_test_list, T in (Float32, Float64)
         u = sinpi.(x1)
         v = copy(u)
         scale_by_mass_matrix!(v, D)
-        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]),
-                                                             D)
+        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin+1):(end-1)]), D)
         @test v ≈ M * u
         scale_by_inverse_mass_matrix!(v, D)
-        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]),
-                                                                     D)
+        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(
+            @view(v[(begin+1):(end-1)]),
+            D,
+        )
         @test v ≈ u
     end
 
@@ -182,7 +192,10 @@ for source in D_test_list, T in (Float32, Float64)
         x6 = x3 .* x3
         x7 = x4 .* x3
         res = fill(zero(eltype(x0)), length(x0))
-        inner_indices = (length(D.coefficients.left_boundary) + 1):(length(res) - length(D.coefficients.left_boundary) - 1)
+        inner_indices =
+            length(D.coefficients.left_boundary)+1:length(
+                res,
+            )-length(D.coefficients.left_boundary)-1
         @test derivative_order(D) == der_order
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == false
@@ -239,12 +252,13 @@ for source in D_test_list, T in (Float32, Float64)
         u = sinpi.(x1)
         v = copy(u)
         scale_by_mass_matrix!(v, D)
-        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]),
-                                                             D)
+        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin+1):(end-1)]), D)
         @test v ≈ M * u
         scale_by_inverse_mass_matrix!(v, D)
-        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]),
-                                                                     D)
+        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(
+            @view(v[(begin+1):(end-1)]),
+            D,
+        )
         @test v ≈ u
     end
 
@@ -269,7 +283,10 @@ for source in D_test_list, T in (Float32, Float64)
         x6 = x3 .* x3
         x7 = x4 .* x3
         res = fill(zero(eltype(x0)), length(x0))
-        inner_indices = (length(D.coefficients.left_boundary) + 1):(length(res) - length(D.coefficients.left_boundary) - 1)
+        inner_indices =
+            length(D.coefficients.left_boundary)+1:length(
+                res,
+            )-length(D.coefficients.left_boundary)-1
         @test derivative_order(D) == der_order
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == false
@@ -324,21 +341,24 @@ for source in D_test_list, T in (Float32, Float64)
         u = sinpi.(x1)
         v = copy(u)
         scale_by_mass_matrix!(v, D)
-        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]),
-                                                             D)
+        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin+1):(end-1)]), D)
         @test v ≈ M * u
         scale_by_inverse_mass_matrix!(v, D)
-        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]),
-                                                                     D)
+        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(
+            @view(v[(begin+1):(end-1)]),
+            D,
+        )
         @test v ≈ u
     end
 
-    @test_throws Union{MethodError, ArgumentError} derivative_operator(source,
-                                                                       der_order,
-                                                                       16,
-                                                                       xmin,
-                                                                       xmax,
-                                                                       N)
+    @test_throws Union{MethodError,ArgumentError} derivative_operator(
+        source,
+        der_order,
+        16,
+        xmin,
+        xmax,
+        N,
+    )
 end
 
 # Accuracy tests of second derivative operators.
@@ -368,7 +388,10 @@ for source in D_test_list, T in (Float32, Float64)
         x3 = x2 .* x1
         x4 = x2 .* x2
         res = fill(zero(eltype(x0)), length(x0))
-        inner_indices = (length(D.coefficients.left_boundary) + 1):(length(res) - length(D.coefficients.left_boundary) - 1)
+        inner_indices =
+            length(D.coefficients.left_boundary)+1:length(
+                res,
+            )-length(D.coefficients.left_boundary)-1
         @test derivative_order(D) == der_order
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == false
@@ -403,12 +426,13 @@ for source in D_test_list, T in (Float32, Float64)
         u = sinpi.(x1)
         v = copy(u)
         scale_by_mass_matrix!(v, D)
-        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]),
-                                                             D)
+        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin+1):(end-1)]), D)
         @test v ≈ M * u
         scale_by_inverse_mass_matrix!(v, D)
-        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]),
-                                                                     D)
+        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(
+            @view(v[(begin+1):(end-1)]),
+            D,
+        )
         @test v ≈ u
     end
 
@@ -433,7 +457,10 @@ for source in D_test_list, T in (Float32, Float64)
         x6 = x3 .* x3
         x7 = x4 .* x3
         res = fill(zero(eltype(x0)), length(x0))
-        inner_indices = (length(D.coefficients.left_boundary) + 1):(length(res) - length(D.coefficients.left_boundary) - 1)
+        inner_indices =
+            length(D.coefficients.left_boundary)+1:length(
+                res,
+            )-length(D.coefficients.left_boundary)-1
         @test derivative_order(D) == der_order
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == false
@@ -474,12 +501,13 @@ for source in D_test_list, T in (Float32, Float64)
         u = sinpi.(x1)
         v = copy(u)
         scale_by_mass_matrix!(v, D)
-        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]),
-                                                             D)
+        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin+1):(end-1)]), D)
         @test v ≈ M * u
         scale_by_inverse_mass_matrix!(v, D)
-        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]),
-                                                                     D)
+        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(
+            @view(v[(begin+1):(end-1)]),
+            D,
+        )
         @test v ≈ u
     end
 
@@ -504,7 +532,10 @@ for source in D_test_list, T in (Float32, Float64)
         x6 = x3 .* x3
         x7 = x4 .* x3
         res = fill(zero(eltype(x0)), length(x0))
-        inner_indices = (length(D.coefficients.left_boundary) + 1):(length(res) - length(D.coefficients.left_boundary) - 1)
+        inner_indices =
+            length(D.coefficients.left_boundary)+1:length(
+                res,
+            )-length(D.coefficients.left_boundary)-1
         @test derivative_order(D) == der_order
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == false
@@ -521,11 +552,15 @@ for source in D_test_list, T in (Float32, Float64)
         mul!(res, D, x1)
         @test all(i -> abs(res[i]) < 20000 * eps(T), eachindex(res))
         mul!(res, D, x2)
-        @test all(i -> isapprox(res[i], 2 * x0[i], rtol = 15000 * eps(res[i])),
-                  eachindex(res))
+        @test all(
+            i -> isapprox(res[i], 2 * x0[i], rtol = 15000 * eps(res[i])),
+            eachindex(res),
+        )
         mul!(res, D, x3)
-        @test all(i -> isapprox(res[i], 6 * x1[i], rtol = 5000 * eps(res[i])),
-                  eachindex(res))
+        @test all(
+            i -> isapprox(res[i], 6 * x1[i], rtol = 5000 * eps(res[i])),
+            eachindex(res),
+        )
         # only interior
         mul!(res, D, x4)
         @test all(i -> res[i] ≈ 12 * x2[i], inner_indices)
@@ -551,12 +586,13 @@ for source in D_test_list, T in (Float32, Float64)
         u = sinpi.(x1)
         v = copy(u)
         scale_by_mass_matrix!(v, D)
-        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]),
-                                                             D)
+        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin+1):(end-1)]), D)
         @test v ≈ M * u
         scale_by_inverse_mass_matrix!(v, D)
-        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]),
-                                                                     D)
+        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(
+            @view(v[(begin+1):(end-1)]),
+            D,
+        )
         @test v ≈ u
     end
 
@@ -582,7 +618,10 @@ for source in D_test_list, T in (Float32, Float64)
         x7 = x4 .* x3
         x8 = x4 .* x4
         res = fill(zero(eltype(x0)), length(x0))
-        inner_indices = (length(D.coefficients.left_boundary) + 1):(length(res) - length(D.coefficients.left_boundary) - 1)
+        inner_indices =
+            length(D.coefficients.left_boundary)+1:length(
+                res,
+            )-length(D.coefficients.left_boundary)-1
         @test derivative_order(D) == der_order
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == false
@@ -631,26 +670,29 @@ for source in D_test_list, T in (Float32, Float64)
         u = sinpi.(x1)
         v = copy(u)
         scale_by_mass_matrix!(v, D)
-        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]),
-                                                             D)
+        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin+1):(end-1)]), D)
         @test v ≈ M * u
         scale_by_inverse_mass_matrix!(v, D)
-        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]),
-                                                                     D)
+        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(
+            @view(v[(begin+1):(end-1)]),
+            D,
+        )
         @test v ≈ u
     end
 
-    @test_throws Union{MethodError, ArgumentError} derivative_operator(source,
-                                                                       der_order,
-                                                                       16,
-                                                                       xmin,
-                                                                       xmax,
-                                                                       N)
+    @test_throws Union{MethodError,ArgumentError} derivative_operator(
+        source,
+        der_order,
+        16,
+        xmin,
+        xmax,
+        N,
+    )
 end
 
 # Accuracy tests of third derivative operators.
 @testset "third-derivative operators ($source, $T)" for source in D_test_list,
-                                                        T in (Float32, Float64)
+    T in (Float32, Float64)
 
     xmin = -one(T)
     xmax = 2 * one(T)
@@ -675,7 +717,10 @@ end
         x3 = x2 .* x1
         x4 = x2 .* x2
         res = fill(zero(eltype(x0)), length(x0))
-        inner_indices = (length(D.coefficients.left_boundary) + 1):(length(res) - length(D.coefficients.left_boundary) - 1)
+        inner_indices =
+            length(D.coefficients.left_boundary)+1:length(
+                res,
+            )-length(D.coefficients.left_boundary)-1
         @test derivative_order(D) == der_order
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == false
@@ -708,12 +753,13 @@ end
         u = sinpi.(x1)
         v = copy(u)
         scale_by_mass_matrix!(v, D)
-        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]),
-                                                             D)
+        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin+1):(end-1)]), D)
         @test v ≈ M * u
         scale_by_inverse_mass_matrix!(v, D)
-        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]),
-                                                                     D)
+        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(
+            @view(v[(begin+1):(end-1)]),
+            D,
+        )
         @test v ≈ u
     end
 
@@ -736,7 +782,10 @@ end
         x4 = x2 .* x2
         x5 = x3 .* x2
         res = fill(zero(eltype(x0)), length(x0))
-        inner_indices = (length(D.coefficients.left_boundary) + 1):(length(res) - length(D.coefficients.left_boundary) - 1)
+        inner_indices =
+            length(D.coefficients.left_boundary)+1:length(
+                res,
+            )-length(D.coefficients.left_boundary)-1
         @test derivative_order(D) == der_order
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == false
@@ -777,12 +826,13 @@ end
         u = sinpi.(x1)
         v = copy(u)
         scale_by_mass_matrix!(v, D)
-        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]),
-                                                             D)
+        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin+1):(end-1)]), D)
         @test v ≈ M * u
         scale_by_inverse_mass_matrix!(v, D)
-        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]),
-                                                                     D)
+        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(
+            @view(v[(begin+1):(end-1)]),
+            D,
+        )
         @test v ≈ u
     end
 
@@ -806,7 +856,10 @@ end
         x5 = x3 .* x2
         x6 = x3 .* x3
         res = fill(zero(eltype(x0)), length(x0))
-        inner_indices = (length(D.coefficients.left_boundary) + 1):(length(res) - length(D.coefficients.left_boundary) - 1)
+        inner_indices =
+            length(D.coefficients.left_boundary)+1:length(
+                res,
+            )-length(D.coefficients.left_boundary)-1
         @test derivative_order(D) == der_order
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == false
@@ -818,8 +871,10 @@ end
         mul!(res, D, x2)
         @test all(i -> abs(res[i]) < 5_000_000 * eps(T), eachindex(res))
         mul!(res, D, x3)
-        @test all(i -> isapprox(res[i], 6 * x0[i], rtol = 5_000_000 * eps(T)),
-                  eachindex(res))
+        @test all(
+            i -> isapprox(res[i], 6 * x0[i], rtol = 5_000_000 * eps(T)),
+            eachindex(res),
+        )
         # only interior
         mul!(res, D, x3)
         @test all(i -> isapprox(res[i], 6 * x0[i], rtol = 150_000 * eps(T)), inner_indices)
@@ -852,21 +907,24 @@ end
         u = sinpi.(x1)
         v = copy(u)
         scale_by_mass_matrix!(v, D)
-        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]),
-                                                             D)
+        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin+1):(end-1)]), D)
         @test v ≈ M * u
         scale_by_inverse_mass_matrix!(v, D)
-        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]),
-                                                                     D)
+        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(
+            @view(v[(begin+1):(end-1)]),
+            D,
+        )
         @test v ≈ u
     end
 
-    @test_throws Union{MethodError, ArgumentError} derivative_operator(source,
-                                                                       der_order,
-                                                                       16,
-                                                                       xmin,
-                                                                       xmax,
-                                                                       N)
+    @test_throws Union{MethodError,ArgumentError} derivative_operator(
+        source,
+        der_order,
+        16,
+        xmin,
+        xmax,
+        N,
+    )
 end
 
 # Accuracy tests of fourth derivative operators.
@@ -894,7 +952,10 @@ end
         x3 = x2 .* x1
         x4 = x2 .* x2
         res = fill(zero(eltype(x0)), length(x0))
-        inner_indices = (length(D.coefficients.left_boundary) + 1):(length(res) - length(D.coefficients.left_boundary) - 1)
+        inner_indices =
+            length(D.coefficients.left_boundary)+1:length(
+                res,
+            )-length(D.coefficients.left_boundary)-1
         @test derivative_order(D) == der_order
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == false
@@ -936,12 +997,13 @@ end
         u = sinpi.(x1)
         v = copy(u)
         scale_by_mass_matrix!(v, D)
-        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]),
-                                                             D)
+        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin+1):(end-1)]), D)
         @test v ≈ M * u
         scale_by_inverse_mass_matrix!(v, D)
-        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]),
-                                                                     D)
+        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(
+            @view(v[(begin+1):(end-1)]),
+            D,
+        )
         @test v ≈ u
     end
 
@@ -963,7 +1025,10 @@ end
         x3 = x2 .* x1
         x4 = x2 .* x2
         res = fill(zero(eltype(x0)), length(x0))
-        inner_indices = (length(D.coefficients.left_boundary) + 1):(length(res) - length(D.coefficients.left_boundary) - 1)
+        inner_indices =
+            length(D.coefficients.left_boundary)+1:length(
+                res,
+            )-length(D.coefficients.left_boundary)-1
         @test derivative_order(D) == der_order
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == false
@@ -980,8 +1045,10 @@ end
         mul!(res, D, x3)
         @test all(i -> abs(res[i]) < 120_000_000 * eps(T), inner_indices)
         mul!(res, D, x4)
-        @test all(i -> isapprox(res[i], 24 * x0[i], rtol = 50_000_000 * eps(T)),
-                  inner_indices)
+        @test all(
+            i -> isapprox(res[i], 24 * x0[i], rtol = 50_000_000 * eps(T)),
+            inner_indices,
+        )
         # boundary: first derivative
         @test isapprox(derivative_left(D, x0, Val{1}()), 0, atol = 10 * eps(T))
         @test isapprox(derivative_right(D, x0, Val{1}()), 0, atol = 10 * eps(T))
@@ -1016,12 +1083,13 @@ end
         u = sinpi.(x1)
         v = copy(u)
         scale_by_mass_matrix!(v, D)
-        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]),
-                                                             D)
+        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin+1):(end-1)]), D)
         @test v ≈ M * u
         scale_by_inverse_mass_matrix!(v, D)
-        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]),
-                                                                     D)
+        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(
+            @view(v[(begin+1):(end-1)]),
+            D,
+        )
         @test v ≈ u
     end
 
@@ -1043,7 +1111,10 @@ end
         x3 = x2 .* x1
         x4 = x2 .* x2
         res = fill(zero(eltype(x0)), length(x0))
-        inner_indices = (length(D.coefficients.left_boundary) + 1):(length(res) - length(D.coefficients.left_boundary) - 1)
+        inner_indices =
+            length(D.coefficients.left_boundary)+1:length(
+                res,
+            )-length(D.coefficients.left_boundary)-1
         @test derivative_order(D) == der_order
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == false
@@ -1060,8 +1131,10 @@ end
         mul!(res, D, x3)
         @test all(i -> abs(res[i]) < 500_000_000 * eps(T), inner_indices)
         mul!(res, D, x4)
-        @test all(i -> isapprox(res[i], 24 * x0[i], rtol = 50_000_000 * eps(T)),
-                  inner_indices)
+        @test all(
+            i -> isapprox(res[i], 24 * x0[i], rtol = 50_000_000 * eps(T)),
+            inner_indices,
+        )
         # boundary: first derivative
         @test isapprox(derivative_left(D, x0, Val{1}()), 0, atol = 1000 * eps(T))
         @test isapprox(derivative_right(D, x0, Val{1}()), 0, atol = 1000 * eps(T))
@@ -1096,22 +1169,26 @@ end
         u = sinpi.(x1)
         v = copy(u)
         scale_by_mass_matrix!(v, D)
-        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]),
-                                                             D)
+        @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin+1):(end-1)]), D)
         @test v ≈ M * u
         scale_by_inverse_mass_matrix!(v, D)
-        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]),
-                                                                     D)
+        @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(
+            @view(v[(begin+1):(end-1)]),
+            D,
+        )
         @test v ≈ u
     end
 
-    @test_throws Union{MethodError, ArgumentError} derivative_operator(source,
-                                                                       der_order,
-                                                                       16,
-                                                                       xmin,
-                                                                       xmax,
-                                                                       N)
+    @test_throws Union{MethodError,ArgumentError} derivative_operator(
+        source,
+        der_order,
+        16,
+        xmin,
+        xmax,
+        N,
+    )
 end
+
 
 # Compare mul! with β=0 and mul! without β.
 for T in (Float32, Float64), acc_order in (2, 4, 6, 8)
@@ -1145,25 +1222,30 @@ for T in (Float32, Float64), acc_order in (2, 4, 6, 8)
     @test all(i -> dest1[i] ≈ dest3[i], eachindex(u))
 end
 
+
 # https://github.com/ranocha/SummationByPartsOperators.jl/issues/208
 @testset "issue #208" begin
-    for acc_order in (2, 4, 6), der_order in 1:4
-        @test_nowarn derivative_operator(Mattsson2014(),
-                                         derivative_order = der_order,
-                                         accuracy_order = acc_order,
-                                         xmin = -1.0,
-                                         xmax = 1.0,
-                                         N = 20)
+    for acc_order in (2, 4, 6), der_order = 1:4
+        @test_nowarn derivative_operator(
+            Mattsson2014(),
+            derivative_order = der_order,
+            accuracy_order = acc_order,
+            xmin = -1.0,
+            xmax = 1.0,
+            N = 20,
+        )
     end
 
     # https://github.com/ranocha/SummationByPartsOperators.jl/pull/281
     @testset "PR #281" begin
-        D = @test_nowarn derivative_operator(MattssonAlmquistVanDerWeide2018Minimal(),
-                                             1,
-                                             4,
-                                             0.0,
-                                             1.0,
-                                             9)
+        D = @test_nowarn derivative_operator(
+            MattssonAlmquistVanDerWeide2018Minimal(),
+            1,
+            4,
+            0.0,
+            1.0,
+            9,
+        )
         @test all(isfinite.(Matrix(D)))
     end
 end

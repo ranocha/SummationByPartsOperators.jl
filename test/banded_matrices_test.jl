@@ -2,12 +2,14 @@ using Test
 using LinearAlgebra, SparseArrays
 using SummationByPartsOperators, BandedMatrices
 
-D_test_list = (MattssonNordström2004(),
-               MattssonSvärdNordström2004(),
-               MattssonSvärdShoeybi2008(),
-               Mattsson2014(),
-               MattssonAlmquistCarpenter2014Extended(),
-               MattssonAlmquistCarpenter2014Optimal())
+D_test_list = (
+    MattssonNordström2004(),
+    MattssonSvärdNordström2004(),
+    MattssonSvärdShoeybi2008(),
+    Mattsson2014(),
+    MattssonAlmquistCarpenter2014Extended(),
+    MattssonAlmquistCarpenter2014Optimal(),
+)
 Di_test_list = (MattssonSvärdNordström2004(),)
 D2var_test_list = (Mattsson2012(),)
 
@@ -48,6 +50,7 @@ for T in (Float32, Float64),
     mul!(dest2, D_banded, u)
     @test dest1 ≈ dest2
 
+
     Di_serial = try
         dissipation_operator(Di_source, D_serial, order = diss_order)
     catch err
@@ -73,19 +76,22 @@ for T in (Float32, Float64),
     @test all(i -> isapprox(dest1[i], dest2[i], atol = 500 * eps(T)), eachindex(u))
 end
 
+
 for T in (Float32, Float64), acc_order in (2, 4, 6), D2var_source in D2var_test_list
     xmin = zero(T)
     xmax = 5 * one(T)
     N = 101
     D2var_serial = try
-        var_coef_derivative_operator(D2var_source,
-                                     2,
-                                     acc_order,
-                                     xmin,
-                                     xmax,
-                                     N,
-                                     one,
-                                     Val{:serial}())
+        var_coef_derivative_operator(
+            D2var_source,
+            2,
+            acc_order,
+            xmin,
+            xmax,
+            N,
+            one,
+            Val{:serial}(),
+        )
     catch err
         !isa(err, ArgumentError) && throw(err)
         nothing

@@ -1,6 +1,7 @@
 using Test, SummationByPartsOperators
 using LinearAlgebra
 
+
 function accuracy_test!(res, ufunc, dufunc, D, direction)
     u = compute_coefficients(ufunc, D)
     du = compute_coefficients(dufunc, D)
@@ -22,7 +23,7 @@ for T in (Float32, Float64)
         @test issymmetric(D) == false
         u = compute_coefficients(zero ∘ eltype, D)
         res = similar(u)
-        for k in 0:((N ÷ 2) - 1)
+        for k = 0:(N÷2)-1
             ufunc = x -> sinpi(k * x[1])
             dufunc = x -> eltype(x)(k * π) * cospi(k * x[1])
             @test accuracy_test!(res, ufunc, dufunc, D, Val(:x))

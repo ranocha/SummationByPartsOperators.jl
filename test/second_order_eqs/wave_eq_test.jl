@@ -11,7 +11,7 @@ for T in (Float32, Float64), left_bc in BCs, right_bc in BCs
     tspan = (zero(T), one(T))
 
     # SBP FD
-    for acc_order in 2:2:8
+    for acc_order = 2:2:8
         D = derivative_operator(MattssonSvärdNordström2004(), 2, acc_order, xmin, xmax, N)
         semi = WaveEquationNonperiodicSemidiscretization(D, left_bc, right_bc)
         for compact in (true, false)
