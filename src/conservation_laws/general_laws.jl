@@ -33,5 +33,5 @@ function FilterCallback(filter::AbstractFilter)
     condition = (t, u, integrator) -> true
     affect!(integrator) = filter(integrator.u)
 
-    DiscreteCallback(condition, affect!, save_positions = (false, false))
+    DiscreteCallback(condition, affect!, save_positions=(false,false))
 end

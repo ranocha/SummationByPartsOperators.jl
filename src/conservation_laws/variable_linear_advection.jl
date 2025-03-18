@@ -11,14 +11,10 @@ or `nothing`, `a(x)` the variable coefficient, and `split_form::Union{Val(false)
 determines whether the canonical split form or the conservative form should be
 used.
 """
-@auto_hash_equals struct VariableLinearAdvectionNonperiodicSemidiscretization{
-    T,
-    Derivative<:AbstractDerivativeOperator{T},
-    Dissipation,
-    SplitForm<:Union{Val{false},Val{true}},
-    LeftBC,
-    RightBC,
-} <: AbstractSemidiscretization
+@auto_hash_equals struct VariableLinearAdvectionNonperiodicSemidiscretization{T, Derivative<:AbstractDerivativeOperator{T},
+                                                                              Dissipation,
+                                                                              SplitForm<:Union{Val{false}, Val{true}},
+                                                                              LeftBC, RightBC} <: AbstractSemidiscretization
     derivative::Derivative
     dissipation::Dissipation
     a::Vector{T}
@@ -28,21 +24,7 @@ used.
     left_bc::LeftBC
     right_bc::RightBC
 
-    function VariableLinearAdvectionNonperiodicSemidiscretization(
-        derivative::Derivative,
-        dissipation::Dissipation,
-        afunc,
-        split_form::SplitForm,
-        left_bc::LeftBC,
-        right_bc::RightBC,
-    ) where {
-        T,
-        Derivative<:AbstractDerivativeOperator{T},
-        Dissipation,
-        SplitForm<:Union{Val{false},Val{true}},
-        LeftBC,
-        RightBC,
-    }
+    function VariableLinearAdvectionNonperiodicSemidiscretization(derivative::Derivative, dissipation::Dissipation, afunc, split_form::SplitForm, left_bc::LeftBC, right_bc::RightBC) where {T, Derivative<:AbstractDerivativeOperator{T}, Dissipation, SplitForm<:Union{Val{false}, Val{true}}, LeftBC, RightBC}
         if dissipation !== nothing
             @argcheck size(derivative) == size(dissipation) DimensionMismatch
             @argcheck grid(derivative) == grid(dissipation) ArgumentError
@@ -51,16 +33,7 @@ used.
         a = compute_coefficients(afunc, derivative)
         tmp1 = Array{T}(undef, N)
         tmp2 = Array{T}(undef, N)
-        new{T,Derivative,Dissipation,SplitForm,LeftBC,RightBC}(
-            derivative,
-            dissipation,
-            a,
-            tmp1,
-            tmp2,
-            split_form,
-            left_bc,
-            right_bc,
-        )
+        new{T,Derivative,Dissipation,SplitForm,LeftBC,RightBC}(derivative, dissipation, a, tmp1, tmp2, split_form, left_bc, right_bc)
     end
 end
 
@@ -84,7 +57,7 @@ end
 
 
 function godunov_flux_variablelinearadvection(uₗ::T, uᵣ::T, a::T) where {T<:Real}
-    ifelse(a > 0, a * uₗ, a * uᵣ)
+    ifelse(a > 0, a*uₗ, a*uᵣ)
 end
 
 function (disc::VariableLinearAdvectionNonperiodicSemidiscretization)(du, u, p, t)
@@ -107,7 +80,7 @@ function (disc::VariableLinearAdvectionNonperiodicSemidiscretization)(du, u, p, 
         mul!(tmp1, derivative, a)
         @. du += m1_2 * u * tmp1
         ## D * a*u
-        @. tmp2 = a * u
+        @. tmp2 = a*u
         mul!(tmp1, derivative, tmp2)
         @. du += m1_2 * tmp1
     else
@@ -124,9 +97,9 @@ function (disc::VariableLinearAdvectionNonperiodicSemidiscretization)(du, u, p, 
 
     # boundary conditions via Godunov's flux
     @inbounds fnum_left = godunov_flux_variablelinearadvection(left_bc(t), u[1], a[1])
-    @inbounds du[1] += (fnum_left - a[1] * u[1]) / left_boundary_weight(derivative)
+    @inbounds du[1] += (fnum_left - a[1]*u[1]) / left_boundary_weight(derivative)
     @inbounds fnum_right = godunov_flux_variablelinearadvection(u[end], right_bc(t), a[end])
-    @inbounds du[end] -= (fnum_right - a[end] * u[end]) / right_boundary_weight(derivative)
+    @inbounds du[end] -= (fnum_right - a[end]*u[end]) / right_boundary_weight(derivative)
 
     nothing
 end
@@ -144,12 +117,9 @@ or `nothing`, `a(x)` the variable coefficient, and `split_form::Union{Val(false)
 determines whether the canonical split form or the conservative form should be
 used.
 """
-@auto_hash_equals struct VariableLinearAdvectionPeriodicSemidiscretization{
-    T,
-    Derivative<:AbstractPeriodicDerivativeOperator{T},
-    Dissipation,
-    SplitForm<:Union{Val{false},Val{true}},
-} <: AbstractSemidiscretization
+@auto_hash_equals struct VariableLinearAdvectionPeriodicSemidiscretization{T, Derivative<:AbstractPeriodicDerivativeOperator{T},
+                                                                           Dissipation,
+                                                                           SplitForm<:Union{Val{false}, Val{true}}} <: AbstractSemidiscretization
     derivative::Derivative
     dissipation::Dissipation
     a::Vector{T}
@@ -157,17 +127,7 @@ used.
     tmp2::Vector{T}
     split_form::SplitForm
 
-    function VariableLinearAdvectionPeriodicSemidiscretization(
-        derivative::Derivative,
-        dissipation::Dissipation,
-        afunc,
-        split_form::SplitForm,
-    ) where {
-        T,
-        Derivative<:AbstractPeriodicDerivativeOperator{T},
-        Dissipation,
-        SplitForm<:Union{Val{false},Val{true}},
-    }
+    function VariableLinearAdvectionPeriodicSemidiscretization(derivative::Derivative, dissipation::Dissipation, afunc, split_form::SplitForm) where {T, Derivative<:AbstractPeriodicDerivativeOperator{T}, Dissipation, SplitForm<:Union{Val{false}, Val{true}}}
         if dissipation !== nothing
             @argcheck size(derivative) == size(dissipation) DimensionMismatch
             @argcheck grid(derivative) == grid(dissipation) ArgumentError
@@ -176,14 +136,7 @@ used.
         a = compute_coefficients(afunc, derivative)
         tmp1 = Array{T}(undef, N)
         tmp2 = Array{T}(undef, N)
-        new{T,Derivative,Dissipation,SplitForm}(
-            derivative,
-            dissipation,
-            a,
-            tmp1,
-            tmp2,
-            split_form,
-        )
+        new{T,Derivative,Dissipation,SplitForm}(derivative, dissipation, a, tmp1, tmp2, split_form)
     end
 end
 
@@ -226,7 +179,7 @@ function (disc::VariableLinearAdvectionPeriodicSemidiscretization)(du, u, p, t)
         mul!(tmp1, derivative, a)
         @. du += m1_2 * u * tmp1
         ## D * a*u
-        @. tmp2 = a * u
+        @. tmp2 = a*u
         mul!(tmp1, derivative, tmp2)
         @. du += m1_2 * tmp1
     else

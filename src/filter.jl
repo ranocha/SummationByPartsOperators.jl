@@ -26,35 +26,17 @@ mul!(dest, fact::FactorisationWrapper, u) = ldiv!(dest, fact.fact, u)
 Represents the action of a modal filter on values in a nodal basis with fixed
 strength.
 """
-@auto_hash_equals struct ConstantFilter{
-    T<:Real,
-    Nodal2Modal,
-    Modal2Nodal,
-    Tmp,
-    FilterFunction,
-} <: AbstractFilter{T}
+@auto_hash_equals struct ConstantFilter{T<:Real,Nodal2Modal,Modal2Nodal,Tmp,FilterFunction} <: AbstractFilter{T}
     coefficients::Vector{T}
     nodal2modal::Nodal2Modal
     modal2nodal::Modal2Nodal
     tmp::Tmp
     filter::FilterFunction
 
-    function ConstantFilter(
-        coefficients::Vector{T},
-        nodal2modal::Nodal2Modal,
-        modal2nodal::Modal2Nodal,
-        tmp::Tmp,
-        filter::FilterFunction,
-    ) where {T<:Real,Nodal2Modal,Modal2Nodal,Tmp,FilterFunction}
-        @argcheck length(coefficients) == size(tmp, 1)
+    function ConstantFilter(coefficients::Vector{T}, nodal2modal::Nodal2Modal, modal2nodal::Modal2Nodal, tmp::Tmp, filter::FilterFunction) where {T<:Real,Nodal2Modal,Modal2Nodal,Tmp,FilterFunction}
+        @argcheck length(coefficients) == size(tmp,1)
 
-        new{T,Nodal2Modal,Modal2Nodal,Tmp,FilterFunction}(
-            coefficients,
-            nodal2modal,
-            modal2nodal,
-            tmp,
-            filter,
-        )
+        new{T,Nodal2Modal,Modal2Nodal,Tmp,FilterFunction}(coefficients, nodal2modal, modal2nodal, tmp, filter)
     end
 end
 
@@ -75,10 +57,10 @@ end
 
 function (filter::ConstantFilter)(u::AbstractMatrix, tmp::AbstractVector)
     @boundscheck begin
-        length(tmp) == size(u, 1) || throw(DimensionMismatch())
+        length(tmp) == size(u,1) || throw(DimensionMismatch())
     end
 
-    for j in Base.OneTo(size(u, 2))
+    for j in Base.OneTo(size(u,2))
         v = view(u, :, j)
         @inbounds filter(v, tmp)
     end
@@ -110,19 +92,19 @@ Represents the exponential filter function `σ(η) = exp(-α*η^p)`.
     α::T
     p::Int
 
-    function ExponentialFilter(α::T, p::Int = 2) where {T<:Real}
+    function ExponentialFilter(α::T, p::Int=2) where {T<:Real}
         α < 0 && @warn("α should be nonnegative [α = $α].")
         p < 0 && @warn("p should be nonnegative [p = $p].")
         new{T}(α, p)
     end
 end
 
-function ExponentialFilter(::Type{T} = Float64, p::Int = 2) where {T<:Real}
+function ExponentialFilter(::Type{T}=Float64, p::Int=2) where {T<:Real}
     α = -log(eps(T))
     ExponentialFilter(α, p)
 end
 
-function ExponentialFilter(p::Int, ::Type{T} = Float64) where {T<:Real}
+function ExponentialFilter(p::Int, ::Type{T}=Float64) where {T<:Real}
     α = -log(eps(T))
     ExponentialFilter(α, p)
 end
@@ -133,8 +115,8 @@ function set_filter_coefficients!(coefficients::Vector, filter::ExponentialFilte
     @unpack α, p = filter
 
     @inbounds for i in Base.OneTo(length(coefficients))
-        η = T(i - 1) / N
-        coefficients[i] = exp(-α * η^p)
+        η = T(i-1) / N
+        coefficients[i] = exp(-α*η^p)
     end
 
     nothing
