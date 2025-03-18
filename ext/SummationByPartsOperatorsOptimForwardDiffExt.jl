@@ -3,22 +3,31 @@ module SummationByPartsOperatorsOptimForwardDiffExt
 using Optim: Optim, Options, LBFGS, optimize, minimizer
 using ForwardDiff: ForwardDiff
 
-using SummationByPartsOperators: SummationByPartsOperators, GlaubitzNordströmÖffner2023, MatrixDerivativeOperator
+using SummationByPartsOperators: SummationByPartsOperators, GlaubitzNordströmÖffner2023,
+                                 MatrixDerivativeOperator
 using LinearAlgebra: Diagonal, LowerTriangular, dot, diag, norm, mul!
 using SparseArrays: spzeros
 
-function SummationByPartsOperators.function_space_operator(basis_functions, nodes::Vector{T},
+function SummationByPartsOperators.function_space_operator(basis_functions,
+                                                           nodes::Vector{T},
                                                            source::SourceOfCoefficients;
-                                                           derivative_order = 1, accuracy_order = 0,
-                                                           opt_alg = LBFGS(), options = Options(g_tol = 1e-14, iterations = 10000),
-                                                           verbose = false) where {T, SourceOfCoefficients}
-
+                                                           derivative_order = 1,
+                                                           accuracy_order = 0,
+                                                           opt_alg = LBFGS(),
+                                                           options = Options(g_tol = 1e-14,
+                                                                             iterations = 10000),
+                                                           verbose = false) where {T,
+                                                                                   SourceOfCoefficients
+                                                                                   }
     if derivative_order != 1
         throw(ArgumentError("Derivative order $derivative_order not implemented."))
     end
     sort!(nodes)
-    weights, D = construct_function_space_operator(basis_functions, nodes, source; opt_alg = opt_alg, options = options, verbose = verbose)
-    return MatrixDerivativeOperator(first(nodes), last(nodes), nodes, weights, D, accuracy_order, source)
+    weights, D = construct_function_space_operator(basis_functions, nodes, source;
+                                                   opt_alg = opt_alg, options = options,
+                                                   verbose = verbose)
+    return MatrixDerivativeOperator(first(nodes), last(nodes), nodes, weights, D,
+                                    accuracy_order, source)
 end
 
 function inner_H1(f, g, f_derivative, g_derivative, nodes)
@@ -26,7 +35,9 @@ function inner_H1(f, g, f_derivative, g_derivative, nodes)
 end
 norm_H1(f, f_derivative, nodes) = sqrt(inner_H1(f, f, f_derivative, f_derivative, nodes))
 
-call_orthonormal_basis_function(A, basis_functions, k, x) = sum([basis_functions[i](x)*A[k, i] for i in 1:k])
+function call_orthonormal_basis_function(A, basis_functions, k, x)
+    sum([basis_functions[i](x) * A[k, i] for i in 1:k])
+end
 
 # This will orthonormalize the basis functions using the Gram-Schmidt process to reduce the condition
 # number of the Vandermonde matrix. The matrix A transfers the old basis functions to the new orthonormalized by
@@ -40,20 +51,29 @@ function orthonormalize_gram_schmidt(basis_functions, basis_functions_derivative
     basis_functions_orthonormalized = Vector{Function}(undef, K)
     basis_functions_orthonormalized_derivatives = Vector{Function}(undef, K)
 
-    for k = 1:K
+    for k in 1:K
         A[k, k] = 1
-        for j = 1:k-1
+        for j in 1:(k - 1)
             g(x) = call_orthonormal_basis_function(A, basis_functions, j, x)
-            g_derivative(x) = call_orthonormal_basis_function(A, basis_functions_derivatives, j, x)
-            inner_product = inner_H1(basis_functions[k], g, basis_functions_derivatives[k], g_derivative, nodes)
+            function g_derivative(x)
+                call_orthonormal_basis_function(A, basis_functions_derivatives, j, x)
+            end
+            inner_product = inner_H1(basis_functions[k], g, basis_functions_derivatives[k],
+                                     g_derivative, nodes)
             norm_squared = inner_H1(g, g, g_derivative, g_derivative, nodes)
-            A[k, :] = A[k, :] - inner_product/norm_squared * A[j, :]
+            A[k, :] = A[k, :] - inner_product / norm_squared * A[j, :]
         end
 
-        basis_functions_orthonormalized[k] = x -> call_orthonormal_basis_function(A, basis_functions, k, x)
-        basis_functions_orthonormalized_derivatives[k] = x -> call_orthonormal_basis_function(A, basis_functions_derivatives, k, x)
+        basis_functions_orthonormalized[k] = x -> call_orthonormal_basis_function(A,
+                                                                                  basis_functions,
+                                                                                  k, x)
+        basis_functions_orthonormalized_derivatives[k] = x -> call_orthonormal_basis_function(A,
+                                                                                              basis_functions_derivatives,
+                                                                                              k,
+                                                                                              x)
         # Normalization
-        r = norm_H1(basis_functions_orthonormalized[k], basis_functions_orthonormalized_derivatives[k], nodes)
+        r = norm_H1(basis_functions_orthonormalized[k],
+                    basis_functions_orthonormalized_derivatives[k], nodes)
         A[k, :] = A[k, :] / r
     end
     return basis_functions_orthonormalized, basis_functions_orthonormalized_derivatives
@@ -99,12 +119,15 @@ end
 
 function construct_function_space_operator(basis_functions, nodes,
                                            ::GlaubitzNordströmÖffner2023;
-                                           opt_alg = LBFGS(), options = Options(g_tol = 1e-14, iterations = 10000),
+                                           opt_alg = LBFGS(),
+                                           options = Options(g_tol = 1e-14,
+                                                             iterations = 10000),
                                            verbose = false)
     K = length(basis_functions)
     N = length(nodes)
     L = div(N * (N - 1), 2)
-    basis_functions_derivatives = [x -> ForwardDiff.derivative(basis_functions[i], x) for i in 1:K]
+    basis_functions_derivatives = [x -> ForwardDiff.derivative(basis_functions[i], x)
+                                   for i in 1:K]
     basis_functions_orthonormalized, basis_functions_orthonormalized_derivatives = orthonormalize_gram_schmidt(basis_functions,
                                                                                                                basis_functions_derivatives,
                                                                                                                nodes)
@@ -138,7 +161,7 @@ function construct_function_space_operator(basis_functions, nodes,
     S = create_S(sigma, N)
     P = create_P(rho, x_length)
     weights = diag(P)
-    Q = S + B/2
+    Q = S + B / 2
     D = inv(P) * Q
     return weights, D
 end
@@ -165,7 +188,7 @@ end
                     if i + 1 <= l_tilde <= N
                         daij_dsigmak[i, j, k] += V[l_tilde, j]
                     else
-                        C = N^2 - 3*N + 2*i - 2*k + 1/4
+                        C = N^2 - 3 * N + 2 * i - 2 * k + 1 / 4
                         if C >= 0
                             D = sqrt(C)
                             D_plus_one_half = D + 0.5
@@ -189,7 +212,7 @@ end
             for j in axes(daij_drhok, 2)
                 for i in axes(daij_drhok, 1)
                     factor1 = x_length * V_x[i, j] / sum_sig_rho^2
-                    factor =  factor1 * sig_deriv_rho[k]
+                    factor = factor1 * sig_deriv_rho[k]
                     if k == i
                         daij_drhok[i, j, k] = -factor * (sum_sig_rho - sig_rho[k])
                     else

@@ -43,7 +43,8 @@ using Test, SummationByPartsOperators
 
     @testset "SBP FD" begin
         for acc_order in 2:2:8
-            D = derivative_operator(MattssonSvärdNordström2004(), 1, acc_order, xmin, xmax, N)
+            D = derivative_operator(MattssonSvärdNordström2004(), 1, acc_order, xmin, xmax,
+                                    N)
             Di = dissipation_operator(D)
             semi = BurgersNonperiodicSemidiscretization(D, Di, split_form, zero, zero)
             println(devnull, semi)
