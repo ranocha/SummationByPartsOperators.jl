@@ -110,8 +110,8 @@ g_n = \begin{cases}
 ```@example twodimensional_advection
 a = (1.0, 2.0)
 u0(x) = exp(-30 * norm(x .- (0.0, 0.0))^2)
-u(x, t) = u0(x .- a .* t)
-g(x, t) = u(x, t) # boundary condition from the analytical solution
+u(t, x) = u0(x .- a .* t)
+g(t, x) = u(t, x) # boundary condition from the analytical solution
 u_ini = u0.(nodes)
 
 A = a[1] * D_x + a[2] * D_y
@@ -125,7 +125,7 @@ function set_bc!(bc, u, a, g, D, t)
       j = D.boundary_indices[i]
       normal = D.normals[i]
       if dot(normal, a) < 0 # inflow
-         bc[j] = g(node, t)
+         bc[j] = g(t, node)
       else # outflow
          bc[j] = u[j]
       end
@@ -151,7 +151,7 @@ using Printf; using Plots: @animate, gif
 anim = @animate for i in eachindex(sol)
    t = sol.t[i]
    scatter(first.(nodes), last.(nodes), sol[i], label = L"u_\mathrm{numerical}")
-   scatter!(first.(nodes), last.(nodes), u.(nodes, Ref(t)), label = L"u_\mathrm{analytical}", xlabel = "x", ylabel = "y", zlabel = "u",
+   scatter!(first.(nodes), last.(nodes), u.(Ref(t), nodes), label = L"u_\mathrm{analytical}", xlabel = "x", ylabel = "y", zlabel = "u",
             title = @sprintf("t = %.2f", t), zrange = (-0.1, 1.1), legend = :topright, dpi = 170)
 end
 gif(anim, "example_linear_advection_2D.gif");
