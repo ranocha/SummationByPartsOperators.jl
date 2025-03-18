@@ -55,7 +55,7 @@ using MuladdMacro: @muladd
 using RecursiveArrayTools: recursive_bottom_eltype
 using Reexport: @reexport
 if !isdefined(Base, :get_extension)
-  using Requires: @require
+    using Requires: @require
 end
 using StaticArrays: SVector, StaticVector, FieldVector
 using SimpleUnPack: @unpack
@@ -69,17 +69,18 @@ import LinearAlgebra: mul!
 import PolynomialBases: integrate, evaluate_coefficients, evaluate_coefficients!,
                         compute_coefficients, compute_coefficients!
 
-
 # types
 abstract type AbstractDerivativeOperator{T} end
 abstract type AbstractNonperiodicDerivativeOperator{T} <: AbstractDerivativeOperator{T} end
 abstract type AbstractPeriodicDerivativeOperator{T} <: AbstractDerivativeOperator{T} end
-abstract type AbstractMatrixDerivativeOperator{T} <: AbstractNonperiodicDerivativeOperator{T} end
-abstract type AbstractMultidimensionalMatrixDerivativeOperator{Dim,T} <: AbstractMatrixDerivativeOperator{T} end
+abstract type AbstractMatrixDerivativeOperator{T} <:
+              AbstractNonperiodicDerivativeOperator{T} end
+abstract type AbstractMultidimensionalMatrixDerivativeOperator{Dim, T} <:
+              AbstractMatrixDerivativeOperator{T} end
 abstract type AbstractDerivativeCoefficients{T} end
 abstract type AbstractMassMatrix{T} end
 abstract type AbstractSemidiscretization end
-abstract type AbstractFilter{T<:Real} end
+abstract type AbstractFilter{T <: Real} end
 abstract type AbstractFilterFunction end
 """
     SourceOfCoefficients
@@ -87,7 +88,6 @@ abstract type AbstractFilterFunction end
 All sources of coefficients (articles) are subtypes of this abstract type.
 """
 abstract type SourceOfCoefficients end
-
 
 # source files
 include("general_operators.jl")
@@ -98,12 +98,12 @@ include("var_coef_operators.jl")
 include("coupling.jl")
 
 function __init__()
-  @static if !isdefined(Base, :get_extension)
-    @require BandedMatrices="aae01518-5342-5314-be14-df237901396f" include("../ext/SummationByPartsOperatorsBandedMatricesExt.jl")
-    @require DiffEqCallbacks="459566f4-90b8-5000-8ac3-15dfb0a30def" include("../ext/SummationByPartsOperatorsDiffEqCallbacksExt.jl")
-    @require ForwardDiff="f6369f11-7733-5829-9624-2563aa707210" include("../ext/SummationByPartsOperatorsForwardDiffExt.jl")
-    @require StructArrays="09ab397b-f2b6-538f-b94a-2f83cf4a842a" include("../ext/SummationByPartsOperatorsStructArraysExt.jl")
-  end
+    @static if !isdefined(Base, :get_extension)
+        @require BandedMatrices="aae01518-5342-5314-be14-df237901396f" include("../ext/SummationByPartsOperatorsBandedMatricesExt.jl")
+        @require DiffEqCallbacks="459566f4-90b8-5000-8ac3-15dfb0a30def" include("../ext/SummationByPartsOperatorsDiffEqCallbacksExt.jl")
+        @require ForwardDiff="f6369f11-7733-5829-9624-2563aa707210" include("../ext/SummationByPartsOperatorsForwardDiffExt.jl")
+        @require StructArrays="09ab397b-f2b6-538f-b94a-2f83cf4a842a" include("../ext/SummationByPartsOperatorsStructArraysExt.jl")
+    end
 end
 
 include("filter.jl")
@@ -145,7 +145,8 @@ export PeriodicDerivativeOperator, PeriodicDissipationOperator,
        FourierPolynomialDerivativeOperator, FourierRationalDerivativeOperator,
        FourierDerivativeOperator2D,
        LegendreDerivativeOperator, LegendreSecondDerivativeOperator,
-       MatrixDerivativeOperator, MultidimensionalMatrixDerivativeOperator, TensorProductOperator,
+       MatrixDerivativeOperator, MultidimensionalMatrixDerivativeOperator,
+       TensorProductOperator,
        UpwindOperators, PeriodicUpwindOperators
 export FilterCallback, ConstantFilter, ExponentialFilter
 export SafeMode, FastMode, ThreadedMode
@@ -158,7 +159,8 @@ export integrate, integrate_boundary, restrict_boundary,
        mul_transpose_derivative_left!, mul_transpose_derivative_right!,
        evaluate_coefficients, evaluate_coefficients!,
        compute_coefficients, compute_coefficients!
-export periodic_central_derivative_operator, periodic_derivative_operator, derivative_operator,
+export periodic_central_derivative_operator, periodic_derivative_operator,
+       derivative_operator,
        dissipation_operator, var_coef_derivative_operator,
        fourier_derivative_operator,
        legendre_derivative_operator, legendre_second_derivative_operator,
@@ -189,7 +191,7 @@ export BurgersPeriodicSemidiscretization, BurgersNonperiodicSemidiscretization,
 
 # explicit precompilation only on Julia v1.9 and newer
 @static if VERSION >= v"1.9.0-beta4"
-  include("precompile.jl")
+    include("precompile.jl")
 end
 
 end # module

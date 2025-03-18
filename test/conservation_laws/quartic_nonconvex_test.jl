@@ -6,7 +6,7 @@ using OrdinaryDiffEq, DiffEqCallbacks
     xmax = T(1)
     N = 2^6
     u0func = sinpi
-    tspan = (zero(T), one(T)/50)
+    tspan = (zero(T), one(T) / 50)
 
     # Fourier
     let D = fourier_derivative_operator(xmin, xmax, N)
@@ -17,8 +17,9 @@ using OrdinaryDiffEq, DiffEqCallbacks
         du = similar(ode.u0)
         semi(du, ode.u0, nothing, first(tspan))
 
-        saving = SavingCallback(semi, saveat=range(tspan..., length=10))
-        sol = solve(ode, SSPRK104(), dt=1/20N, save_everystep=false, callback=saving)
+        saving = SavingCallback(semi, saveat = range(tspan..., length = 10))
+        sol = solve(ode, SSPRK104(), dt = 1 / 20N, save_everystep = false,
+                    callback = saving)
     end
 
     # Periodic FD
@@ -31,7 +32,8 @@ using OrdinaryDiffEq, DiffEqCallbacks
         du = similar(ode.u0)
         semi(du, ode.u0, nothing, first(tspan))
 
-        saving = SavingCallback(semi, saveat=range(tspan..., length=10))
-        sol = solve(ode, SSPRK104(), dt=1/20N, save_everystep=false, callback=saving)
+        saving = SavingCallback(semi, saveat = range(tspan..., length = 10))
+        sol = solve(ode, SSPRK104(), dt = 1 / 20N, save_everystep = false,
+                    callback = saving)
     end
 end

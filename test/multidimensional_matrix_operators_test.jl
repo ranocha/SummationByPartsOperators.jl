@@ -10,7 +10,8 @@ using SparseArrays
     xmax_construction = 1.0
 
     for acc_order in [2, 4, 6]
-        D = derivative_operator(MattssonNordström2004(), 1, acc_order, xmin_construction, xmax_construction, N)
+        D = derivative_operator(MattssonNordström2004(), 1, acc_order, xmin_construction,
+                                xmax_construction, N)
 
         nodes = SVector.(grid(D))
         boundary_indices = [1, N]
@@ -18,15 +19,23 @@ using SparseArrays
         weights = diag(mass_matrix(D))
         weights_boundary = [1.0, 1.0]
         Ds_dense = (Matrix(D),)
-        D_multi_dense = MultidimensionalMatrixDerivativeOperator(nodes, boundary_indices, normals, weights, weights_boundary, Ds_dense, acc_order, source_of_coefficients(D))
+        D_multi_dense = MultidimensionalMatrixDerivativeOperator(nodes, boundary_indices,
+                                                                 normals, weights,
+                                                                 weights_boundary, Ds_dense,
+                                                                 acc_order,
+                                                                 source_of_coefficients(D))
         Ds_sparse = (sparse(D),)
-        D_multi_sparse = MultidimensionalMatrixDerivativeOperator(nodes, boundary_indices, normals, weights, weights_boundary, Ds_sparse, acc_order, source_of_coefficients(D))
+        D_multi_sparse = MultidimensionalMatrixDerivativeOperator(nodes, boundary_indices,
+                                                                  normals, weights,
+                                                                  weights_boundary,
+                                                                  Ds_sparse, acc_order,
+                                                                  source_of_coefficients(D))
         @test D_multi_sparse[1] isa SparseMatrixCSC
 
         for D_multi in (D_multi_dense, D_multi_sparse)
             for compact in (true, false)
-                show(IOContext(devnull, :compact=>compact), D_multi)
-                summary(IOContext(devnull, :compact=>compact), D_multi)
+                show(IOContext(devnull, :compact => compact), D_multi)
+                summary(IOContext(devnull, :compact => compact), D_multi)
             end
 
             @test ndims(D_multi) == 1
@@ -54,22 +63,30 @@ using SparseArrays
             @test integrate_boundary(u, D_multi, 1) ≈ integrate_boundary(u, D)
 
             SummationByPartsOperators.scale_by_mass_matrix!(u, D_multi)
-            @test_throws DimensionMismatch scale_by_mass_matrix!(@view(u[(begin + 1):(end - 1)]), D_multi)
+            @test_throws DimensionMismatch scale_by_mass_matrix!(@view(u[(begin + 1):(end - 1)]),
+                                                                 D_multi)
             SummationByPartsOperators.scale_by_mass_matrix!(u_reference, D)
-            @test_throws DimensionMismatch scale_by_mass_matrix!(@view(u_reference[(begin + 1):(end - 1)]), D)
+            @test_throws DimensionMismatch scale_by_mass_matrix!(@view(u_reference[(begin + 1):(end - 1)]),
+                                                                 D)
             @test u ≈ u_reference
             SummationByPartsOperators.scale_by_inverse_mass_matrix!(u, D_multi)
-            @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(u[(begin + 1):(end - 1)]), D_multi)
+            @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(u[(begin + 1):(end - 1)]),
+                                                                         D_multi)
             SummationByPartsOperators.scale_by_inverse_mass_matrix!(u_reference, D)
-            @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(u_reference[(begin + 1):(end - 1)]), D)
+            @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(u_reference[(begin + 1):(end - 1)]),
+                                                                         D)
             @test u ≈ u_reference
 
             @test SummationByPartsOperators.weights_boundary(D_multi) == [1.0, 1.0]
-            @test SummationByPartsOperators.get_weight(D_multi, 1) == left_boundary_weight(D_multi) == left_boundary_weight(D)
-            @test SummationByPartsOperators.get_weight(D_multi, N) == right_boundary_weight(D_multi) == right_boundary_weight(D)
+            @test SummationByPartsOperators.get_weight(D_multi, 1) ==
+                  left_boundary_weight(D_multi) == left_boundary_weight(D)
+            @test SummationByPartsOperators.get_weight(D_multi, N) ==
+                  right_boundary_weight(D_multi) == right_boundary_weight(D)
 
-            @test SummationByPartsOperators.lower_bandwidth(D_multi) == size(D_multi[1], 1) - 1
-            @test SummationByPartsOperators.upper_bandwidth(D_multi) == size(D_multi[1], 1) - 1
+            @test SummationByPartsOperators.lower_bandwidth(D_multi) ==
+                  size(D_multi[1], 1) - 1
+            @test SummationByPartsOperators.upper_bandwidth(D_multi) ==
+                  size(D_multi[1], 1) - 1
         end
     end
 end
@@ -83,13 +100,15 @@ end
     ymax_construction = -0.5
 
     for acc_order in [2, 4, 6], T in (Float32, Float64)
-        D_1 = derivative_operator(MattssonNordström2004(), 1, acc_order, T(xmin_construction), T(xmax_construction), N_x)
-        D_2 = derivative_operator(MattssonAlmquistCarpenter2014Extended(), 1, acc_order, T(ymin_construction), T(ymax_construction), N_y)
+        D_1 = derivative_operator(MattssonNordström2004(), 1, acc_order,
+                                  T(xmin_construction), T(xmax_construction), N_x)
+        D_2 = derivative_operator(MattssonAlmquistCarpenter2014Extended(), 1, acc_order,
+                                  T(ymin_construction), T(ymax_construction), N_y)
         D_t = tensor_product_operator_2D(D_1, D_2)
 
         for compact in (true, false)
-            show(IOContext(devnull, :compact=>compact), D_t)
-            summary(IOContext(devnull, :compact=>compact), D_t)
+            show(IOContext(devnull, :compact => compact), D_t)
+            summary(IOContext(devnull, :compact => compact), D_t)
         end
 
         @test ndims(D_t) == 2
@@ -97,8 +116,8 @@ end
         @test accuracy_order(D_t) == acc_order
         @test source_of_coefficients(D_t) isa SourceOfCoefficientsCombination{2}
         for compact in (true, false)
-            show(IOContext(devnull, :compact=>compact), source_of_coefficients(D_t))
-            summary(IOContext(devnull, :compact=>compact), source_of_coefficients(D_t))
+            show(IOContext(devnull, :compact => compact), source_of_coefficients(D_t))
+            summary(IOContext(devnull, :compact => compact), source_of_coefficients(D_t))
         end
         @test eltype(D_t) == eltype(D_1) == eltype(D_2) == T
         @test real(D_t) == real(D_1) == real(D_2) == T
@@ -134,19 +153,33 @@ end
         x0 = ones(N_x * N_y)
         x1 = first.(x)
         y1 = last.(x)
-        res = D_t[1] * x0; @test all(i->res[i] < 1000 * eps(T), eachindex(res))
-        res = D_t[2] * x0; @test all(i->res[i] < 1000 * eps(T), eachindex(res))
-        res = D_t[1] * x1; @test all(i->isapprox(res[i], x0[i], atol = 1000 * eps(T)), eachindex(res))
-        res = D_t[1] * y1; @test all(i->res[i] < 1000 * eps(T), eachindex(res))
-        res = D_t[2] * x1; @test all(i->res[i] < 1000 * eps(T), eachindex(res))
-        res = D_t[2] * y1; @test all(i->isapprox(res[i], x0[i], atol = 1000 * eps(T)), eachindex(res))
+        res = D_t[1] * x0
+        @test all(i -> res[i] < 1000 * eps(T), eachindex(res))
+        res = D_t[2] * x0
+        @test all(i -> res[i] < 1000 * eps(T), eachindex(res))
+        res = D_t[1] * x1
+        @test all(i -> isapprox(res[i], x0[i], atol = 1000 * eps(T)), eachindex(res))
+        res = D_t[1] * y1
+        @test all(i -> res[i] < 1000 * eps(T), eachindex(res))
+        res = D_t[2] * x1
+        @test all(i -> res[i] < 1000 * eps(T), eachindex(res))
+        res = D_t[2] * y1
+        @test all(i -> isapprox(res[i], x0[i], atol = 1000 * eps(T)), eachindex(res))
         if acc_order >= 4
-            res = D_t[1] * x1.^2; @test all(i->isapprox(res[i], 2 * x1[i], atol = 1000 * eps(T)), eachindex(res))
-            res = D_t[2] * y1.^2; @test all(i->isapprox(res[i], 2 * y1[i], atol = 1000 * eps(T)), eachindex(res))
+            res = D_t[1] * x1 .^ 2
+            @test all(i -> isapprox(res[i], 2 * x1[i], atol = 1000 * eps(T)),
+                      eachindex(res))
+            res = D_t[2] * y1 .^ 2
+            @test all(i -> isapprox(res[i], 2 * y1[i], atol = 1000 * eps(T)),
+                      eachindex(res))
         end
         if acc_order >= 6
-            res = D_t[1] * x1.^3; @test all(i->isapprox(res[i], 3 * x1[i]^2, atol = 1000 * eps(T)), eachindex(res))
-            res = D_t[2] * y1.^3; @test all(i->isapprox(res[i], 3 * y1[i]^2, atol = 1000 * eps(T)), eachindex(res))
+            res = D_t[1] * x1 .^ 3
+            @test all(i -> isapprox(res[i], 3 * x1[i]^2, atol = 1000 * eps(T)),
+                      eachindex(res))
+            res = D_t[2] * y1 .^ 3
+            @test all(i -> isapprox(res[i], 3 * y1[i]^2, atol = 1000 * eps(T)),
+                      eachindex(res))
         end
     end
 end

@@ -18,19 +18,19 @@ See [`function_space_operator`](@ref).
 struct GlaubitzNordströmÖffner2023 <: SourceOfCoefficients end
 
 function Base.show(io::IO, source::GlaubitzNordströmÖffner2023)
-  if get(io, :compact, false)
-    summary(io, source)
-  else
-      print(io,
-          "Glaubitz, Nordström, Öffner (2023) \n",
-          "  Summation-by-parts operators for general function spaces \n",
-          "  SIAM Journal on Numerical Analysis 61, 2, pp. 733-754. \n",
-          "See also \n",
-          "  Glaubitz, Nordström, Öffner (2024) \n",
-          "  An optimization-based construction procedure for function \n",
-          "    space based summation-by-parts operators on arbitrary grids \n",
-          "  arXiv, arXiv:2405.08770v1.")
-  end
+    if get(io, :compact, false)
+        summary(io, source)
+    else
+        print(io,
+              "Glaubitz, Nordström, Öffner (2023) \n",
+              "  Summation-by-parts operators for general function spaces \n",
+              "  SIAM Journal on Numerical Analysis 61, 2, pp. 733-754. \n",
+              "See also \n",
+              "  Glaubitz, Nordström, Öffner (2024) \n",
+              "  An optimization-based construction procedure for function \n",
+              "    space based summation-by-parts operators on arbitrary grids \n",
+              "  arXiv, arXiv:2405.08770v1.")
+    end
 end
 
 # This function is extended in the package extension SummationByPartsOperatorsOptimExt
