@@ -301,6 +301,114 @@ for source in D_test_list, T in (Float32,Float64)
         @test v ≈ u
     end
 
+    acc_order = 10
+    D = try
+        derivative_operator(source, der_order, acc_order, xmin, xmax, N)
+    catch
+        nothing
+    end
+    if D !== nothing
+        D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
+        for compact in (true, false)
+            show(IOContext(devnull, :compact=>false), D)
+            show(IOContext(devnull, :compact=>false), D.coefficients)
+        end
+        x1 = grid(D)
+        x0 = fill(one(eltype(x1)), length(x1))
+        x2 = x1 .* x1
+        x3 = x2 .* x1
+        x4 = x2 .* x2
+        x5 = x2 .* x3
+        x6 = x3 .* x3
+        x7 = x4 .* x3
+        res = fill(zero(eltype(x0)), length(x0))
+        inner_indices = length(D.coefficients.left_boundary)+1:length(res)-length(D.coefficients.left_boundary)-1
+        @test derivative_order(D) == der_order
+        @test accuracy_order(D)   == acc_order
+        @test issymmetric(D) == false
+        @test SummationByPartsOperators.xmin(D) ≈ xmin
+        @test SummationByPartsOperators.xmax(D) ≈ xmax
+        # interior and boundary
+        mul!(res, D, x0)
+        @test all(i->abs(res[i]) < 16000*eps(T), eachindex(res))
+        mul!(res, D, x1)
+        @test all(i->isapprox(res[i], x0[i], rtol=28000*eps(T)), eachindex(res))
+        mul!(res, D, x2)
+        @test all(i->isapprox(res[i], 2*x1[i], rtol=18000*eps(T)), eachindex(res))
+        mul!(res, D, x3)
+        @test all(i->isapprox(res[i], 3*x2[i], rtol=18000*eps(T)), eachindex(res))
+        mul!(res, D, x4)
+        @test all(i->res[i] ≈ 4*x3[i], inner_indices)
+        # only interior
+        mul!(res, D, x5)
+        @test all(i->res[i] ≈ 5*x4[i], inner_indices)
+        mul!(res, D, x6)
+        @test all(i->isapprox(res[i], 6*x5[i], rtol=8000*eps(T)), inner_indices)
+        # integration
+        k=0; @test integrate(x0, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
+        k=1; @test integrate(x1, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
+        k=2; @test integrate(x2, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
+        k=3; @test integrate(x3, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
+        k=4; @test integrate(x4, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
+        k=5; @test integrate(x5, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
+        k=6; @test integrate(x6, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
+        k=7; @test integrate(x7, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
+    end
+
+    acc_order = 12
+    D = try
+        derivative_operator(source, der_order, acc_order, xmin, xmax, N)
+    catch
+        nothing
+    end
+    if D !== nothing
+        D = derivative_operator(source, der_order, acc_order, xmin, xmax, N)
+        for compact in (true, false)
+            show(IOContext(devnull, :compact=>false), D)
+            show(IOContext(devnull, :compact=>false), D.coefficients)
+        end
+        x1 = grid(D)
+        x0 = fill(one(eltype(x1)), length(x1))
+        x2 = x1 .* x1
+        x3 = x2 .* x1
+        x4 = x2 .* x2
+        x5 = x2 .* x3
+        x6 = x3 .* x3
+        x7 = x4 .* x3
+        res = fill(zero(eltype(x0)), length(x0))
+        inner_indices = length(D.coefficients.left_boundary)+1:length(res)-length(D.coefficients.left_boundary)-1
+        @test derivative_order(D) == der_order
+        @test accuracy_order(D)   == acc_order
+        @test issymmetric(D) == false
+        @test SummationByPartsOperators.xmin(D) ≈ xmin
+        @test SummationByPartsOperators.xmax(D) ≈ xmax
+        # interior and boundary
+        mul!(res, D, x0)
+        @test all(i->abs(res[i]) < 16000*eps(T), eachindex(res))
+        mul!(res, D, x1)
+        @test all(i->isapprox(res[i], x0[i], rtol=28000*eps(T)), eachindex(res))
+        mul!(res, D, x2)
+        @test all(i->isapprox(res[i], 2*x1[i], rtol=18000*eps(T)), eachindex(res))
+        mul!(res, D, x3)
+        @test all(i->isapprox(res[i], 3*x2[i], rtol=18000*eps(T)), eachindex(res))
+        mul!(res, D, x4)
+        @test all(i->res[i] ≈ 4*x3[i], inner_indices)
+        # only interior
+        mul!(res, D, x5)
+        @test all(i->res[i] ≈ 5*x4[i], inner_indices)
+        mul!(res, D, x6)
+        @test all(i->isapprox(res[i], 6*x5[i], rtol=8000*eps(T)), inner_indices)
+        # integration
+        k=0; @test integrate(x0, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
+        k=1; @test integrate(x1, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
+        k=2; @test integrate(x2, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
+        k=3; @test integrate(x3, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
+        k=4; @test integrate(x4, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
+        k=5; @test integrate(x5, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
+        k=6; @test integrate(x6, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
+        k=7; @test integrate(x7, D) ≈ (xmax^(k+1)-(xmin)^(k+1))/(k+1)
+    end
+
     @test_throws Union{MethodError,ArgumentError} derivative_operator(source, der_order, 16, xmin, xmax, N)
 end
 
