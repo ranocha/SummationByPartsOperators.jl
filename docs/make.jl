@@ -46,10 +46,10 @@ open(joinpath(@__DIR__, "src", "contributing.md"), "w") do io
     # Point to source license file
     println(io,
             """
-```@meta
-EditURL = "https://github.com/ranocha/SummationByPartsOperators.jl/blob/main/CONTRIBUTING.md"
-```
-""")
+            ```@meta
+            EditURL = "https://github.com/ranocha/SummationByPartsOperators.jl/blob/main/CONTRIBUTING.md"
+            ```
+            """)
     # Write the modified contents
     println(io, "# Contributing")
     println(io, "")
