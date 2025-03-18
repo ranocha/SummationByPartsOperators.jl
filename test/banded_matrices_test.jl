@@ -37,9 +37,9 @@ for T in (Float32, Float64), acc_order in (2,4,6,8), diss_order in (2,4,6,8), D_
     mul!(dest2, D_full, u)
     @test all(i->isapprox(dest1[i], dest2[i], atol=5000*eps(T)), eachindex(u))
     mul!(dest2, D_sparse, u)
-    @test all(i->isapprox(dest1[i], dest2[i], atol=5000*eps(T)), eachindex(u))
+    @test dest1 ≈ dest2
     mul!(dest2, D_banded, u)
-    @test all(i->isapprox(dest1[i], dest2[i], atol=5000*eps(T)), eachindex(u))
+    @test dest1 ≈ dest2
 
 
     Di_serial = try

@@ -527,6 +527,105 @@ function periodic_derivative_coefficients(source::Holoborodko2008, derivative_or
     PeriodicDerivativeCoefficients(lower_coef, central_coef, upper_coef, mode, derivative_order, accuracy_order, source)
 end
 
+"""
+    LanczosLowNoise()
+
+Coefficients of the periodic operators given in
+- Holoborodko (2008)
+  Smooth Noise Robust Differentiators.
+  http://www.holoborodko.com/pavel/numerical-methods/numerical-derivative/lanczos-low-noise-differentiators/
+"""
+struct LanczosLowNoise <: SourceOfCoefficients end
+
+function Base.show(io::IO, source::LanczosLowNoise)
+    if get(io, :compact, false)
+        summary(io, source)
+    else
+        print(io,
+            "  Holoborodko (2008) \n",
+            "  Smooth Noise Robust Differentiators. \n",
+            "  http://www.holoborodko.com/pavel/numerical-methods/numerical-derivative/lanczos-low-Noise-differentiators/")
+    end
+end
+
+"""
+    periodic_derivative_coefficients(source::LanczosLowNoise, derivative_order, accuracy_order;
+                                     T=Float64, mode=FastMode(),
+                                     stencil_width=accuracy_order+3)
+
+Create the `PeriodicDerivativeCoefficients` approximating the `derivative_order`-th
+derivative with an order of accuracy `accuracy_order` and scalar type `T` for
+(super) Lanczos low Noise filters, see [`LanczosLowNoise`](@ref).
+The evaluation of the derivative can be parallelized using threads by choosing
+`mode = ThreadedMode()`.
+"""
+function periodic_derivative_coefficients(source::LanczosLowNoise,
+                                          derivative_order,
+                                          accuracy_order;
+                                          T=Float64, mode=FastMode(),
+                                          stencil_width=accuracy_order+3)
+    method_exists = true
+    if derivative_order == 1
+        if accuracy_order == 2
+            if stencil_width == 5
+                lower_coef = SVector{2, T}([
+                    -1//10, -2//10
+                ])
+                upper_coef = -lower_coef
+                central_coef = T(0)
+            elseif stencil_width == 7
+                lower_coef = SVector{3, T}([
+                    -1//28, -2//28, -3//28
+                ])
+                upper_coef = -lower_coef
+                central_coef = T(0)
+            elseif stencil_width == 9
+                lower_coef = SVector{4, T}([
+                    -1//60, -2//60, -3//60, -4//60
+                ])
+                upper_coef = -lower_coef
+                central_coef = T(0)
+            elseif stencil_width == 11
+                lower_coef = SVector{5, T}([
+                    -1//110, -2//110, -3//110, -4//110, -5//110
+                ])
+                upper_coef = -lower_coef
+                central_coef = T(0)
+            else
+                method_exists = false
+            end
+        elseif accuracy_order == 4
+            if stencil_width == 7
+                lower_coef = SVector{3, T}([
+                    -58//252, -67//252, 22//252
+                ])
+                upper_coef = -lower_coef
+                central_coef = T(0)
+            elseif stencil_width == 9
+                lower_coef = SVector{4, T}([
+                    -126//1188, -193//1188, -142//1188, 86//1188
+                ])
+                upper_coef = -lower_coef
+                central_coef = T(0)
+            elseif stencil_width == 11
+                lower_coef = SVector{5, T}([
+                    -296//5148, -503//5148, -532//5148, -294//5148, 300//5148
+                ])
+                upper_coef = -lower_coef
+                central_coef = T(0)
+            else
+                method_exists = false
+            end
+        else
+            method_exists = false
+        end
+    end
+    if method_exists == false
+        throw(ArgumentError("Method with derivative_order=$derivative_order, accuracy_order=$accuracy_order, stencil_width=$stencil_width not implemented/derived."))
+    end
+
+    PeriodicDerivativeCoefficients(lower_coef, central_coef, upper_coef, mode, derivative_order, accuracy_order, source)
+end
 
 """
     PeriodicDerivativeOperator
@@ -609,7 +708,7 @@ the quadrature rule associated with the periodic derivative operator `D`.
 """
 function integrate(func, u::AbstractVector, D::PeriodicDerivativeOperator)
     @boundscheck begin
-        length(u) == length(grid(D))
+        length(u) == length(grid(D)) || throw(DimensionMismatch("sizes of input vector and operator do not match"))
     end
     @unpack Δx = D
 
@@ -625,12 +724,20 @@ function mass_matrix(D::PeriodicDerivativeOperator)
 end
 
 function scale_by_mass_matrix!(u::AbstractVector, D::PeriodicDerivativeOperator)
+    Base.require_one_based_indexing(u)
+    @boundscheck begin
+        length(u) == size(D, 2) || throw(DimensionMismatch("sizes of input vector and operator do not match"))
+    end
     @unpack Δx = D
 
     u .*= Δx
 end
 
 function scale_by_inverse_mass_matrix!(u::AbstractVector, D::PeriodicDerivativeOperator)
+    Base.require_one_based_indexing(u)
+    @boundscheck begin
+        length(u) == size(D, 2) || throw(DimensionMismatch("sizes of input vector and operator do not match"))
+    end
     @unpack Δx = D
 
     u ./= Δx
@@ -814,6 +921,69 @@ end
         mode = _parallel_to_mode(mode)
     end
     periodic_derivative_operator(derivative_order, accuracy_order, grid, left_offset, mode)
+end
+
+"""
+    periodic_derivative_operator(source::LanczosLowNoise;
+                                 derivative_order = 1,
+                                 accuracy_order,
+                                 stencil_width = accuracy_order + 3,
+                                 xmin, xmax, N,
+                                 mode = FastMode())
+
+Create a `PeriodicDerivativeOperator` approximating the `derivative_order`-th
+derivative on a uniform grid between `xmin` and `xmax` with `N` grid points up
+to order of accuracy `accuracy_order` where `stencil_width` determines the
+number of nodes used for the finite difference stencil.
+The evaluation of the derivative can be parallelized using threads by choosing
+`mode = ThreadedMode()`.
+
+## Examples
+
+```jldoctest
+julia> D = periodic_derivative_operator(LanczosLowNoise();
+                                        accuracy_order = 2,
+                                        xmin = 0.0, xmax = 1.0, N = 10)
+Periodic first-derivative operator of order 2 on a grid in [0.0, 1.0] using 10 nodes,
+stencils with 2 nodes to the left, 2 nodes to the right, and coefficients of   Holoborodko (2008)
+  Smooth Noise Robust Differentiators.
+  http://www.holoborodko.com/pavel/numerical-methods/numerical-derivative/lanczos-low-Noise-differentiators/
+
+julia> Matrix(D)
+10×10 Matrix{Float64}:
+  0.0   1.0   2.0   0.0   0.0   0.0   0.0   0.0  -2.0  -1.0
+ -1.0   0.0   1.0   2.0   0.0   0.0   0.0   0.0   0.0  -2.0
+ -2.0  -1.0   0.0   1.0   2.0   0.0   0.0   0.0   0.0   0.0
+  0.0  -2.0  -1.0   0.0   1.0   2.0   0.0   0.0   0.0   0.0
+  0.0   0.0  -2.0  -1.0   0.0   1.0   2.0   0.0   0.0   0.0
+  0.0   0.0   0.0  -2.0  -1.0   0.0   1.0   2.0   0.0   0.0
+  0.0   0.0   0.0   0.0  -2.0  -1.0   0.0   1.0   2.0   0.0
+  0.0   0.0   0.0   0.0   0.0  -2.0  -1.0   0.0   1.0   2.0
+  2.0   0.0   0.0   0.0   0.0   0.0  -2.0  -1.0   0.0   1.0
+  1.0   2.0   0.0   0.0   0.0   0.0   0.0  -2.0  -1.0   0.0
+
+julia> D = periodic_derivative_operator(LanczosLowNoise();
+                                        accuracy_order = 2,
+                                        xmin = 0 // 1, xmax = 1 // 1, N = 10,
+                                        stencil_width = 7)
+Periodic first-derivative operator of order 2 on a grid in [0//1, 1//1] using 10 nodes,
+stencils with 3 nodes to the left, 3 nodes to the right, and coefficients of   Holoborodko (2008)
+  Smooth Noise Robust Differentiators.
+  http://www.holoborodko.com/pavel/numerical-methods/numerical-derivative/lanczos-low-Noise-differentiators/
+```
+"""
+function periodic_derivative_operator(source::LanczosLowNoise;
+                                      derivative_order = 1,
+                                      accuracy_order,
+                                      stencil_width = accuracy_order + 3,
+                                      xmin, xmax, N,
+                                      mode = FastMode())
+    grid = range(xmin, stop = xmax, length = N + 1) # N includes two identical boundary nodes
+    coefficients = periodic_derivative_coefficients(source, derivative_order, accuracy_order;
+                                                    stencil_width = stencil_width,
+                                                    T = eltype(grid),
+                                                    mode = mode)
+    PeriodicDerivativeOperator(coefficients, grid)
 end
 
 

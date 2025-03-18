@@ -492,7 +492,7 @@ end
 
 lower_bandwidth(cache::Mattsson2012Cache4) = 3
 upper_bandwidth(cache::Mattsson2012Cache4) = 3
-Base.checkbounds(::Type{Bool}, u::AbstractVector, ::Mattsson2012Cache4) = length(u) > 8
+Base.checkbounds(::Type{Bool}, u::AbstractVector, ::Mattsson2012Cache4) = length(u) > 12
 left_length(::Mattsson2012Cache4) = 6
 right_length(::Mattsson2012Cache4) = 6
 
@@ -2085,7 +2085,7 @@ struct Mattsson2012Cache6{T} <: AbstractCoefficientCache{T}
         d090505, d090506, d090507, d090508,
         d090605, d090606, d090607, d090608, d090609,
         d090705, d090706, d090707, d090708, d090709, d090710,
-        d090810, d090805, d090806, d090807, d090808, d090809, d090811,
+        d090810, d090811, d090805, d090806, d090807, d090808, d090809,
         d090910, d090911, d090912, d090905, d090906, d090907, d090908, d090909,
         d091010, d091011, d091012, d091007, d091008, d091009,
         d091110, d091111, d091112, d091108, d091109,
@@ -2100,7 +2100,7 @@ end
 
 lower_bandwidth(cache::Mattsson2012Cache6) = 8
 upper_bandwidth(cache::Mattsson2012Cache6) = 8
-Base.checkbounds(::Type{Bool}, u::AbstractVector, ::Mattsson2012Cache6) = length(u) > 12
+Base.checkbounds(::Type{Bool}, u::AbstractVector, ::Mattsson2012Cache6) = length(u) > 18
 left_length(::Mattsson2012Cache6) = 9
 right_length(::Mattsson2012Cache6) = 9
 

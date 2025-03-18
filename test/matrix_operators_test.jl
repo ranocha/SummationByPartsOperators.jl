@@ -1,10 +1,10 @@
 using Test
+using SparseArrays
 using LinearAlgebra
 using SummationByPartsOperators
-using Optim: Optim # to enable loading the function space operator optimization code
 
 # check construction of interior part of upwind operators
-@testset "Check against some upwind operators" begin
+@testset "Check against some upwind operators (dense)" begin
   N = 14
   xmin_construction = 0.5
   xmax_construction = 1.0
@@ -101,10 +101,14 @@ using Optim: Optim # to enable loading the function space operator optimization 
     u = sinpi.(x)
     u_reference = copy(u)
     SummationByPartsOperators.scale_by_mass_matrix!(u, Dm)
+    @test_throws DimensionMismatch scale_by_mass_matrix!(@view(u[(begin + 1):(end - 1)]), Dm)
     SummationByPartsOperators.scale_by_mass_matrix!(u_reference, D_reference.minus)
+    @test_throws DimensionMismatch scale_by_mass_matrix!(@view(u_reference[(begin + 1):(end - 1)]), D_reference.minus)
     @test u ≈ u_reference
     SummationByPartsOperators.scale_by_inverse_mass_matrix!(u, Dm)
+    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(u[(begin + 1):(end - 1)]), Dm)
     SummationByPartsOperators.scale_by_inverse_mass_matrix!(u_reference, D_reference.minus)
+    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(u_reference[(begin + 1):(end - 1)]), D_reference.minus)
     @test u ≈ u_reference
 
     @test SummationByPartsOperators.get_weight(Dm, 1) == left_boundary_weight(D)
@@ -115,61 +119,117 @@ using Optim: Optim # to enable loading the function space operator optimization 
   end
 end
 
-if VERSION >= v"1.9"
-  @testset "Function space operators" begin
-    N = 5
-    x_min = -1.0
-    x_max = 1.0
-    nodes = collect(range(x_min, x_max, length=N))
-    source = GlaubitzNordströmÖffner2023()
+@testset "Check against some upwind operators (sparse)" begin
+  N = 14
+  xmin_construction = 0.5
+  xmax_construction = 1.0
+  xmin_application = -0.25
+  xmax_application = 0.75
+
+  for acc_order in 2:6
+    Dm_bounded = derivative_operator(Mattsson2017(:minus  ), 1, acc_order,
+                                     xmin_construction, xmax_construction, N)
+    Dp_bounded = derivative_operator(Mattsson2017(:plus   ), 1, acc_order,
+                                     xmin_construction, xmax_construction, N)
+    Dc_bounded = derivative_operator(Mattsson2017(:central), 1, acc_order,
+                                     xmin_construction, xmax_construction, N)
+
+    nodes = collect(grid(Dc_bounded))
+    weights = diag(mass_matrix(Dc_bounded))
+    Dm = MatrixDerivativeOperator(xmin_application, xmax_application,
+                                  nodes, weights, sparse(Dm_bounded), acc_order,
+                                  source_of_coefficients(Dm_bounded))
+    Dp = MatrixDerivativeOperator(xmin_application, xmax_application,
+                                  nodes, weights, sparse(Dp_bounded), acc_order,
+                                  source_of_coefficients(Dp_bounded))
+    Dc = MatrixDerivativeOperator(xmin_application, xmax_application,
+                                  nodes, weights, sparse(Dc_bounded), acc_order,
+                                  source_of_coefficients(Dc_bounded))
+    D = UpwindOperators(Dm, Dc, Dp)
+
     for compact in (true, false)
-      show(IOContext(devnull, :compact=>compact), source)
+      show(IOContext(devnull, :compact=>compact), D)
+      show(IOContext(devnull, :compact=>compact), Dm)
+      show(IOContext(devnull, :compact=>compact), Dp)
+      show(IOContext(devnull, :compact=>compact), Dc)
+      summary(IOContext(devnull, :compact=>compact), D)
+      summary(IOContext(devnull, :compact=>compact), Dm)
+      summary(IOContext(devnull, :compact=>compact), Dp)
+      summary(IOContext(devnull, :compact=>compact), Dc)
     end
-    B = zeros(N, N)
-    B[1, 1] = -1.0
-    B[N, N] = 1.0
-    let basis_functions = [x -> x^i for i in 0:3]
-      D = function_space_operator(basis_functions, nodes, source)
-      # Only first-derivative operators are implemented yet
-      @test_throws ArgumentError function_space_operator(basis_functions, nodes, source; derivative_order = 2)
+    M = mass_matrix(D)
+    @test M == mass_matrix(Dm)
+    @test M == mass_matrix(Dp)
+    @test M == mass_matrix(Dc)
 
-      @test grid(D) ≈ nodes
-      @test all(isapprox.(D * ones(N), zeros(N); atol = 1e-13))
-      @test D * nodes ≈ ones(N)
-      @test D * (nodes .^ 2) ≈ 2 * nodes
-      @test D * (nodes .^ 3) ≈ 3 * (nodes .^ 2)
-      M = mass_matrix(D)
-      @test M * D.D + D.D' * M ≈ B
-    end
+    x = grid(D)
+    @test x == grid(Dm)
+    @test x == grid(Dp)
+    @test x == grid(Dc)
 
-    let basis_functions = [one, identity, exp]
-      D = function_space_operator(basis_functions, nodes, source)
+    @test issymmetric(Dm) == false
+    @test issymmetric(Dp) == false
+    @test issymmetric(Dc) == false
 
-      @test grid(D) ≈ nodes
-      @test all(isapprox.(D * ones(N), zeros(N); atol = 1e-13))
-      @test D * nodes ≈ ones(N)
-      @test D * exp.(nodes) ≈ exp.(nodes)
-      M = mass_matrix(D)
-      @test M * D.D + D.D' * M ≈ B
-    end
+    D_reference = upwind_operators(Mattsson2017;
+                                   derivative_order = 1, accuracy_order = acc_order,
+                                   xmin = xmin_application, xmax = xmax_application,
+                                   N = N)
+    @test x ≈ grid(D_reference)
+    @test M ≈ mass_matrix(D_reference)
 
-    # test non-equidistant nodes generated by `nodes = [0.0, rand(8)..., 1.0]`
-    nodes = [0.0, 0.01585580467018155, 0.18010381213204507, 0.270467434432868,
-             0.37699483985320303, 0.5600831197666554, 0.5698824835924449, 0.623949064816263,
-             0.8574665549914025, 1.0]
-    N = length(nodes)
-    B = zeros(N, N)
-    B[1, 1] = -1.0
-    B[N, N] = 1.0
-    let basis_functions = [one, identity, exp]
-      D = function_space_operator(basis_functions, nodes, source)
+    u = sinpi.(x)
+    @test D.minus * u ≈ D_reference.minus * u
+    @test D.plus * u ≈ D_reference.plus * u
+    @test D.central * u ≈ D_reference.central * u
 
-      @test grid(D) ≈ nodes
-      @test all(isapprox.(D * ones(N), zeros(N); atol = 1e-11))
-      @test D * nodes ≈ ones(N)
-      @test D * exp.(nodes) ≈ exp.(nodes)
-      M = mass_matrix(D)
-      @test M * D.D + D.D' * M ≈ B
-    end
+    du = copy(u)
+    du_reference = copy(u)
+    α = 1.23
+    mul!(du, D.minus, u, α)
+    mul!(du_reference, D_reference.minus, u, α)
+    @test du ≈ du_reference
+    mul!(du, D.plus, u, α)
+    mul!(du_reference, D_reference.plus, u, α)
+    @test du ≈ du_reference
+    mul!(du, D.central, u, α)
+    mul!(du_reference, D_reference.central, u, α)
+    @test du ≈ du_reference
+
+    du = copy(u)
+    du_reference = copy(u)
+    β = 4.56
+    mul!(du, D.minus, u, α, β)
+    mul!(du_reference, D_reference.minus, u, α, β)
+    @test du ≈ du_reference
+    mul!(du, D.plus, u, α, β)
+    mul!(du_reference, D_reference.plus, u, α, β)
+    @test du ≈ du_reference
+    mul!(du, D.central, u, α, β)
+    mul!(du_reference, D_reference.central, u, α, β)
+    @test du ≈ du_reference
+
+    @test integrate(abs2, u, Dm) ≈ integrate(abs2, u, D_reference.minus)
+    @test integrate(abs2, u, Dp) ≈ integrate(abs2, u, D_reference.plus)
+    @test integrate(abs2, u, Dc) ≈ integrate(abs2, u, D_reference.central)
+
+    u = sinpi.(x)
+    u_reference = copy(u)
+    SummationByPartsOperators.scale_by_mass_matrix!(u, Dm)
+    @test_throws DimensionMismatch scale_by_mass_matrix!(@view(u[(begin + 1):(end - 1)]), Dm)
+    SummationByPartsOperators.scale_by_mass_matrix!(u_reference, D_reference.minus)
+    @test_throws DimensionMismatch scale_by_mass_matrix!(@view(u_reference[(begin + 1):(end - 1)]), D_reference.minus)
+    @test u ≈ u_reference
+    SummationByPartsOperators.scale_by_inverse_mass_matrix!(u, Dm)
+    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(u[(begin + 1):(end - 1)]), Dm)
+    SummationByPartsOperators.scale_by_inverse_mass_matrix!(u_reference, D_reference.minus)
+    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(u_reference[(begin + 1):(end - 1)]), D_reference.minus)
+    @test u ≈ u_reference
+
+    @test SummationByPartsOperators.get_weight(Dm, 1) == left_boundary_weight(D)
+    @test SummationByPartsOperators.get_weight(Dm, N) == right_boundary_weight(D)
+
+    @test SummationByPartsOperators.lower_bandwidth(Dm) == size(Dm, 1) - 1
+    @test SummationByPartsOperators.upper_bandwidth(Dm) == size(Dm, 1) - 1
   end
 end

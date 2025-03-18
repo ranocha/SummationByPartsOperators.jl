@@ -32,7 +32,7 @@ let T=Float32
     @test SummationByPartsOperators.xmin(D) ≈ xmin
     @test SummationByPartsOperators.xmax(D) ≈ xmax
     M = mass_matrix(D)
-    @test M * Matrix(D) + Matrix(D)' * M ≈ zeros(T, N, N)
+    @test M * Matrix(D) + Matrix(D)' * M ≈ mass_matrix_boundary(D)
     mul!(res, D, x0)
     @test all(i->abs(res[i]) < eps(T), accuracy_order:length(res)-accuracy_order)
     mul!(res, D, x1)
@@ -44,8 +44,10 @@ let T=Float32
     u = sinpi.(x1)
     v = copy(u)
     scale_by_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ M * u
     scale_by_inverse_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ u
 
     accuracy_order = 4
@@ -59,7 +61,7 @@ let T=Float32
     @test SummationByPartsOperators.xmin(D) ≈ xmin
     @test SummationByPartsOperators.xmax(D) ≈ xmax
     M = mass_matrix(D)
-    @test M * Matrix(D) + Matrix(D)' * M ≈ zeros(T, N, N)
+    @test M * Matrix(D) + Matrix(D)' * M ≈ mass_matrix_boundary(D)
     mul!(res, D, x0)
     @test all(i->abs(res[i]) < 50*eps(T), accuracy_order:length(res)-accuracy_order)
     mul!(res, D, x1)
@@ -75,8 +77,10 @@ let T=Float32
     u = sinpi.(x1)
     v = copy(u)
     scale_by_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ M * u
     scale_by_inverse_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ u
 
     accuracy_order = 6
@@ -90,7 +94,7 @@ let T=Float32
     @test SummationByPartsOperators.xmin(D) ≈ xmin
     @test SummationByPartsOperators.xmax(D) ≈ xmax
     M = mass_matrix(D)
-    @test M * Matrix(D) + Matrix(D)' * M ≈ zeros(T, N, N)
+    @test M * Matrix(D) + Matrix(D)' * M ≈ mass_matrix_boundary(D)
     mul!(res, D, x0)
     @test all(i->abs(res[i]) < 50*eps(T), accuracy_order:length(res)-accuracy_order)
     mul!(res, D, x1)
@@ -110,8 +114,10 @@ let T=Float32
     u = sinpi.(x1)
     v = copy(u)
     scale_by_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ M * u
     scale_by_inverse_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ u
 
     # second derivative operators
@@ -143,8 +149,10 @@ let T=Float32
     u = sinpi.(x1)
     v = copy(u)
     scale_by_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ M * u
     scale_by_inverse_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ u
 
     accuracy_order = 4
@@ -174,8 +182,10 @@ let T=Float32
     u = sinpi.(x1)
     v = copy(u)
     scale_by_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ M * u
     scale_by_inverse_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ u
 
     accuracy_order = 6
@@ -196,14 +206,16 @@ let T=Float32
     mul!(res, D, x5); @test norm((res - 20 .* x3)[accuracy_order:end-accuracy_order], Inf) < 50000N*eps(T)
     mul!(res, D, x6); @test norm((res - 30 .* x4)[accuracy_order:end-accuracy_order], Inf) < 52000N*eps(T)
     mul!(res, D, x7); @test norm((res - 42 .* x5)[accuracy_order:end-accuracy_order], Inf) < 92000N*eps(T)
-        # mass matrix scaling
-        M = @inferred mass_matrix(D)
-        u = sinpi.(x1)
-        v = copy(u)
-        scale_by_mass_matrix!(v, D)
-        @test v ≈ M * u
-        scale_by_inverse_mass_matrix!(v, D)
-        @test v ≈ u
+    # mass matrix scaling
+    M = @inferred mass_matrix(D)
+    u = sinpi.(x1)
+    v = copy(u)
+    scale_by_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
+    @test v ≈ M * u
+    scale_by_inverse_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
+    @test v ≈ u
 
     tmp = D * x7
     @test typeof(tmp) == typeof(res)
@@ -220,7 +232,7 @@ let T=Float32
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == true # because this operator is zero!
     M = mass_matrix(D)
-    @test M * Matrix(D) + Matrix(D)' * M ≈ zeros(T, N, N)
+    @test M * Matrix(D) + Matrix(D)' * M ≈ mass_matrix_boundary(D)
     mul!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < eps(T)
     mul!(res, D, x1); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 1400*eps(T)
     mul!(res, D, x2); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 7000*eps(T)
@@ -230,8 +242,10 @@ let T=Float32
     u = sinpi.(x1)
     v = copy(u)
     scale_by_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ M * u
     scale_by_inverse_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ u
 
     accuracy_order = 4
@@ -243,7 +257,7 @@ let T=Float32
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
     M = mass_matrix(D)
-    @test M * Matrix(D) + Matrix(D)' * M ≈ zeros(T, N, N)
+    @test M * Matrix(D) + Matrix(D)' * M ≈ mass_matrix_boundary(D)
     mul!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 400*eps(T)
     mul!(res, D, x1); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 10000N*eps(T)
     mul!(res, D, x2); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 50000N*eps(T)
@@ -255,8 +269,10 @@ let T=Float32
     u = sinpi.(x1)
     v = copy(u)
     scale_by_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ M * u
     scale_by_inverse_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ u
 
     accuracy_order = 6
@@ -268,7 +284,7 @@ let T=Float32
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
     M = mass_matrix(D)
-    @test M * Matrix(D) + Matrix(D)' * M ≈ zeros(T, N, N)
+    @test M * Matrix(D) + Matrix(D)' * M ≈ mass_matrix_boundary(D)
     mul!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 300*eps(T)
     mul!(res, D, x1); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 80000N*eps(T)
     mul!(res, D, x2); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 300000N*eps(T)
@@ -290,6 +306,8 @@ let T=Float32
 
     @test integrate(x7, D) ≈ sum(mass_matrix(D) * x7)
     @test integrate(u->u^2, x7, D) ≈ dot(x7, mass_matrix(D), x7)
+    @test integrate_boundary(x7, D) ≈ 0.0
+    @test integrate_boundary(u->u^2, x7, D) ≈ 0.0
 end
 
 # Accuracy tests with Float64.
@@ -320,7 +338,7 @@ let T = Float64
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
     M = mass_matrix(D)
-    @test M * Matrix(D) + Matrix(D)' * M ≈ zeros(T, N, N)
+    @test M * Matrix(D) + Matrix(D)' * M ≈ mass_matrix_boundary(D)
     mul!(res, D, x0)
     @test all(i->abs(res[i]) < eps(T), accuracy_order:length(res)-accuracy_order)
     mul!(res, D, x1)
@@ -334,8 +352,10 @@ let T = Float64
     u = sinpi.(x1)
     v = copy(u)
     scale_by_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ M * u
     scale_by_inverse_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ u
 
     accuracy_order = 4
@@ -345,7 +365,7 @@ let T = Float64
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
     M = mass_matrix(D)
-    @test M * Matrix(D) + Matrix(D)' * M ≈ zeros(T, N, N)
+    @test M * Matrix(D) + Matrix(D)' * M ≈ mass_matrix_boundary(D)
     mul!(res, D, x0)
     @test all(i->abs(res[i]) < 10*eps(T), accuracy_order:length(res)-accuracy_order)
     mul!(res, D, x1)
@@ -363,8 +383,10 @@ let T = Float64
     u = sinpi.(x1)
     v = copy(u)
     scale_by_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ M * u
     scale_by_inverse_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ u
 
     accuracy_order = 6
@@ -374,7 +396,7 @@ let T = Float64
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
     M = mass_matrix(D)
-    @test M * Matrix(D) + Matrix(D)' * M ≈ zeros(T, N, N)
+    @test M * Matrix(D) + Matrix(D)' * M ≈ mass_matrix_boundary(D)
     mul!(res, D, x0)
     @test all(i->abs(res[i]) < 10*eps(T), accuracy_order:length(res)-accuracy_order)
     mul!(res, D, x1)
@@ -415,8 +437,10 @@ let T = Float64
     u = sinpi.(x1)
     v = copy(u)
     scale_by_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ M * u
     scale_by_inverse_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ u
 
     accuracy_order = 4
@@ -438,8 +462,10 @@ let T = Float64
     u = sinpi.(x1)
     v = copy(u)
     scale_by_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ M * u
     scale_by_inverse_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ u
 
     accuracy_order = 6
@@ -472,7 +498,7 @@ let T = Float64
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == true # because this operator is zero!
     M = mass_matrix(D)
-    @test M * Matrix(D) + Matrix(D)' * M ≈ zeros(T, N, N)
+    @test M * Matrix(D) + Matrix(D)' * M ≈ mass_matrix_boundary(D)
     mul!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < eps(T)
     mul!(res, D, x1); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 1400*eps(T)
     mul!(res, D, x2); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 7000*eps(T)
@@ -482,8 +508,10 @@ let T = Float64
     u = sinpi.(x1)
     v = copy(u)
     scale_by_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ M * u
     scale_by_inverse_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ u
 
     accuracy_order = 4
@@ -493,7 +521,7 @@ let T = Float64
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
     M = mass_matrix(D)
-    @test M * Matrix(D) + Matrix(D)' * M ≈ zeros(T, N, N)
+    @test M * Matrix(D) + Matrix(D)' * M ≈ mass_matrix_boundary(D)
     mul!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 400*eps(T)
     mul!(res, D, x1); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 20000*eps(T)
     mul!(res, D, x2); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 200000*eps(T)
@@ -505,8 +533,10 @@ let T = Float64
     u = sinpi.(x1)
     v = copy(u)
     scale_by_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ M * u
     scale_by_inverse_mass_matrix!(v, D)
+    @test_throws DimensionMismatch scale_by_inverse_mass_matrix!(@view(v[(begin + 1):(end - 1)]), D)
     @test v ≈ u
 
     accuracy_order = 6
@@ -516,7 +546,7 @@ let T = Float64
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
     M = mass_matrix(D)
-    @test M * Matrix(D) + Matrix(D)' * M ≈ zeros(T, N, N)
+    @test M * Matrix(D) + Matrix(D)' * M ≈ mass_matrix_boundary(D)
     mul!(res, D, x0); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 300*eps(T)
     mul!(res, D, x1); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 70000*eps(T)
     mul!(res, D, x2); @test norm(res[accuracy_order:end-accuracy_order], Inf) < 200000*eps(T)
@@ -538,6 +568,8 @@ let T = Float64
 
     @test integrate(x7, D) ≈ sum(mass_matrix(D) * x7)
     @test integrate(u->u^2, x7, D) ≈ dot(x7, mass_matrix(D), x7)
+    @test integrate_boundary(x7, D) ≈ 0.0
+    @test integrate_boundary(u->u^2, x7, D) ≈ 0.0
 end
 
 # Compare Fornberg algorithm with exact representation of central derivative coefficients.
@@ -864,7 +896,7 @@ let T = Float32
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == false
         M = mass_matrix(D)
-        @test M * Matrix(D) + Matrix(D)' * M ≈ zeros(T, N, N)
+        @test M * Matrix(D) + Matrix(D)' * M ≈ mass_matrix_boundary(D)
         mul!(res, D, x0)
         @test all(i->abs(res[i]) < eps(T), stencil_width:length(res)-stencil_width)
         mul!(res, D, x1)
@@ -886,7 +918,7 @@ let T = Float32
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == false
         M = mass_matrix(D)
-        @test M * Matrix(D) + Matrix(D)' * M ≈ zeros(T, N, N)
+        @test M * Matrix(D) + Matrix(D)' * M ≈ mass_matrix_boundary(D)
         mul!(res, D, x0)
         @test all(i->abs(res[i]) < 50*eps(T),  stencil_width:length(res)-stencil_width)
         mul!(res, D, x1)
@@ -977,6 +1009,167 @@ let T = Float32
                                          xmin, xmax, N, stencil_width=13)
 end
 
+# Robust method LanczosLowNoise
+@testset "LanczosLowNoise" begin
+    @testset "T = $T" for T in (Float32, Float64)
+        xmin = one(T)
+        xmax = 2 * one(T)
+        N = 100
+        x1 = compute_coefficients(identity, periodic_derivative_operator(1, 2, xmin, xmax, N))
+
+        x0 = fill(one(eltype(x1)), length(x1))
+        x2 = x1 .* x1
+        x3 = x2 .* x1
+        x4 = x2 .* x2
+        x5 = x2 .* x3
+        x6 = x3 .* x3
+        x7 = x4 .* x3
+
+        res = fill(zero(eltype(x0)), length(x0))
+
+        # first derivative operators
+        der_order = 1
+        acc_order = 2
+        @testset "second-order operator, stencil width $stencil_width" for stencil_width in 5:2:11
+            D = periodic_derivative_operator(LanczosLowNoise();
+                                            derivative_order = der_order,
+                                            accuracy_order = acc_order,
+                                            xmin = xmin, xmax = xmax, N = N,
+                                            stencil_width = stencil_width)
+            println(devnull, D)
+            @test derivative_order(D) == der_order
+            @test accuracy_order(D) == acc_order
+            @test issymmetric(D) == false
+            M = mass_matrix(D)
+            @test M * Matrix(D) + Matrix(D)' * M ≈ mass_matrix_boundary(D)
+            mul!(res, D, x0)
+            @test all(i->abs(res[i]) < 20 * eps(T), stencil_width:length(res)-stencil_width)
+            mul!(res, D, x1)
+            @test all(i->res[i] ≈ x0[i], stencil_width:length(res)-stencil_width)
+            mul!(res, D, x2)
+            @test all(i->res[i] ≈ 2*x1[i], stencil_width:length(res)-stencil_width)
+        end
+        @test_throws ArgumentError D = periodic_derivative_operator(LanczosLowNoise();
+                                                                    derivative_order = der_order,
+                                                                    accuracy_order = acc_order,
+                                                                    xmin = xmin,
+                                                                    xmax = xmax,
+                                                                    N = N,
+                                                                    stencil_width = 3)
+        @test_throws ArgumentError D = periodic_derivative_operator(LanczosLowNoise();
+                                                                    derivative_order = der_order,
+                                                                    accuracy_order = acc_order,
+                                                                    xmin = xmin,
+                                                                    xmax = xmax,
+                                                                    N = N,
+                                                                    stencil_width = 13)
+
+        acc_order = 4
+        @testset "fourth-order operator, stencil width $stencil_width" for stencil_width in 7:2:11
+            D = periodic_derivative_operator(LanczosLowNoise();
+                                            derivative_order = der_order,
+                                            accuracy_order = acc_order,
+                                            xmin = xmin, xmax = xmax, N = N,
+                                            stencil_width = stencil_width)
+            println(devnull, D)
+            @test derivative_order(D) == der_order
+            @test accuracy_order(D) == acc_order
+            @test issymmetric(D) == false
+            M = mass_matrix(D)
+            @test M * Matrix(D) + Matrix(D)' * M ≈ mass_matrix_boundary(D)
+            mul!(res, D, x0)
+            @test all(i->abs(res[i]) < 50 * eps(T),  stencil_width:length(res)-stencil_width)
+            mul!(res, D, x1)
+            @test all(i->res[i] ≈ x0[i],  stencil_width:length(res)-stencil_width)
+            mul!(res, D, x2)
+            @test all(i->res[i] ≈ 2*x1[i],  stencil_width:length(res)-stencil_width)
+            mul!(res, D, x3)
+            @test all(i->res[i] ≈ 3*x2[i],  stencil_width:length(res)-stencil_width)
+            mul!(res, D, x4)
+            @test all(i->res[i] ≈ 4*x3[i],  stencil_width:length(res)-stencil_width)
+        end
+        @test_throws ArgumentError D = periodic_derivative_operator(LanczosLowNoise();
+                                                                    derivative_order = der_order,
+                                                                    accuracy_order = acc_order,
+                                                                    xmin = xmin,
+                                                                    xmax = xmax,
+                                                                    N = N,
+                                                                    stencil_width = 5)
+        @test_throws ArgumentError D = periodic_derivative_operator(LanczosLowNoise();
+                                                                    derivative_order = der_order,
+                                                                    accuracy_order = acc_order,
+                                                                    xmin = xmin,
+                                                                    xmax = xmax,
+                                                                    N = N,
+                                                                    stencil_width = 13)
+    end
+
+    @testset "T = $T" for T in (Rational{Int},)
+
+        xmin = one(T)
+        xmax = 2 * one(T)
+        N = 100
+        x1 = compute_coefficients(identity, periodic_derivative_operator(1, 2, xmin, xmax, N))
+
+        x0 = fill(one(eltype(x1)), length(x1))
+        x2 = x1 .* x1
+        x3 = x2 .* x1
+        x4 = x2 .* x2
+        x5 = x2 .* x3
+        x6 = x3 .* x3
+        x7 = x4 .* x3
+
+        res = fill(zero(eltype(x0)), length(x0))
+
+        # first derivative operators
+        der_order = 1
+        acc_order = 2
+        @testset "second-order operator, stencil width $stencil_width" for stencil_width in 5:2:11
+            D = periodic_derivative_operator(LanczosLowNoise();
+                                            derivative_order = der_order,
+                                            accuracy_order = acc_order,
+                                            xmin = xmin, xmax = xmax, N = N,
+                                            stencil_width = stencil_width)
+            println(devnull, D)
+            @test derivative_order(D) == der_order
+            @test accuracy_order(D) == acc_order
+            @test issymmetric(D) == false
+            M = mass_matrix(D)
+            @test M * Matrix(D) + Matrix(D)' * M == mass_matrix_boundary(D)
+            mul!(res, D, x0)
+            @test all(i->iszero(res[i]), stencil_width:length(res)-stencil_width)
+            mul!(res, D, x1)
+            @test all(i->res[i] == x0[i], stencil_width:length(res)-stencil_width)
+            mul!(res, D, x2)
+            @test all(i->res[i] == 2*x1[i], stencil_width:length(res)-stencil_width)
+        end
+
+        acc_order = 4
+        @testset "fourth-order operator, stencil width $stencil_width" for stencil_width in 7:2:11
+            D = periodic_derivative_operator(LanczosLowNoise();
+                                            derivative_order = der_order,
+                                            accuracy_order = acc_order,
+                                            xmin = xmin, xmax = xmax, N = N,
+                                            stencil_width = stencil_width)
+            println(devnull, D)
+            @test derivative_order(D) == der_order
+            @test accuracy_order(D) == acc_order
+            @test issymmetric(D) == false
+            M = mass_matrix(D)
+            @test M * Matrix(D) + Matrix(D)' * M == mass_matrix_boundary(D)
+            mul!(res, D, x0)
+            @test all(i->iszero(res[i]),  stencil_width:length(res)-stencil_width)
+            mul!(res, D, x1)
+            @test all(i->res[i] == x0[i],  stencil_width:length(res)-stencil_width)
+            mul!(res, D, x2)
+            @test all(i->res[i] == 2*x1[i],  stencil_width:length(res)-stencil_width)
+            mul!(res, D, x3)
+            @test all(i->res[i] == 3*x2[i],  stencil_width:length(res)-stencil_width)
+            mul!(res, D, x4)
+            @test all(i->res[i] == 4*x3[i],  stencil_width:length(res)-stencil_width)
+        end
+    end
+end # LanczosLowNoise
 
 # Check rational operators
 for T in (Float32, Float64)
@@ -1021,6 +1214,8 @@ for T in (Float32, Float64)
 
         @test integrate(u, D) ≈ sum(mass_matrix(D) * u)
         @test integrate(u->u^2, u, D) ≈ dot(u, mass_matrix(D), u)
+        @test integrate_boundary(u, D) ≈ 0.0
+        @test integrate_boundary(u->u^2, u, D) ≈ 0.0
     end
 
     for N in (8, 9), acc_order in (2, 3, 4)

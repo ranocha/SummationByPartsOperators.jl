@@ -9,21 +9,21 @@ experiment with new operators given in matrix form.
 
 An instance of this type can be constructed by passing the endpoints
 `xmin`, `xmax` of the desired grid as well as the `nodes`, `weights`, and the
-derivative operator `D::Matrix` on a reference interval, assuming that the
+derivative operator `D::AbstractMatrix` on a reference interval, assuming that the
 `nodes` contain the boundary points of the reference interval. `source` is
 the source of coefficients and can be `nothing` for experimentation.
 """
-@auto_hash_equals struct MatrixDerivativeOperator{T, SourceOfCoefficients} <: AbstractNonperiodicDerivativeOperator{T}
+@auto_hash_equals struct MatrixDerivativeOperator{T, Dtype <: AbstractMatrix{T}, SourceOfCoefficients} <: AbstractMatrixDerivativeOperator{T}
   grid::Vector{T}
   weights::Vector{T}
-  D::Matrix{T}
+  D::Dtype
   accuracy_order::Int
   source::SourceOfCoefficients
 
   function MatrixDerivativeOperator(xmin::T, xmax::T,
                                     nodes::Vector{T},
                                     weights::Vector{T},
-                                    D::Matrix{T},
+                                    D::AbstractMatrix{T},
                                     accuracy_order::Int,
                                     source::SourceOfCoefficients) where {T <: Real, SourceOfCoefficients}
       # The `nodes`, `weights`, and `D` are given on a reference interval.
@@ -33,27 +33,27 @@ the source of coefficients and can be `nothing` for experimentation.
       grid = (nodes .- first(nodes)) ./ jac .+ xmin
       Δx = inv(jac)
 
-      new{T, SourceOfCoefficients}(grid, Δx * weights, jac * D, accuracy_order, source)
+      new{T, typeof(D), SourceOfCoefficients}(grid, Δx * weights, jac * D, accuracy_order, source)
   end
 end
 
-derivative_order(D::MatrixDerivativeOperator) = 1
+derivative_order(D::AbstractMatrixDerivativeOperator) = 1
 LinearAlgebra.issymmetric(D::MatrixDerivativeOperator) = false
 
-source_of_coefficients(D::MatrixDerivativeOperator) = D.source
+source_of_coefficients(D::AbstractMatrixDerivativeOperator) = D.source
 
-function integrate(func, u, D::MatrixDerivativeOperator)
+function integrate(func, u, D::AbstractMatrixDerivativeOperator)
   return integrate(func, u, D.weights)
 end
 
-mass_matrix(D::MatrixDerivativeOperator) = Diagonal(D.weights)
+mass_matrix(D::AbstractMatrixDerivativeOperator) = Diagonal(D.weights)
 
 Base.eltype(D::MatrixDerivativeOperator{T}) where {T} = T
 
-function scale_by_mass_matrix!(u::AbstractVector, D::MatrixDerivativeOperator, factor=true)
-    N, _ = size(D)
+function scale_by_mass_matrix!(u::AbstractVector, D::AbstractMatrixDerivativeOperator, factor=true)
+    Base.require_one_based_indexing(u)
     @boundscheck begin
-        @argcheck N == length(u)
+        length(u) == size(D, 2) || throw(DimensionMismatch("sizes of input vector and operator do not match"))
     end
 
     @inbounds @simd for i in eachindex(u, D.weights)
@@ -63,10 +63,10 @@ function scale_by_mass_matrix!(u::AbstractVector, D::MatrixDerivativeOperator, f
     return u
 end
 
-function scale_by_inverse_mass_matrix!(u::AbstractVector, D::MatrixDerivativeOperator, factor=true)
-    N, _ = size(D)
+function scale_by_inverse_mass_matrix!(u::AbstractVector, D::AbstractMatrixDerivativeOperator, factor=true)
+    Base.require_one_based_indexing(u)
     @boundscheck begin
-        @argcheck N == length(u)
+        length(u) == size(D, 2) || throw(DimensionMismatch("sizes of input vector and operator do not match"))
     end
 
     @inbounds @simd for i in eachindex(u, D.weights)
@@ -76,7 +76,7 @@ function scale_by_inverse_mass_matrix!(u::AbstractVector, D::MatrixDerivativeOpe
     u
 end
 
-function get_weight(D::MatrixDerivativeOperator, i::Int)
+function get_weight(D::AbstractMatrixDerivativeOperator, i::Int)
     @unpack weights = D
     N, _ = size(D)
     @boundscheck begin
@@ -110,25 +110,25 @@ function mul!(dest::AbstractVector, Dop::MatrixDerivativeOperator, u::AbstractVe
 end
 
 
-function lower_bandwidth(D::MatrixDerivativeOperator)
+function lower_bandwidth(D::AbstractMatrixDerivativeOperator)
     size(D, 1) - 1
 end
 
-function upper_bandwidth(D::MatrixDerivativeOperator)
+function upper_bandwidth(D::AbstractMatrixDerivativeOperator)
     size(D, 1) - 1
 end
 
-function accuracy_order(D::MatrixDerivativeOperator)
+function accuracy_order(D::AbstractMatrixDerivativeOperator)
     D.accuracy_order
 end
 
 
-function left_boundary_weight(D::MatrixDerivativeOperator)
+function left_boundary_weight(D::AbstractMatrixDerivativeOperator)
     @inbounds retval = D.weights[begin]
     retval
 end
 
-function right_boundary_weight(D::MatrixDerivativeOperator)
+function right_boundary_weight(D::AbstractMatrixDerivativeOperator)
     @inbounds retval = D.weights[end]
     retval
 end
