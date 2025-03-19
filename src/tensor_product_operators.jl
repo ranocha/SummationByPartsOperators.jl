@@ -171,8 +171,3 @@ function tensor_product_operator_2D(D_x, D_y = D_x)
                                                        acc_order, source)
     return TensorProductOperator(D_multi, N_x, N_y)
 end
-
-function Base.kron(D_x::AbstractNonperiodicDerivativeOperator,
-                   D_y::AbstractNonperiodicDerivativeOperator)
-    tensor_product_operator_2D(D_x, D_y)
-end

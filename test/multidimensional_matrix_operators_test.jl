@@ -105,7 +105,6 @@ end
         D_2 = derivative_operator(MattssonAlmquistCarpenter2014Extended(), 1, acc_order,
                                   T(ymin_construction), T(ymax_construction), N_y)
         D_t = tensor_product_operator_2D(D_1, D_2)
-        @test kron(D_1, D_2) == D_t
 
         for compact in (true, false)
             show(IOContext(devnull, :compact => compact), D_t)
