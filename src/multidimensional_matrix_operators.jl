@@ -74,8 +74,26 @@ Base.ndims(::AbstractMultidimensionalMatrixDerivativeOperator{Dim}) where {Dim} 
 Base.getindex(D::AbstractMultidimensionalMatrixDerivativeOperator, i::Int) = D.Ds[i]
 Base.eltype(::AbstractMultidimensionalMatrixDerivativeOperator{Dim, T}) where {Dim, T} = T
 
+"""
+    normals(D::MultidimensionalMatrixDerivativeOperator)
+
+Return the normal vectors of the boundary nodes of a [`MultidimensionalMatrixDerivativeOperator`](@ref) `D`.
+"""
+normals(D::AbstractMultidimensionalMatrixDerivativeOperator) = D.normals
+
+"""
+    boundary_indices(D::MultidimensionalMatrixDerivativeOperator)
+
+Return the indices of the boundary nodes of a [`MultidimensionalMatrixDerivativeOperator`](@ref) `D`.
+"""
+boundary_indices(D::AbstractMultidimensionalMatrixDerivativeOperator) = D.boundary_indices
+
 function restrict_boundary(u, D::AbstractMultidimensionalMatrixDerivativeOperator)
     u[D.boundary_indices]
+end
+
+function restrict_interior(u, D::AbstractMultidimensionalMatrixDerivativeOperator)
+    u[setdiff(1:length(u), D.boundary_indices)]
 end
 
 """
