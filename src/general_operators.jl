@@ -309,7 +309,7 @@ restrict_boundary(u, D::AbstractPeriodicDerivativeOperator) = eltype(u)[]
 
 Restrict the coefficients `u` to the interior nodes of the derivative operator `D`.
 """
-restrict_interior(u, D::AbstractNonperiodicDerivativeOperator) = u[2:end-1]
+restrict_interior(u, D::AbstractNonperiodicDerivativeOperator) = u[2:(end - 1)]
 
 restrict_interior(u, D::AbstractPeriodicDerivativeOperator) = u
 
