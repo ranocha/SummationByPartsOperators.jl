@@ -93,7 +93,7 @@ function restrict_boundary(u, D::AbstractMultidimensionalMatrixDerivativeOperato
 end
 
 function restrict_interior(u, D::AbstractMultidimensionalMatrixDerivativeOperator)
-    u[setdiff(1:length(u), D.boundary_indices)]
+    u[setdiff(eachindex(u), D.boundary_indices)]
 end
 
 """
