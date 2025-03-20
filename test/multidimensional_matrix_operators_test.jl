@@ -121,8 +121,21 @@ end
         end
         @test eltype(D_t) == eltype(D_1) == eltype(D_2) == T
         @test real(D_t) == real(D_1) == real(D_2) == T
+        @test normals(D_t) == D_t.normals
+        @test boundary_indices(D_t) == D_t.boundary_indices
 
-        @test length(grid(D_t)) == N_x * N_y
+        nodes = grid(D_t)
+        @test length(nodes) == N_x * N_y
+        u = sin.(first.(nodes) .^ 2) .* cospi.(last.(nodes))
+        u_reference = copy(u)
+
+        SummationByPartsOperators.scale_by_mass_matrix!(u, D_t)
+        SummationByPartsOperators.scale_by_inverse_mass_matrix!(u, D_t)
+        @test u ≈ u_reference
+        @test length(restrict_interior(u, D_t)) == (N_x - 2) * (N_y - 2)
+        @test length(restrict_boundary(u, D_t)) == 2 * (N_x + N_y)
+
+        # derivative operators
         M = mass_matrix(D_t)
         D_x = D_t[1]
         @test D_x isa SparseMatrixCSC
@@ -147,6 +160,11 @@ end
         B_1D_2 = mass_matrix_boundary(D_2)
         @test B_x ≈ Diagonal(kron(B_1D_1, M_1D_2))
         @test B_y ≈ Diagonal(kron(M_1D_1, B_1D_2))
+
+        # integrals
+        @test integrate(abs2, u, D_t) ≈ sum(M * abs2.(u))
+        @test integrate_boundary(abs2, u, D_t, 1) ≈ sum(B_x * abs2.(u))
+        @test integrate_boundary(abs2, u, D_t, 2) ≈ sum(B_y * abs2.(u))
 
         # accuracy test
         x = grid(D_t)
