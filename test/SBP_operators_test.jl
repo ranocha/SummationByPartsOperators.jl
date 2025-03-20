@@ -45,6 +45,9 @@ for source in D_test_list, T in (Float32, Float64)
         # SBP property
         M = mass_matrix(D)
         @test M * Matrix(D) + Matrix(D)' * M ≈ mass_matrix_boundary(D)
+
+        @test restrict_interior(x2, D) ≈ x2[(begin + 1):(end - 1)]
+        @test restrict_boundary(x2, D) ≈ [xmin^2, xmax^2]
         # interior and boundary
         mul!(res, D, x0)
         @test all(i -> abs(res[i]) < 1000 * eps(T), eachindex(res))
@@ -112,6 +115,9 @@ for source in D_test_list, T in (Float32, Float64)
         # SBP property
         M = mass_matrix(D)
         @test M * Matrix(D) + Matrix(D)' * M ≈ mass_matrix_boundary(D)
+
+        @test restrict_interior(x2, D) ≈ x2[(begin + 1):(end - 1)]
+        @test restrict_boundary(x2, D) ≈ [xmin^2, xmax^2]
         # interior and boundary
         mul!(res, D, x0)
         @test all(i -> abs(res[i]) < 1000 * eps(T), eachindex(res))
@@ -189,6 +195,9 @@ for source in D_test_list, T in (Float32, Float64)
         # SBP property
         M = mass_matrix(D)
         @test M * Matrix(D) + Matrix(D)' * M ≈ mass_matrix_boundary(D)
+
+        @test restrict_interior(x2, D) ≈ x2[(begin + 1):(end - 1)]
+        @test restrict_boundary(x2, D) ≈ [xmin^2, xmax^2]
         # interior and boundary
         mul!(res, D, x0)
         @test all(i -> abs(res[i]) < 1000 * eps(T), eachindex(res))
@@ -276,6 +285,9 @@ for source in D_test_list, T in (Float32, Float64)
         # SBP property
         M = mass_matrix(D)
         @test M * Matrix(D) + Matrix(D)' * M ≈ mass_matrix_boundary(D)
+
+        @test restrict_interior(x2, D) ≈ x2[(begin + 1):(end - 1)]
+        @test restrict_boundary(x2, D) ≈ [xmin^2, xmax^2]
         # interior and boundary
         mul!(res, D, x0)
         @test all(i -> abs(res[i]) < 16000 * eps(T), eachindex(res))
@@ -438,6 +450,9 @@ for source in D_test_list, T in (Float32, Float64)
         dL = derivative_left(D, Val{1}())
         dR = derivative_right(D, Val{1}())
         @test M * Matrix(D) - Matrix(D)' * M ≈ eR * dR' - eL * dL' - dR * eR' + dL * eL'
+
+        @test restrict_interior(x2, D) ≈ x2[(begin + 1):(end - 1)]
+        @test restrict_boundary(x2, D) ≈ [xmin^2, xmax^2]
         # interior and boundary
         mul!(res, D, x0)
         @test all(i -> abs(res[i]) < 2000 * eps(T), eachindex(res))
@@ -509,6 +524,9 @@ for source in D_test_list, T in (Float32, Float64)
         dL = derivative_left(D, Val{1}())
         dR = derivative_right(D, Val{1}())
         @test M * Matrix(D) - Matrix(D)' * M ≈ eR * dR' - eL * dL' - dR * eR' + dL * eL'
+
+        @test restrict_interior(x2, D) ≈ x2[(begin + 1):(end - 1)]
+        @test restrict_boundary(x2, D) ≈ [xmin^2, xmax^2]
         # interior and boundary
         mul!(res, D, x0)
         @test all(i -> abs(res[i]) < 10000 * eps(T), eachindex(res))
@@ -587,6 +605,9 @@ for source in D_test_list, T in (Float32, Float64)
         dL = derivative_left(D, Val{1}())
         dR = derivative_right(D, Val{1}())
         @test M * Matrix(D) - Matrix(D)' * M ≈ eR * dR' - eL * dL' - dR * eR' + dL * eL'
+
+        @test restrict_interior(x2, D) ≈ x2[(begin + 1):(end - 1)]
+        @test restrict_boundary(x2, D) ≈ [xmin^2, xmax^2]
         # interior and boundary
         mul!(res, D, x0)
         @test all(i -> abs(res[i]) < 10000 * eps(T), eachindex(res))
@@ -669,6 +690,9 @@ end
         @test derivative_order(D) == der_order
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == false
+
+        @test restrict_interior(x2, D) ≈ x2[(begin + 1):(end - 1)]
+        @test restrict_boundary(x2, D) ≈ [xmin^2, xmax^2]
         # interior and boundary
         mul!(res, D, x0)
         @test all(i -> abs(res[i]) < eps(T), eachindex(res))
@@ -730,6 +754,9 @@ end
         @test derivative_order(D) == der_order
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == false
+
+        @test restrict_interior(x2, D) ≈ x2[(begin + 1):(end - 1)]
+        @test restrict_boundary(x2, D) ≈ [xmin^2, xmax^2]
         # interior and boundary
         mul!(res, D, x0)
         @test all(i -> abs(res[i]) < 100_000 * eps(T), eachindex(res))
@@ -800,6 +827,9 @@ end
         @test derivative_order(D) == der_order
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == false
+
+        @test restrict_interior(x2, D) ≈ x2[(begin + 1):(end - 1)]
+        @test restrict_boundary(x2, D) ≈ [xmin^2, xmax^2]
         # interior and boundary
         mul!(res, D, x0)
         @test all(i -> abs(res[i]) < 1_000_000 * eps(T), eachindex(res))
@@ -884,6 +914,9 @@ end
         @test derivative_order(D) == der_order
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == false
+
+        @test restrict_interior(x2, D) ≈ x2[(begin + 1):(end - 1)]
+        @test restrict_boundary(x2, D) ≈ [xmin^2, xmax^2]
         # interior and boundary
         mul!(res, D, x0)
         @test all(i -> abs(res[i]) < 10 * eps(T) / D.Δx^4, eachindex(res))
@@ -953,6 +986,9 @@ end
         @test derivative_order(D) == der_order
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == false
+
+        @test restrict_interior(x2, D) ≈ x2[(begin + 1):(end - 1)]
+        @test restrict_boundary(x2, D) ≈ [xmin^2, xmax^2]
         # interior and boundary
         mul!(res, D, x0)
         @test all(i -> abs(res[i]) < 50_000_000 * eps(T), eachindex(res))
@@ -1033,6 +1069,9 @@ end
         @test derivative_order(D) == der_order
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == false
+
+        @test restrict_interior(x2, D) ≈ x2[(begin + 1):(end - 1)]
+        @test restrict_boundary(x2, D) ≈ [xmin^2, xmax^2]
         # interior and boundary
         mul!(res, D, x0)
         @test all(i -> abs(res[i]) < 50_000_000 * eps(T), eachindex(res))

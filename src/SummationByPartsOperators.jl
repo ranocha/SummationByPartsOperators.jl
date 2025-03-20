@@ -152,7 +152,8 @@ export FilterCallback, ConstantFilter, ExponentialFilter
 export SafeMode, FastMode, ThreadedMode
 export derivative_order, accuracy_order, source_of_coefficients, grid, semidiscretize
 export mass_matrix, mass_matrix_boundary
-export integrate, integrate_boundary, restrict_boundary,
+export integrate, integrate_boundary,
+       restrict_interior, restrict_boundary,
        left_boundary_weight, right_boundary_weight,
        scale_by_mass_matrix!, scale_by_inverse_mass_matrix!,
        derivative_left, derivative_right,
@@ -165,6 +166,7 @@ export periodic_central_derivative_operator, periodic_derivative_operator,
        fourier_derivative_operator,
        legendre_derivative_operator, legendre_second_derivative_operator,
        upwind_operators, function_space_operator, tensor_product_operator_2D
+export normals, boundary_indices
 export UniformMesh1D, UniformPeriodicMesh1D
 export couple_continuously, couple_discontinuously
 export mul!
