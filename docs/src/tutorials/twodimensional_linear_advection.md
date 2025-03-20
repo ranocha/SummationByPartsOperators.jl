@@ -122,8 +122,8 @@ p = (; a, A, B, g, D, bc)
 function set_bc!(bc, u, a, g, D, t)
    fill!(bc, zero(eltype(bc)))
    for (i, node) in enumerate(restrict_boundary(grid(D), D))
-      j = D.boundary_indices[i]
-      normal = D.normals[i]
+      j = boundary_indices(D)[i]
+      normal = normals(D)[i]
       if dot(normal, a) < 0 # inflow
          bc[j] = g(t, node)
       else # outflow
