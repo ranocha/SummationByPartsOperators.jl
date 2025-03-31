@@ -85,14 +85,14 @@ f_df = D * u_v # compute the function value and its derivative
 @assert ForwardDiff.partials(f_df, 1) ≈ D * v # the Jacobian of `f(u) = D * u` is `D`</code></pre><p>You can of course also use this with nonlinear functions, e.g.,</p><pre><code class="language-julia hljs">f(u, D) = u .* (D * (u.^2))
 
 f_df = f(u_v, D)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">8-element StructArray(::Vector{Float64}, ::Vector{ForwardDiff.Partials{1, Float64}}) with eltype ForwardDiff.Dual{Nothing, Float64, 1}:
- Dual{Nothing}(-33.848235324195755,23.611832039349338)
- Dual{Nothing}(-15.336999344075931,43.85206256191543)
-  Dual{Nothing}(10.434126012692198,-31.917895039946856)
- Dual{Nothing}(-17.759238528480136,18.579032453831903)
-  Dual{Nothing}(22.931090432954935,-56.0746615453224)
- Dual{Nothing}(-44.56876050822929,143.87207650318425)
-  Dual{Nothing}(46.37537214115569,-108.7679995399418)
-  Dual{Nothing}(18.631634184670492,-53.85479575430753)</code></pre><p>The Jacobian of this function is</p><pre><code class="language-julia hljs">using LinearAlgebra
+  Dual{Nothing}(1.0667093814333168,20.43102863336279)
+  Dual{Nothing}(0.9293589355558264,-9.93107645481886)
+  Dual{Nothing}(3.464617265975602,4.262340086280382)
+ Dual{Nothing}(10.969716245365477,-58.32280617780351)
+  Dual{Nothing}(0.3796667383808849,37.282453741811565)
+ Dual{Nothing}(-9.853614356292573,23.909761065699342)
+ Dual{Nothing}(-1.2895003646809111,7.1503162678185355)
+  Dual{Nothing}(2.4516301401256055,4.312382350574652)</code></pre><p>The Jacobian of this function is</p><pre><code class="language-julia hljs">using LinearAlgebra
 
 J = Diagonal(D * u.^2) + 2 .* u .* Matrix(D) * Diagonal(u)
 
@@ -116,4 +116,4 @@ Environment:
 <span class="sgr32"><span class="sgr1">      Status</span></span> `~/work/SummationByPartsOperators.jl/SummationByPartsOperators.jl/docs/Manifest.toml`
  <span class="sgr90"> [f6369f11] </span>ForwardDiff v0.10.38
  <span class="sgr90"> [09ab397b] </span>StructArrays v0.6.18
- <span class="sgr90"> [9f78cca6] </span>SummationByPartsOperators v0.5.78 `~/work/SummationByPartsOperators.jl/SummationByPartsOperators.jl`</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../tutorials/twodimensional_linear_advection/">« Linear advection equation in two dimensions</a><a class="docs-footer-nextpage" href="../applications/">Applications &amp; references »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.9.0 on <span class="colophon-date" title="Thursday 20 March 2025 09:58">Thursday 20 March 2025</span>. Using Julia version 1.6.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+ <span class="sgr90"> [9f78cca6] </span>SummationByPartsOperators v0.5.78 `~/work/SummationByPartsOperators.jl/SummationByPartsOperators.jl`</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../tutorials/twodimensional_linear_advection/">« Linear advection equation in two dimensions</a><a class="docs-footer-nextpage" href="../applications/">Applications &amp; references »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.10.0 on <span class="colophon-date" title="Monday 31 March 2025 20:38">Monday 31 March 2025</span>. Using Julia version 1.6.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
