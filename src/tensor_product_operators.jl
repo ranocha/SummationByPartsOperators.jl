@@ -40,8 +40,8 @@ function mass_matrix_boundary(D::TensorProductOperator{2}, dim::Int)
     # This exploits how we construct the tensor product operator in `tensor_product_operator_2D`.
     if dim == 1
         corners_x_dir = [N_y + 1, # lower left corner
-            N_x + N_y + 1, # upper left corner
             N_x + N_y, # lower right corner
+            N_x + N_y + 1, # upper left corner
             2 * N_x + N_y] # upper right corner
         deleteat!(boundary_weights, corners_x_dir)
         deleteat!(boundary_indices, corners_x_dir)
