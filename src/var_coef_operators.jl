@@ -4,32 +4,27 @@
 
 A dissipation operator on a nonperiodic finite difference grid.
 """
-@auto_hash_equals struct VarCoefDerivativeOperator{T, CoefficientCache, ExecutionMode,
-                                                   SourceOfCoefficients, Grid} <:
+@auto_hash_equals struct VarCoefDerivativeOperator{T,
+                                                   Coefficients <: VarCoefDerivativeCoefficients,
+                                                   Grid} <:
                          AbstractVariableCoefficientNonperiodicDerivativeOperator{T}
-    coefficients::VarCoefDerivativeCoefficients{T, CoefficientCache, ExecutionMode,
-                                                SourceOfCoefficients}
+    coefficients::Coefficients
     grid::Grid
     Δx::T
     factor::T
     b::Vector{T}
 
-    function VarCoefDerivativeOperator(coefficients::VarCoefDerivativeCoefficients{T,
-                                                                                   CoefficientCache,
-                                                                                   ExecutionMode,
-                                                                                   SourceOfCoefficients},
+    function VarCoefDerivativeOperator(coefficients::Coefficients,
                                        grid::Grid,
-                                       b::Vector{T}) where {T, CoefficientCache,
-                                                            ExecutionMode,
-                                                            SourceOfCoefficients, Grid}
+                                       b::Vector{T}) where {T,
+                                                            Coefficients <: VarCoefDerivativeCoefficients,
+                                                            Grid}
         @argcheck checkbounds(Bool, grid, coefficients.coefficient_cache) DimensionMismatch
         @argcheck length(grid) == length(b)
 
         Δx = step(grid)
         factor = inv(Δx^derivative_order(coefficients))
-        new{T, CoefficientCache, ExecutionMode, SourceOfCoefficients, Grid}(coefficients,
-                                                                            grid, Δx,
-                                                                            factor, b)
+        new{T, Coefficients, Grid}(coefficients, grid, Δx, factor, b)
     end
 end
 

@@ -77,6 +77,11 @@ end
         @test all(i -> dest1[i] ≈ dest2[i], eachindex(u))
         mul!(dest2, D2var_safe, u)
         @test all(i -> dest1[i] ≈ dest2[i], eachindex(u))
+
+        # test allocations
+        @test iszero(@allocated(mul!(dest1, D2var_serial, u)))
+        @test iszero(@allocated(mul!(dest1, D2var_serial, u, one(T))))
+        @test iszero(@allocated(mul!(dest1, D2var_serial, u, one(T), zero(T))))
     end
 end
 
