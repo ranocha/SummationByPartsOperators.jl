@@ -5,7 +5,8 @@
 A dissipation operator on a nonperiodic finite difference grid.
 """
 @auto_hash_equals struct VarCoefDerivativeOperator{T,
-                                                   Coefficients <: VarCoefDerivativeCoefficients,
+                                                   Coefficients <:
+                                                   VarCoefDerivativeCoefficients,
                                                    Grid} <:
                          AbstractVariableCoefficientNonperiodicDerivativeOperator{T}
     coefficients::Coefficients
@@ -17,7 +18,8 @@ A dissipation operator on a nonperiodic finite difference grid.
     function VarCoefDerivativeOperator(coefficients::Coefficients,
                                        grid::Grid,
                                        b::Vector{T}) where {T,
-                                                            Coefficients <: VarCoefDerivativeCoefficients,
+                                                            Coefficients <:
+                                                            VarCoefDerivativeCoefficients,
                                                             Grid}
         @argcheck checkbounds(Bool, grid, coefficients.coefficient_cache) DimensionMismatch
         @argcheck length(grid) == length(b)
