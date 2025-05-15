@@ -32,7 +32,7 @@ function BandedMatrix(D::BandedDerivativeOperator)
     n, m = size(D)
 
     # create uninitialised matrix
-    B = BandedMatrix(BandedMatrices.Zeros{T}(n, m), (l, u))
+    B = BandedMatrix{T}(undef, (n, m), (l, u))
 
     # B.data[i,:] is the ith band, starting with the upper ones
     # B.data[:,j] is the jth column, entries out of range are undefined
@@ -78,6 +78,58 @@ function BandedMatrix(D::BandedDerivativeOperator)
         num_entries = length(e) + 1 - max(1, j - u)
         for i in 1:num_entries
             B.data[max(1, j - u) - (j - u) + i, j] = dest[max(1, j - u) - 1 + i]
+        end
+    end
+
+    return B
+end
+
+"""
+    copyto!(B::BandedMatrix, D)
+
+Copy a banded derivative operator `D` to a banded matrix `B`, e.g., when `D` is a
+[`DerivativeOperator`](@ref), a [`DissipationOperator`](@ref), or a
+[`VarCoefDerivativeOperator`](@ref).
+"""
+function Base.copyto!(B::BandedMatrix{T}, D::BandedDerivativeOperator) where {T}
+    Base.require_one_based_indexing(B, D)
+    if size(D) != size(B)
+        throw(DimensionMismatch("sizes do not match"))
+    end
+    l = lower_bandwidth(D)
+    u = upper_bandwidth(D)
+    if l != bandwidth(B, 1) || u != bandwidth(B, 2)
+        throw(DimensionMismatch("bandwidths do not match"))
+    end
+    n, m = size(D)
+
+    # B.data[i,:] is the ith band, starting with the upper ones
+    # B.data[:,j] is the jth column, entries out of range are undefined
+    e = fill(zero(T), m)
+    dest = similar(e)
+
+    # Since the operator is banded, the coefficients `e[i]` and `e[j]`
+    # lead to independent results in `dest = D * e` when `i < j`
+    # satisfy `i + u < j - l`.
+    for k in 1:(1 + u + l)
+        # Set independent entries in the input vector to unity
+        for j in k:(1 + u + l):m
+            e[j] = one(T)
+        end
+
+        # Apply the operator
+        mul!(dest, D, e)
+
+        # Copy the result to the banded matrix
+        for j in k:(1 + u + l):m
+            for i in max(1, 2 + u - j):min(m + 1 + u - j, 1 + u + l)
+                B.data[i, j] = dest[j - u - 1 + i]
+            end
+        end
+
+        # Set independent entries in the input vector to zero again
+        for j in k:(1 + u + l):m
+            e[j] = zero(T)
         end
     end
 
