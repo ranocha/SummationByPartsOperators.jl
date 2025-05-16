@@ -23,9 +23,13 @@ for T in (Float32, Float64), acc_order in (2, 4, 6, 8), diss_order in (2, 4, 6, 
     end
     D_serial === nothing && continue
 
-    D_full = Matrix(D_serial)
-    D_sparse = sparse(D_serial)
-    D_banded = BandedMatrix(D_serial)
+    D_full = @inferred Matrix(D_serial)
+    D_sparse = @inferred sparse(D_serial)
+    D_banded = @inferred BandedMatrix(D_serial)
+    D_banded_new = zero(D_banded)
+    @inferred copyto!(D_banded_new, D_serial)
+    @test D_banded_new == D_banded
+
     x = grid(D_serial)
     u = cospi.(x)
     dest1 = fill(zero(eltype(u)), length(u))
@@ -51,9 +55,12 @@ for T in (Float32, Float64), acc_order in (2, 4, 6, 8), diss_order in (2, 4, 6, 
     end
     Di_serial === nothing && continue
 
-    Di_full = Matrix(Di_serial)
-    Di_sparse = sparse(Di_serial)
-    Di_banded = BandedMatrix(Di_serial)
+    Di_full = @inferred Matrix(Di_serial)
+    Di_sparse = @inferred sparse(Di_serial)
+    Di_banded = @inferred BandedMatrix(Di_serial)
+    Di_banded_new = zero(Di_banded)
+    @inferred copyto!(Di_banded_new, Di_serial)
+    @test Di_banded_new == Di_banded
 
     @test BandedMatrices.isbanded(Di_serial) == BandedMatrices.isbanded(Di_banded)
     @test bandwidth(Di_serial, 1) == bandwidth(Di_banded, 1)
@@ -81,9 +88,13 @@ for T in (Float32, Float64), acc_order in (2, 4, 6), D2var_source in D2var_test_
     end
     D2var_serial === nothing && continue
 
-    D2var_full = Matrix(D2var_serial)
-    D2var_sparse = sparse(D2var_serial)
-    D2var_banded = BandedMatrix(D2var_serial)
+    D2var_full = @inferred Matrix(D2var_serial)
+    D2var_sparse = @inferred sparse(D2var_serial)
+    D2var_banded = @inferred BandedMatrix(D2var_serial)
+    D2var_banded_new = zero(D2var_banded)
+    @inferred copyto!(D2var_banded_new, D2var_serial)
+    @test D2var_banded_new == D2var_banded
+
     x = grid(D2var_serial)
     u = cospi.(x)
     dest1 = fill(zero(eltype(u)), length(u))
