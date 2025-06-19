@@ -66,7 +66,8 @@ using Unrolled: @unroll
 
 import LinearAlgebra: mul!
 @reexport using PolynomialBases
-import PolynomialBases: integrate, evaluate_coefficients, evaluate_coefficients!,
+import PolynomialBases: grid, mass_matrix, mass_matrix_boundary, integrate,
+                        evaluate_coefficients, evaluate_coefficients!,
                         compute_coefficients, compute_coefficients!
 
 # types
