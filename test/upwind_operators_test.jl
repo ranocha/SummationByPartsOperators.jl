@@ -268,7 +268,8 @@ end
 
 @testset "UpwindOperators with couple_discontinuously (periodic)" begin
     D = @inferred upwind_operators(couple_discontinuously,
-                                   legendre_derivative_operator(xmin = -1.0, xmax = 1.0, N = 3),
+                                   legendre_derivative_operator(xmin = -1.0, xmax = 1.0,
+                                                                N = 3),
                                    UniformPeriodicMesh1D(xmin = 0.0, xmax = 1.0, Nx = 4))
     @test size(D.minus) == (12, 12)
     @test size(D.plus) == (12, 12)
