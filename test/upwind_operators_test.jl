@@ -219,3 +219,93 @@ end
     @test_nowarn mul!(du, D.plus, u, 2.0, 3.0)
     @test du ≈ 8 * D.plus * u # 5 = 2 + 3 * 2
 end
+
+@testset "UpwindOperators with couple_discontinuously (non-periodic)" begin
+    D = @inferred upwind_operators(couple_discontinuously,
+                                   legendre_derivative_operator(xmin = -1.0, xmax = 1.0, N = 3),
+                                   UniformMesh1D(xmin = 0.0, xmax = 1.0, Nx = 4))
+    @test size(D.minus) == (12, 12)
+    @test size(D.plus) == (12, 12)
+    @test size(D.central) == (12, 12)
+
+    x = @inferred grid(D)
+    u = @. sinpi(2 * x)
+
+    du = zero(u)
+    @test_nowarn mul!(du, D.minus, u)
+    @test du ≈ D.minus * u
+    @test_nowarn mul!(du, D.minus, u, 2.0)
+    @test du ≈ 2 * D.minus * u
+    @test_nowarn mul!(du, D.minus, u, 2.0, 3.0)
+    @test du ≈ 8 * D.minus * u # 5 = 2 + 3 * 2
+
+    du = zero(u)
+    @test_nowarn mul!(du, D.plus, u)
+    @test du ≈ D.plus * u
+    @test_nowarn mul!(du, D.plus, u, 2.0)
+    @test du ≈ 2 * D.plus * u
+    @test_nowarn mul!(du, D.plus, u, 2.0, 3.0)
+    @test du ≈ 8 * D.plus * u # 5 = 2 + 3 * 2
+
+    M = @inferred mass_matrix(D)
+    @test M * Matrix(D.plus) + Matrix(D.minus)' * M ≈ mass_matrix_boundary(D)
+
+    x = @inferred grid(D)
+    @test (@inferred integrate(x, D)) == (@inferred integrate(x, D.plus))
+
+    for compact in (true, false)
+        show(IOContext(devnull, :compact => compact), D)
+        show(IOContext(devnull, :compact => compact), D.minus)
+        show(IOContext(devnull, :compact => compact), D.plus)
+        show(IOContext(devnull, :compact => compact), D.central)
+        summary(IOContext(devnull, :compact => compact), D)
+        summary(IOContext(devnull, :compact => compact), D.minus)
+        summary(IOContext(devnull, :compact => compact), D.plus)
+        summary(IOContext(devnull, :compact => compact), D.central)
+    end
+end
+
+@testset "UpwindOperators with couple_discontinuously (periodic)" begin
+    D = @inferred upwind_operators(couple_discontinuously,
+                                   legendre_derivative_operator(xmin = -1.0, xmax = 1.0, N = 3),
+                                   UniformPeriodicMesh1D(xmin = 0.0, xmax = 1.0, Nx = 4))
+    @test size(D.minus) == (12, 12)
+    @test size(D.plus) == (12, 12)
+    @test size(D.central) == (12, 12)
+
+    x = @inferred grid(D)
+    u = @. sinpi(2 * x)
+
+    du = zero(u)
+    @test_nowarn mul!(du, D.minus, u)
+    @test du ≈ D.minus * u
+    @test_nowarn mul!(du, D.minus, u, 2.0)
+    @test du ≈ 2 * D.minus * u
+    @test_nowarn mul!(du, D.minus, u, 2.0, 3.0)
+    @test du ≈ 8 * D.minus * u # 5 = 2 + 3 * 2
+
+    du = zero(u)
+    @test_nowarn mul!(du, D.plus, u)
+    @test du ≈ D.plus * u
+    @test_nowarn mul!(du, D.plus, u, 2.0)
+    @test du ≈ 2 * D.plus * u
+    @test_nowarn mul!(du, D.plus, u, 2.0, 3.0)
+    @test du ≈ 8 * D.plus * u # 5 = 2 + 3 * 2
+
+    M = @inferred mass_matrix(D)
+    @test sum(abs, M * Matrix(D.plus) + Matrix(D.minus)' * M) < 1e-12
+
+    x = @inferred grid(D)
+    @test (@inferred integrate(x, D)) == (@inferred integrate(x, D.plus))
+
+    for compact in (true, false)
+        show(IOContext(devnull, :compact => compact), D)
+        show(IOContext(devnull, :compact => compact), D.minus)
+        show(IOContext(devnull, :compact => compact), D.plus)
+        show(IOContext(devnull, :compact => compact), D.central)
+        summary(IOContext(devnull, :compact => compact), D)
+        summary(IOContext(devnull, :compact => compact), D.minus)
+        summary(IOContext(devnull, :compact => compact), D.plus)
+        summary(IOContext(devnull, :compact => compact), D.central)
+    end
+end

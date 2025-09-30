@@ -284,3 +284,76 @@ function upwind_operators(::typeof(periodic_derivative_operator);
     Dc = PeriodicDerivativeOperator(coef_central, Dm.grid_evaluate)
     return PeriodicUpwindOperators(Dm, Dc, Dp)
 end
+
+"""
+    upwind_operators(couple_discontinuously, D, mesh)
+
+Create [`UpwindOperators`](@ref) (for a non-periodic `mesh`) or
+[`PeriodicUpwindOperators`](@ref) (for a periodic `mesh`) from
+an existing first-derivative SBP operator `D`. The individual operators
+are constructed using [`couple_discontinuously`](@ref). If `D` is a
+[`LegendreDerivativeOperator`](@ref) (constructed using
+[`legendre_derivative_operator`](@ref)), the resulting upwind operators
+are local discontinuous Galerkin (LDG) operators.
+
+## References
+
+- Ranocha, Mitsotakis, Ketcheson (2021).
+  A Broad Class of Conservative Numerical Methods for Dispersive Wave Equations.
+  [DOI: 10.4208/cicp.OA-2020-0119](https://doi.org/10.4208/cicp.OA-2020-0119)
+
+## Examples
+
+```jldoctest
+julia> D = upwind_operators(couple_discontinuously,
+                            legendre_derivative_operator(xmin = -1.0, xmax = 1.0, N = 3),
+                            UniformMesh1D(xmin = 0.0, xmax = 1.0, Nx = 4))
+Upwind SBP first-derivative operators of order 2 on a grid in [5.0e-324, 0.9999999999999999] using 12 nodes
+and coefficients of Module
+```
+
+```julia
+julia> sparse(D.minus)
+12×12 SparseArrays.SparseMatrixCSC{Float64, Int64} with 35 stored entries:
+ -12.0   16.0   -4.0    ⋅      ⋅      ⋅     ⋅      ⋅      ⋅     ⋅      ⋅     ⋅
+  -4.0     ⋅     4.0    ⋅      ⋅      ⋅     ⋅      ⋅      ⋅     ⋅      ⋅     ⋅
+   4.0  -16.0   12.0    ⋅      ⋅      ⋅     ⋅      ⋅      ⋅     ⋅      ⋅     ⋅
+    ⋅      ⋅   -24.0  12.0   16.0   -4.0    ⋅      ⋅      ⋅     ⋅      ⋅     ⋅
+    ⋅      ⋅      ⋅   -4.0     ⋅     4.0    ⋅      ⋅      ⋅     ⋅      ⋅     ⋅
+    ⋅      ⋅      ⋅    4.0  -16.0   12.0    ⋅      ⋅      ⋅     ⋅      ⋅     ⋅
+    ⋅      ⋅      ⋅     ⋅      ⋅   -24.0  12.0   16.0   -4.0    ⋅      ⋅     ⋅
+    ⋅      ⋅      ⋅     ⋅      ⋅      ⋅   -4.0     ⋅     4.0    ⋅      ⋅     ⋅
+    ⋅      ⋅      ⋅     ⋅      ⋅      ⋅    4.0  -16.0   12.0    ⋅      ⋅     ⋅
+    ⋅      ⋅      ⋅     ⋅      ⋅      ⋅     ⋅      ⋅   -24.0  12.0   16.0  -4.0
+    ⋅      ⋅      ⋅     ⋅      ⋅      ⋅     ⋅      ⋅      ⋅   -4.0     ⋅    4.0
+    ⋅      ⋅      ⋅     ⋅      ⋅      ⋅     ⋅      ⋅      ⋅    4.0  -16.0  12.0
+
+julia> sparse(D.plus)
+12×12 SparseArrays.SparseMatrixCSC{Float64, Int64} with 35 stored entries:
+ -12.0   16.0   -4.0     ⋅      ⋅      ⋅      ⋅      ⋅      ⋅      ⋅      ⋅     ⋅
+  -4.0     ⋅     4.0     ⋅      ⋅      ⋅      ⋅      ⋅      ⋅      ⋅      ⋅     ⋅
+   4.0  -16.0  -12.0   24.0     ⋅      ⋅      ⋅      ⋅      ⋅      ⋅      ⋅     ⋅
+    ⋅      ⋅      ⋅   -12.0   16.0   -4.0     ⋅      ⋅      ⋅      ⋅      ⋅     ⋅
+    ⋅      ⋅      ⋅    -4.0     ⋅     4.0     ⋅      ⋅      ⋅      ⋅      ⋅     ⋅
+    ⋅      ⋅      ⋅     4.0  -16.0  -12.0   24.0     ⋅      ⋅      ⋅      ⋅     ⋅
+    ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   -12.0   16.0   -4.0     ⋅      ⋅     ⋅
+    ⋅      ⋅      ⋅      ⋅      ⋅      ⋅    -4.0     ⋅     4.0     ⋅      ⋅     ⋅
+    ⋅      ⋅      ⋅      ⋅      ⋅      ⋅     4.0  -16.0  -12.0   24.0     ⋅     ⋅
+    ⋅      ⋅      ⋅      ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   -12.0   16.0  -4.0
+    ⋅      ⋅      ⋅      ⋅      ⋅      ⋅      ⋅      ⋅      ⋅    -4.0     ⋅    4.0
+    ⋅      ⋅      ⋅      ⋅      ⋅      ⋅      ⋅      ⋅      ⋅     4.0  -16.0  12.0
+```
+"""
+function upwind_operators(::typeof(couple_discontinuously),
+                          D::AbstractNonperiodicDerivativeOperator,
+                          mesh::AbstractMesh1D)
+    @assert derivative_order(D) == 1
+    Dp = couple_discontinuously(D, mesh, Val{:plus}())
+    Dc = couple_discontinuously(D, mesh, Val{:central}())
+    Dm = couple_discontinuously(D, mesh, Val{:minus}())
+    if isperiodic(mesh)
+        return PeriodicUpwindOperators(Dm, Dc, Dp)
+    else
+        return UpwindOperators(Dm, Dc, Dp)
+    end
+end
