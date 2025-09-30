@@ -312,6 +312,22 @@ Dm = couple_discontinuously(
 Matrix(Dm)
 ```
 
+You can use [`upwind_operators`](@ref) to create all operators at once.
+
+```@repl
+using SummationByPartsOperators
+
+D = upwind_operators(couple_discontinuously,
+                     legendre_derivative_operator(xmin = -1.0, xmax = 1.0, N = 3),
+                     UniformMesh1D(xmin = 0.0, xmax = 1.0, Nx = 4))
+
+Matrix(D.plus)
+
+Matrix(D.minus)
+
+Matrix(D.central)
+```
+
 
 ## Basic interfaces and additional features
 
