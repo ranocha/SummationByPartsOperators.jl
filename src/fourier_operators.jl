@@ -450,6 +450,10 @@ function LinearAlgebra.ldiv!(dest::AbstractVector{T},
     mul!(dest, brfft_plan, tmp)
 end
 
+function integrate(func, u::AbstractVector, D::FourierPolynomialDerivativeOperator)
+    integrate(func, u, D.D1)
+end
+
 @auto_hash_equals struct FourierRationalDerivativeOperator{T <: Real, Grid, RFFT, BRFFT,
                                                            Nnum, Nden} <:
                          AbstractPeriodicDerivativeOperator{T}
@@ -782,6 +786,10 @@ function Base.:\(rat::Union{FourierRationalDerivativeOperator,
                  u::AbstractVector{T}) where {T}
     dest = similar(u)
     ldiv!(dest, rat, u)
+end
+
+function integrate(func, u::AbstractVector, D::FourierRationalDerivativeOperator)
+    integrate(func, u, D.D1)
 end
 
 @auto_hash_equals struct PeriodicDerivativeOperatorQuotient{T <: Real,

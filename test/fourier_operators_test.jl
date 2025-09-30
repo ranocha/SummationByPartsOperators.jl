@@ -110,6 +110,8 @@ for T in (Float32, Float64)
 
         @test integrate(u, D) ≈ sum(mass_matrix(D) * u)
         @test integrate(u -> u^2, u, D) ≈ dot(u, mass_matrix(D), u)
+        @test integrate(u, D) ≈ integrate(u, poly)
+        @test integrate(u, D) ≈ integrate(u, rat)
 
         # combine rational operators and scalars
         @test @inferred(2*rat1) * u ≈ rat1 * (2 * u)
