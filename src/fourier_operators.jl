@@ -231,6 +231,7 @@ function LinearAlgebra.issymmetric(poly::FourierPolynomialDerivativeOperator)
     @unpack coef = poly
     all(iszero, coef[idx] for idx in eachindex(coef) if iseven(idx))
 end
+Base.iszero(D::FourierPolynomialDerivativeOperator) = all(iszero, D.coef)
 grid(poly::FourierPolynomialDerivativeOperator) = grid(poly.D1)
 
 function Base.show(io::IO, poly::FourierPolynomialDerivativeOperator)
@@ -498,6 +499,8 @@ function LinearAlgebra.issymmetric(rat::FourierRationalDerivativeOperator)
 
     num_is_even == den_is_even
 end
+
+Base.iszero(D::FourierRationalDerivativeOperator) = all(iszero, D.num_coef)
 
 function FourierRationalDerivativeOperator(num::FourierPolynomialDerivativeOperator)
     T = eltype(num)
