@@ -901,7 +901,7 @@ function derivative_left(cD::UniformNonperiodicCoupledOperator,
         @argcheck N == length(u)
     end
 
-    (; mesh, grid) = cD.meshgrid
+    @unpack mesh, grid = cD.meshgrid
     cell = 1
     xmin, xmax = bounds(cell, mesh)
     ymin, ymax = first(grid), last(grid)
@@ -917,7 +917,7 @@ function derivative_right(cD::UniformNonperiodicCoupledOperator,
         @argcheck N == length(u)
     end
 
-    (; mesh, grid) = cD.meshgrid
+    @unpack mesh, grid = cD.meshgrid
     cell = numcells(mesh)
     xmin, xmax = bounds(cell, mesh)
     ymin, ymax = first(grid), last(grid)
