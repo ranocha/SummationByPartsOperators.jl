@@ -439,6 +439,8 @@ end
 
         D2op2 = couple_continuously(D2op1, UniformMesh1D(xmin, xmax, 1))
         @test Matrix(D2op1) ≈ Matrix(D2op2)
+        @test derivative_left(D2op1, u, Val{1}()) ≈ derivative_left(D2op2, u, Val{1}())
+        @test derivative_right(D2op1, u, Val{1}()) ≈ derivative_right(D2op2, u, Val{1}())
 
         D2op2 = couple_continuously(D2op1, UniformPeriodicMesh1D(xmin, xmax, 1))
         @test SummationByPartsOperators.xmin(D2op2) ≈ xmin

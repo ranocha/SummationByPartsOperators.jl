@@ -231,6 +231,7 @@ function LinearAlgebra.issymmetric(poly::FourierPolynomialDerivativeOperator)
     @unpack coef = poly
     all(iszero, coef[idx] for idx in eachindex(coef) if iseven(idx))
 end
+Base.iszero(D::FourierPolynomialDerivativeOperator) = all(iszero, D.coef)
 grid(poly::FourierPolynomialDerivativeOperator) = grid(poly.D1)
 
 function Base.show(io::IO, poly::FourierPolynomialDerivativeOperator)
@@ -449,6 +450,10 @@ function LinearAlgebra.ldiv!(dest::AbstractVector{T},
     mul!(dest, brfft_plan, tmp)
 end
 
+function integrate(func, u::AbstractVector, D::FourierPolynomialDerivativeOperator)
+    integrate(func, u, D.D1)
+end
+
 @auto_hash_equals struct FourierRationalDerivativeOperator{T <: Real, Grid, RFFT, BRFFT,
                                                            Nnum, Nden} <:
                          AbstractPeriodicDerivativeOperator{T}
@@ -498,6 +503,8 @@ function LinearAlgebra.issymmetric(rat::FourierRationalDerivativeOperator)
 
     num_is_even == den_is_even
 end
+
+Base.iszero(D::FourierRationalDerivativeOperator) = all(iszero, D.num_coef)
 
 function FourierRationalDerivativeOperator(num::FourierPolynomialDerivativeOperator)
     T = eltype(num)
@@ -779,6 +786,10 @@ function Base.:\(rat::Union{FourierRationalDerivativeOperator,
                  u::AbstractVector{T}) where {T}
     dest = similar(u)
     ldiv!(dest, rat, u)
+end
+
+function integrate(func, u::AbstractVector, D::FourierRationalDerivativeOperator)
+    integrate(func, u, D.D1)
 end
 
 @auto_hash_equals struct PeriodicDerivativeOperatorQuotient{T <: Real,

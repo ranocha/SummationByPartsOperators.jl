@@ -81,6 +81,8 @@ for T in (Float32, Float64)
         poly = @inferred (I + 2D + 5 * D^2) * (2I * D - D^3 * 5I) * (D * 2 - D^2 * 5)
         @test poly.coef == (0.0, 0.0, 4.0, -2.0, -10.0, -45.0, 0.0, 125.0)
         println(devnull, poly)
+        @test !iszero(poly)
+        @test iszero(0 * poly)
 
         @test @inferred(I+one(T) / 2 * D) * u ≈ (u + D * u ./ 2)
 
@@ -95,6 +97,8 @@ for T in (Float32, Float64)
 
         rat = @inferred((I - D^2)/(I + D^4))
         println(devnull, rat)
+        @test !iszero(rat)
+        @test iszero(0 * rat)
         v = rat * u
         @test (I - D^2) \ (v + D^4 * v) ≈ u
 
@@ -106,6 +110,8 @@ for T in (Float32, Float64)
 
         @test integrate(u, D) ≈ sum(mass_matrix(D) * u)
         @test integrate(u -> u^2, u, D) ≈ dot(u, mass_matrix(D), u)
+        @test integrate(u, D) ≈ integrate(u, poly)
+        @test integrate(u, D) ≈ integrate(u, rat)
 
         # combine rational operators and scalars
         @test @inferred(2*rat1) * u ≈ rat1 * (2 * u)

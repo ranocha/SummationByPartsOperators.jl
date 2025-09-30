@@ -893,3 +893,35 @@ function upper_bandwidth(cD::UniformNonperiodicCoupledOperator)
     @unpack D = cD
     upper_bandwidth(D)
 end
+
+function derivative_left(cD::UniformNonperiodicCoupledOperator,
+                         u::AbstractVector, der_order::Val{1})
+    N, _ = size(cD)
+    @boundscheck begin
+        @argcheck N == length(u)
+    end
+
+    @unpack mesh, grid = cD.meshgrid
+    cell = 1
+    xmin, xmax = bounds(cell, mesh)
+    ymin, ymax = first(grid), last(grid)
+    factor = (ymax - ymin) / (xmax - xmin)
+    u_local = @view u[begin:(begin + size(cD.D, 2) - 1)]
+    return factor * derivative_left(cD.D, u_local, der_order)
+end
+
+function derivative_right(cD::UniformNonperiodicCoupledOperator,
+                          u::AbstractVector, der_order::Val{1})
+    N, _ = size(cD)
+    @boundscheck begin
+        @argcheck N == length(u)
+    end
+
+    @unpack mesh, grid = cD.meshgrid
+    cell = numcells(mesh)
+    xmin, xmax = bounds(cell, mesh)
+    ymin, ymax = first(grid), last(grid)
+    factor = (ymax - ymin) / (xmax - xmin)
+    u_local = @view u[(end - size(cD.D, 2) + 1):end]
+    return factor * derivative_right(cD.D, u_local, der_order)
+end
