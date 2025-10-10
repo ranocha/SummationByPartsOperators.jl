@@ -103,3 +103,14 @@ end
         @test maximum(abs, A - A') < 200 * eps(T)
     end
 end
+
+@testset "Setting coefficients manually" begin
+    D0 = var_coef_derivative_operator(Mattsson2012(), 2, 2, -1.0, 1.0, 11, zero)
+    @test iszero(@inferred Matrix(D0))
+
+    D0.b .= grid(D0).^2
+    @test !iszero(@inferred Matrix(D0))
+
+    D2 = var_coef_derivative_operator(Mattsson2012(), 2, 2, -1.0, 1.0, 11, abs2)
+    @test (@inferred Matrix(D2)) ≈ (@inferred Matrix(D0))
+end
