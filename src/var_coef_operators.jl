@@ -2,7 +2,9 @@
 """
     VarCoefDerivativeOperator
 
-A dissipation operator on a nonperiodic finite difference grid.
+A derivative operator with variable coefficients
+on a nonperiodic finite difference grid.
+See [`var_coef_derivative_operator`](@ref).
 """
 @auto_hash_equals struct VarCoefDerivativeOperator{T,
                                                    Coefficients <:
@@ -72,15 +74,61 @@ end
 
 """
     var_coef_derivative_operator(source_of_coefficients, derivative_order, accuracy_order,
-                                 xmin, xmax, N, left_weights, right_weights, bfunc,
-                                 mode=FastMode())
+                                 xmin, xmax, N, bfunc,
+                                 mode = FastMode())
 
 Create a `VarCoefDerivativeOperator` approximating a `derivative_order`-th
 derivative with variable coefficients `bfunc` on a grid between `xmin` and
 `xmax` with `N` grid points up to order of accuracy `accuracy_order` with
 coefficients given by `source_of_coefficients`.
 The evaluation of the derivative can be parallelized using threads by choosing
-`mode=ThreadedMode()`.
+`mode = ThreadedMode()`.
+
+You can modify the variable coefficient provided by `bfunc` also after creating
+the operator by modifying the field `b` of the returned operator. This allows
+a manual evaluation of the variable coefficients on the [`grid`](@ref) of the
+operator.
+
+# Examples
+
+```jldoctest
+julia> D0 = var_coef_derivative_operator(Mattsson2012(), 2, 2, -1.0, 1.0, 11, zero);
+
+julia> Matrix(D0)
+11×11 Matrix{Float64}:
+ 0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0
+ 0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0
+ 0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0
+ 0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0
+ 0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0
+ 0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0
+ 0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0
+ 0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0
+ 0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0
+ 0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0
+ 0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0
+
+julia> D0.b .= grid(D0).^2;
+
+julia> Matrix(D0)
+11×11 Matrix{Float64}:
+ 34.0  -59.0   25.0   0.0   0.0   0.0   0.0   0.0    0.0    0.0   0.0
+ 20.5  -33.0   12.5   0.0   0.0   0.0   0.0   0.0    0.0    0.0   0.0
+  0.0   12.5  -19.0   6.5   0.0   0.0   0.0   0.0    0.0    0.0   0.0
+  0.0    0.0    6.5  -9.0   2.5   0.0   0.0   0.0    0.0    0.0   0.0
+  0.0    0.0    0.0   2.5  -3.0   0.5   0.0   0.0    0.0    0.0   0.0
+  0.0    0.0    0.0   0.0   0.5  -1.0   0.5   0.0    0.0    0.0   0.0
+  0.0    0.0    0.0   0.0   0.0   0.5  -3.0   2.5    0.0    0.0   0.0
+  0.0    0.0    0.0   0.0   0.0   0.0   2.5  -9.0    6.5    0.0   0.0
+  0.0    0.0    0.0   0.0   0.0   0.0   0.0   6.5  -19.0   12.5   0.0
+  0.0    0.0    0.0   0.0   0.0   0.0   0.0   0.0   12.5  -33.0  20.5
+  0.0    0.0    0.0   0.0   0.0   0.0   0.0   0.0   25.0  -59.0  34.0
+
+julia> D2 = var_coef_derivative_operator(Mattsson2012(), 2, 2, -1.0, 1.0, 11, abs2);
+
+julia> Matrix(D2) ≈ Matrix(D0)
+true
+```
 """
 function var_coef_derivative_operator(source_of_coefficients, derivative_order,
                                       accuracy_order,
