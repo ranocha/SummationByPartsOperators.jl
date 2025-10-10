@@ -66,6 +66,12 @@ jobs:
           - os: macos-latest
             version: '1.6'
         include:
+          - version: '1.10'
+            os: ubuntu-latest
+            sbp_test: part1
+          - version: '1.10'
+            os: ubuntu-latest
+            sbp_test: part2
           - version: '1.8'
             os: ubuntu-latest
             sbp_test: part1
