@@ -465,7 +465,7 @@ for (fname, op) in ((:scale_by_mass_matrix!, Base.:*),
     end
 end
 
-function integrate(func, u::AbstractVector, cD::UniformCoupledOperator)
+function integrate(func::Func, u::AbstractVector, cD::UniformCoupledOperator) where {Func}
     @unpack D, meshgrid = cD
     @unpack mesh, grid = meshgrid
     ymin, ymax = first(grid), last(grid)

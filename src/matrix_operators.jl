@@ -47,7 +47,7 @@ LinearAlgebra.issymmetric(D::MatrixDerivativeOperator) = false
 
 source_of_coefficients(D::AbstractMatrixDerivativeOperator) = D.source
 
-function integrate(func, u, D::AbstractMatrixDerivativeOperator)
+function integrate(func::Func, u, D::AbstractMatrixDerivativeOperator) where {Func}
     return integrate(func, u, D.weights)
 end
 
