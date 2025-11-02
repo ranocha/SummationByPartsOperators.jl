@@ -450,7 +450,8 @@ function LinearAlgebra.ldiv!(dest::AbstractVector{T},
     mul!(dest, brfft_plan, tmp)
 end
 
-function integrate(func::Func, u::AbstractVector, D::FourierPolynomialDerivativeOperator) where {Func}
+function integrate(func::Func, u::AbstractVector,
+                   D::FourierPolynomialDerivativeOperator) where {Func}
     integrate(func, u, D.D1)
 end
 
@@ -788,7 +789,8 @@ function Base.:\(rat::Union{FourierRationalDerivativeOperator,
     ldiv!(dest, rat, u)
 end
 
-function integrate(func::Func, u::AbstractVector, D::FourierRationalDerivativeOperator) where {Func}
+function integrate(func::Func, u::AbstractVector,
+                   D::FourierRationalDerivativeOperator) where {Func}
     integrate(func, u, D.D1)
 end
 

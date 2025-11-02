@@ -152,7 +152,8 @@ end
 
 # TODO there is no 5 argument mul! in FFTW.jl...
 
-function integrate(func::Func, u::AbstractMatrix, D::FourierDerivativeOperator2D) where {Func}
+function integrate(func::Func, u::AbstractMatrix,
+                   D::FourierDerivativeOperator2D) where {Func}
     @boundscheck begin
         length(u) == length(grid(D)) || throw(DimensionMismatch())
     end
