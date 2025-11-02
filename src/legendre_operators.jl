@@ -99,8 +99,8 @@ end
 
 derivative_order(D::LegendreSecondDerivativeOperator) = 2
 
-function integrate(func, u,
-                   D::Union{LegendreDerivativeOperator, LegendreSecondDerivativeOperator})
+function integrate(func::Func, u,
+                   D::Union{LegendreDerivativeOperator, LegendreSecondDerivativeOperator}) where {Func}
     D.Δx * integrate(func, u, D.basis)
 end
 function evaluate_coefficients(u,

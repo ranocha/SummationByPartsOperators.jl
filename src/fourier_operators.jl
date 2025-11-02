@@ -136,7 +136,7 @@ end
 #     mul!(dest, brfft_plan, tmp, α, β)
 # end
 
-function integrate(func, u::AbstractVector, D::FourierDerivativeOperator)
+function integrate(func::Func, u::AbstractVector, D::FourierDerivativeOperator) where {Func}
     @boundscheck begin
         length(u) == length(grid(D)) ||
             throw(DimensionMismatch("sizes of input vector and operator do not match"))
@@ -450,7 +450,7 @@ function LinearAlgebra.ldiv!(dest::AbstractVector{T},
     mul!(dest, brfft_plan, tmp)
 end
 
-function integrate(func, u::AbstractVector, D::FourierPolynomialDerivativeOperator)
+function integrate(func::Func, u::AbstractVector, D::FourierPolynomialDerivativeOperator) where {Func}
     integrate(func, u, D.D1)
 end
 
@@ -788,7 +788,7 @@ function Base.:\(rat::Union{FourierRationalDerivativeOperator,
     ldiv!(dest, rat, u)
 end
 
-function integrate(func, u::AbstractVector, D::FourierRationalDerivativeOperator)
+function integrate(func::Func, u::AbstractVector, D::FourierRationalDerivativeOperator) where {Func}
     integrate(func, u, D.D1)
 end
 

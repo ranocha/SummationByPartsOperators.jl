@@ -14,7 +14,7 @@ function evaluate_coefficients(u, semi::AbstractSemidiscretization)
     evaluate_coefficients(u, semi.derivative)
 end
 
-function integrate(func, u, semi::AbstractSemidiscretization)
+function integrate(func::Func, u, semi::AbstractSemidiscretization) where {Func}
     integrate(func, u, semi.derivative)
 end
 

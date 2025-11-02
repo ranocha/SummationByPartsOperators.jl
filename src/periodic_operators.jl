@@ -767,7 +767,7 @@ end
 Map the function `func` to the coefficients `u` and integrate with respect to
 the quadrature rule associated with the periodic derivative operator `D`.
 """
-function integrate(func, u::AbstractVector, D::PeriodicDerivativeOperator)
+function integrate(func::Func, u::AbstractVector, D::PeriodicDerivativeOperator) where {Func}
     @boundscheck begin
         length(u) == length(grid(D)) ||
             throw(DimensionMismatch("sizes of input vector and operator do not match"))

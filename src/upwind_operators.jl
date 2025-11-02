@@ -150,8 +150,8 @@ xmax(D::Union{UpwindOperators, PeriodicUpwindOperators}) = xmax(D.minus)
 mass_matrix(D::Union{UpwindOperators, PeriodicUpwindOperators}) = mass_matrix(D.minus)
 left_boundary_weight(D::UpwindOperators) = left_boundary_weight(D.minus)
 right_boundary_weight(D::UpwindOperators) = right_boundary_weight(D.minus)
-function integrate(func, u::AbstractVector,
-                   D::Union{UpwindOperators, PeriodicUpwindOperators})
+function integrate(func::Func, u::AbstractVector,
+                   D::Union{UpwindOperators, PeriodicUpwindOperators}) where {Func}
     integrate(func, u, D.minus)
 end
 
