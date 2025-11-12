@@ -14,4 +14,4 @@ updates:
   - package-ecosystem: "julia"
     directory: "/" # Location of package manifests
     schedule:
-      interval: "weekly"
+      interval: "daily"
