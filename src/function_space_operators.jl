@@ -8,10 +8,12 @@ Function space SBP (FSBP) operators given in
   SIAM Journal on Numerical Analysis 61, 2, pp. 733-754.
 
 See also
-- Glaubitz, Nordström, Öffner (2024)
+- Glaubitz, Nordström, Öffner (2025)
   An optimization-based construction procedure for function space based
   summation-by-parts operators on arbitrary grids.
-  arXiv, arXiv:2405.08770v1.
+  Journal of Scientific Computing 105, 83.
+  [DOI: 10.1007/s10915-025-03062-1](https://doi.org/10.1007/s10915-025-03062-1)
+  [arXiv:2405.08770](https://arxiv.org/abs/2405.08770).
 
 See [`function_space_operator`](@ref).
 """
@@ -23,13 +25,13 @@ function Base.show(io::IO, source::GlaubitzNordströmÖffner2023)
     else
         print(io,
               "Glaubitz, Nordström, Öffner (2023) \n",
-              "  Summation-by-parts operators for general function spaces \n",
+              "  Summation-by-parts operators for general function spaces. \n",
               "  SIAM Journal on Numerical Analysis 61, 2, pp. 733-754. \n",
               "See also \n",
-              "  Glaubitz, Nordström, Öffner (2024) \n",
+              "  Glaubitz, Nordström, Öffner (2025) \n",
               "  An optimization-based construction procedure for function \n",
-              "    space based summation-by-parts operators on arbitrary grids \n",
-              "  arXiv, arXiv:2405.08770v1.")
+              "    space based summation-by-parts operators on arbitrary grids. \n",
+              "  Journal of Scientific Computing 105, 83.")
     end
 end
 
