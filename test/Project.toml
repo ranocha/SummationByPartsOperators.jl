@@ -14,14 +14,14 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
 Aqua = "0.8"
-BandedMatrices = "0.15, 0.16, 0.17, 1"
+BandedMatrices = "0.17"
 DiffEqCallbacks = "2, 3, 4"
 ForwardDiff = "0.10, 1"
 Optim = "1"
 OrdinaryDiffEq = "5, 6"
 SpecialFunctions = "1, 2"
 StaticArrays = "1.0"
-StructArrays = "0.5, 0.6, 0.7"
+StructArrays = "0.6"
 
 [preferences.OrdinaryDiffEq]
 PrecompileAutoSpecialize = false
