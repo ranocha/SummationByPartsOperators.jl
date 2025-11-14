@@ -1,7 +1,7 @@
 name = "SummationByPartsOperators"
 uuid = "9f78cca6-572e-554e-b819-917d2f1cf240"
-author = ["Hendrik Ranocha"]
 version = "0.5.87-DEV"
+author = ["Hendrik Ranocha"]
 
 [deps]
 ArgCheck = "dce04be8-c92d-5529-be00-80e4d2c0e197"
@@ -40,7 +40,7 @@ SummationByPartsOperatorsStructArraysExt = "StructArrays"
 [compat]
 ArgCheck = "1, 2.0"
 AutoHashEquals = "0.2, 1, 2"
-BandedMatrices = "0.17"
+BandedMatrices = "0.17, 1"
 DiffEqCallbacks = "2, 3, 4"
 FFTW = "1.8"
 ForwardDiff = "0.10, 1"
