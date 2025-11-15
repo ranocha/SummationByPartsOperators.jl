@@ -60,7 +60,7 @@ jobs:
         sbp_test:
           - part1
           - part2
-        # macos-14 doesn't support Julia v1.6,
+        # macos-14 and newer do not support Julia v1.6,
         # cf. https://discourse.julialang.org/t/how-to-fix-github-actions-ci-failures-with-julia-1-6-or-1-7-on-macos-latest-and-macos-14/117019
         exclude:
           - os: macos-latest
@@ -77,12 +77,6 @@ jobs:
             sbp_test: part1
           - version: '1.8'
             os: ubuntu-latest
-            sbp_test: part2
-          - version: '1.6'
-            os: macos-13 # Intel
-            sbp_test: part1
-          - version: '1.6'
-            os: macos-13 # Intel
             sbp_test: part2
     steps:
       - uses: actions/checkout@v4
