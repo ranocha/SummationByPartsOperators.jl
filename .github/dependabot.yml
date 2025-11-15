@@ -20,6 +20,6 @@ updates:
       interval: "daily"
     groups:
       # Group all Julia package updates into a single PR:
-      all-julia-packages:
+      all-julia-dependencies:
         patterns:
           - "*"
