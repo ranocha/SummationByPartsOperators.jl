@@ -3,15 +3,23 @@ version: 2
 enable-beta-ecosystems: true # Julia ecosystem
 updates:
   - package-ecosystem: "github-actions"
+    directory: "/" # Location of package manifests
+    schedule:
+      interval: "monthly"
     groups:
       # Group all GitHub Actions PRs into a single PR:
       all-github-actions:
         patterns:
           - "*"
-    directory: "/" # Location of package manifests
-    schedule:
-      interval: "monthly"
   - package-ecosystem: "julia"
-    directory: "/" # Location of package manifests
+    directories: # Location of Julia projects
+      - "/"
+      - "/docs"
+      - "/test"
     schedule:
       interval: "daily"
+    groups:
+      # Group all Julia package updates into a single PR:
+      all-julia-packages:
+        patterns:
+          - "*"
