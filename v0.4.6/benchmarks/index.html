@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Benchmarks · SummationByPartsOperators.jl</title><link rel="canonical" href="https://ranocha.github.io/SummationByPartsOperators.jl/stable/benchmarks/"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit">SummationByPartsOperators.jl</span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><a class="tocitem" href="../introduction/">Introduction</a></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="../tutorials/variable_linear_advection/">Linear advection equation with variable coefficients</a></li></ul></li><li><a class="tocitem" href="../applications/">Applications</a></li><li class="is-active"><a class="tocitem" href>Benchmarks</a><ul class="internal"><li><a class="tocitem" href="#First-derivative-operators"><span>First-derivative operators</span></a></li><li><a class="tocitem" href="#Dissipation-operators"><span>Dissipation operators</span></a></li></ul></li><li><a class="tocitem" href="../api_reference/">API reference</a></li><li><a class="tocitem" href="../contributing/">Contributing</a></li><li><a class="tocitem" href="../license/">License</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Benchmarks</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Benchmarks</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/ranocha/SummationByPartsOperators.jl/blob/master/docs/src/benchmarks.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Benchmarks"><a class="docs-heading-anchor" href="#Benchmarks">Benchmarks</a><a id="Benchmarks-1"></a><a class="docs-heading-anchor-permalink" href="#Benchmarks" title="Permalink"></a></h1><p>Here are some simple benchmarks. Take them with a grain of salt since they run on virtual machines in the cloud to generate the documentation automatically.</p><h2 id="First-derivative-operators"><a class="docs-heading-anchor" href="#First-derivative-operators">First-derivative operators</a><a id="First-derivative-operators-1"></a><a class="docs-heading-anchor-permalink" href="#First-derivative-operators" title="Permalink"></a></h2><pre><code class="language-julia">using BenchmarkTools
+using SummationByPartsOperators
+using BandedMatrices, LinearAlgebra, Random, SparseArrays
+
+BLAS.set_num_threads(1) # make sure that BLAS is serial to be fair
+
+T = Float64
+xmin, xmax = T(0), T(1)
+N = 10^3
+der_order = 1 # first-derivative operators
+acc_order = 6 # the (interior) order of accuracy is six
+source = MattssonSvärdShoeybi2008()
+
+D_periodic_serial  = periodic_derivative_operator(der_order, acc_order, xmin, xmax, N+1, Val{:serial}())
+D_nonperiodic_serial  = derivative_operator(source, der_order, acc_order, xmin, xmax, N, Val{:serial}())
+D_nonperiodic_sparse  = sparse(D_nonperiodic_serial)
+D_nonperiodic_banded  = BandedMatrix(D_nonperiodic_serial)
+
+Random.seed!(12345)
+u = randn(T, N)
+dest = similar(u)
+
+function doit(D, text, dest, u)
+  println(text)
+  sleep(0.1)
+  show(stdout, MIME&quot;text/plain&quot;(), @benchmark mul!($dest, $D, $u))
+  println()
+end
+
+doit(D_periodic_serial, &quot;D_periodic_serial:&quot;, dest, u)
+doit(D_nonperiodic_serial, &quot;D_nonperiodic_serial:&quot;, dest, u)
+doit(D_nonperiodic_sparse, &quot;D_nonperiodic_sparse:&quot;, dest, u)
+doit(D_nonperiodic_banded, &quot;D_nonperiodic_banded:&quot;, dest, u)</code></pre><pre class="documenter-example-output">D_periodic_serial:
+BenchmarkTools.Trial:
+  memory estimate:  0 bytes
+  allocs estimate:  0
+  --------------
+  minimum time:     759.174 ns (0.00% GC)
+  median time:      894.835 ns (0.00% GC)
+  mean time:        916.416 ns (0.00% GC)
+  maximum time:     1.350 μs (0.00% GC)
+  --------------
+  samples:          10000
+  evals/sample:     115
+D_nonperiodic_serial:
+BenchmarkTools.Trial:
+  memory estimate:  0 bytes
+  allocs estimate:  0
+  --------------
+  minimum time:     770.036 ns (0.00% GC)
+  median time:      887.327 ns (0.00% GC)
+  mean time:        937.357 ns (0.00% GC)
+  maximum time:     29.076 μs (0.00% GC)
+  --------------
+  samples:          10000
+  evals/sample:     110
+D_nonperiodic_sparse:
+BenchmarkTools.Trial:
+  memory estimate:  0 bytes
+  allocs estimate:  0
+  --------------
+  minimum time:     6.040 μs (0.00% GC)
+  median time:      7.560 μs (0.00% GC)
+  mean time:        7.559 μs (0.00% GC)
+  maximum time:     205.572 μs (0.00% GC)
+  --------------
+  samples:          10000
+  evals/sample:     5
+D_nonperiodic_banded:
+BenchmarkTools.Trial:
+  memory estimate:  0 bytes
+  allocs estimate:  0
+  --------------
+  minimum time:     12.800 μs (0.00% GC)
+  median time:      14.901 μs (0.00% GC)
+  mean time:        15.757 μs (0.00% GC)
+  maximum time:     811.646 μs (0.00% GC)
+  --------------
+  samples:          10000
+  evals/sample:     1</pre><h2 id="Dissipation-operators"><a class="docs-heading-anchor" href="#Dissipation-operators">Dissipation operators</a><a id="Dissipation-operators-1"></a><a class="docs-heading-anchor-permalink" href="#Dissipation-operators" title="Permalink"></a></h2><pre><code class="language-julia">using BenchmarkTools
+using SummationByPartsOperators
+using BandedMatrices, LinearAlgebra, Random, SparseArrays
+
+BLAS.set_num_threads(1) # make sure that BLAS is serial to be fair
+
+T = Float64
+xmin, xmax = T(0), T(1)
+N = 10^3
+acc_order = 8
+source_D = MattssonSvärdShoeybi2008()
+source_Di = MattssonSvärdNordström2004()
+
+D_serial  = derivative_operator(source_D, 1, acc_order, xmin, xmax, N, Val{:serial}())
+
+Di_serial  = dissipation_operator(source_Di, D_serial)
+Di_sparse  = sparse(Di_serial)
+Di_full    = Matrix(Di_serial)
+
+Random.seed!(12345)
+u = randn(T, N)
+dest = similar(u)
+
+function doit(D, text, dest, u)
+  println(text)
+  sleep(0.1)
+  show(stdout, MIME&quot;text/plain&quot;(), @benchmark mul!($dest, $D, $u))
+  println()
+end
+
+doit(D_serial, &quot;D_serial:&quot;, dest, u)
+doit(Di_serial, &quot;Di_serial:&quot;, dest, u)
+doit(Di_sparse, &quot;Di_sparse:&quot;, dest, u)
+doit(Di_full, &quot;Di_full:&quot;, dest, u)</code></pre><pre class="documenter-example-output">D_serial:
+BenchmarkTools.Trial:
+  memory estimate:  0 bytes
+  allocs estimate:  0
+  --------------
+  minimum time:     1.060 μs (0.00% GC)
+  median time:      1.230 μs (0.00% GC)
+  mean time:        1.326 μs (0.00% GC)
+  maximum time:     192.861 μs (0.00% GC)
+  --------------
+  samples:          10000
+  evals/sample:     10
+Di_serial:
+BenchmarkTools.Trial:
+  memory estimate:  16 bytes
+  allocs estimate:  1
+  --------------
+  minimum time:     2.067 μs (0.00% GC)
+  median time:      2.389 μs (0.00% GC)
+  mean time:        2.473 μs (0.00% GC)
+  maximum time:     31.224 μs (0.00% GC)
+  --------------
+  samples:          10000
+  evals/sample:     9
+Di_sparse:
+BenchmarkTools.Trial:
+  memory estimate:  0 bytes
+  allocs estimate:  0
+  --------------
+  minimum time:     8.234 μs (0.00% GC)
+  median time:      9.534 μs (0.00% GC)
+  mean time:        9.975 μs (0.00% GC)
+  maximum time:     285.783 μs (0.00% GC)
+  --------------
+  samples:          10000
+  evals/sample:     3
+Di_full:
+BenchmarkTools.Trial:
+  memory estimate:  0 bytes
+  allocs estimate:  0
+  --------------
+  minimum time:     202.812 μs (0.00% GC)
+  median time:      284.016 μs (0.00% GC)
+  mean time:        287.755 μs (0.00% GC)
+  maximum time:     3.611 ms (0.00% GC)
+  --------------
+  samples:          10000
+  evals/sample:     1</pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../applications/">« Applications</a><a class="docs-footer-nextpage" href="../api_reference/">API reference »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Saturday 22 May 2021 09:10">Saturday 22 May 2021</span>. Using Julia version 1.6.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
