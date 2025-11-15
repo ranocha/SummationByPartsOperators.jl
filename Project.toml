@@ -40,7 +40,7 @@ SummationByPartsOperatorsStructArraysExt = "StructArrays"
 [compat]
 ArgCheck = "1, 2.0"
 AutoHashEquals = "0.2, 1, 2"
-BandedMatrices = "0.17, 1.10"
+BandedMatrices = "0.17, 1"
 DiffEqCallbacks = "2, 3, 4"
 FFTW = "1.8"
 ForwardDiff = "0.10, 1"
