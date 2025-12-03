@@ -80,7 +80,7 @@ On non-periodic domains, additional boundary terms appear. Thus, the basic
 symmetry properties of SBP operators are the same as the ones of periodic SBP
 operators modulo boundary terms. Note that the correct handling of boundary terms
 is the basic reason of the success of SBP operators. In particular for hyperbolic
-problems, other boundary treatments that might appear senseful can result in
+problems, other boundary treatments that might appear sensible can result in
 catastrophic failure.
 
 ### First-derivative operators
@@ -139,7 +139,7 @@ To mimic integration-by-parts of second derivatives,
   \int_{x_\mathrm{min}}^{x_\mathrm{max}} u(x) \bigl( \partial_x^2 v(x) \bigr) \mathrm{d}x
 = - \int_{x_\mathrm{min}}^{x_\mathrm{max}} \bigl( \partial_x u(x) \bigr) \bigl( \partial_x v(x) \bigr) \mathrm{d}x
   + u(x_\mathrm{max}) \bigl( \partial_x v(x_\mathrm{max}) \bigr)
-  - \bigl( \partial_x u(x_\mathrm{min})) v(x_\mathrm{min}),
+  - u(x_\mathrm{min}) \bigl( \partial_x v(x_\mathrm{min}) \bigr)
 ```
 the evaluation of the first derivative at the boundaries is necessary. These
 linear functionals are available as [`derivative_left`](@ref) and

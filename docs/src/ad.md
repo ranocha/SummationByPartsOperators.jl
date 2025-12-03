@@ -72,7 +72,7 @@ since [FFTW.jl](https://github.com/JuliaMath/FFTW.jl) requires unit strides.
 
 ## Jacobian-vector products
 
-There is a nat trick that you can use if you are only interested in Jacobian-vector
+There is a neat trick that you can use if you are only interested in Jacobian-vector
 products. [ForwardDiff.jl](https://github.com/JuliaDiff/ForwardDiff.jl) does not offer
 such a functionality at the time of writing, but Simon Byrne suggested the following
 implementation.

@@ -2,7 +2,7 @@
 """
     FactorisationWrapper
 
-A small wrapper around a a factorisation `fact`, allowing to represent
+A small wrapper around a factorisation `fact`, allowing to represent
 multiplication by the inverse of `fact`.
 """
 struct FactorisationWrapper{Fact}
