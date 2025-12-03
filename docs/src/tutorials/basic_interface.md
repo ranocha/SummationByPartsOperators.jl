@@ -31,7 +31,7 @@ D * u
 
 As you can see above, calling `D * u` allocates a new vector for the
 result. If you want to apply an SBP operator multiple times and need
-good performance, you should consider using pre-allocating the output
+good performance, you should consider pre-allocating the output
 and using in-place update instead. This strategy is also described in
 the [performance tips in the Julia manual](https://docs.julialang.org/en/v1/manual/performance-tips/#Pre-allocating-outputs).
 Julia provides the function `mul!` for this purpose.

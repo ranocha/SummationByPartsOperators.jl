@@ -48,7 +48,7 @@ using SummationByPartsOperators, OrdinaryDiffEq
 using LaTeXStrings; using Plots: Plots, plot, plot!, savefig
 ```
 
-Next, we specify the initial data as Julia function as well as the
+Next, we specify the initial data as a Julia function as well as the
 spatial domain and the time span. Here, we use an analytic soliton solution
 of the KdV equation for the initial data.
 

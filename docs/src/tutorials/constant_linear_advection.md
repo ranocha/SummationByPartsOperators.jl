@@ -24,7 +24,7 @@ using SummationByPartsOperators, OrdinaryDiffEq
 using LaTeXStrings; using Plots: Plots, plot, plot!, savefig
 ```
 
-Next, we specify the initial and boundary data as Julia functions as well as the
+Next, we specify the initial and boundary data as a Julia functions as well as the
 spatial domain and the time span.
 
 ```@example linear_advection

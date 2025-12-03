@@ -102,7 +102,7 @@ sparse matrix. No surprise - it is again much slower, as in periodic domains.
 doit(D_sparse, "D_sparse:", du, u)
 ```
 
-FInally, we compare it to a representation as banded matrix. Disappointingly,
+Finally, we compare it to a representation as a banded matrix. Disappointingly,
 this is still much slower than the optimized implementation from
 SummationByPartsOperators.jl.
 ```@example first-derivative-bounded
