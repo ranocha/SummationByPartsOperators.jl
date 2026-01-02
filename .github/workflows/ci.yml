@@ -116,7 +116,7 @@ jobs:
       - shell: bash
         run: |
           cp ./lcov.info ./lcov-${{ matrix.sbp_test }}-${{ matrix.os }}-${{ matrix.version }}.info
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: lcov-${{ matrix.sbp_test }}-${{ matrix.os }}-${{ matrix.version }}
           path: ./lcov-${{ matrix.sbp_test }}-${{ matrix.os }}-${{ matrix.version }}.info
@@ -139,7 +139,7 @@ jobs:
       # At first, we check out the repository and download all artifacts
       # (and list files for debugging).
       - uses: actions/checkout@v6
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v7
       - run: ls -R
       # Next, we merge the individual coverage files and upload
       # the combined results to Coveralls.
@@ -163,7 +163,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path-to-lcov: ./lcov.info
       # Upload merged coverage data as artifact for debugging
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: lcov
           path: ./lcov.info
