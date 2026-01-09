@@ -1,7 +1,7 @@
 using Test
 using LinearAlgebra
 using SummationByPartsOperators
-using Optim: Optim # to enable loading the function space operator optimization code
+import Optim, ForwardDiff # to enable loading the function space operator optimization code
 
 if VERSION >= v"1.9"
     @testset "Function space operators" begin
