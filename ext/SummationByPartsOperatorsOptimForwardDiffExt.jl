@@ -152,7 +152,7 @@ function construct_function_space_operator(basis_functions, nodes,
 
     x0 = zeros(L + N)
     fg!(F, G, x) = optimization_function_and_grad!(F, G, x, p)
-    result = optimize(Optim.only_fg!(fg!), x0, opt_alg, options)
+    result = optimize(Optim.NLSolversBase.only_fg!(fg!), x0, opt_alg, options)
     verbose && display(result)
 
     x = minimizer(result)
