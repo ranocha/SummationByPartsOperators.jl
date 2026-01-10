@@ -1,7 +1,7 @@
 name = "SummationByPartsOperators"
 uuid = "9f78cca6-572e-554e-b819-917d2f1cf240"
-author = ["Hendrik Ranocha"]
 version = "0.5.89-DEV"
+author = ["Hendrik Ranocha"]
 
 [deps]
 ArgCheck = "dce04be8-c92d-5529-be00-80e4d2c0e197"
@@ -48,7 +48,7 @@ InteractiveUtils = "1"
 LinearAlgebra = "1"
 LoopVectorization = "0.12.22"
 MuladdMacro = "0.2"
-Optim = "1"
+Optim = "1, 2"
 PolynomialBases = "0.4.24"
 PrecompileTools = "1.0.1"
 RecursiveArrayTools = "2.11, 3"
