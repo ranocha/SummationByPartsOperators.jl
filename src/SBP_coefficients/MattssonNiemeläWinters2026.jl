@@ -1,11 +1,13 @@
 
+# TODO: add arXiv once available
+
 """
     MattssonNiemeläWinters2026(version::Symbol())
 
 Coefficients of the optimized upwind SBP operators with nonuniform grid given in
 - Mattsson, Niemelä, Winters (2026)
   Optimal boundary closures for diagonal-norm upwind SBP operators.
-  TBD
+  [arXiv:2602.05727](https://arxiv.org/abs/2602.05727)
 
 You can choose between the different versions `:central`, `:plus`, and `:minus`.
 """
@@ -27,7 +29,7 @@ function Base.show(io::IO, source::MattssonNiemeläWinters2026)
         print(io,
               "Mattsson, Niemelä, Winters (2026) \n",
               "  Optimal boundary closures for diagonal-norm upwind SBP operators. \n",
-              "  TBD.")
+              "  arXiv e-print 2602.05727.")
     end
 end
 
