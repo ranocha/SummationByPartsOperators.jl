@@ -3,7 +3,8 @@ using LinearAlgebra
 using SummationByPartsOperators
 
 D_test_list = vcat([(Mattsson2017, acc_order) for acc_order in 2:9],
-                   [(WilliamsDuru2024, acc_order) for acc_order in 4:7])
+                   [(WilliamsDuru2024, acc_order) for acc_order in 4:7],
+                   [(MattssonNiemeläWinters2026, acc_order) for acc_order in 2:9])
 
 # check construction of interior part of upwind operators
 @testset "Check interior parts" begin
@@ -36,7 +37,11 @@ D_test_list = vcat([(Mattsson2017, acc_order) for acc_order in 2:9],
         res = M * Dp + Dm' * M
         res[1, 1] += 1
         res[end, end] -= 1
-        @test norm(res) < N * eps()
+        if source !== MattssonNiemeläWinters2026
+            @test norm(res) < N * eps()
+        else
+            @test norm(res) < 10 * N * eps()
+        end
 
         # derivative accuracy order
         for D in (Dp_bounded, Dm_bounded, Dc_bounded)
@@ -97,6 +102,9 @@ D_test_list = vcat([(Mattsson2017, acc_order) for acc_order in 2:9],
         @test v ≈ u
     end
 end
+
+D_test_list = vcat([(Mattsson2017, acc_order) for acc_order in 2:9],
+                   [(WilliamsDuru2024, acc_order) for acc_order in 4:7])
 
 @testset "Rational Tests" begin
     N = 21

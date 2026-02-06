@@ -126,6 +126,7 @@ include("SBP_coefficients/MattssonAlmquistCarpenter2014Optimal.jl")
 include("SBP_coefficients/Mattsson2017.jl")
 include("SBP_coefficients/MattssonAlmquistVanDerWeide2018Minimal.jl")
 include("SBP_coefficients/MattssonAlmquistVanDerWeide2018Accurate.jl")
+include("SBP_coefficients/MattssonNiemeläWinters2026.jl")
 include("SBP_coefficients/DienerDorbandSchnetterTiglio2007.jl")
 include("SBP_coefficients/SharanBradyLivescu2022.jl")
 include("SBP_coefficients/WilliamsDuru2024.jl")
@@ -178,6 +179,7 @@ export MattssonNordström2004, MattssonSvärdNordström2004, MattssonSvärdShoey
        MattssonAlmquistCarpenter2014Extended, MattssonAlmquistCarpenter2014Optimal,
        Mattsson2017,
        MattssonAlmquistVanDerWeide2018Minimal, MattssonAlmquistVanDerWeide2018Accurate,
+       MattssonNiemeläWinters2026,
        DienerDorbandSchnetterTiglio2007,
        SharanBradyLivescu2022,
        WilliamsDuru2024
