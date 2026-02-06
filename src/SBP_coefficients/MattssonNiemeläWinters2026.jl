@@ -1,6 +1,4 @@
 
-# TODO: add arXiv once available
-
 """
     MattssonNiemeläWinters2026(version::Symbol())
 
