@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Linear advection equation with constant coefficients · SummationByPartsOperators.jl</title><script data-outdated-warner src="../../assets/warner.js"></script><link rel="canonical" href="https://ranocha.github.io/SummationByPartsOperators.jl/stable/tutorials/constant_linear_advection/"/><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">SummationByPartsOperators.jl</a></span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><a class="tocitem" href="../../introduction/">Introduction</a></li><li><span class="tocitem">Tutorials</span><ul><li class="is-active"><a class="tocitem" href>Linear advection equation with constant coefficients</a><ul class="internal"><li><a class="tocitem" href="#Basic-example-using-finite-difference-SBP-operators"><span>Basic example using finite difference SBP operators</span></a></li><li><a class="tocitem" href="#Advanced-visualization"><span>Advanced visualization</span></a></li><li><a class="tocitem" href="#Continuous-and-discontinuous-Galerkin-methods"><span>Continuous and discontinuous Galerkin methods</span></a></li><li><a class="tocitem" href="#Package-versions"><span>Package versions</span></a></li></ul></li><li><a class="tocitem" href="../advection_diffusion/">Linear advection diffusion equation with periodic boundary conditions</a></li><li><a class="tocitem" href="../variable_linear_advection/">Linear advection equation with variable coefficients</a></li><li><a class="tocitem" href="../wave_equation/">Wave equation</a></li><li><a class="tocitem" href="../kdv/">Korteweg-de Vries equation</a></li></ul></li><li><a class="tocitem" href="../../applications/">Applications &amp; references</a></li><li><a class="tocitem" href="../../benchmarks/">Benchmarks</a></li><li><a class="tocitem" href="../../api_reference/">API reference</a></li><li><a class="tocitem" href="../../contributing/">Contributing</a></li><li><a class="tocitem" href="../../license/">License</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Tutorials</a></li><li class="is-active"><a href>Linear advection equation with constant coefficients</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Linear advection equation with constant coefficients</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/ranocha/SummationByPartsOperators.jl/blob/main/docs/src/tutorials/constant_linear_advection.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Linear-advection-equation-with-constant-coefficients"><a class="docs-heading-anchor" href="#Linear-advection-equation-with-constant-coefficients">Linear advection equation with constant coefficients</a><a id="Linear-advection-equation-with-constant-coefficients-1"></a><a class="docs-heading-anchor-permalink" href="#Linear-advection-equation-with-constant-coefficients" title="Permalink"></a></h1><p>This tutorial is concerned with the basic linear advection equation</p><p class="math-container">\[\begin{aligned}
+    \partial_t u(t,x) + \partial_x u(t,x) &amp;= 0, &amp;&amp; t \in (0,T), x \in (x_{min}, x_{max}), \\
+    u(0,x) &amp;= u_0(x), &amp;&amp; x \in (x_{min}, x_{max}), \\
+    u(t,x_{min}) &amp;= u_L(t).
+\end{aligned}\]</p><p>Note that the advection velocity is positive (unity). Thus, a boundary condition needs to be specified exactly at the left boundary. Otherwise, the problem will not be well-posed (under-specified or over-specified).</p><h2 id="Basic-example-using-finite-difference-SBP-operators"><a class="docs-heading-anchor" href="#Basic-example-using-finite-difference-SBP-operators">Basic example using finite difference SBP operators</a><a id="Basic-example-using-finite-difference-SBP-operators-1"></a><a class="docs-heading-anchor-permalink" href="#Basic-example-using-finite-difference-SBP-operators" title="Permalink"></a></h2><p>Let&#39;s create an appropriate discretization of this equation step by step. At first, we load packages that we will use in this example.</p><pre><code class="language-julia hljs">using SummationByPartsOperators, OrdinaryDiffEq
+using LaTeXStrings; using Plots: Plots, plot, plot!, savefig</code></pre><p>Next, we specify the initial and boundary data as Julia functions as well as the spatial domain and the time span.</p><pre><code class="language-julia hljs">xmin, xmax = -1.0, 1.0
+u0_func(x) = sinpi(x)
+uL_func(t) = t &gt;= 3 ? sinpi(t) : zero(t)
+tspan = (0., 8.0)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">(0.0, 8.0)</code></pre><p>This choice of the domain and boundary condition ensures that the initial profile is transported out of the domain before non-homogeneous boundary data influences the solution.</p><p>Next, we implement the semidiscretization using the interface of <a href="https://github.com/SciML/OrdinaryDiffEq.jl">OrdinaryDiffEq.jl</a> which is part of <a href="https://diffeq.sciml.ai/latest/">DifferentialEquations.jl</a>.</p><pre><code class="language-julia hljs">function rhs!(du, u, params, t)
+  D = params.D
+
+  # Set `du = - D * u` using in-place multiplication avoiding allocations
+  # for efficiency
+  mul!(du, D, u, -one(eltype(D)))
+
+  # Next, we impose the boundary conditions weakly using an SAT at the left
+  # boundary. Since we use the strong form of the equation, we do not need to
+  # do anything at the right boundary.
+  # Assuming that boundary nodes are included in the grid, adding this SAT
+  # can be achieved by
+  du[begin] += (uL_func(t) - u[begin]) / left_boundary_weight(D)
+
+  return nothing
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">rhs! (generic function with 1 method)</code></pre><p>Here, we have used a simultaneous approximation term (SAT) to impose the boundary condition weakly. In general, this approach is related to the weak imposition of boundary conditions using numerical fluxes in finite volume and discontinuous Galerkin methods; they are even equivalent for the linear advection equation considered here.</p><p>Next, we choose an SBP operator <code>D</code>, evaluate the initial data on the grid, and set up the semidiscretization as an ODE problem.</p><pre><code class="language-julia hljs">D = derivative_operator(MattssonNordström2004(), derivative_order=1, accuracy_order=4,
+                        xmin=xmin, xmax=xmax, N=101)
+u0 = compute_coefficients(u0_func, D)
+params = (D=D, )
+ode = ODEProblem(rhs!, u0, tspan, params);</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ODEProblem with uType Vector{Float64} and tType Float64. In-place: true
+timespan: (0.0, 8.0)
+u0: 101-element Vector{Float64}:
+ -0.0
+ -0.06279051952931343
+ -0.12533323356430437
+ -0.1873813145857248
+ -0.24868988716485466
+ -0.30901699437494734
+ -0.3681245526846779
+ -0.42577929156507266
+ -0.4817536741017154
+ -0.5358267949789968
+  ⋮
+  0.4817536741017154
+  0.42577929156507266
+  0.3681245526846779
+  0.30901699437494734
+  0.24868988716485466
+  0.1873813145857248
+  0.12533323356430437
+  0.06279051952931343
+  0.0</code></pre><p>Finally, we can solve the ODE using an explicit Runge-Kutta method with adaptive time stepping.</p><pre><code class="language-julia hljs">sol = solve(ode, Tsit5(), saveat=range(first(tspan), stop=last(tspan), length=200));
+
+plot(xguide=L&quot;x&quot;, yguide=L&quot;u&quot;)
+plot!(evaluate_coefficients(sol[1], D), label=L&quot;u_0&quot;)
+plot!(evaluate_coefficients(sol[end], D), label=L&quot;u_\mathrm{numerical}&quot;)
+savefig(&quot;example_linear_advection.png&quot;);</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&quot;/home/runner/work/SummationByPartsOperators.jl/SummationByPartsOperators.jl/docs/build/tutorials/example_linear_advection.png&quot;</code></pre><p><img src="../example_linear_advection.png" alt/></p><h2 id="Advanced-visualization"><a class="docs-heading-anchor" href="#Advanced-visualization">Advanced visualization</a><a id="Advanced-visualization-1"></a><a class="docs-heading-anchor-permalink" href="#Advanced-visualization" title="Permalink"></a></h2><p>Let&#39;s create an animation of the numerical solution.</p><pre><code class="language-julia hljs">using Printf; using Plots: Animation, frame, gif
+
+let anim = Animation()
+    idx = 1
+    x, u = evaluate_coefficients(sol[idx], D)
+    fig = plot(x, u, xguide=L&quot;x&quot;, yguide=L&quot;u&quot;, xlim=extrema(x), ylim=(-1.05, 1.05),
+              label=&quot;&quot;, title=@sprintf(&quot;\$t = %6.2f \$&quot;, sol.t[idx]))
+    for idx in 1:length(sol.t)
+        fig[1] = x, sol.u[idx]
+        plot!(title=@sprintf(&quot;\$t = %6.2f \$&quot;, sol.t[idx]))
+        frame(anim)
+    end
+    gif(anim, &quot;example_linear_advection.gif&quot;)
+end</code></pre><p><img src="https://user-images.githubusercontent.com/12693098/119224994-7bb8c480-bb01-11eb-9c3e-c4fea709da71.gif" alt="example_linear_advection_animation"/></p><h2 id="Continuous-and-discontinuous-Galerkin-methods"><a class="docs-heading-anchor" href="#Continuous-and-discontinuous-Galerkin-methods">Continuous and discontinuous Galerkin methods</a><a id="Continuous-and-discontinuous-Galerkin-methods-1"></a><a class="docs-heading-anchor-permalink" href="#Continuous-and-discontinuous-Galerkin-methods" title="Permalink"></a></h2><p>You can use a CG or DG method by swapping out the derivative operator <code>D</code>.</p><pre><code class="language-julia hljs">plot(xguide=L&quot;x&quot;, yguide=L&quot;u&quot;)
+plot!(evaluate_coefficients(sol[1], D), label=L&quot;u_0&quot;)
+plot!(evaluate_coefficients(sol[end], D), label=L&quot;u_\mathrm{FD}&quot;)
+
+# CGSEM using polynomials of degree 3, i.e. 4 nodes per element, and 30 elements
+D_CGSEM = couple_continuously(
+            legendre_derivative_operator(xmin=-1.0, xmax=1.0, N=4),
+            UniformMesh1D(xmin=xmin, xmax=xmax, Nx=30))
+ode_CGSEM = ODEProblem(rhs!, compute_coefficients(u0_func, D_CGSEM), tspan, (D=D_CGSEM,))
+sol_CGSEM = solve(ode_CGSEM, Tsit5(), save_everystep=false)
+plot!(evaluate_coefficients(sol_CGSEM[end], D_CGSEM), label=L&quot;u_\mathrm{CG}&quot;)
+
+# DGSEM using polynomials of degree 3, i.e. 4 nodes per element, and 30 elements
+# which are coupled using upwind fluxes
+D_DGSEM = couple_discontinuously(
+            legendre_derivative_operator(xmin=-1.0, xmax=1.0, N=4),
+            UniformMesh1D(xmin=xmin, xmax=xmax, Nx=30),
+            Val(:minus))
+ode_DGSEM = ODEProblem(rhs!, compute_coefficients(u0_func, D_DGSEM), tspan, (D=D_DGSEM,))
+sol_DGSEM = solve(ode_DGSEM, Tsit5(), save_everystep=false)
+plot!(evaluate_coefficients(sol_DGSEM[end], D_DGSEM), label=L&quot;u_\mathrm{DG}&quot;)
+
+savefig(&quot;example_linear_advection_Galerkin.png&quot;);</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&quot;/home/runner/work/SummationByPartsOperators.jl/SummationByPartsOperators.jl/docs/build/tutorials/example_linear_advection_Galerkin.png&quot;</code></pre><p><img src="../example_linear_advection_Galerkin.png" alt/></p><h2 id="Package-versions"><a class="docs-heading-anchor" href="#Package-versions">Package versions</a><a id="Package-versions-1"></a><a class="docs-heading-anchor-permalink" href="#Package-versions" title="Permalink"></a></h2><p>These results were obtained using the following versions.</p><pre><code class="language-julia hljs">using InteractiveUtils
+versioninfo()
+
+using Pkg
+Pkg.status([&quot;SummationByPartsOperators&quot;, &quot;OrdinaryDiffEq&quot;],
+           mode=PKGMODE_MANIFEST)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Julia Version 1.6.7
+Commit 3b76b25b64 (2022-07-19 15:11 UTC)
+Platform Info:
+  OS: Linux (x86_64-pc-linux-gnu)
+  CPU: Intel(R) Xeon(R) Platinum 8272CL CPU @ 2.60GHz
+  WORD_SIZE: 64
+  LIBM: libopenlibm
+  LLVM: libLLVM-11.0.1 (ORCJIT, skylake-avx512)
+Environment:
+  JULIA_PKG_SERVER_REGISTRY_PREFERENCE = eager
+      Status `~/work/SummationByPartsOperators.jl/SummationByPartsOperators.jl/docs/Manifest.toml`
+  [1dea7af3] OrdinaryDiffEq v6.51.2
+  [9f78cca6] SummationByPartsOperators v0.5.35 `~/work/SummationByPartsOperators.jl/SummationByPartsOperators.jl`</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../introduction/">« Introduction</a><a class="docs-footer-nextpage" href="../advection_diffusion/">Linear advection diffusion equation with periodic boundary conditions »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Saturday 27 May 2023 16:41">Saturday 27 May 2023</span>. Using Julia version 1.6.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

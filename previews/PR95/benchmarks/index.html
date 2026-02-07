@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Benchmarks · SummationByPartsOperators.jl</title><link rel="canonical" href="https://ranocha.github.io/SummationByPartsOperators.jl/stable/benchmarks/"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit">SummationByPartsOperators.jl</span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><a class="tocitem" href="../introduction/">Introduction</a></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="../tutorials/constant_linear_advection/">Linear advection equation with constant coefficients</a></li><li><a class="tocitem" href="../tutorials/advection_diffusion/">Linear advection diffusion equation with periodic boundary conditions</a></li><li><a class="tocitem" href="../tutorials/variable_linear_advection/">Linear advection equation with variable coefficients</a></li><li><a class="tocitem" href="../tutorials/wave_equation/">Wave equation</a></li></ul></li><li><a class="tocitem" href="../applications/">Applications &amp; references</a></li><li class="is-active"><a class="tocitem" href>Benchmarks</a><ul class="internal"><li><a class="tocitem" href="#First-derivative-operators"><span>First-derivative operators</span></a></li><li><a class="tocitem" href="#Dissipation-operators"><span>Dissipation operators</span></a></li><li><a class="tocitem" href="#Structure-of-Arrays-(SoA)-and-Array-of-Structures-(AoS)"><span>Structure-of-Arrays (SoA) and Array-of-Structures (AoS)</span></a></li></ul></li><li><a class="tocitem" href="../api_reference/">API reference</a></li><li><a class="tocitem" href="../contributing/">Contributing</a></li><li><a class="tocitem" href="../license/">License</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Benchmarks</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Benchmarks</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/ranocha/SummationByPartsOperators.jl/blob/master/docs/src/benchmarks.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Benchmarks"><a class="docs-heading-anchor" href="#Benchmarks">Benchmarks</a><a id="Benchmarks-1"></a><a class="docs-heading-anchor-permalink" href="#Benchmarks" title="Permalink"></a></h1><p>Here are some simple benchmarks. Take them with a grain of salt since they run on virtual machines in the cloud to generate the documentation automatically.</p><h2 id="First-derivative-operators"><a class="docs-heading-anchor" href="#First-derivative-operators">First-derivative operators</a><a id="First-derivative-operators-1"></a><a class="docs-heading-anchor-permalink" href="#First-derivative-operators" title="Permalink"></a></h2><p>Periodic domains:</p><pre><code class="language-julia">using BenchmarkTools
+using LinearAlgebra, SparseArrays
+using SummationByPartsOperators, DiffEqOperators
+
+BLAS.set_num_threads(1) # make sure that BLAS is serial to be fair
+
+T = Float64
+xmin, xmax = T(0), T(1)
+
+D_SBP = periodic_derivative_operator(derivative_order=1, accuracy_order=2,
+                                     xmin=xmin, xmax=xmax, N=100)
+x = grid(D_SBP)
+D_DEO = CenteredDifference(derivative_order(D_SBP), accuracy_order(D_SBP),
+                           step(x), length(x)) * PeriodicBC(eltype(D_SBP))
+
+D_sparse = sparse(D_SBP)
+
+u = randn(eltype(D_SBP), length(x)); du = similar(u);
+@show D_SBP * u ≈ D_DEO * u ≈ D_sparse * u
+
+function doit(D, text, du, u)
+  println(text)
+  sleep(0.1)
+  show(stdout, MIME&quot;text/plain&quot;(), @benchmark mul!($du, $D, $u))
+  println()
+end
+
+doit(D_SBP, &quot;D_SBP:&quot;, du, u)
+doit(D_DEO, &quot;D_DEO:&quot;, du, u)
+doit(D_sparse, &quot;D_sparse:&quot;, du, u)</code></pre><pre class="documenter-example-output">D_SBP * u ≈ D_DEO * u ≈ D_sparse * u = true
+D_SBP:
+BenchmarkTools.Trial:
+  memory estimate:  0 bytes
+  allocs estimate:  0
+  --------------
+  minimum time:     28.775 ns (0.00% GC)
+  median time:      35.918 ns (0.00% GC)
+  mean time:        36.307 ns (0.00% GC)
+  maximum time:     109.262 ns (0.00% GC)
+  --------------
+  samples:          10000
+  evals/sample:     994
+D_DEO:
+BenchmarkTools.Trial:
+  memory estimate:  0 bytes
+  allocs estimate:  0
+  --------------
+  minimum time:     271.785 ns (0.00% GC)
+  median time:      391.411 ns (0.00% GC)
+  mean time:        385.678 ns (0.00% GC)
+  maximum time:     630.656 ns (0.00% GC)
+  --------------
+  samples:          10000
+  evals/sample:     209
+D_sparse:
+BenchmarkTools.Trial:
+  memory estimate:  0 bytes
+  allocs estimate:  0
+  --------------
+  minimum time:     350.020 ns (0.00% GC)
+  median time:      504.030 ns (0.00% GC)
+  mean time:        500.064 ns (0.00% GC)
+  maximum time:     756.545 ns (0.00% GC)
+  --------------
+  samples:          10000
+  evals/sample:     200</pre><p>Bounded domains:</p><pre><code class="language-julia">using BenchmarkTools
+using LinearAlgebra, SparseArrays
+using SummationByPartsOperators, BandedMatrices
+
+BLAS.set_num_threads(1) # make sure that BLAS is serial to be fair
+
+T = Float64
+xmin, xmax = T(0), T(1)
+
+D_SBP = derivative_operator(MattssonNordström2004(), derivative_order=1,
+                            accuracy_order=6, xmin=xmin, xmax=xmax, N=10^3)
+D_sparse = sparse(D_SBP)
+D_banded = BandedMatrix(D_SBP)
+
+u = randn(eltype(D_SBP), size(D_SBP, 1)); du = similar(u);
+@show D_SBP * u ≈ D_sparse * u ≈ D_banded * u
+
+function doit(D, text, du, u)
+  println(text)
+  sleep(0.1)
+  show(stdout, MIME&quot;text/plain&quot;(), @benchmark mul!($du, $D, $u))
+  println()
+end
+
+doit(D_SBP, &quot;D_SBP:&quot;, du, u)
+doit(D_sparse, &quot;D_sparse:&quot;, du, u)
+doit(D_banded, &quot;D_banded:&quot;, du, u)</code></pre><pre class="documenter-example-output">D_SBP * u ≈ D_sparse * u ≈ D_banded * u = true
+D_SBP:
+BenchmarkTools.Trial:
+  memory estimate:  0 bytes
+  allocs estimate:  0
+  --------------
+  minimum time:     320.692 ns (0.00% GC)
+  median time:      450.029 ns (0.00% GC)
+  mean time:        454.783 ns (0.00% GC)
+  maximum time:     801.971 ns (0.00% GC)
+  --------------
+  samples:          10000
+  evals/sample:     208
+D_sparse:
+BenchmarkTools.Trial:
+  memory estimate:  0 bytes
+  allocs estimate:  0
+  --------------
+  minimum time:     7.940 μs (0.00% GC)
+  median time:      9.861 μs (0.00% GC)
+  mean time:        9.856 μs (0.00% GC)
+  maximum time:     17.081 μs (0.00% GC)
+  --------------
+  samples:          10000
+  evals/sample:     5
+D_banded:
+BenchmarkTools.Trial:
+  memory estimate:  0 bytes
+  allocs estimate:  0
+  --------------
+  minimum time:     14.700 μs (0.00% GC)
+  median time:      16.101 μs (0.00% GC)
+  mean time:        16.059 μs (0.00% GC)
+  maximum time:     63.703 μs (0.00% GC)
+  --------------
+  samples:          10000
+  evals/sample:     1</pre><h2 id="Dissipation-operators"><a class="docs-heading-anchor" href="#Dissipation-operators">Dissipation operators</a><a id="Dissipation-operators-1"></a><a class="docs-heading-anchor-permalink" href="#Dissipation-operators" title="Permalink"></a></h2><pre><code class="language-julia">using BenchmarkTools
+using LinearAlgebra, SparseArrays
+using SummationByPartsOperators, BandedMatrices
+
+BLAS.set_num_threads(1) # make sure that BLAS is serial to be fair
+
+T = Float64
+xmin, xmax = T(0), T(1)
+
+D_SBP = derivative_operator(MattssonNordström2004(), derivative_order=1,
+                            accuracy_order=6, xmin=xmin, xmax=xmax, N=10^3)
+Di_SBP  = dissipation_operator(MattssonSvärdNordström2004(), D_SBP)
+Di_sparse = sparse(Di_SBP)
+Di_banded = BandedMatrix(Di_SBP)
+Di_full   = Matrix(Di_SBP)
+
+u = randn(eltype(D_SBP), size(D_SBP, 1)); du = similar(u);
+@show Di_SBP * u ≈ Di_sparse * u ≈ Di_banded * u ≈ Di_full * u
+
+function doit(D, text, du, u)
+  println(text)
+  sleep(0.1)
+  show(stdout, MIME&quot;text/plain&quot;(), @benchmark mul!($du, $D, $u))
+  println()
+end
+
+doit(D_SBP, &quot;D_SBP:&quot;, du, u)
+doit(Di_SBP, &quot;Di_SBP:&quot;, du, u)
+doit(Di_sparse, &quot;Di_sparse:&quot;, du, u)
+doit(Di_banded, &quot;Di_banded:&quot;, du, u)
+doit(Di_full, &quot;Di_full:&quot;, du, u)</code></pre><pre class="documenter-example-output">Di_SBP * u ≈ Di_sparse * u ≈ Di_banded * u ≈ Di_full * u = true
+D_SBP:
+BenchmarkTools.Trial:
+  memory estimate:  0 bytes
+  allocs estimate:  0
+  --------------
+  minimum time:     394.552 ns (0.00% GC)
+  median time:      554.264 ns (0.00% GC)
+  mean time:        558.219 ns (0.00% GC)
+  maximum time:     845.821 ns (0.00% GC)
+  --------------
+  samples:          10000
+  evals/sample:     201
+Di_SBP:
+BenchmarkTools.Trial:
+  memory estimate:  0 bytes
+  allocs estimate:  0
+  --------------
+  minimum time:     1.680 μs (0.00% GC)
+  median time:      2.090 μs (0.00% GC)
+  mean time:        2.063 μs (0.00% GC)
+  maximum time:     6.690 μs (0.00% GC)
+  --------------
+  samples:          10000
+  evals/sample:     10
+Di_sparse:
+BenchmarkTools.Trial:
+  memory estimate:  0 bytes
+  allocs estimate:  0
+  --------------
+  minimum time:     7.700 μs (0.00% GC)
+  median time:      11.100 μs (0.00% GC)
+  mean time:        10.981 μs (0.00% GC)
+  maximum time:     44.002 μs (0.00% GC)
+  --------------
+  samples:          10000
+  evals/sample:     1
+Di_banded:
+BenchmarkTools.Trial:
+  memory estimate:  0 bytes
+  allocs estimate:  0
+  --------------
+  minimum time:     8.800 μs (0.00% GC)
+  median time:      12.800 μs (0.00% GC)
+  mean time:        12.752 μs (0.00% GC)
+  maximum time:     53.404 μs (0.00% GC)
+  --------------
+  samples:          10000
+  evals/sample:     1
+Di_full:
+BenchmarkTools.Trial:
+  memory estimate:  0 bytes
+  allocs estimate:  0
+  --------------
+  minimum time:     325.418 μs (0.00% GC)
+  median time:      353.320 μs (0.00% GC)
+  mean time:        361.325 μs (0.00% GC)
+  maximum time:     660.738 μs (0.00% GC)
+  --------------
+  samples:          10000
+  evals/sample:     1</pre><h2 id="Structure-of-Arrays-(SoA)-and-Array-of-Structures-(AoS)"><a class="docs-heading-anchor" href="#Structure-of-Arrays-(SoA)-and-Array-of-Structures-(AoS)">Structure-of-Arrays (SoA) and Array-of-Structures (AoS)</a><a id="Structure-of-Arrays-(SoA)-and-Array-of-Structures-(AoS)-1"></a><a class="docs-heading-anchor-permalink" href="#Structure-of-Arrays-(SoA)-and-Array-of-Structures-(AoS)" title="Permalink"></a></h2><p><a href="https://github.com/ranocha/SummationByPartsOperators.jl">SummationByPartsOperators.jl</a> tries to provide efficient support of</p><ul><li><code>StaticVector</code>s from <a href="https://github.com/JuliaArrays/StaticArrays.jl">StaticArrays.jl</a></li><li><a href="https://github.com/JuliaArrays/StructArrays.jl">StructArrays.jl</a></li></ul><pre><code class="language-julia">using BenchmarkTools
+using StaticArrays, StructArrays
+using LinearAlgebra, SparseArrays
+using SummationByPartsOperators, BandedMatrices
+
+BLAS.set_num_threads(1) # make sure that BLAS is serial to be fair
+
+struct Vec5{T} &lt;: FieldVector{5,T}
+  x1::T
+  x2::T
+  x3::T
+  x4::T
+  x5::T
+end
+
+# Apply `mul!` to each component of a plain array of structures one after another
+function mul_aos!(du, D, u, args...)
+  for i in 1:size(du, 1)
+    mul!(view(du, i, :), D, view(u, i, :), args...)
+  end
+end
+
+T = Float64
+xmin, xmax = T(0), T(1)
+
+D_SBP = derivative_operator(MattssonNordström2004(), derivative_order=1,
+                            accuracy_order=4, xmin=xmin, xmax=xmax, N=101)
+D_sparse = sparse(D_SBP)
+D_full   = Matrix(D_SBP)
+
+println(&quot;Scalar case&quot;)
+u = randn(T, size(D_SBP, 1)); du = similar(u)
+println(&quot;D_SBP&quot;)
+show(stdout, MIME&quot;text/plain&quot;(), @benchmark mul!($du, $D_SBP, $u))
+println(&quot;\nD_sparse&quot;)
+show(stdout, MIME&quot;text/plain&quot;(), @benchmark mul!($du, $D_sparse, $u))
+println(&quot;\nD_full&quot;)
+show(stdout, MIME&quot;text/plain&quot;(), @benchmark mul!($du, $D_full, $u))</code></pre><pre class="documenter-example-output">Scalar case
+D_SBP
+BenchmarkTools.Trial:
+  memory estimate:  0 bytes
+  allocs estimate:  0
+  --------------
+  minimum time:     45.235 ns (0.00% GC)
+  median time:      56.190 ns (0.00% GC)
+  mean time:        57.894 ns (0.00% GC)
+  maximum time:     104.773 ns (0.00% GC)
+  --------------
+  samples:          10000
+  evals/sample:     986
+D_sparse
+BenchmarkTools.Trial:
+  memory estimate:  0 bytes
+  allocs estimate:  0
+  --------------
+  minimum time:     601.265 ns (0.00% GC)
+  median time:      746.340 ns (0.00% GC)
+  mean time:        744.166 ns (0.00% GC)
+  maximum time:     1.000 μs (0.00% GC)
+  --------------
+  samples:          10000
+  evals/sample:     162
+D_full
+BenchmarkTools.Trial:
+  memory estimate:  0 bytes
+  allocs estimate:  0
+  --------------
+  minimum time:     2.060 μs (0.00% GC)
+  median time:      2.230 μs (0.00% GC)
+  mean time:        2.296 μs (0.00% GC)
+  maximum time:     6.330 μs (0.00% GC)
+  --------------
+  samples:          10000
+  evals/sample:     10</pre><pre><code class="language-julia">println(&quot;Plain Array of Structures&quot;)
+u_aos_plain = randn(T, 5, size(D_SBP, 1)); du_aos_plain = similar(u_aos_plain)
+println(&quot;D_SBP&quot;)
+show(stdout, MIME&quot;text/plain&quot;(), @benchmark mul_aos!($du_aos_plain, $D_SBP, $u_aos_plain))
+println(&quot;\nD_sparse&quot;)
+show(stdout, MIME&quot;text/plain&quot;(), @benchmark mul_aos!($du_aos_plain, $D_sparse, $u_aos_plain))
+println(&quot;\nD_full&quot;)
+show(stdout, MIME&quot;text/plain&quot;(), @benchmark mul_aos!($du_aos_plain, $D_full, $u_aos_plain))</code></pre><pre class="documenter-example-output">Plain Array of Structures
+D_SBP
+BenchmarkTools.Trial:
+  memory estimate:  0 bytes
+  allocs estimate:  0
+  --------------
+  minimum time:     1.160 μs (0.00% GC)
+  median time:      1.270 μs (0.00% GC)
+  mean time:        1.336 μs (0.00% GC)
+  maximum time:     6.940 μs (0.00% GC)
+  --------------
+  samples:          10000
+  evals/sample:     10
+D_sparse
+BenchmarkTools.Trial:
+  memory estimate:  0 bytes
+  allocs estimate:  0
+  --------------
+  minimum time:     3.375 μs (0.00% GC)
+  median time:      3.663 μs (0.00% GC)
+  mean time:        3.677 μs (0.00% GC)
+  maximum time:     7.000 μs (0.00% GC)
+  --------------
+  samples:          10000
+  evals/sample:     8
+D_full
+BenchmarkTools.Trial:
+  memory estimate:  0 bytes
+  allocs estimate:  0
+  --------------
+  minimum time:     11.800 μs (0.00% GC)
+  median time:      11.901 μs (0.00% GC)
+  mean time:        12.540 μs (0.00% GC)
+  maximum time:     47.703 μs (0.00% GC)
+  --------------
+  samples:          10000
+  evals/sample:     1</pre><pre><code class="language-julia">println(&quot;Array of Structures (reinterpreted array)&quot;)
+u_aos_r = reinterpret(reshape, Vec5{T}, u_aos_plain); du_aos_r = similar(u_aos_r)
+@show D_SBP * u_aos_r ≈ D_sparse * u_aos_r ≈ D_full * u_aos_r
+mul!(du_aos_r, D_SBP, u_aos_r)
+@show reinterpret(reshape, T, du_aos_r) ≈ du_aos_plain
+println(&quot;D_SBP&quot;)
+show(stdout, MIME&quot;text/plain&quot;(), @benchmark mul!($du_aos_r, $D_SBP, $u_aos_r))
+println(&quot;\nD_sparse&quot;)
+show(stdout, MIME&quot;text/plain&quot;(), @benchmark mul!($du_aos_r, $D_sparse, $u_aos_r))
+println(&quot;\nD_full&quot;)
+show(stdout, MIME&quot;text/plain&quot;(), @benchmark mul!($du_aos_r, $D_full, $u_aos_r))</code></pre><pre class="documenter-example-output">Array of Structures (reinterpreted array)
+D_SBP * u_aos_r ≈ D_sparse * u_aos_r ≈ D_full * u_aos_r = true
+reinterpret(reshape, T, du_aos_r) ≈ du_aos_plain = true
+D_SBP
+BenchmarkTools.Trial:
+  memory estimate:  0 bytes
+  allocs estimate:  0
+  --------------
+  minimum time:     212.655 ns (0.00% GC)
+  median time:      236.240 ns (0.00% GC)
+  mean time:        241.952 ns (0.00% GC)
+  maximum time:     369.079 ns (0.00% GC)
+  --------------
+  samples:          10000
+  evals/sample:     530
+D_sparse
+BenchmarkTools.Trial:
+  memory estimate:  0 bytes
+  allocs estimate:  0
+  --------------
+  minimum time:     843.111 ns (0.00% GC)
+  median time:      915.333 ns (0.00% GC)
+  mean time:        917.877 ns (0.00% GC)
+  maximum time:     1.358 μs (0.00% GC)
+  --------------
+  samples:          10000
+  evals/sample:     72
+D_full
+BenchmarkTools.Trial:
+  memory estimate:  0 bytes
+  allocs estimate:  0
+  --------------
+  minimum time:     16.001 μs (0.00% GC)
+  median time:      17.601 μs (0.00% GC)
+  mean time:        18.382 μs (0.00% GC)
+  maximum time:     72.505 μs (0.00% GC)
+  --------------
+  samples:          10000
+  evals/sample:     1</pre><pre><code class="language-julia">println(&quot;Array of Structures&quot;)
+u_aos = Array(u_aos_r); du_aos = similar(u_aos)
+@show D_SBP * u_aos ≈ D_sparse * u_aos ≈ D_full * u_aos
+mul!(du_aos, D_SBP, u_aos)
+@show du_aos ≈ du_aos_r
+println(&quot;D_SBP&quot;)
+show(stdout, MIME&quot;text/plain&quot;(), @benchmark mul!($du_aos, $D_SBP, $u_aos))
+println(&quot;\nD_sparse&quot;)
+show(stdout, MIME&quot;text/plain&quot;(), @benchmark mul!($du_aos, $D_sparse, $u_aos))
+println(&quot;\nD_full&quot;)
+show(stdout, MIME&quot;text/plain&quot;(), @benchmark mul!($du_aos, $D_full, $u_aos))</code></pre><pre class="documenter-example-output">Array of Structures
+D_SBP * u_aos ≈ D_sparse * u_aos ≈ D_full * u_aos = true
+du_aos ≈ du_aos_r = true
+D_SBP
+BenchmarkTools.Trial:
+  memory estimate:  0 bytes
+  allocs estimate:  0
+  --------------
+  minimum time:     207.556 ns (0.00% GC)
+  median time:      230.014 ns (0.00% GC)
+  mean time:        237.304 ns (0.00% GC)
+  maximum time:     342.126 ns (0.00% GC)
+  --------------
+  samples:          10000
+  evals/sample:     570
+D_sparse
+BenchmarkTools.Trial:
+  memory estimate:  0 bytes
+  allocs estimate:  0
+  --------------
+  minimum time:     812.040 ns (0.00% GC)
+  median time:      880.053 ns (0.00% GC)
+  mean time:        882.746 ns (0.00% GC)
+  maximum time:     1.445 μs (0.00% GC)
+  --------------
+  samples:          10000
+  evals/sample:     75
+D_full
+BenchmarkTools.Trial:
+  memory estimate:  0 bytes
+  allocs estimate:  0
+  --------------
+  minimum time:     15.901 μs (0.00% GC)
+  median time:      17.601 μs (0.00% GC)
+  mean time:        18.174 μs (0.00% GC)
+  maximum time:     59.703 μs (0.00% GC)
+  --------------
+  samples:          10000
+  evals/sample:     1</pre><pre><code class="language-julia">println(&quot;Structure of Arrays&quot;)
+u_soa = StructArray(u_aos); du_soa = similar(u_soa)
+@show D_SBP * u_soa ≈ D_sparse * u_soa ≈ D_full * u_soa
+mul!(du_soa, D_SBP, u_soa)
+@show du_soa ≈ du_aos
+println(&quot;D_SBP&quot;)
+show(stdout, MIME&quot;text/plain&quot;(), @benchmark mul!($du_soa, $D_SBP, $u_soa))
+println(&quot;\nD_sparse&quot;)
+show(stdout, MIME&quot;text/plain&quot;(), @benchmark mul!($du_soa, $D_sparse, $u_soa))
+println(&quot;\nD_full&quot;)
+show(stdout, MIME&quot;text/plain&quot;(), @benchmark mul!($du_soa, $D_full, $u_soa))</code></pre><pre class="documenter-example-output">Structure of Arrays
+D_SBP * u_soa ≈ D_sparse * u_soa ≈ D_full * u_soa = true
+du_soa ≈ du_aos = true
+D_SBP
+BenchmarkTools.Trial:
+  memory estimate:  0 bytes
+  allocs estimate:  0
+  --------------
+  minimum time:     327.330 ns (0.00% GC)
+  median time:      328.216 ns (0.00% GC)
+  mean time:        346.384 ns (0.00% GC)
+  maximum time:     625.586 ns (0.00% GC)
+  --------------
+  samples:          10000
+  evals/sample:     227
+D_sparse
+BenchmarkTools.Trial:
+  memory estimate:  0 bytes
+  allocs estimate:  0
+  --------------
+  minimum time:     125.908 μs (0.00% GC)
+  median time:      136.208 μs (0.00% GC)
+  mean time:        146.037 μs (0.00% GC)
+  maximum time:     8.691 ms (0.00% GC)
+  --------------
+  samples:          10000
+  evals/sample:     1
+D_full
+BenchmarkTools.Trial:
+  memory estimate:  0 bytes
+  allocs estimate:  0
+  --------------
+  minimum time:     20.801 μs (0.00% GC)
+  median time:      25.901 μs (0.00% GC)
+  mean time:        25.835 μs (0.00% GC)
+  maximum time:     60.103 μs (0.00% GC)
+  --------------
+  samples:          10000
+  evals/sample:     1</pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../applications/">« Applications &amp; references</a><a class="docs-footer-nextpage" href="../api_reference/">API reference »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Thursday 27 May 2021 05:18">Thursday 27 May 2021</span>. Using Julia version 1.6.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
