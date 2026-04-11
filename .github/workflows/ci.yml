@@ -50,7 +50,7 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1.6'
+          - '1.10'
           - '1'
           # - 'nightly'
         os:
@@ -60,24 +60,6 @@ jobs:
         sbp_test:
           - part1
           - part2
-        # macos-14 and newer do not support Julia v1.6,
-        # cf. https://discourse.julialang.org/t/how-to-fix-github-actions-ci-failures-with-julia-1-6-or-1-7-on-macos-latest-and-macos-14/117019
-        exclude:
-          - os: macos-latest
-            version: '1.6'
-        include:
-          - version: '1.10'
-            os: ubuntu-latest
-            sbp_test: part1
-          - version: '1.10'
-            os: ubuntu-latest
-            sbp_test: part2
-          - version: '1.8'
-            os: ubuntu-latest
-            sbp_test: part1
-          - version: '1.8'
-            os: ubuntu-latest
-            sbp_test: part2
     steps:
       - uses: actions/checkout@v6
       - uses: julia-actions/setup-julia@v2
