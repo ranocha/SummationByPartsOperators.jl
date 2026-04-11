@@ -8,6 +8,10 @@ for human readability.
 
 ## Changes in the v0.5 lifecycle
 
+#### Changed
+
+- The minimum Julia version was updated to 1.10 in version 0.5.91.
+
 #### Deprecated
 
 - The (keyword) argument `parallel::Union{Val{:serial}, Val{:threads}}`

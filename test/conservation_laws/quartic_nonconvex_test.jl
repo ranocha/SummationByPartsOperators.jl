@@ -1,5 +1,5 @@
 using Test, SummationByPartsOperators
-using OrdinaryDiffEq, DiffEqCallbacks
+using OrdinaryDiffEqSSPRK, DiffEqCallbacks
 
 @testset "Quartic" for T in (Float32, Float64), split_form in (Val{true}(), Val{false}())
     xmin = T(-1)
