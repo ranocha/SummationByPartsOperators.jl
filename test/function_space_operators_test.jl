@@ -16,7 +16,7 @@ import Optim, ForwardDiff # to enable loading the function space operator optimi
         D = function_space_operator(basis_functions, nodes, source)
         # Only first-derivative operators are implemented yet
         @test_throws ArgumentError function_space_operator(basis_functions, nodes,
-                                                            source; derivative_order = 2)
+                                                           source; derivative_order = 2)
 
         @test grid(D) ≈ nodes
         @test all(isapprox.(D * ones(N), zeros(N); atol = 1e-13))

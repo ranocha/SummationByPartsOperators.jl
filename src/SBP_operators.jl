@@ -370,19 +370,19 @@ end
 
 # Specialized for vectors of `StaticVector`s
 @generated function convolve_interior_coefficients!(_dest::AbstractVector{<:StaticVector{N,
-                                                                                            T1}},
+                                                                                         T1}},
                                                     lower_coef::SVector{LowerOffset},
                                                     central_coef,
                                                     upper_coef::SVector{UpperOffset},
                                                     _u::AbstractVector{<:StaticVector{N,
-                                                                                        T2}},
+                                                                                      T2}},
                                                     α, β,
                                                     ::StaticInt{left_boundary_width},
                                                     ::StaticInt{right_boundary_width},
                                                     mode) where {LowerOffset,
-                                                                    UpperOffset, N, T1, T2,
-                                                                    left_boundary_width,
-                                                                    right_boundary_width}
+                                                                 UpperOffset, N, T1, T2,
+                                                                 left_boundary_width,
+                                                                 right_boundary_width}
     if LowerOffset > 0
         ex = :(lower_coef[$LowerOffset] * u[v, i - $LowerOffset])
         for j in (LowerOffset - 1):-1:1
@@ -447,18 +447,18 @@ end
 end
 
 @generated function convolve_interior_coefficients!(_dest::AbstractVector{<:StaticVector{N,
-                                                                                            T1}},
+                                                                                         T1}},
                                                     lower_coef::SVector{LowerOffset},
                                                     central_coef,
                                                     upper_coef::SVector{UpperOffset},
                                                     _u::AbstractVector{<:StaticVector{N,
-                                                                                        T2}},
+                                                                                      T2}},
                                                     α, ::StaticInt{left_boundary_width},
                                                     ::StaticInt{right_boundary_width},
                                                     mode) where {LowerOffset,
-                                                                    UpperOffset, N, T1, T2,
-                                                                    left_boundary_width,
-                                                                    right_boundary_width}
+                                                                 UpperOffset, N, T1, T2,
+                                                                 left_boundary_width,
+                                                                 right_boundary_width}
     if LowerOffset > 0
         ex = :(lower_coef[$LowerOffset] * u[v, i - $LowerOffset])
         for j in (LowerOffset - 1):-1:1
