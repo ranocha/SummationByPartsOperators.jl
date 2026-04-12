@@ -182,9 +182,7 @@ export BurgersPeriodicSemidiscretization, BurgersNonperiodicSemidiscretization,
        WaveEquationNonperiodicSemidiscretization,
        QuarticNonconvexPeriodicSemidiscretization
 
-# explicit precompilation only on Julia v1.9 and newer
-@static if VERSION >= v"1.9.0-beta4"
-    include("precompile.jl")
-end
+# explicit precompilation (on Julia v1.9 and newer)
+include("precompile.jl")
 
 end # module

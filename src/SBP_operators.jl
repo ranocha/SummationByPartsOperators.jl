@@ -368,156 +368,154 @@ end
     end
 end
 
-@static if VERSION >= v"1.6" # `reinterpret(reshape, ...)` was introduced in Julia v1.6
-    # Specialized for vectors of `StaticVector`s
-    @generated function convolve_interior_coefficients!(_dest::AbstractVector{<:StaticVector{N,
-                                                                                             T1}},
-                                                        lower_coef::SVector{LowerOffset},
-                                                        central_coef,
-                                                        upper_coef::SVector{UpperOffset},
-                                                        _u::AbstractVector{<:StaticVector{N,
-                                                                                          T2}},
-                                                        α, β,
-                                                        ::StaticInt{left_boundary_width},
-                                                        ::StaticInt{right_boundary_width},
-                                                        mode) where {LowerOffset,
-                                                                     UpperOffset, N, T1, T2,
-                                                                     left_boundary_width,
-                                                                     right_boundary_width}
-        if LowerOffset > 0
-            ex = :(lower_coef[$LowerOffset] * u[v, i - $LowerOffset])
-            for j in (LowerOffset - 1):-1:1
-                ex = :($ex + lower_coef[$j] * u[v, i - $j])
-            end
-            ex = :($ex + central_coef * u[v, i])
-        else
-            ex = :(central_coef * u[v, i])
+# Specialized for vectors of `StaticVector`s
+@generated function convolve_interior_coefficients!(_dest::AbstractVector{<:StaticVector{N,
+                                                                                            T1}},
+                                                    lower_coef::SVector{LowerOffset},
+                                                    central_coef,
+                                                    upper_coef::SVector{UpperOffset},
+                                                    _u::AbstractVector{<:StaticVector{N,
+                                                                                        T2}},
+                                                    α, β,
+                                                    ::StaticInt{left_boundary_width},
+                                                    ::StaticInt{right_boundary_width},
+                                                    mode) where {LowerOffset,
+                                                                    UpperOffset, N, T1, T2,
+                                                                    left_boundary_width,
+                                                                    right_boundary_width}
+    if LowerOffset > 0
+        ex = :(lower_coef[$LowerOffset] * u[v, i - $LowerOffset])
+        for j in (LowerOffset - 1):-1:1
+            ex = :($ex + lower_coef[$j] * u[v, i - $j])
         end
-        for j in 1:UpperOffset
-            ex = :($ex + upper_coef[$j] * u[v, i + $j])
-        end
+        ex = :($ex + central_coef * u[v, i])
+    else
+        ex = :(central_coef * u[v, i])
+    end
+    for j in 1:UpperOffset
+        ex = :($ex + upper_coef[$j] * u[v, i + $j])
+    end
 
-        if N == 1
-            ex_dest = :(reshape(reinterpret($T1, _dest), 1, length(_dest)))
-            ex_u = :(reshape(reinterpret($T2, _u), 1, length(_u)))
-        else
-            ex_dest = :(reinterpret(reshape, $T1, _dest))
-            ex_u = :(reinterpret(reshape, $T2, _u))
-        end
+    if N == 1
+        ex_dest = :(reshape(reinterpret($T1, _dest), 1, length(_dest)))
+        ex_u = :(reshape(reinterpret($T2, _u), 1, length(_u)))
+    else
+        ex_dest = :(reinterpret(reshape, $T1, _dest))
+        ex_u = :(reinterpret(reshape, $T2, _u))
+    end
 
-        if mode <: ThreadedMode
-            quote
-                Base.@_inline_meta
-                dest = $ex_dest
-                u = $ex_u
-                fi = firstindex(dest, 2) + left_boundary_width
-                la = lastindex(dest, 2) - right_boundary_width
-                @tturbo warn_check_args=false for i in fi:la
-                    for v in LoopVectorization.indices((dest, u), (1, 1))
-                        dest[v, i] = β * dest[v, i] + α * $ex
-                    end
+    if mode <: ThreadedMode
+        quote
+            Base.@_inline_meta
+            dest = $ex_dest
+            u = $ex_u
+            fi = firstindex(dest, 2) + left_boundary_width
+            la = lastindex(dest, 2) - right_boundary_width
+            @tturbo warn_check_args=false for i in fi:la
+                for v in LoopVectorization.indices((dest, u), (1, 1))
+                    dest[v, i] = β * dest[v, i] + α * $ex
                 end
             end
-        elseif mode <: SafeMode
-            quote
-                Base.@_inline_meta
-                dest = $ex_dest
-                u = $ex_u
-                fi = firstindex(dest, 2) + left_boundary_width
-                la = lastindex(dest, 2) - right_boundary_width
-                @inbounds for i in fi:la
-                    for v in LoopVectorization.indices((dest, u), (1, 1))
-                        dest[v, i] = β * dest[v, i] + α * $ex
-                    end
+        end
+    elseif mode <: SafeMode
+        quote
+            Base.@_inline_meta
+            dest = $ex_dest
+            u = $ex_u
+            fi = firstindex(dest, 2) + left_boundary_width
+            la = lastindex(dest, 2) - right_boundary_width
+            @inbounds for i in fi:la
+                for v in LoopVectorization.indices((dest, u), (1, 1))
+                    dest[v, i] = β * dest[v, i] + α * $ex
                 end
             end
-        else
-            quote
-                Base.@_inline_meta
-                dest = $ex_dest
-                u = $ex_u
-                fi = firstindex(dest, 2) + left_boundary_width
-                la = lastindex(dest, 2) - right_boundary_width
-                @turbo warn_check_args=false for i in fi:la
-                    for v in LoopVectorization.indices((dest, u), (1, 1))
-                        dest[v, i] = β * dest[v, i] + α * $ex
-                    end
+        end
+    else
+        quote
+            Base.@_inline_meta
+            dest = $ex_dest
+            u = $ex_u
+            fi = firstindex(dest, 2) + left_boundary_width
+            la = lastindex(dest, 2) - right_boundary_width
+            @turbo warn_check_args=false for i in fi:la
+                for v in LoopVectorization.indices((dest, u), (1, 1))
+                    dest[v, i] = β * dest[v, i] + α * $ex
                 end
             end
         end
     end
+end
 
-    @generated function convolve_interior_coefficients!(_dest::AbstractVector{<:StaticVector{N,
-                                                                                             T1}},
-                                                        lower_coef::SVector{LowerOffset},
-                                                        central_coef,
-                                                        upper_coef::SVector{UpperOffset},
-                                                        _u::AbstractVector{<:StaticVector{N,
-                                                                                          T2}},
-                                                        α, ::StaticInt{left_boundary_width},
-                                                        ::StaticInt{right_boundary_width},
-                                                        mode) where {LowerOffset,
-                                                                     UpperOffset, N, T1, T2,
-                                                                     left_boundary_width,
-                                                                     right_boundary_width}
-        if LowerOffset > 0
-            ex = :(lower_coef[$LowerOffset] * u[v, i - $LowerOffset])
-            for j in (LowerOffset - 1):-1:1
-                ex = :($ex + lower_coef[$j] * u[v, i - $j])
-            end
-            ex = :($ex + central_coef * u[v, i])
-        else
-            ex = :(central_coef * u[v, i])
+@generated function convolve_interior_coefficients!(_dest::AbstractVector{<:StaticVector{N,
+                                                                                            T1}},
+                                                    lower_coef::SVector{LowerOffset},
+                                                    central_coef,
+                                                    upper_coef::SVector{UpperOffset},
+                                                    _u::AbstractVector{<:StaticVector{N,
+                                                                                        T2}},
+                                                    α, ::StaticInt{left_boundary_width},
+                                                    ::StaticInt{right_boundary_width},
+                                                    mode) where {LowerOffset,
+                                                                    UpperOffset, N, T1, T2,
+                                                                    left_boundary_width,
+                                                                    right_boundary_width}
+    if LowerOffset > 0
+        ex = :(lower_coef[$LowerOffset] * u[v, i - $LowerOffset])
+        for j in (LowerOffset - 1):-1:1
+            ex = :($ex + lower_coef[$j] * u[v, i - $j])
         end
-        for j in 1:UpperOffset
-            ex = :($ex + upper_coef[$j] * u[v, i + $j])
-        end
+        ex = :($ex + central_coef * u[v, i])
+    else
+        ex = :(central_coef * u[v, i])
+    end
+    for j in 1:UpperOffset
+        ex = :($ex + upper_coef[$j] * u[v, i + $j])
+    end
 
-        if N == 1
-            ex_dest = :(reshape(reinterpret($T1, _dest), 1, length(_dest)))
-            ex_u = :(reshape(reinterpret($T2, _u), 1, length(_u)))
-        else
-            ex_dest = :(reinterpret(reshape, $T1, _dest))
-            ex_u = :(reinterpret(reshape, $T2, _u))
-        end
+    if N == 1
+        ex_dest = :(reshape(reinterpret($T1, _dest), 1, length(_dest)))
+        ex_u = :(reshape(reinterpret($T2, _u), 1, length(_u)))
+    else
+        ex_dest = :(reinterpret(reshape, $T1, _dest))
+        ex_u = :(reinterpret(reshape, $T2, _u))
+    end
 
-        if mode <: ThreadedMode
-            quote
-                Base.@_inline_meta
-                dest = $ex_dest
-                u = $ex_u
-                fi = firstindex(dest, 2) + left_boundary_width
-                la = lastindex(dest, 2) - right_boundary_width
-                @tturbo warn_check_args=false for i in fi:la
-                    for v in LoopVectorization.indices((dest, u), (1, 1))
-                        dest[v, i] = α * $ex
-                    end
+    if mode <: ThreadedMode
+        quote
+            Base.@_inline_meta
+            dest = $ex_dest
+            u = $ex_u
+            fi = firstindex(dest, 2) + left_boundary_width
+            la = lastindex(dest, 2) - right_boundary_width
+            @tturbo warn_check_args=false for i in fi:la
+                for v in LoopVectorization.indices((dest, u), (1, 1))
+                    dest[v, i] = α * $ex
                 end
             end
-        elseif mode <: SafeMode
-            quote
-                Base.@_inline_meta
-                dest = $ex_dest
-                u = $ex_u
-                fi = firstindex(dest, 2) + left_boundary_width
-                la = lastindex(dest, 2) - right_boundary_width
-                @inbounds for i in fi:la
-                    for v in LoopVectorization.indices((dest, u), (1, 1))
-                        dest[v, i] = α * $ex
-                    end
+        end
+    elseif mode <: SafeMode
+        quote
+            Base.@_inline_meta
+            dest = $ex_dest
+            u = $ex_u
+            fi = firstindex(dest, 2) + left_boundary_width
+            la = lastindex(dest, 2) - right_boundary_width
+            @inbounds for i in fi:la
+                for v in LoopVectorization.indices((dest, u), (1, 1))
+                    dest[v, i] = α * $ex
                 end
             end
-        else
-            quote
-                Base.@_inline_meta
-                dest = $ex_dest
-                u = $ex_u
-                fi = firstindex(dest, 2) + left_boundary_width
-                la = lastindex(dest, 2) - right_boundary_width
-                @turbo warn_check_args=false for i in fi:la
-                    for v in LoopVectorization.indices((dest, u), (1, 1))
-                        dest[v, i] = α * $ex
-                    end
+        end
+    else
+        quote
+            Base.@_inline_meta
+            dest = $ex_dest
+            u = $ex_u
+            fi = firstindex(dest, 2) + left_boundary_width
+            la = lastindex(dest, 2) - right_boundary_width
+            @turbo warn_check_args=false for i in fi:la
+                for v in LoopVectorization.indices((dest, u), (1, 1))
+                    dest[v, i] = α * $ex
                 end
             end
         end
