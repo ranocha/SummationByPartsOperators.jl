@@ -150,7 +150,7 @@ saveat = range(tspan..., length = 100)
 sol = solve(ode, Tsit5(); saveat)
 
 using Printf; using Plots: @animate, gif
-anim = @animate for i in eachindex(sol)
+anim = @animate for i in eachindex(sol.u)
    t = sol.t[i]
    scatter(first.(nodes), last.(nodes), sol.u[i], label = L"u_\mathrm{numerical}")
    scatter!(first.(nodes), last.(nodes), u.(Ref(t), nodes), label = L"u_\mathrm{analytical}", xlabel = "x", ylabel = "y", zlabel = "u",
