@@ -23,7 +23,7 @@ Have a look at the source code if you want to dig deeper. Below is an example
 demonstrating how to use this semidiscretization.
 
 ```@example variable_linear_advection
-using SummationByPartsOperators, OrdinaryDiffEq
+using SummationByPartsOperators, OrdinaryDiffEqSSPRK
 using LaTeXStrings; using Plots: Plots, plot, plot!, savefig
 
 # general parameters
@@ -55,8 +55,8 @@ sol = solve(ode, SSPRK104(), dt=D.Δx, adaptive=false,
 
 # visualise the result
 plot(xguide=L"x", yguide=L"u")
-plot!(evaluate_coefficients(sol[1], semi), label=L"u_0")
-plot!(evaluate_coefficients(sol[end], semi), label=L"u_\mathrm{numerical}")
+plot!(evaluate_coefficients(sol.u[1], semi), label=L"u_0")
+plot!(evaluate_coefficients(sol.u[end], semi), label=L"u_\mathrm{numerical}")
 savefig("example_linear_advection.png");
 ```
 
@@ -72,6 +72,6 @@ using InteractiveUtils
 versioninfo()
 
 using Pkg
-Pkg.status(["SummationByPartsOperators", "OrdinaryDiffEq"],
+Pkg.status(["SummationByPartsOperators", "OrdinaryDiffEqSSPRK"],
            mode=PKGMODE_MANIFEST)
 ```

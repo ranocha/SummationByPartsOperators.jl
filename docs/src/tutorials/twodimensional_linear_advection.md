@@ -17,7 +17,7 @@ one-dimensional SBP operators in each direction. Based on one-dimensional SBP op
 in ``[y_{\min}, y_{\max}]``, we can construct a two-dimensional SBP operator ``D`` on ``N = N_x\cdot N_y`` nodes utilizing Kronecker products.
 
 ```@example twodimensional_advection
-using SummationByPartsOperators, OrdinaryDiffEq
+using SummationByPartsOperators, OrdinaryDiffEqTsit5
 using LaTeXStrings; using Plots: Plots, scatter, scatter!, savefig
 using LinearAlgebra: norm, dot
 
@@ -81,11 +81,13 @@ B_y = mass_matrix_boundary(D, 2)
 We can verify the SBP property of the two-dimensional operator in each direction:
 
 ```@example twodimensional_advection
-M * D_x + D_x' * M ≈ B_x
+check = M * D_x + D_x' * M ≈ B_x
+check || error("SBP property in x-direction is not satisfied.")
 ```
 
 ```@example twodimensional_advection
-M * D_y + D_y' * M ≈ B_y
+check = M * D_y + D_y' * M ≈ B_y
+check || error("SBP property in y-direction is not satisfied.")
 ```
 
 Similar to [`integrate`](@ref) for performing integrals in the interior, we can use [`integrate_boundary`](@ref) to perform integrals along the boundary.
@@ -148,9 +150,9 @@ saveat = range(tspan..., length = 100)
 sol = solve(ode, Tsit5(); saveat)
 
 using Printf; using Plots: @animate, gif
-anim = @animate for i in eachindex(sol)
+anim = @animate for i in eachindex(sol.u)
    t = sol.t[i]
-   scatter(first.(nodes), last.(nodes), sol[i], label = L"u_\mathrm{numerical}")
+   scatter(first.(nodes), last.(nodes), sol.u[i], label = L"u_\mathrm{numerical}")
    scatter!(first.(nodes), last.(nodes), u.(Ref(t), nodes), label = L"u_\mathrm{analytical}", xlabel = "x", ylabel = "y", zlabel = "u",
             title = @sprintf("t = %.2f", t), zrange = (-0.1, 1.1), legend = :topright, dpi = 170)
 end
@@ -166,7 +168,7 @@ using InteractiveUtils
 versioninfo()
 
 using Pkg
-Pkg.status(["SummationByPartsOperators", "OrdinaryDiffEq"],
+Pkg.status(["SummationByPartsOperators", "OrdinaryDiffEqTsit5"],
            mode=PKGMODE_MANIFEST)
 ```
 

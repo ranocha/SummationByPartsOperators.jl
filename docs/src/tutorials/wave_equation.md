@@ -22,7 +22,7 @@ Below is an example demonstrating how to use this semidiscretization.
 
 
 ```@example wave_equation
-using SummationByPartsOperators, OrdinaryDiffEq
+using SummationByPartsOperators, OrdinaryDiffEqRKN
 using LaTeXStrings; using Plots: Plots, plot, plot!, savefig
 
 # general parameters
@@ -46,8 +46,8 @@ sol = solve(ode, DPRKN6(), saveat=range(first(tspan), stop=last(tspan), length=2
 
 # visualize the result
 plot(xguide=L"x")
-plot!(evaluate_coefficients(sol[end].x[2], semi), label=L"u")
-plot!(evaluate_coefficients(sol[end].x[1], semi), label=L"\partial_t u")
+plot!(evaluate_coefficients(sol.u[end].x[2], semi), label=L"u")
+plot!(evaluate_coefficients(sol.u[end].x[1], semi), label=L"\partial_t u")
 savefig("example_wave_equation.png");
 ```
 
@@ -78,7 +78,7 @@ function create_gif(left_bc::Val{LEFT_BC}, right_bc::Val{RIGHT_BC}) where {LEFT_
 
     anim = Animation()
     idx = 1
-    x, u = evaluate_coefficients(sol[idx].x[2], D2)
+    x, u = evaluate_coefficients(sol.u[idx].x[2], D2)
     fig = plot(x, u, xguide=L"x", yguide=L"u", xlim=extrema(x), ylim=(-1.05, 1.05),
               label="", title=@sprintf("\$t = %6.2f \$", sol.t[idx]))
     for idx in 1:length(sol.t)
@@ -116,6 +116,6 @@ using InteractiveUtils
 versioninfo()
 
 using Pkg
-Pkg.status(["SummationByPartsOperators", "OrdinaryDiffEq"],
+Pkg.status(["SummationByPartsOperators", "OrdinaryDiffEqRKN"],
            mode=PKGMODE_MANIFEST)
 ```
