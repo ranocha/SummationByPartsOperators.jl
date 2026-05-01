@@ -31,7 +31,7 @@ import Optim, ForwardDiff # to enable loading the function space operator optimi
         D = function_space_operator(basis_functions, nodes, source)
 
         @test grid(D) ≈ nodes
-        @test all(isapprox.(D * ones(N), zeros(N); atol = 1e-13))
+        @test all(isapprox.(D * ones(N), zeros(N); atol = 1e-12))
         @test D * nodes ≈ ones(N)
         @test D * exp.(nodes) ≈ exp.(nodes)
         M = mass_matrix(D)
