@@ -22,3 +22,9 @@ OrdinaryDiffEqSSPRK = "1.5, 2.0"
 SpecialFunctions = "1, 2"
 StaticArrays = "1.9.8"
 StructArrays = "0.6.17, 0.7"
+
+[extras]
+HostCPUFeatures = "3e5b6fbb-0976-4d2c-9146-d79de83f2fb0"
+
+[preferences.HostCPUFeatures]
+allow_runtime_invalidation = true
