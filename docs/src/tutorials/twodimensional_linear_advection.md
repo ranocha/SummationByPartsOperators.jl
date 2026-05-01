@@ -82,12 +82,12 @@ We can verify the SBP property of the two-dimensional operator in each direction
 
 ```@example twodimensional_advection
 check = M * D_x + D_x' * M ≈ B_x
-check && error("SBP property in x-direction is not satisfied.")
+check || error("SBP property in x-direction is not satisfied.")
 ```
 
 ```@example twodimensional_advection
 check = M * D_y + D_y' * M ≈ B_y
-check && error("SBP property in y-direction is not satisfied.")
+check || error("SBP property in y-direction is not satisfied.")
 ```
 
 Similar to [`integrate`](@ref) for performing integrals in the interior, we can use [`integrate_boundary`](@ref) to perform integrals along the boundary.
