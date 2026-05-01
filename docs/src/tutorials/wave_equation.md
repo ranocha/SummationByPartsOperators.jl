@@ -22,7 +22,7 @@ Below is an example demonstrating how to use this semidiscretization.
 
 
 ```@example wave_equation
-using SummationByPartsOperators, OrdinaryDiffEq
+using SummationByPartsOperators, OrdinaryDiffEqRKN
 using LaTeXStrings; using Plots: Plots, plot, plot!, savefig
 
 # general parameters
@@ -116,6 +116,6 @@ using InteractiveUtils
 versioninfo()
 
 using Pkg
-Pkg.status(["SummationByPartsOperators", "OrdinaryDiffEq"],
+Pkg.status(["SummationByPartsOperators", "OrdinaryDiffEqRKN"],
            mode=PKGMODE_MANIFEST)
 ```

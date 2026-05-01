@@ -23,7 +23,7 @@ Have a look at the source code if you want to dig deeper. Below is an example
 demonstrating how to use this semidiscretization.
 
 ```@example variable_linear_advection
-using SummationByPartsOperators, OrdinaryDiffEq
+using SummationByPartsOperators, OrdinaryDiffEqSSPRK
 using LaTeXStrings; using Plots: Plots, plot, plot!, savefig
 
 # general parameters
@@ -72,6 +72,6 @@ using InteractiveUtils
 versioninfo()
 
 using Pkg
-Pkg.status(["SummationByPartsOperators", "OrdinaryDiffEq"],
+Pkg.status(["SummationByPartsOperators", "OrdinaryDiffEqSSPRK"],
            mode=PKGMODE_MANIFEST)
 ```

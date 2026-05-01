@@ -17,7 +17,7 @@ one-dimensional SBP operators in each direction. Based on one-dimensional SBP op
 in ``[y_{\min}, y_{\max}]``, we can construct a two-dimensional SBP operator ``D`` on ``N = N_x\cdot N_y`` nodes utilizing Kronecker products.
 
 ```@example twodimensional_advection
-using SummationByPartsOperators, OrdinaryDiffEq
+using SummationByPartsOperators, OrdinaryDiffEqTsit5
 using LaTeXStrings; using Plots: Plots, scatter, scatter!, savefig
 using LinearAlgebra: norm, dot
 
@@ -166,7 +166,7 @@ using InteractiveUtils
 versioninfo()
 
 using Pkg
-Pkg.status(["SummationByPartsOperators", "OrdinaryDiffEq"],
+Pkg.status(["SummationByPartsOperators", "OrdinaryDiffEqTsit5"],
            mode=PKGMODE_MANIFEST)
 ```
 

@@ -44,7 +44,7 @@ Let's create an appropriate discretization of this equation step by step. At fir
 we load packages that we will use in this example.
 
 ```@example kdv
-using SummationByPartsOperators, OrdinaryDiffEq
+using SummationByPartsOperators, OrdinaryDiffEqRosenbrock
 using LaTeXStrings; using Plots: Plots, plot, plot!, savefig
 ```
 
@@ -152,6 +152,6 @@ using InteractiveUtils
 versioninfo()
 
 using Pkg
-Pkg.status(["SummationByPartsOperators", "OrdinaryDiffEq"],
+Pkg.status(["SummationByPartsOperators", "OrdinaryDiffEqRosenbrock"],
            mode=PKGMODE_MANIFEST)
 ```
