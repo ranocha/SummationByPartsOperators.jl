@@ -85,8 +85,8 @@ time stepping.
 sol = solve(ode, Tsit5(), saveat=range(first(tspan), stop=last(tspan), length=200));
 
 plot(xguide=L"x", yguide=L"u")
-plot!(evaluate_coefficients(sol[1], D), label=L"u_0")
-plot!(evaluate_coefficients(sol[end], D), label=L"u_\mathrm{numerical}")
+plot!(evaluate_coefficients(sol.u[1], D), label=L"u_0")
+plot!(evaluate_coefficients(sol.u[end], D), label=L"u_\mathrm{numerical}")
 savefig("example_linear_advection.png");
 ```
 
@@ -101,7 +101,7 @@ using Printf; using Plots: Animation, frame, gif
 
 let anim = Animation()
     idx = 1
-    x, u = evaluate_coefficients(sol[idx], D)
+    x, u = evaluate_coefficients(sol.u[idx], D)
     fig = plot(x, u, xguide=L"x", yguide=L"u", xlim=extrema(x), ylim=(-1.05, 1.05),
               label="", title=@sprintf("\$t = %6.2f \$", sol.t[idx]))
     for idx in 1:length(sol.t)
@@ -121,8 +121,8 @@ You can use a CG or DG method by swapping out the derivative operator `D`.
 
 ```@example linear_advection
 plot(xguide=L"x", yguide=L"u")
-plot!(evaluate_coefficients(sol[1], D), label=L"u_0")
-plot!(evaluate_coefficients(sol[end], D), label=L"u_\mathrm{FD}")
+plot!(evaluate_coefficients(sol.u[1], D), label=L"u_0")
+plot!(evaluate_coefficients(sol.u[end], D), label=L"u_\mathrm{FD}")
 
 # CGSEM using polynomials of degree 3, i.e. 4 nodes per element, and 30 elements
 D_CGSEM = couple_continuously(

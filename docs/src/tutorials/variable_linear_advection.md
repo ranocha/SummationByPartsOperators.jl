@@ -55,8 +55,8 @@ sol = solve(ode, SSPRK104(), dt=D.Δx, adaptive=false,
 
 # visualise the result
 plot(xguide=L"x", yguide=L"u")
-plot!(evaluate_coefficients(sol[1], semi), label=L"u_0")
-plot!(evaluate_coefficients(sol[end], semi), label=L"u_\mathrm{numerical}")
+plot!(evaluate_coefficients(sol.u[1], semi), label=L"u_0")
+plot!(evaluate_coefficients(sol.u[end], semi), label=L"u_\mathrm{numerical}")
 savefig("example_linear_advection.png");
 ```
 

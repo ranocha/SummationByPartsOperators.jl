@@ -111,8 +111,8 @@ derivative makes the system stiff.
 sol = solve(ode, Rodas5(), saveat=range(first(tspan), stop=last(tspan), length=200))
 
 plot(xguide=L"x", yguide=L"u")
-plot!(evaluate_coefficients(sol[1], D1), label=L"u_0")
-plot!(evaluate_coefficients(sol[end], D1), label=L"u_\mathrm{numerical}")
+plot!(evaluate_coefficients(sol.u[1], D1), label=L"u_0")
+plot!(evaluate_coefficients(sol.u[end], D1), label=L"u_\mathrm{numerical}")
 savefig("example_kdv.png");
 ```
 
@@ -128,7 +128,7 @@ using Printf; using Plots: Animation, frame, gif
 
 let anim = Animation()
     idx = 1
-    x, u = evaluate_coefficients(sol[idx], D1)
+    x, u = evaluate_coefficients(sol.u[idx], D1)
     fig = plot(x, u, xguide=L"x", yguide=L"u", xlim=extrema(x), ylim=(-0.05, 2.05),
               label="", title=@sprintf("\$t = %6.2f \$", sol.t[idx]))
     for idx in 1:length(sol.t)

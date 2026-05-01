@@ -150,7 +150,7 @@ sol = solve(ode, Tsit5(); saveat)
 using Printf; using Plots: @animate, gif
 anim = @animate for i in eachindex(sol)
    t = sol.t[i]
-   scatter(first.(nodes), last.(nodes), sol[i], label = L"u_\mathrm{numerical}")
+   scatter(first.(nodes), last.(nodes), sol.u[i], label = L"u_\mathrm{numerical}")
    scatter!(first.(nodes), last.(nodes), u.(Ref(t), nodes), label = L"u_\mathrm{analytical}", xlabel = "x", ylabel = "y", zlabel = "u",
             title = @sprintf("t = %.2f", t), zrange = (-0.1, 1.1), legend = :topright, dpi = 170)
 end
