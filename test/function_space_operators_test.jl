@@ -46,7 +46,7 @@ import Optim, ForwardDiff # to enable loading the function space operator optimi
     let basis_functions = [one, identity, exp]
         D = function_space_operator(basis_functions, nodes, source, verbose = true,
                                     options = Optim.Options(g_tol = 1e-15,
-                                                            iterations = 15000))
+                                                            iterations = 25000))
 
         @test grid(D) ≈ nodes
         @test all(isapprox.(D * ones(N), zeros(N); atol = 1e-11))
