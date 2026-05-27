@@ -25,6 +25,9 @@ D_test_list = vcat([(Mattsson2017, acc_order) for acc_order in 2:9],
             summary(IOContext(devnull, :compact => compact), Dm_bounded)
             summary(IOContext(devnull, :compact => compact), Dc_bounded)
         end
+        @test isperiodic(Dp_bounded) == false
+        @test isperiodic(Dm_bounded) == false
+        @test isperiodic(Dc_bounded) == false
         M = mass_matrix(Dp_bounded)
         @test M == mass_matrix(Dm_bounded)
         @test M == mass_matrix(Dc_bounded)
@@ -83,6 +86,7 @@ D_test_list = vcat([(Mattsson2017, acc_order) for acc_order in 2:9],
         D_periodic = upwind_operators(periodic_derivative_operator;
                                       accuracy_order = acc_order,
                                       xmin, xmax, N = N - 1)
+        @test isperiodic(D_periodic) == true
         @test D_periodic.minus == Dm_periodic
         @test D_periodic.plus == Dp_periodic
         @test Matrix(D_periodic.central) ≈ (Matrix(Dm_periodic) + Matrix(Dp_periodic)) / 2
@@ -237,6 +241,11 @@ end
     @test size(D.plus) == (12, 12)
     @test size(D.central) == (12, 12)
 
+    @test isperiodic(D) == false
+    @test isperiodic(D.minus) == false
+    @test isperiodic(D.plus) == false
+    @test isperiodic(D.central) == false
+
     x = @inferred grid(D)
     u = @. sinpi(2 * x)
 
@@ -282,6 +291,11 @@ end
     @test size(D.minus) == (12, 12)
     @test size(D.plus) == (12, 12)
     @test size(D.central) == (12, 12)
+
+    @test isperiodic(D) == true
+    @test isperiodic(D.minus) == true
+    @test isperiodic(D.plus) == true
+    @test isperiodic(D.central) == true
 
     x = @inferred grid(D)
     u = @. sinpi(2 * x)

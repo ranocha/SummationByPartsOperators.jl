@@ -30,6 +30,7 @@ let T = Float32
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
+    @test isperiodic(D) == true
     @test SummationByPartsOperators.xmin(D) ≈ xmin
     @test SummationByPartsOperators.xmax(D) ≈ xmax
     @test restrict_interior(x2, D) ≈ x2
@@ -63,6 +64,7 @@ let T = Float32
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
+    @test isperiodic(D) == true
     @test SummationByPartsOperators.xmin(D) ≈ xmin
     @test SummationByPartsOperators.xmax(D) ≈ xmax
     @test restrict_interior(x2, D) ≈ x2
@@ -100,6 +102,7 @@ let T = Float32
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
+    @test isperiodic(D) == true
     @test SummationByPartsOperators.xmin(D) ≈ xmin
     @test SummationByPartsOperators.xmax(D) ≈ xmax
     @test restrict_interior(x2, D) ≈ x2
@@ -143,6 +146,7 @@ let T = Float32
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == true
+    @test isperiodic(D) == true
     @test SummationByPartsOperators.xmin(D) ≈ xmin
     @test SummationByPartsOperators.xmax(D) ≈ xmax
     @test restrict_interior(x2, D) ≈ x2
@@ -183,6 +187,7 @@ let T = Float32
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == true
+    @test isperiodic(D) == true
     @test restrict_interior(x2, D) ≈ x2
     @test length(restrict_boundary(x2, D)) == 0
     M = mass_matrix(D)
@@ -225,6 +230,7 @@ let T = Float32
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == true
+    @test isperiodic(D) == true
     @test restrict_interior(x2, D) ≈ x2
     @test length(restrict_boundary(x2, D)) == 0
     M = mass_matrix(D)
@@ -276,6 +282,7 @@ let T = Float32
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == true # because this operator is zero!
+    @test isperiodic(D) == true
     @test restrict_interior(x2, D) ≈ x2
     @test length(restrict_boundary(x2, D)) == 0
     M = mass_matrix(D)
@@ -309,6 +316,7 @@ let T = Float32
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
+    @test isperiodic(D) == true
     @test restrict_interior(x2, D) ≈ x2
     @test length(restrict_boundary(x2, D)) == 0
     M = mass_matrix(D)
@@ -349,6 +357,7 @@ let T = Float32
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
+    @test isperiodic(D) == true
     @test restrict_interior(x2, D) ≈ x2
     @test length(restrict_boundary(x2, D)) == 0
     M = mass_matrix(D)
@@ -422,6 +431,7 @@ let T = Float64
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
+    @test isperiodic(D) == true
     @test restrict_interior(x2, D) ≈ x2
     @test length(restrict_boundary(x2, D)) == 0
     M = mass_matrix(D)
@@ -453,6 +463,7 @@ let T = Float64
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
+    @test isperiodic(D) == true
     @test restrict_interior(x2, D) ≈ x2
     @test length(restrict_boundary(x2, D)) == 0
     M = mass_matrix(D)
@@ -488,6 +499,7 @@ let T = Float64
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
+    @test isperiodic(D) == true
     @test restrict_interior(x2, D) ≈ x2
     @test length(restrict_boundary(x2, D)) == 0
     M = mass_matrix(D)
@@ -524,6 +536,7 @@ let T = Float64
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == true
+    @test isperiodic(D) == true
     @test restrict_interior(x2, D) ≈ x2
     @test length(restrict_boundary(x2, D)) == 0
     M = mass_matrix(D)
@@ -555,6 +568,7 @@ let T = Float64
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == true
+    @test isperiodic(D) == true
     @test restrict_interior(x2, D) ≈ x2
     @test length(restrict_boundary(x2, D)) == 0
     M = mass_matrix(D)
@@ -592,6 +606,7 @@ let T = Float64
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == true
+    @test isperiodic(D) == true
     @test restrict_interior(x2, D) ≈ x2
     @test length(restrict_boundary(x2, D)) == 0
     M = mass_matrix(D)
@@ -630,6 +645,7 @@ let T = Float64
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == true # because this operator is zero!
+    @test isperiodic(D) == true
     @test restrict_interior(x2, D) ≈ x2
     @test length(restrict_boundary(x2, D)) == 0
     M = mass_matrix(D)
@@ -661,6 +677,7 @@ let T = Float64
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
+    @test isperiodic(D) == true
     @test restrict_interior(x2, D) ≈ x2
     @test length(restrict_boundary(x2, D)) == 0
     M = mass_matrix(D)
@@ -699,6 +716,7 @@ let T = Float64
     @test SummationByPartsOperators.derivative_order(D) == derivative_order
     @test SummationByPartsOperators.accuracy_order(D) == accuracy_order
     @test issymmetric(D) == false
+    @test isperiodic(D) == true
     @test restrict_interior(x2, D) ≈ x2
     @test length(restrict_boundary(x2, D)) == 0
     M = mass_matrix(D)
@@ -1120,6 +1138,7 @@ let T = Float32
         @test derivative_order(D) == der_order
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == false
+        @test isperiodic(D) == true
         @test restrict_interior(x2, D) ≈ x2
         @test length(restrict_boundary(x2, D)) == 0
         M = mass_matrix(D)
@@ -1148,6 +1167,7 @@ let T = Float32
         @test derivative_order(D) == der_order
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == false
+        @test isperiodic(D) == true
         @test restrict_interior(x2, D) ≈ x2
         @test length(restrict_boundary(x2, D)) == 0
         M = mass_matrix(D)
@@ -1193,6 +1213,7 @@ let T = Float32
         @test derivative_order(D) == der_order
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == true
+        @test isperiodic(D) == true
         @test restrict_interior(x2, D) ≈ x2
         @test length(restrict_boundary(x2, D)) == 0
         M = mass_matrix(D)
@@ -1226,6 +1247,7 @@ let T = Float32
         @test derivative_order(D) == der_order
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == true
+        @test isperiodic(D) == true
         @test restrict_interior(x2, D) ≈ x2
         @test length(restrict_boundary(x2, D)) == 0
         M = mass_matrix(D)
@@ -1311,6 +1333,7 @@ end
             @test derivative_order(D) == der_order
             @test accuracy_order(D) == acc_order
             @test issymmetric(D) == false
+            @test isperiodic(D) == true
             @test restrict_interior(x2, D) ≈ x2
             @test length(restrict_boundary(x2, D)) == 0
             M = mass_matrix(D)
@@ -1349,6 +1372,7 @@ end
             @test derivative_order(D) == der_order
             @test accuracy_order(D) == acc_order
             @test issymmetric(D) == false
+            @test isperiodic(D) == true
             @test restrict_interior(x2, D) ≈ x2
             @test length(restrict_boundary(x2, D)) == 0
             M = mass_matrix(D)
@@ -1411,6 +1435,7 @@ end
             @test derivative_order(D) == der_order
             @test accuracy_order(D) == acc_order
             @test issymmetric(D) == false
+            @test isperiodic(D) == true
             @test restrict_interior(x2, D) ≈ x2
             @test length(restrict_boundary(x2, D)) == 0
             M = mass_matrix(D)
@@ -1434,6 +1459,7 @@ end
             @test derivative_order(D) == der_order
             @test accuracy_order(D) == acc_order
             @test issymmetric(D) == false
+            @test isperiodic(D) == true
             @test restrict_interior(x2, D) ≈ x2
             @test length(restrict_boundary(x2, D)) == 0
             M = mass_matrix(D)

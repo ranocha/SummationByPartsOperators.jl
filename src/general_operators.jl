@@ -146,6 +146,14 @@ end
 @inline grid(D::AbstractDerivativeOperator) = D.grid
 @inline grid(D::AbstractPeriodicDerivativeOperator) = D.grid_compute
 
+"""
+    isperiodic(D)
+
+Return `true` if the derivative operator `D` is periodic and `false` otherwise.
+"""
+isperiodic(D::AbstractDerivativeOperator) = false
+isperiodic(D::AbstractPeriodicDerivativeOperator) = true
+
 xmin(D::AbstractDerivativeOperator) = first(grid(D))
 xmax(D::AbstractDerivativeOperator) = last(grid(D))
 
