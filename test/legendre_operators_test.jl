@@ -23,6 +23,7 @@ for T in (Float32, Float64)
         println(devnull, D)
         @test SummationByPartsOperators.derivative_order(D) == 1
         @test issymmetric(D) == false
+        @test @inferred(isperiodic(D)) == false
         @test SummationByPartsOperators.xmin(D) ≈ xmin
         @test SummationByPartsOperators.xmax(D) ≈ xmax
         M = mass_matrix(D)

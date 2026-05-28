@@ -149,7 +149,8 @@ export integrate, integrate_boundary,
        derivative_left, derivative_right,
        mul_transpose_derivative_left!, mul_transpose_derivative_right!,
        evaluate_coefficients, evaluate_coefficients!,
-       compute_coefficients, compute_coefficients!
+       compute_coefficients, compute_coefficients!,
+       isperiodic
 export periodic_central_derivative_operator, periodic_derivative_operator,
        derivative_operator,
        dissipation_operator, var_coef_derivative_operator,

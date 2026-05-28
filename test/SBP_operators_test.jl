@@ -40,6 +40,7 @@ for source in D_test_list, T in (Float32, Float64)
         @test derivative_order(D) == der_order
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == false
+        @test @inferred(isperiodic(D)) == false
         @test SummationByPartsOperators.xmin(D) ≈ xmin
         @test SummationByPartsOperators.xmax(D) ≈ xmax
         # SBP property
@@ -110,6 +111,7 @@ for source in D_test_list, T in (Float32, Float64)
         @test derivative_order(D) == der_order
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == false
+        @test @inferred(isperiodic(D)) == false
         @test SummationByPartsOperators.xmin(D) ≈ xmin
         @test SummationByPartsOperators.xmax(D) ≈ xmax
         # SBP property
@@ -190,6 +192,7 @@ for source in D_test_list, T in (Float32, Float64)
         @test derivative_order(D) == der_order
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == false
+        @test @inferred(isperiodic(D)) == false
         @test SummationByPartsOperators.xmin(D) ≈ xmin
         @test SummationByPartsOperators.xmax(D) ≈ xmax
         # SBP property
@@ -280,6 +283,7 @@ for source in D_test_list, T in (Float32, Float64)
         @test derivative_order(D) == der_order
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == false
+        @test @inferred(isperiodic(D)) == false
         @test SummationByPartsOperators.xmin(D) ≈ xmin
         @test SummationByPartsOperators.xmax(D) ≈ xmax
         # SBP property
@@ -378,6 +382,7 @@ for source in D_test_list, T in (Float32, Float64)
         @test derivative_order(D) == der_order
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == false
+        @test @inferred(isperiodic(D)) == false
         @test SummationByPartsOperators.xmin(D) ≈ xmin
         @test SummationByPartsOperators.xmax(D) ≈ xmax
         # SBP property
@@ -443,6 +448,7 @@ for source in D_test_list, T in (Float32, Float64)
         @test derivative_order(D) == der_order
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == false
+        @test @inferred(isperiodic(D)) == false
         @test SummationByPartsOperators.xmin(D) ≈ xmin
         @test SummationByPartsOperators.xmax(D) ≈ xmax
         # SBP property
@@ -517,6 +523,7 @@ for source in D_test_list, T in (Float32, Float64)
         @test derivative_order(D) == der_order
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == false
+        @test @inferred(isperiodic(D)) == false
         @test SummationByPartsOperators.xmin(D) ≈ xmin
         @test SummationByPartsOperators.xmax(D) ≈ xmax
         # SBP property
@@ -598,6 +605,7 @@ for source in D_test_list, T in (Float32, Float64)
         @test derivative_order(D) == der_order
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == false
+        @test @inferred(isperiodic(D)) == false
         @test SummationByPartsOperators.xmin(D) ≈ xmin
         @test SummationByPartsOperators.xmax(D) ≈ xmax
         # SBP property
@@ -690,6 +698,7 @@ end
         @test derivative_order(D) == der_order
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == false
+        @test @inferred(isperiodic(D)) == false
 
         @test restrict_interior(x2, D) ≈ x2[(begin + 1):(end - 1)]
         @test restrict_boundary(x2, D) ≈ [xmin^2, xmax^2]
@@ -754,6 +763,7 @@ end
         @test derivative_order(D) == der_order
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == false
+        @test @inferred(isperiodic(D)) == false
 
         @test restrict_interior(x2, D) ≈ x2[(begin + 1):(end - 1)]
         @test restrict_boundary(x2, D) ≈ [xmin^2, xmax^2]
@@ -827,6 +837,7 @@ end
         @test derivative_order(D) == der_order
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == false
+        @test @inferred(isperiodic(D)) == false
 
         @test restrict_interior(x2, D) ≈ x2[(begin + 1):(end - 1)]
         @test restrict_boundary(x2, D) ≈ [xmin^2, xmax^2]
@@ -914,6 +925,7 @@ end
         @test derivative_order(D) == der_order
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == false
+        @test @inferred(isperiodic(D)) == false
 
         @test restrict_interior(x2, D) ≈ x2[(begin + 1):(end - 1)]
         @test restrict_boundary(x2, D) ≈ [xmin^2, xmax^2]
@@ -986,6 +998,7 @@ end
         @test derivative_order(D) == der_order
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == false
+        @test @inferred(isperiodic(D)) == false
 
         @test restrict_interior(x2, D) ≈ x2[(begin + 1):(end - 1)]
         @test restrict_boundary(x2, D) ≈ [xmin^2, xmax^2]
@@ -1069,6 +1082,7 @@ end
         @test derivative_order(D) == der_order
         @test accuracy_order(D) == acc_order
         @test issymmetric(D) == false
+        @test @inferred(isperiodic(D)) == false
 
         @test restrict_interior(x2, D) ≈ x2[(begin + 1):(end - 1)]
         @test restrict_boundary(x2, D) ≈ [xmin^2, xmax^2]
