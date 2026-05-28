@@ -55,9 +55,9 @@ using SummationByPartsOperators
         @test issymmetric(Dm) == false
         @test issymmetric(Dp) == false
         @test issymmetric(Dc) == false
-        @test isperiodic(Dm) == false
-        @test isperiodic(Dp) == false
-        @test isperiodic(Dc) == false
+        @test @inferred(isperiodic(Dm)) == false
+        @test @inferred(isperiodic(Dp)) == false
+        @test @inferred(isperiodic(Dc)) == false
 
         D_reference = upwind_operators(Mattsson2017;
                                        derivative_order = 1, accuracy_order = acc_order,
@@ -178,9 +178,9 @@ end
         @test issymmetric(Dm) == false
         @test issymmetric(Dp) == false
         @test issymmetric(Dc) == false
-        @test isperiodic(Dm) == false
-        @test isperiodic(Dp) == false
-        @test isperiodic(Dc) == false
+        @test @inferred(isperiodic(Dm)) == false
+        @test @inferred(isperiodic(Dp)) == false
+        @test @inferred(isperiodic(Dc)) == false
 
         D_reference = upwind_operators(Mattsson2017;
                                        derivative_order = 1, accuracy_order = acc_order,
