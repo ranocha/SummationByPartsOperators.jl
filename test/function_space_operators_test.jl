@@ -19,7 +19,7 @@ import Optim, ForwardDiff # to enable loading the function space operator optimi
                                                            source; derivative_order = 2)
 
         @test grid(D) ≈ nodes
-        @test all(isapprox.(D * ones(N), zeros(N); atol = 1e-13))
+        @test all(isapprox.(D * ones(N), zeros(N); atol = 1e-14))
         @test D * nodes ≈ ones(N)
         @test D * (nodes .^ 2) ≈ 2 * nodes
         @test D * (nodes .^ 3) ≈ 3 * (nodes .^ 2)
@@ -31,7 +31,7 @@ import Optim, ForwardDiff # to enable loading the function space operator optimi
         D = function_space_operator(basis_functions, nodes, source)
 
         @test grid(D) ≈ nodes
-        @test all(isapprox.(D * ones(N), zeros(N); atol = 1e-12))
+        @test all(isapprox.(D * ones(N), zeros(N); atol = 1e-13))
         @test D * nodes ≈ ones(N)
         @test D * exp.(nodes) ≈ exp.(nodes)
         M = mass_matrix(D)
@@ -44,12 +44,10 @@ import Optim, ForwardDiff # to enable loading the function space operator optimi
         0.8574665549914025, 1.0]
     N = length(nodes)
     let basis_functions = [one, identity, exp]
-        D = function_space_operator(basis_functions, nodes, source, verbose = true,
-                                    options = Optim.Options(g_tol = 1e-15,
-                                                            iterations = 25000))
+        D = function_space_operator(basis_functions, nodes, source, verbose = true)
 
         @test grid(D) ≈ nodes
-        @test all(isapprox.(D * ones(N), zeros(N); atol = 1e-11))
+        @test all(isapprox.(D * ones(N), zeros(N); atol = 1e-13))
         @test D * nodes ≈ ones(N)
         @test D * exp.(nodes) ≈ exp.(nodes)
         M = mass_matrix(D)
