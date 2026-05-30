@@ -1,6 +1,6 @@
 module SummationByPartsOperatorsOptimForwardDiffExt
 
-using Optim: Optim, Options, LBFGS, optimize, minimizer
+using Optim: Optim, Options, BFGS, optimize, minimizer
 using ForwardDiff: ForwardDiff
 
 using SummationByPartsOperators: SummationByPartsOperators, GlaubitzNordströmÖffner2023,
@@ -13,7 +13,7 @@ function SummationByPartsOperators.function_space_operator(basis_functions,
                                                            source::SourceOfCoefficients;
                                                            derivative_order = 1,
                                                            accuracy_order = 0,
-                                                           opt_alg = LBFGS(),
+                                                           opt_alg = BFGS(),
                                                            options = Options(g_tol = 1e-14,
                                                                              iterations = 10000),
                                                            verbose = false) where {T,
