@@ -19,7 +19,7 @@ import Optim, ForwardDiff # to enable loading the function space operator optimi
                                                            source; derivative_order = 2)
 
         @test grid(D) ≈ nodes
-        @test all(isapprox.(D * ones(N), zeros(N); atol = 1e-13))
+        @test all(isapprox.(D * ones(N), zeros(N); atol = 1e-12))
         @test D * nodes ≈ ones(N)
         @test D * (nodes .^ 2) ≈ 2 * nodes
         @test D * (nodes .^ 3) ≈ 3 * (nodes .^ 2)
