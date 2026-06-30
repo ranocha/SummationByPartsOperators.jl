@@ -188,15 +188,15 @@ end
     M = mass_matrix(D)
     @test M * Matrix(Dp) + Matrix(Dm)' * M ≈ mass_matrix_boundary(D)
 
-    @test_throws ArgumentError UpwindOperators(derivative_operator(Mattsson2017(:minus), 1,
-                                                                   acc_order, xmin, xmax,
-                                                                   N),
-                                               derivative_operator(Mattsson2017(:central),
-                                                                   1, acc_order, xmin, xmax,
-                                                                   N + 1),
-                                               derivative_operator(Mattsson2017(:plus), 1,
-                                                                   acc_order, xmin, xmax,
-                                                                   N))
+    @test_throws DimensionMismatch UpwindOperators(derivative_operator(Mattsson2017(:minus),
+                                                                       1, acc_order,
+                                                                       xmin, xmax, N),
+                                                   derivative_operator(Mattsson2017(:central),
+                                                                       1, acc_order,
+                                                                       xmin, xmax, N + 1),
+                                                   derivative_operator(Mattsson2017(:plus),
+                                                                       1, acc_order,
+                                                                       xmin, xmax, N))
 
     # mass matrix scaling
     x1 = grid(D)
