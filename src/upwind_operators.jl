@@ -37,7 +37,7 @@ See also [`upwind_operators`](@ref), [`PeriodicUpwindOperators`](@ref)
                                                 AbstractNonperiodicDerivativeOperator{T},
                                                 Plus <:
                                                 AbstractNonperiodicDerivativeOperator{T}}
-        @argcheck grid(minus) == grid(central) == grid(plus)
+        @argcheck grid(minus) ≈ grid(central) ≈ grid(plus)
         @argcheck size(minus) == size(central) == size(plus)
         @argcheck derivative_order(minus) == derivative_order(central) ==
                   derivative_order(plus)
@@ -90,7 +90,7 @@ See also [`upwind_operators`](@ref), [`UpwindOperators`](@ref)
                                                         Plus <:
                                                         AbstractPeriodicDerivativeOperator{T}
                                                         }
-        @argcheck grid(minus) == grid(central) == grid(plus)
+        @argcheck grid(minus) ≈ grid(central) ≈ grid(plus)
         @argcheck size(minus) == size(central) == size(plus)
         @argcheck derivative_order(minus) == derivative_order(central) ==
                   derivative_order(plus)

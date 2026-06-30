@@ -333,3 +333,12 @@ end
         summary(IOContext(devnull, :compact => compact), D.central)
     end
 end
+
+@testset "grid equality check (#419)" begin
+    xmin = -1.0; xmax = 1.0
+    D_GLL = legendre_derivative_operator(xmin, xmax, 4)
+    weights = diag(mass_matrix(D_GLL))
+    Dm = MatrixDerivativeOperator(xmin, xmax, grid(D_GLL), weights, Matrix(D_GLL), 0, nothing)
+    Dp = MatrixDerivativeOperator(xmin, xmax, grid(D_GLL), weights, Matrix(D_GLL), 0, nothing)
+    @test_nowarn UpwindOperators(Dm, D_GLL, Dp)
+end
