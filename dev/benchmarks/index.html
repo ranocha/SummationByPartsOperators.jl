@@ -23,24 +23,24 @@ function doit(D, text, du, u)
   show(stdout, MIME&quot;text/plain&quot;(), @benchmark mul!($du, $D, $u))
   println()
 end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">doit (generic function with 1 method)</code></pre><p>First, we benchmark the implementation from SummationByPartsOperators.jl.</p><pre><code class="language-julia hljs">doit(D_SBP, &quot;D_SBP:&quot;, du, u)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">D_SBP:
-BenchmarkTools.Trial: 10000 samples with 994 evaluations per sample.
- Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">32.855 ns</span></span> … <span class="sgr35">87.900 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
- Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">39.944 ns              </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
- Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">40.047 ns</span></span> ± <span class="sgr32"> 2.022 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
+BenchmarkTools.Trial: 10000 samples with 995 evaluations per sample.
+ Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">25.919 ns</span></span> … <span class="sgr35">50.557 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
+ Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">26.613 ns              </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
+ Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">26.978 ns</span></span> ± <span class="sgr32"> 1.644 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
 
-                  ▁   ▆▁ ▁ █<span class="sgr34">▂</span>                  ▁              ▁
-  ▇▁▁▁▁▁▃▁▁▁▁▁▁▃▁▅█▄▅▅██████<span class="sgr34">█</span>▅▅▃▆▇▆▄▅▅▆▆▆▇▆▅▆▆█████▆▇▆▆▅▃▄▄▄▅ █
-  32.9 ns<span class="sgr90">      Histogram: <span class="sgr1">log(</span>frequency<span class="sgr1">)</span> by time</span>      49.1 ns <span class="sgr1">&lt;</span>
+   ▁▇█<span class="sgr34">▄</span>▂ <span class="sgr32"> </span>                                                    
+  ▄███<span class="sgr34">█</span>█▇<span class="sgr32">▆</span>▇▅▄▃▃▃▂▂▂▂▂▂▂▂▂▂▂▁▂▁▁▁▂▁▁▁▁▂▁▁▂▁▁▁▁▁▁▁▁▁▁▁▁▂▂▂▂▂▂▂▂ ▃
+  25.9 ns<span class="sgr90">         Histogram: frequency by time</span>        35.2 ns <span class="sgr1">&lt;</span>
 
  Memory estimate<span class="sgr90">: </span><span class="sgr33">0 bytes</span>, allocs estimate<span class="sgr90">: </span><span class="sgr33">0</span>.</code></pre><p>Next, we compare this to the runtime obtained using a sparse matrix representation of the derivative operator. Depending on the hardware etc., this can be an order of magnitude slower than the optimized implementation from SummationByPartsOperators.jl.</p><pre><code class="language-julia hljs">doit(D_sparse, &quot;D_sparse:&quot;, du, u)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">D_sparse:
-BenchmarkTools.Trial: 10000 samples with 310 evaluations per sample.
- Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">271.010 ns</span></span> … <span class="sgr35">527.252 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
- Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">272.058 ns               </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
- Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">274.312 ns</span></span> ± <span class="sgr32"> 10.315 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
+BenchmarkTools.Trial: 10000 samples with 611 evaluations per sample.
+ Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">195.818 ns</span></span> … <span class="sgr35">372.187 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
+ Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">207.133 ns               </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
+ Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">208.977 ns</span></span> ± <span class="sgr32">  8.001 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
 
-  ▅█<span class="sgr34">▇</span>▄▅▁<span class="sgr32"> </span>                   ▂▃▂▂                                ▂
-  ██<span class="sgr34">█</span>███<span class="sgr32">█</span>▁▆▇█▇▅▄▁▃▃▁▃▁▁▁▁▁▁▆███████▇▇▇▆▇▇▆▅▄▅▅▅▃▃▁▄▄▃▄▃▁▄▅▃▄▄▃▅ █
-  271 ns<span class="sgr90">        Histogram: <span class="sgr1">log(</span>frequency<span class="sgr1">)</span> by time</span>        304 ns <span class="sgr1">&lt;</span>
+             ▁▃▄▆█▆▇<span class="sgr34">▆</span>▅▃<span class="sgr32">▃</span>▁                                       
+  ▂▁▂▂▃▃▃▄▄▇████████<span class="sgr34">█</span>██<span class="sgr32">█</span>█▇▆▆▅▄▄▄▃▃▃▄▄▄▄▄▄▄▄▃▃▃▃▃▃▂▂▂▂▂▂▂▂▂▂▂▂▂▂ ▄
+  196 ns<span class="sgr90">           Histogram: frequency by time</span>          234 ns <span class="sgr1">&lt;</span>
 
  Memory estimate<span class="sgr90">: </span><span class="sgr33">0 bytes</span>, allocs estimate<span class="sgr90">: </span><span class="sgr33">0</span>.</code></pre><p>These results were obtained using the following versions.</p><pre><code class="language-julia hljs">using InteractiveUtils
 versioninfo()
@@ -53,10 +53,10 @@ Build Info:
   Official https://julialang.org/ release
 Platform Info:
   OS: Linux (x86_64-linux-gnu)
-  CPU: 4 × Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz
+  CPU: 4 × AMD EPYC 7763 64-Core Processor
   WORD_SIZE: 64
   LIBM: libopenlibm
-  LLVM: libLLVM-15.0.7 (ORCJIT, icelake-server)
+  LLVM: libLLVM-15.0.7 (ORCJIT, znver3)
 Threads: 2 default, 0 interactive, 1 GC (on 4 virtual cores)
 Environment:
   JULIA_PKG_SERVER_REGISTRY_PREFERENCE = eager
@@ -84,34 +84,34 @@ function doit(D, text, du, u)
   show(stdout, MIME&quot;text/plain&quot;(), @benchmark mul!($du, $D, $u))
   println()
 end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">doit (generic function with 1 method)</code></pre><p>First, we benchmark the implementation from SummationByPartsOperators.jl.</p><pre><code class="language-julia hljs">doit(D_SBP, &quot;D_SBP:&quot;, du, u)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">D_SBP:
-BenchmarkTools.Trial: 10000 samples with 165 evaluations per sample.
- Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">731.739 ns</span></span> … <span class="sgr35">994.018 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
- Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">784.818 ns               </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
- Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">782.413 ns</span></span> ± <span class="sgr32"> 18.960 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
+BenchmarkTools.Trial: 10000 samples with 202 evaluations per sample.
+ Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">388.851 ns</span></span> … <span class="sgr35">857.599 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
+ Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">392.074 ns               </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
+ Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">396.029 ns</span></span> ± <span class="sgr32"> 13.991 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
 
-  ▃               ▆▂    ▁          <span class="sgr32">▆</span><span class="sgr34">█</span> ▁  ▁▁            ▁▄▂▂▁▁   ▂
-  █▄▄▄▄▇▅▅▅▁▅▄▃▄▄▆██▆▇▆███▆▆▆▇▇▇▇▆▇<span class="sgr32">█</span><span class="sgr34">█</span>██████▇▆▅▄▅▅▄▅▅▅▄▅███████▇ █
-  732 ns<span class="sgr90">        Histogram: <span class="sgr1">log(</span>frequency<span class="sgr1">)</span> by time</span>        827 ns <span class="sgr1">&lt;</span>
+  ▂▆██<span class="sgr34">▇</span>▆▅▄<span class="sgr32">▃</span>▁▁                                     ▁▃▃▃▂▁▁       ▂
+  ████<span class="sgr34">█</span>███<span class="sgr32">█</span>██▅▅▆▇▇▇▅▅▆▄▁▁▁▁▁▁▁▁▁▁▁▁▃▁▁▃▁▃▃▁▁▃▁▃▃▁▅███████▇▇▇▆▅▆ █
+  389 ns<span class="sgr90">        Histogram: <span class="sgr1">log(</span>frequency<span class="sgr1">)</span> by time</span>        441 ns <span class="sgr1">&lt;</span>
 
  Memory estimate<span class="sgr90">: </span><span class="sgr33">0 bytes</span>, allocs estimate<span class="sgr90">: </span><span class="sgr33">0</span>.</code></pre><p>Again, we compare this to a representation of the derivative operator as a sparse matrix. No surprise - it is again much slower, as in periodic domains.</p><pre><code class="language-julia hljs">doit(D_sparse, &quot;D_sparse:&quot;, du, u)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">D_sparse:
 BenchmarkTools.Trial: 10000 samples with 7 evaluations per sample.
- Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">4.692 μs</span></span> … <span class="sgr35">  9.326 μs</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
- Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">4.738 μs               </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
- Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">4.768 μs</span></span> ± <span class="sgr32">165.809 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
+ Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">4.428 μs</span></span> … <span class="sgr35">  8.568 μs</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
+ Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">4.554 μs               </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
+ Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">4.601 μs</span></span> ± <span class="sgr32">248.703 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
 
-   ▅█<span class="sgr34">█</span>▇▅<span class="sgr32">▃</span>▁                                                    ▂
-  ▇██<span class="sgr34">█</span>██<span class="sgr32">█</span>█▆▄▁▁▁▁▁▁▄▆▆▅▆▁▃▃▁▁▁▁▃▁▁▁▁▁▁▁▁▁▃▁▁▁▁▃▁▄▅████▇▇▇▇▇▆▆▇ █
-  4.69 μs<span class="sgr90">      Histogram: <span class="sgr1">log(</span>frequency<span class="sgr1">)</span> by time</span>      5.49 μs <span class="sgr1">&lt;</span>
+   ▁▄▆██<span class="sgr34">▇</span>▆<span class="sgr32">▄</span>▂▁▁                                           ▁▁▁▁ ▂
+  ▃█████<span class="sgr34">█</span>█<span class="sgr32">█</span>███▇▇▆▄▅▅▅▇▅▅▃▁▄▁▁▁▁▃▁▁▁▁▁▁▁▁▁▁▃▁▃▁▁▁▁▁▃▁▁▁▄▆█████ █
+  4.43 μs<span class="sgr90">      Histogram: <span class="sgr1">log(</span>frequency<span class="sgr1">)</span> by time</span>      5.77 μs <span class="sgr1">&lt;</span>
 
  Memory estimate<span class="sgr90">: </span><span class="sgr33">0 bytes</span>, allocs estimate<span class="sgr90">: </span><span class="sgr33">0</span>.</code></pre><p>Finally, we compare it to a representation as a banded matrix. Disappointingly, this is still much slower than the optimized implementation from SummationByPartsOperators.jl.</p><pre><code class="language-julia hljs">doit(D_banded, &quot;D_banded:&quot;, du, u)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">D_banded:
 BenchmarkTools.Trial: 10000 samples with 1 evaluation per sample.
- Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">9.051 μs</span></span> … <span class="sgr35"> 21.402 μs</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
- Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">9.115 μs               </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
- Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">9.408 μs</span></span> ± <span class="sgr32">732.450 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
+ Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">9.488 μs</span></span> … <span class="sgr35"> 32.862 μs</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
+ Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">9.518 μs               </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
+ Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">9.629 μs</span></span> ± <span class="sgr32">998.875 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
 
-  █<span class="sgr34"> </span>   <span class="sgr32"> </span>                                                      
-  █<span class="sgr34">▅</span>▂▁▁<span class="sgr32">▁</span>▂▂▂▂▂▁▁▂▃▃▄▂▂▂▂▂▂▁▂▁▁▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▂▁▁▁▁▁▁▂▂▁▁▂▁▂ ▂
-  9.05 μs<span class="sgr90">         Histogram: frequency by time</span>        13.6 μs <span class="sgr1">&lt;</span>
+  <span class="sgr34">█</span><span class="sgr32"> </span>                                                          
+  <span class="sgr34">█</span><span class="sgr32">▂</span>▂▂▁▂▂▁▁▁▁▁▁▁▂▂▂▂▂▁▂▁▁▁▁▁▁▁▁▁▁▁▂▁▁▁▁▁▁▁▁▂▁▁▁▁▁▁▁▁▁▂▁▁▁▁▁▁▂ ▂
+  9.49 μs<span class="sgr90">         Histogram: frequency by time</span>        17.5 μs <span class="sgr1">&lt;</span>
 
  Memory estimate<span class="sgr90">: </span><span class="sgr33">0 bytes</span>, allocs estimate<span class="sgr90">: </span><span class="sgr33">0</span>.</code></pre><p>These results were obtained using the following versions.</p><pre><code class="language-julia hljs">using InteractiveUtils
 versioninfo()
@@ -124,10 +124,10 @@ Build Info:
   Official https://julialang.org/ release
 Platform Info:
   OS: Linux (x86_64-linux-gnu)
-  CPU: 4 × Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz
+  CPU: 4 × AMD EPYC 7763 64-Core Processor
   WORD_SIZE: 64
   LIBM: libopenlibm
-  LLVM: libLLVM-15.0.7 (ORCJIT, icelake-server)
+  LLVM: libLLVM-15.0.7 (ORCJIT, znver3)
 Threads: 2 default, 0 interactive, 1 GC (on 4 virtual cores)
 Environment:
   JULIA_PKG_SERVER_REGISTRY_PREFERENCE = eager
@@ -159,57 +159,57 @@ function doit(D, text, du, u)
   println()
 end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">doit (generic function with 1 method)</code></pre><p>At first, let us benchmark the derivative and dissipation operators implemented in SummationByPartsOperators.jl.</p><pre><code class="language-julia hljs">doit(D_SBP, &quot;D_SBP:&quot;, du, u)
 doit(Di_SBP, &quot;Di_SBP:&quot;, du, u)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">D_SBP:
-BenchmarkTools.Trial: 10000 samples with 167 evaluations per sample.
- Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">646.641 ns</span></span> … <span class="sgr35"> 1.047 μs</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
- Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">779.838 ns              </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
- Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">773.739 ns</span></span> ± <span class="sgr32">23.895 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
+BenchmarkTools.Trial: 10000 samples with 203 evaluations per sample.
+ Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">383.335 ns</span></span> … <span class="sgr35">859.448 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
+ Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">386.537 ns               </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
+ Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">390.544 ns</span></span> ± <span class="sgr32"> 14.630 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
 
-              ▁              ▄       ▆▄▃     <span class="sgr32"> </span>█<span class="sgr34">▆</span>▄▁       ▄▃▂▂  ▂
-  █▁▃▃▁▁▁▁▃▅▄▆█▄▄▅▃▁▃▄▄▄▅▅▃▄▃█▆█▇▆▇▇▆██████▇▇<span class="sgr32">█</span>█<span class="sgr34">█</span>████▇▇▇▆▇█████ █
-  647 ns<span class="sgr90">        Histogram: <span class="sgr1">log(</span>frequency<span class="sgr1">)</span> by time</span>       825 ns <span class="sgr1">&lt;</span>
+  ▂▆██<span class="sgr34">▇</span>▆▅▄▃<span class="sgr32">▁</span>                                       ▂▃▃▂▁        ▂
+  ████<span class="sgr34">█</span>████<span class="sgr32">█</span>█▆▅▆▇██▆▆▄▄▄▁▄▁▁▃▁▃▃▄▁▁▁▁▃▁▁▄▁▁▁▃▁▁▁▁▆███████▇▇▇▆▆▆ █
+  383 ns<span class="sgr90">        Histogram: <span class="sgr1">log(</span>frequency<span class="sgr1">)</span> by time</span>        435 ns <span class="sgr1">&lt;</span>
 
  Memory estimate<span class="sgr90">: </span><span class="sgr33">0 bytes</span>, allocs estimate<span class="sgr90">: </span><span class="sgr33">0</span>.
 Di_SBP:
-BenchmarkTools.Trial: 10000 samples with 10 evaluations per sample.
- Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">1.219 μs</span></span> … <span class="sgr35"> 3.466 μs</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
- Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">1.221 μs              </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
- Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">1.231 μs</span></span> ± <span class="sgr32">72.904 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
+BenchmarkTools.Trial: 10000 samples with 21 evaluations per sample.
+ Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">987.095 ns</span></span> … <span class="sgr35"> 1.965 μs</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
+ Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">994.286 ns              </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
+ Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">  1.004 μs</span></span> ± <span class="sgr32">61.672 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
 
-  <span class="sgr34">█</span><span class="sgr32">▃</span>                                                         ▁
-  <span class="sgr34">█</span><span class="sgr32">█</span>▆▃▁▁▃▃▃▃▁▃▁▁▄▄▃▅▄▁▁▃▃▃▁▁▃▁▃▁▁▁▁▁▄▃▃▁▄▁▃▁▁▃▁▁▃▃▁▁▁▁▄▄▆▆▅▆ █
-  1.22 μs<span class="sgr90">      Histogram: <span class="sgr1">log(</span>frequency<span class="sgr1">)</span> by time</span>     1.71 μs <span class="sgr1">&lt;</span>
+  ▇<span class="sgr34">█</span>▃<span class="sgr32"> </span>  ▁                                                    ▁ ▁
+  █<span class="sgr34">█</span>█<span class="sgr32">▅</span>▄▅██▄▃▃▃▃▁▁▅▅▅▅▁▁▁▁▁▁▁▃▁▃▁▁▁▁▁▁▃▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▃▁▁▁▁▅██ █
+  987 ns<span class="sgr90">        Histogram: <span class="sgr1">log(</span>frequency<span class="sgr1">)</span> by time</span>      1.38 μs <span class="sgr1">&lt;</span>
 
  Memory estimate<span class="sgr90">: </span><span class="sgr33">0 bytes</span>, allocs estimate<span class="sgr90">: </span><span class="sgr33">0</span>.</code></pre><p>Next, we compare the results to sparse matrix representations. It will not come as a surprise that these are again much (around an order of magnitude) slower.</p><pre><code class="language-julia hljs">doit(Di_sparse, &quot;Di_sparse:&quot;, du, u)
 doit(Di_banded, &quot;Di_banded:&quot;, du, u)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Di_sparse:
-BenchmarkTools.Trial: 10000 samples with 6 evaluations per sample.
- Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">5.205 μs</span></span> … <span class="sgr35"> 10.585 μs</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
- Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">5.350 μs               </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
- Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">5.383 μs</span></span> ± <span class="sgr32">199.915 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
+BenchmarkTools.Trial: 10000 samples with 7 evaluations per sample.
+ Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">4.951 μs</span></span> … <span class="sgr35">  8.705 μs</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
+ Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">4.995 μs               </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
+ Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">5.050 μs</span></span> ± <span class="sgr32">289.528 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
 
-       ▂▅▇<span class="sgr34">█</span>▇<span class="sgr32">▄</span>                                                 
-  ▂▂▃▄▆███<span class="sgr34">█</span>█<span class="sgr32">█</span>█▆▄▃▂▂▂▂▂▂▂▂▂▂▂▂▂▂▁▁▁▁▁▂▂▂▁▁▁▁▁▁▂▁▂▂▂▂▂▂▂▂▂▂▂▂▂▂ ▃
-  5.2 μs<span class="sgr90">          Histogram: frequency by time</span>        6.22 μs <span class="sgr1">&lt;</span>
+  ▄█<span class="sgr34">█</span>▅ <span class="sgr32"> </span>▁▁                                               ▂▁   ▂
+  ██<span class="sgr34">█</span>█▇<span class="sgr32">▄</span>██▆▃▃▁▁▄▆▆▆▄▃▄▁▃▃▁▁▁▁▁▁▁▁▃▁▁▁▁▁▃▁▁▁▁▁▁▁▁▁▁▃▁▁▁▁▅████▇ █
+  4.95 μs<span class="sgr90">      Histogram: <span class="sgr1">log(</span>frequency<span class="sgr1">)</span> by time</span>      6.21 μs <span class="sgr1">&lt;</span>
 
  Memory estimate<span class="sgr90">: </span><span class="sgr33">0 bytes</span>, allocs estimate<span class="sgr90">: </span><span class="sgr33">0</span>.
 Di_banded:
-BenchmarkTools.Trial: 10000 samples with 5 evaluations per sample.
- Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">6.707 μs</span></span> … <span class="sgr35"> 12.643 μs</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
- Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">6.772 μs               </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
- Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">6.826 μs</span></span> ± <span class="sgr32">313.911 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
+BenchmarkTools.Trial: 10000 samples with 4 evaluations per sample.
+ Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">7.021 μs</span></span> … <span class="sgr35"> 17.343 μs</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
+ Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">7.056 μs               </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
+ Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">7.140 μs</span></span> ± <span class="sgr32">493.378 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
 
-   ▆█<span class="sgr34">▇</span>▄<span class="sgr32"> </span>                                   ▁▁                 ▂
-  ███<span class="sgr34">█</span>█<span class="sgr32">█</span>▁▁▃▄▃▅▃▃▅▆▆▅▄▁▄▁▁▄▃▁▄▁▁▃▃▄▁▁▁▃▁▄▁▅▇███▆▆▆▅▆▆▆▅▅▅▅▅▅▅▅ █
-  6.71 μs<span class="sgr90">      Histogram: <span class="sgr1">log(</span>frequency<span class="sgr1">)</span> by time</span>      8.08 μs <span class="sgr1">&lt;</span>
+  █<span class="sgr34">█</span> <span class="sgr32"> </span> ▂▂                                                ▁    ▂
+  █<span class="sgr34">█</span>▄<span class="sgr32">▃</span>▄██▄▄▄▄▄▁▁▄▃▅▃▄▃▁▁▁▁▁▁▁▁▃▁▁▁▁▁▁▁▁▁▁▃▁▃▁▁▁▁▁▁▁▁▁▁▁▄███▇▇ █
+  7.02 μs<span class="sgr90">      Histogram: <span class="sgr1">log(</span>frequency<span class="sgr1">)</span> by time</span>      9.23 μs <span class="sgr1">&lt;</span>
 
  Memory estimate<span class="sgr90">: </span><span class="sgr33">0 bytes</span>, allocs estimate<span class="sgr90">: </span><span class="sgr33">0</span>.</code></pre><p>Finally, let&#39;s benchmark the same computation if a full (dense) matrix is used to represent the derivative operator. This is obviously a bad idea but 🤷</p><pre><code class="language-julia hljs">doit(Di_full, &quot;Di_full:&quot;, du, u)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Di_full:
 BenchmarkTools.Trial: 10000 samples with 1 evaluation per sample.
- Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">246.705 μs</span></span> … <span class="sgr35">351.670 μs</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
- Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">249.370 μs               </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
- Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">252.556 μs</span></span> ± <span class="sgr32">  6.078 μs</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
+ Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">115.477 μs</span></span> … <span class="sgr35">176.020 μs</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
+ Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">116.248 μs               </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
+ Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">118.424 μs</span></span> ± <span class="sgr32">  5.344 μs</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
 
-    ▃▇█▇<span class="sgr34">▅</span>▃▂▂▃▃<span class="sgr32">▁</span>       ▄▅▅▄▃▂▁▁▁            ▁▁                   ▂
-  ▂▆████<span class="sgr34">█</span>█████<span class="sgr32">█</span>█▇▆▆▆▆████████████▇▆▇█▇▆▆▆▇▇███▇▇▆▆▅▆▆▅▅▅▅▅▅▂▄▅▆ █
-  247 μs<span class="sgr90">        Histogram: <span class="sgr1">log(</span>frequency<span class="sgr1">)</span> by time</span>        276 μs <span class="sgr1">&lt;</span>
+  ▄█<span class="sgr34">▆</span>▄▃▁▁<span class="sgr32"> </span>▁▁                  ▃▄▂▁                              ▁
+  ██<span class="sgr34">█</span>████<span class="sgr32">█</span>██▇▆▆▆▅▆▆▅▅▆▅▅▅▄▄▄▄▇███████▇▆▆▆▄▄▅▅▅▂▃▄▄▅▃▄▄▄▄▄▆▆▅▅▅▅ █
+  115 μs<span class="sgr90">        Histogram: <span class="sgr1">log(</span>frequency<span class="sgr1">)</span> by time</span>        140 μs <span class="sgr1">&lt;</span>
 
  Memory estimate<span class="sgr90">: </span><span class="sgr33">0 bytes</span>, allocs estimate<span class="sgr90">: </span><span class="sgr33">0</span>.</code></pre><p>These results were obtained using the following versions.</p><pre><code class="language-julia hljs">using InteractiveUtils
 versioninfo()
@@ -222,10 +222,10 @@ Build Info:
   Official https://julialang.org/ release
 Platform Info:
   OS: Linux (x86_64-linux-gnu)
-  CPU: 4 × Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz
+  CPU: 4 × AMD EPYC 7763 64-Core Processor
   WORD_SIZE: 64
   LIBM: libopenlibm
-  LLVM: libLLVM-15.0.7 (ORCJIT, icelake-server)
+  LLVM: libLLVM-15.0.7 (ORCJIT, znver3)
 Threads: 2 default, 0 interactive, 1 GC (on 4 virtual cores)
 Environment:
   JULIA_PKG_SERVER_REGISTRY_PREFERENCE = eager
@@ -288,36 +288,36 @@ show(stdout, MIME&quot;text/plain&quot;(), @benchmark mul!($du, $D_sparse, $u))
 println(&quot;\nD_full&quot;)
 show(stdout, MIME&quot;text/plain&quot;(), @benchmark mul!($du, $D_full, $u))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Scalar case
 D_SBP
-BenchmarkTools.Trial: 10000 samples with 980 evaluations per sample.
- Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">61.904 ns</span></span> … <span class="sgr35">126.880 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
- Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">75.215 ns               </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
- Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">71.876 ns</span></span> ± <span class="sgr32">  5.828 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
+BenchmarkTools.Trial: 10000 samples with 989 evaluations per sample.
+ Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">45.829 ns</span></span> … <span class="sgr35">95.375 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
+ Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">47.056 ns              </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
+ Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">47.561 ns</span></span> ± <span class="sgr32"> 2.121 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
 
-  ▇             ▁          ▂    <span class="sgr32"> </span> ▆▂     ▆<span class="sgr34">█</span>               ▂▁   ▁
-  █▇▅▆▆▆▆▆▅▅▅▆▆██▇▇▆▇▆▅▆▆▇▇█▇▇▇▇<span class="sgr32">▇</span>▇██▇▇▇▇▇█<span class="sgr34">█</span>▇▅▃▅▇▅▆█▇▆▅▅▄▄▇██▇▇ █
-  61.9 ns<span class="sgr90">       Histogram: <span class="sgr1">log(</span>frequency<span class="sgr1">)</span> by time</span>      81.9 ns <span class="sgr1">&lt;</span>
+   ▂▅▆███<span class="sgr34">█</span>▇▇<span class="sgr32">▆</span>▆▅▅▄▂ ▂▁  ▁                             ▁▂▂▂▂▁   ▃
+  ▇██████<span class="sgr34">█</span>██<span class="sgr32">█</span>████████▇▇█▅▅▅▃▄▁▃▁▃▁▁▁▁▁▁▁▃▁▃▁▁▁▁▁▁▁▄▆█████████ █
+  45.8 ns<span class="sgr90">      Histogram: <span class="sgr1">log(</span>frequency<span class="sgr1">)</span> by time</span>        56 ns <span class="sgr1">&lt;</span>
 
  Memory estimate<span class="sgr90">: </span><span class="sgr33">0 bytes</span>, allocs estimate<span class="sgr90">: </span><span class="sgr33">0</span>.
 D_sparse
-BenchmarkTools.Trial: 10000 samples with 224 evaluations per sample.
- Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">332.281 ns</span></span> … <span class="sgr35">516.179 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
- Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">337.969 ns               </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
- Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">339.994 ns</span></span> ± <span class="sgr32">  9.195 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
+BenchmarkTools.Trial: 10000 samples with 230 evaluations per sample.
+ Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">322.474 ns</span></span> … <span class="sgr35">567.370 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
+ Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">377.361 ns               </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
+ Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">379.700 ns</span></span> ± <span class="sgr32"> 21.861 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
 
-     █▇▅▄█<span class="sgr34">▆</span>▇<span class="sgr32">▆</span>▁                                                  
-  ▃▄██████<span class="sgr34">█</span>█<span class="sgr32">█</span>█▅▃▂▂▂▂▂▂▂▂▂▂▁▂▂▂▂▂▃▃▃▃▃▃▃▃▃▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂ ▃
-  332 ns<span class="sgr90">           Histogram: frequency by time</span>          378 ns <span class="sgr1">&lt;</span>
+                      ▂▃▃▄▆█▇▇<span class="sgr34">▆</span><span class="sgr32">▅</span>▅▄▄▂▁▁▂                         
+  ▁▁▂▂▂▃▂▂▂▂▂▂▃▄▆▇▆▆▇█████████<span class="sgr34">█</span><span class="sgr32">█</span>████████▇▆▅▄▅▄▄▄▄▄▄▃▃▃▂▂▂▂▂▂▁▁▂ ▄
+  322 ns<span class="sgr90">           Histogram: frequency by time</span>          441 ns <span class="sgr1">&lt;</span>
 
  Memory estimate<span class="sgr90">: </span><span class="sgr33">0 bytes</span>, allocs estimate<span class="sgr90">: </span><span class="sgr33">0</span>.
 D_full
 BenchmarkTools.Trial: 10000 samples with 10 evaluations per sample.
- Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">1.711 μs</span></span> … <span class="sgr35"> 2.836 μs</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
- Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">1.726 μs              </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
- Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">1.735 μs</span></span> ± <span class="sgr32">67.958 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
+ Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">1.108 μs</span></span> … <span class="sgr35"> 3.486 μs</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
+ Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">1.119 μs              </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
+ Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">1.131 μs</span></span> ± <span class="sgr32">99.051 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
 
-  ▄█<span class="sgr34">▇</span><span class="sgr32">▂</span>                                                       ▁
-  ██<span class="sgr34">█</span><span class="sgr32">█</span>▄▃▁▃▁▁▁▁▁▄▁▁▁▄▄▄▄▄▁▁▃▃▁▄▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▃▁▁▁▁▁▁▁▁▁▄▆▇▇ █
-  1.71 μs<span class="sgr90">      Histogram: <span class="sgr1">log(</span>frequency<span class="sgr1">)</span> by time</span>     2.18 μs <span class="sgr1">&lt;</span>
+  █<span class="sgr34">▆</span><span class="sgr32"> </span>                                                        ▁
+  █<span class="sgr34">█</span><span class="sgr32">▇</span>▄▁▆█▃▁▁▁▁▃▁▁▃▅▅▃▁▁▁▃▁▁▁▁▁▁▁▁▃▁▁▁▁▃▁▁▃▃▁▁▁▄▁▁▁▃▃▁▁▁▁▁▃▃▆ █
+  1.11 μs<span class="sgr90">      Histogram: <span class="sgr1">log(</span>frequency<span class="sgr1">)</span> by time</span>     1.94 μs <span class="sgr1">&lt;</span>
 
  Memory estimate<span class="sgr90">: </span><span class="sgr33">0 bytes</span>, allocs estimate<span class="sgr90">: </span><span class="sgr33">0</span>.</code></pre><p>Next, we use a plain array of structures (AoS) in the form of a two-dimensional array and our custom <code>mul_aos!</code> implementation that loops over each component, using <code>mul!</code> on <code>view</code>s. Here, the differences between the timings are less pronounced.</p><pre><code class="language-julia hljs">println(&quot;Plain Array of Structures&quot;)
 u_aos_plain = randn(T, 5, size(D_SBP, 1)); du_aos_plain = similar(u_aos_plain)
@@ -328,36 +328,36 @@ show(stdout, MIME&quot;text/plain&quot;(), @benchmark mul_aos!($du_aos_plain, $D
 println(&quot;\nD_full&quot;)
 show(stdout, MIME&quot;text/plain&quot;(), @benchmark mul_aos!($du_aos_plain, $D_full, $u_aos_plain))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Plain Array of Structures
 D_SBP
-BenchmarkTools.Trial: 10000 samples with 9 evaluations per sample.
- Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">2.477 μs</span></span> … <span class="sgr35"> 4.652 μs</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
- Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">2.499 μs              </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
- Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">2.513 μs</span></span> ± <span class="sgr32">93.447 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
+BenchmarkTools.Trial: 10000 samples with 10 evaluations per sample.
+ Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">1.279 μs</span></span> … <span class="sgr35">  4.361 μs</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
+ Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">1.287 μs               </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
+ Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">1.302 μs</span></span> ± <span class="sgr32">110.588 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
 
-   ▇<span class="sgr34">█</span>▅<span class="sgr32"> </span>                                                      ▁
-  ██<span class="sgr34">█</span>█<span class="sgr32">▆</span>▄▁▁▁▁▁▃▁▁▃▃▅▅▆▄▃▁▁▁▁▁▃▃▁▁▃▃▄▁▁▁▃▁▁▁▁▁▁▁▁▃▃▁▁▃▄▆▇█▇▆▆▆ █
-  2.48 μs<span class="sgr90">      Histogram: <span class="sgr1">log(</span>frequency<span class="sgr1">)</span> by time</span>     3.03 μs <span class="sgr1">&lt;</span>
+  █<span class="sgr34">▅</span><span class="sgr32"> </span>   ▁                                                     ▁
+  █<span class="sgr34">█</span><span class="sgr32">▁</span>▃▄▅█▄▁▁▃▁▁▁▃▄▅▄▃▁▁▃▁▃▁▁▃▁▃▁▃▃▃▄▄▅▁▁▃▁▃▁▃▁▁▁▁▁▁▁▁▁▁▃▁▁▁▄▇ █
+  1.28 μs<span class="sgr90">      Histogram: <span class="sgr1">log(</span>frequency<span class="sgr1">)</span> by time</span>      2.09 μs <span class="sgr1">&lt;</span>
 
  Memory estimate<span class="sgr90">: </span><span class="sgr33">0 bytes</span>, allocs estimate<span class="sgr90">: </span><span class="sgr33">0</span>.
 D_sparse
 BenchmarkTools.Trial: 10000 samples with 9 evaluations per sample.
- Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">2.257 μs</span></span> … <span class="sgr35">  4.443 μs</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
- Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">2.335 μs               </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
- Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">2.345 μs</span></span> ± <span class="sgr32">103.430 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
+ Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">2.443 μs</span></span> … <span class="sgr35">  7.038 μs</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
+ Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">2.546 μs               </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
+ Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">2.645 μs</span></span> ± <span class="sgr32">472.332 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
 
-     ▂█▄ ▂<span class="sgr34">▆</span>▆▃                                                 
-  ▂▄▆█████<span class="sgr34">█</span>██▆▄▃▂▂▂▂▂▂▁▂▂▂▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▂▁▁▂▁▂▁▁▂▁▂▂▂▂▂▂▂▂▂ ▃
-  2.26 μs<span class="sgr90">         Histogram: frequency by time</span>        2.87 μs <span class="sgr1">&lt;</span>
+  ▅█<span class="sgr34">▇</span>▅<span class="sgr32">▂</span>▁                                                      ▁
+  ██<span class="sgr34">█</span>█<span class="sgr32">█</span>█▇▆▇▆▆▅▅▄▄▃▃▄██▆▅▆▅▅▄▆▅▅▄▄▄▅▃▃▄▃▃▄▅▄▄▄▄▄▃▃▄▅▃▄▃▄▂▆▅▄▅▄ █
+  2.44 μs<span class="sgr90">      Histogram: <span class="sgr1">log(</span>frequency<span class="sgr1">)</span> by time</span>      5.61 μs <span class="sgr1">&lt;</span>
 
  Memory estimate<span class="sgr90">: </span><span class="sgr33">240 bytes</span>, allocs estimate<span class="sgr90">: </span><span class="sgr33">5</span>.
 D_full
-BenchmarkTools.Trial: 10000 samples with 1 evaluation per sample.
- Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">8.799 μs</span></span> … <span class="sgr35"> 25.063 μs</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
- Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">8.886 μs               </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
- Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">8.936 μs</span></span> ± <span class="sgr32">515.316 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
+BenchmarkTools.Trial: 10000 samples with 5 evaluations per sample.
+ Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">6.268 μs</span></span> … <span class="sgr35"> 13.365 μs</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
+ Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">6.312 μs               </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
+ Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">6.382 μs</span></span> ± <span class="sgr32">363.118 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
 
-    ▁█<span class="sgr34">▃</span> <span class="sgr32"> </span>                                                     
-  ▂▄██<span class="sgr34">█</span>▅<span class="sgr32">▂</span>▂▂▂▂▁▂▁▁▁▁▁▁▂▁▁▁▁▁▁▁▁▁▁▁▂▁▂▂▂▂▂▁▁▁▁▂▁▁▂▁▁▁▁▁▂▂▁▂▂▁▁▂ ▂
-  8.8 μs<span class="sgr90">          Histogram: frequency by time</span>        10.2 μs <span class="sgr1">&lt;</span>
+  ▆<span class="sgr34">█</span>▅▃<span class="sgr32">▂</span> ▂                                                 ▁▁  ▁
+  █<span class="sgr34">█</span>██<span class="sgr32">█</span>██▇▅▄▄▁▁▄▁▅▆▅▄▄▃▃▃▁▁▁▁▁▁▁▃▁▁▁▁▁▁▁▁▃▁▁▁▁▁▃▁▁▁▁▁▁▁▁▄▇███ █
+  6.27 μs<span class="sgr90">      Histogram: <span class="sgr1">log(</span>frequency<span class="sgr1">)</span> by time</span>      8.03 μs <span class="sgr1">&lt;</span>
 
  Memory estimate<span class="sgr90">: </span><span class="sgr33">0 bytes</span>, allocs estimate<span class="sgr90">: </span><span class="sgr33">0</span>.</code></pre><p>Now, we use an array of structures (AoS) based on <code>reinterpret</code> and standard <code>mul!</code>. This is much more efficient for the implementation in SummationByPartsOperators.jl. In Julia v1.6, this is also more efficient for sparse matrices but less efficient for dense matrices (compared to the plain AoS approach with <code>mul_aos!</code> above).</p><pre><code class="language-julia hljs">println(&quot;Array of Structures (reinterpreted array)&quot;)
 u_aos_r = reinterpret(reshape, Vec5{T}, u_aos_plain); du_aos_r = similar(u_aos_r)
@@ -373,36 +373,36 @@ show(stdout, MIME&quot;text/plain&quot;(), @benchmark mul!($du_aos_r, $D_full, $
 D_SBP * u_aos_r ≈ D_sparse * u_aos_r ≈ D_full * u_aos_r = true
 reinterpret(reshape, T, du_aos_r) ≈ du_aos_plain = true
 D_SBP
-BenchmarkTools.Trial: 10000 samples with 656 evaluations per sample.
- Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">172.434 ns</span></span> … <span class="sgr35">266.745 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
- Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">203.567 ns               </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
- Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">202.216 ns</span></span> ± <span class="sgr32">  6.305 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
+BenchmarkTools.Trial: 10000 samples with 540 evaluations per sample.
+ Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">210.839 ns</span></span> … <span class="sgr35">307.020 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
+ Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">214.922 ns               </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
+ Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">216.924 ns</span></span> ± <span class="sgr32">  5.890 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
 
-                          ▅        ▆▁      <span class="sgr32"> </span>▃<span class="sgr34">█</span>▂ ▁       ▄▂▂▁    ▁
-  ▇▁▁▁▁▄▃█▇▃▁▁▄▃▁▃▃▅▄▄▁▃▁▅█▆▆▇▆▅▆▆▆█████▇▇▇<span class="sgr32">▆</span>█<span class="sgr34">█</span>████▆▄▅▆▅▇█████▇▆ █
-  172 ns<span class="sgr90">        Histogram: <span class="sgr1">log(</span>frequency<span class="sgr1">)</span> by time</span>        216 ns <span class="sgr1">&lt;</span>
+          ▄▇█<span class="sgr34">▅</span>▂   <span class="sgr32"> </span>                                             
+  ▂▂▂▂▂▃▄████<span class="sgr34">█</span>██▆▅<span class="sgr32">▄</span>▃▃▂▂▂▂▂▂▂▂▂▂▂▁▂▁▁▁▂▁▁▁▁▁▁▂▂▂▂▂▂▃▄▄▃▃▃▃▂▂▂▂▂▂ ▃
+  211 ns<span class="sgr90">           Histogram: frequency by time</span>          233 ns <span class="sgr1">&lt;</span>
 
  Memory estimate<span class="sgr90">: </span><span class="sgr33">0 bytes</span>, allocs estimate<span class="sgr90">: </span><span class="sgr33">0</span>.
 D_sparse
-BenchmarkTools.Trial: 10000 samples with 177 evaluations per sample.
- Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">597.299 ns</span></span> … <span class="sgr35"> 14.560 μs</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 91.95%
- Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">608.542 ns               </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
- Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">616.418 ns</span></span> ± <span class="sgr32">147.150 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.22% ±  0.92%
+BenchmarkTools.Trial: 10000 samples with 187 evaluations per sample.
+ Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">554.246 ns</span></span> … <span class="sgr35"> 9.142 μs</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 91.50%
+ Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">570.642 ns              </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
+ Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">577.700 ns</span></span> ± <span class="sgr32">89.166 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.14% ±  0.92%
 
-    ▃  ▄█<span class="sgr34">▇</span>▂  <span class="sgr32"> </span>                                                  
-  ▁▅██▇██<span class="sgr34">█</span>█▄▃<span class="sgr32">▃</span>▂▂▂▂▁▁▂▂▂▂▂▂▂▂▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁ ▂
-  597 ns<span class="sgr90">           Histogram: frequency by time</span>          699 ns <span class="sgr1">&lt;</span>
+       ▁▃▇█▇<span class="sgr34">▅</span>▃  <span class="sgr32"> </span>                                              
+  ▂▂▂▃▆█████<span class="sgr34">█</span>██▆<span class="sgr32">▅</span>▄▃▃▂▂▂▂▂▂▂▂▂▂▂▂▂▃▃▃▄▄▃▃▃▂▂▂▂▂▂▂▂▂▂▁▂▂▂▂▂▂▁▂▁▂ ▃
+  554 ns<span class="sgr90">          Histogram: frequency by time</span>          657 ns <span class="sgr1">&lt;</span>
 
  Memory estimate<span class="sgr90">: </span><span class="sgr33">32 bytes</span>, allocs estimate<span class="sgr90">: </span><span class="sgr33">1</span>.
 D_full
 BenchmarkTools.Trial: 10000 samples with 1 evaluation per sample.
- Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">11.627 μs</span></span> … <span class="sgr35"> 29.085 μs</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
- Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">11.646 μs               </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
- Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">11.733 μs</span></span> ± <span class="sgr32">681.688 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
+ Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">13.846 μs</span></span> … <span class="sgr35">45.065 μs</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
+ Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">13.926 μs              </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
+ Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">14.155 μs</span></span> ± <span class="sgr32"> 1.538 μs</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
 
-  <span class="sgr34">█</span><span class="sgr32"> </span>                                                           
-  <span class="sgr34">█</span><span class="sgr32">▂</span>▂▁▂▁▁▁▁▁▂▁▁▁▂▁▂▂▂▂▂▂▂▂▁▂▁▁▂▂▂▁▂▂▁▂▂▂▂▂▂▂▁▂▂▂▂▂▂▂▂▂▁▁▂▂▂▂▂▂ ▂
-  11.6 μs<span class="sgr90">         Histogram: frequency by time</span>         16.3 μs <span class="sgr1">&lt;</span>
+  █<span class="sgr34">▅</span><span class="sgr32"> </span>                                                         ▁
+  █<span class="sgr34">█</span><span class="sgr32">▄</span>▁▅▅▇▃▃▁▁▁▁▁▃▅▅▄▃▁▃▃▁▃▁▅▄▅▁▄▅▄▄▅▄▅▅▅▅▅▆▅▄▄▅▃▄▅▁▄▄▃▃▃▄▁▁▆▇ █
+  13.8 μs<span class="sgr90">      Histogram: <span class="sgr1">log(</span>frequency<span class="sgr1">)</span> by time</span>      22.1 μs <span class="sgr1">&lt;</span>
 
  Memory estimate<span class="sgr90">: </span><span class="sgr33">0 bytes</span>, allocs estimate<span class="sgr90">: </span><span class="sgr33">0</span>.</code></pre><p>Next, we still use an array of structures (AoS), but copy the data into a plain <code>Array</code> instead of using the <code>reinterpret</code>ed versions. There is no significant difference to the previous version in this case.</p><pre><code class="language-julia hljs">println(&quot;Array of Structures&quot;)
 u_aos = Array(u_aos_r); du_aos = similar(u_aos)
@@ -418,36 +418,36 @@ show(stdout, MIME&quot;text/plain&quot;(), @benchmark mul!($du_aos, $D_full, $u_
 D_SBP * u_aos ≈ D_sparse * u_aos ≈ D_full * u_aos = true
 du_aos ≈ du_aos_r = true
 D_SBP
-BenchmarkTools.Trial: 10000 samples with 626 evaluations per sample.
- Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">198.449 ns</span></span> … <span class="sgr35">271.917 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
- Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">212.925 ns               </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
- Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">211.882 ns</span></span> ± <span class="sgr32">  5.674 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
+BenchmarkTools.Trial: 10000 samples with 530 evaluations per sample.
+ Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">211.811 ns</span></span> … <span class="sgr35">286.802 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
+ Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">214.913 ns               </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
+ Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">216.934 ns</span></span> ± <span class="sgr32">  5.999 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
 
-  ▃              ▄▇             <span class="sgr32"> </span> █<span class="sgr34">▇</span>▂▁  ▁            ▂▃▂▁▁      ▁
-  ██▅▃▂▃▅▄▄▃▄▄▅▄▄██▆▇▇▆▇▇▇▅▇▆▅▆▆<span class="sgr32">▆</span>▅█<span class="sgr34">█</span>███▇██▅▅▄▄▄▄▃▂▄▄▅██████▇▇▆▆ █
-  198 ns<span class="sgr90">        Histogram: <span class="sgr1">log(</span>frequency<span class="sgr1">)</span> by time</span>        225 ns <span class="sgr1">&lt;</span>
+       ▅▇█<span class="sgr34">▅</span>▃   <span class="sgr32"> </span>                                                
+  ▂▂▃▅▇███<span class="sgr34">█</span>██▆▄<span class="sgr32">▃</span>▃▂▂▂▂▂▂▂▂▁▂▁▂▂▁▁▁▁▁▂▁▁▁▁▁▂▁▂▂▂▃▄▄▃▃▃▃▂▂▂▂▂▂▂▂▂▂ ▃
+  212 ns<span class="sgr90">           Histogram: frequency by time</span>          236 ns <span class="sgr1">&lt;</span>
 
  Memory estimate<span class="sgr90">: </span><span class="sgr33">0 bytes</span>, allocs estimate<span class="sgr90">: </span><span class="sgr33">0</span>.
 D_sparse
-BenchmarkTools.Trial: 10000 samples with 190 evaluations per sample.
- Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">530.195 ns</span></span> … <span class="sgr35">924.121 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
- Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">539.958 ns               </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
- Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">541.960 ns</span></span> ± <span class="sgr32"> 12.810 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
+BenchmarkTools.Trial: 10000 samples with 186 evaluations per sample.
+ Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">548.554 ns</span></span> … <span class="sgr35">918.817 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
+ Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">577.968 ns               </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
+ Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">582.528 ns</span></span> ± <span class="sgr32"> 20.348 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
 
-    ▂▆▆▅▅▆▆▅▆█<span class="sgr34">█</span>▆<span class="sgr32">▄</span>▁                   ▁▂▂▃▃▂▂▁▁▁                 ▃
-  ▅███████████<span class="sgr34">█</span>█<span class="sgr32">█</span>██████▇▆▅▄▃▁▁▁▃▄▇▇▇██████████████▇▇▆▅▆▆▆▆▅▅▄▆▄ █
-  530 ns<span class="sgr90">        Histogram: <span class="sgr1">log(</span>frequency<span class="sgr1">)</span> by time</span>        582 ns <span class="sgr1">&lt;</span>
+             ▁▃▃▅▆▇▇█<span class="sgr34">▇</span>▇▅<span class="sgr32">▄</span>▃▁                                     
+  ▁▁▁▂▂▃▄▅▅▆▇████████<span class="sgr34">█</span>██<span class="sgr32">█</span>██▇▆▅▄▄▃▃▂▂▂▂▂▂▂▂▂▂▂▃▃▃▃▃▃▃▃▂▂▂▂▂▂▂▂▁▁ ▄
+  549 ns<span class="sgr90">           Histogram: frequency by time</span>          642 ns <span class="sgr1">&lt;</span>
 
  Memory estimate<span class="sgr90">: </span><span class="sgr33">0 bytes</span>, allocs estimate<span class="sgr90">: </span><span class="sgr33">0</span>.
 D_full
 BenchmarkTools.Trial: 10000 samples with 1 evaluation per sample.
- Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">11.637 μs</span></span> … <span class="sgr35"> 37.004 μs</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
- Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">11.655 μs               </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
- Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">11.727 μs</span></span> ± <span class="sgr32">652.879 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
+ Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">13.886 μs</span></span> … <span class="sgr35">30.657 μs</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
+ Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">13.966 μs              </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
+ Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">14.129 μs</span></span> ± <span class="sgr32"> 1.105 μs</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
 
-  <span class="sgr34">█</span><span class="sgr32"> </span>                                                           
-  <span class="sgr34">█</span><span class="sgr32">▂</span>▂▁▁▂▂▂▂▁▁▁▁▁▁▂▁▂▂▂▂▁▂▁▁▁▁▁▁▁▁▂▁▁▂▂▂▂▁▁▂▂▁▁▁▁▂▂▁▁▁▂▂▁▁▁▁▂▂▂ ▂
-  11.6 μs<span class="sgr90">         Histogram: frequency by time</span>         16.1 μs <span class="sgr1">&lt;</span>
+  █<span class="sgr34">▅</span><span class="sgr32"> </span>                                                         ▁
+  █<span class="sgr34">█</span><span class="sgr32">▁</span>▁▃▆█▃▄▁▁▃▃▁▃▅▄▅▅▁▁▁▁▁▁▃▁▁▃▃▁▁▄▁▁▄▄▄▄▄▄▃▃▄▃▃▃▁▃▁▃▃▃▄▁▁▃▅█ █
+  13.9 μs<span class="sgr90">      Histogram: <span class="sgr1">log(</span>frequency<span class="sgr1">)</span> by time</span>      22.1 μs <span class="sgr1">&lt;</span>
 
  Memory estimate<span class="sgr90">: </span><span class="sgr33">0 bytes</span>, allocs estimate<span class="sgr90">: </span><span class="sgr33">0</span>.</code></pre><p>Finally, let&#39;s look at a structure of arrays (SoA). Interestingly, this is slower than the array of structures we used above. On Julia v1.6, the sparse matrix representation performs particularly bad in this case.</p><pre><code class="language-julia hljs">println(&quot;Structure of Arrays&quot;)
 u_soa = StructArray(u_aos); du_soa = similar(u_soa)
@@ -463,36 +463,36 @@ show(stdout, MIME&quot;text/plain&quot;(), @benchmark mul!($du_soa, $D_full, $u_
 D_SBP * u_soa ≈ D_sparse * u_soa ≈ D_full * u_soa = true
 du_soa ≈ du_aos = true
 D_SBP
-BenchmarkTools.Trial: 10000 samples with 208 evaluations per sample.
- Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">365.091 ns</span></span> … <span class="sgr35">579.774 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
- Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">444.457 ns               </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
- Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">440.725 ns</span></span> ± <span class="sgr32"> 14.015 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
+BenchmarkTools.Trial: 10000 samples with 478 evaluations per sample.
+ Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">223.243 ns</span></span> … <span class="sgr35">386.017 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
+ Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">226.322 ns               </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
+ Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">228.739 ns</span></span> ± <span class="sgr32">  8.727 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
 
-                            ▂▅      ▆▅     <span class="sgr32"> </span>▆<span class="sgr34">█</span>   ▁▂       ▂▃▂▁  ▂
-  ▆▃▁▁▃▃▁▅▁▃▃▃▄▄▄▁▁▁▁▃▄▁▁▁▃▃██▆▆▆▆▆▆██▆▇███<span class="sgr32">█</span>█<span class="sgr34">█</span>▇▄▆███▇▆▅▆▄▄█████ █
-  365 ns<span class="sgr90">        Histogram: <span class="sgr1">log(</span>frequency<span class="sgr1">)</span> by time</span>        477 ns <span class="sgr1">&lt;</span>
+     ▃██▇<span class="sgr34">▆</span>▂   <span class="sgr32"> </span>                                                 
+  ▃▄▇████<span class="sgr34">█</span>██▆▄<span class="sgr32">▄</span>▃▃▂▂▂▂▂▂▂▂▁▁▁▁▂▂▂▁▂▁▁▁▁▂▂▂▂▃▃▄▄▃▃▃▂▂▂▂▂▂▂▂▂▂▂▂▂▂ ▃
+  223 ns<span class="sgr90">           Histogram: frequency by time</span>          251 ns <span class="sgr1">&lt;</span>
 
  Memory estimate<span class="sgr90">: </span><span class="sgr33">0 bytes</span>, allocs estimate<span class="sgr90">: </span><span class="sgr33">0</span>.
 D_sparse
 BenchmarkTools.Trial: 10000 samples with 1 evaluation per sample.
- Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">50.889 μs</span></span> … <span class="sgr35">100.351 μs</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
- Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">51.098 μs               </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
- Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">51.419 μs</span></span> ± <span class="sgr32">  1.613 μs</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
+ Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">48.801 μs</span></span> … <span class="sgr35">81.202 μs</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
+ Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">48.982 μs              </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
+ Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">49.454 μs</span></span> ± <span class="sgr32"> 2.024 μs</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
 
-  ▆█<span class="sgr34">▆</span>▇▅▅<span class="sgr32"> </span>                                          ▁▁▁         ▂
-  ██<span class="sgr34">█</span>███<span class="sgr32">█</span>▄▃▃▁▁▁▁▅▆▆▆▆▅▄▁▃▁▁▁▁▁▃▁▃▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▆▇█████▇█▇█▇▆▇ █
-  50.9 μs<span class="sgr90">       Histogram: <span class="sgr1">log(</span>frequency<span class="sgr1">)</span> by time</span>      56.4 μs <span class="sgr1">&lt;</span>
+  ▇<span class="sgr34">█</span>▅▁<span class="sgr32"> </span> ▁                                              ▁▂▂    ▁
+  █<span class="sgr34">█</span>██<span class="sgr32">▁</span>▆█▆▁▁▁▁▃▁▄▅▆▅▄▁▃▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▃▄█████▇ █
+  48.8 μs<span class="sgr90">      Histogram: <span class="sgr1">log(</span>frequency<span class="sgr1">)</span> by time</span>      57.6 μs <span class="sgr1">&lt;</span>
 
  Memory estimate<span class="sgr90">: </span><span class="sgr33">0 bytes</span>, allocs estimate<span class="sgr90">: </span><span class="sgr33">0</span>.
 D_full
-BenchmarkTools.Trial: 10000 samples with 5 evaluations per sample.
- Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">6.365 μs</span></span> … <span class="sgr35"> 11.725 μs</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
- Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">6.384 μs               </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
- Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">6.424 μs</span></span> ± <span class="sgr32">228.628 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
+BenchmarkTools.Trial: 10000 samples with 6 evaluations per sample.
+ Range <span class="sgr90">(</span><span class="sgr36"><span class="sgr1">min</span></span> … <span class="sgr35">max</span><span class="sgr90">):  </span><span class="sgr36"><span class="sgr1">5.358 μs</span></span> … <span class="sgr35">  9.879 μs</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>min … max<span class="sgr90">): </span>0.00% … 0.00%
+ Time  <span class="sgr90">(</span><span class="sgr34"><span class="sgr1">median</span></span><span class="sgr90">):     </span><span class="sgr34"><span class="sgr1">5.392 μs               </span></span><span class="sgr90">┊</span> GC <span class="sgr90">(</span>median<span class="sgr90">):    </span>0.00%
+ Time  <span class="sgr90">(</span><span class="sgr32"><span class="sgr1">mean</span></span> ± <span class="sgr32">σ</span><span class="sgr90">):   </span><span class="sgr32"><span class="sgr1">5.450 μs</span></span> ± <span class="sgr32">300.058 ns</span>  <span class="sgr90">┊</span> GC <span class="sgr90">(</span>mean ± σ<span class="sgr90">):  </span>0.00% ± 0.00%
 
-  █<span class="sgr34">█</span> <span class="sgr32"> </span>                                                        ▂
-  █<span class="sgr34">█</span>▆<span class="sgr32">▃</span>▁▁▁▁▁▁▁▁▁▃▅▅▆▅▄▄▁▃▃▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▃▁▁▁▅███▇▇▆▆▇▅▆▆▆ █
-  6.37 μs<span class="sgr90">      Histogram: <span class="sgr1">log(</span>frequency<span class="sgr1">)</span> by time</span>      7.48 μs <span class="sgr1">&lt;</span>
+  ▆<span class="sgr34">█</span>▃ <span class="sgr32"> </span> ▂                                                ▁▁   ▁
+  █<span class="sgr34">█</span>█▆<span class="sgr32">▅</span>▇█▇▁▁▄▁▁▁▁▄▅▆▆▅▁▁▃▁▄▃▁▁▁▁▁▁▃▁▁▁▁▁▃▁▁▁▁▁▁▁▁▃▁▁▁▃▁▁▇███▇ █
+  5.36 μs<span class="sgr90">      Histogram: <span class="sgr1">log(</span>frequency<span class="sgr1">)</span> by time</span>      6.84 μs <span class="sgr1">&lt;</span>
 
  Memory estimate<span class="sgr90">: </span><span class="sgr33">0 bytes</span>, allocs estimate<span class="sgr90">: </span><span class="sgr33">0</span>.</code></pre><p>These results were obtained using the following versions.</p><pre><code class="language-julia hljs">using InteractiveUtils
 versioninfo()
@@ -505,14 +505,14 @@ Build Info:
   Official https://julialang.org/ release
 Platform Info:
   OS: Linux (x86_64-linux-gnu)
-  CPU: 4 × Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz
+  CPU: 4 × AMD EPYC 7763 64-Core Processor
   WORD_SIZE: 64
   LIBM: libopenlibm
-  LLVM: libLLVM-15.0.7 (ORCJIT, icelake-server)
+  LLVM: libLLVM-15.0.7 (ORCJIT, znver3)
 Threads: 2 default, 0 interactive, 1 GC (on 4 virtual cores)
 Environment:
   JULIA_PKG_SERVER_REGISTRY_PREFERENCE = eager
 <span class="sgr32"><span class="sgr1">Status</span></span> `~/work/SummationByPartsOperators.jl/SummationByPartsOperators.jl/docs/Manifest.toml`
   <span class="sgr90">[90137ffa] </span>StaticArrays v1.9.18
   <span class="sgr90">[09ab397b] </span>StructArrays v0.7.3
-  <span class="sgr90">[9f78cca6] </span>SummationByPartsOperators v0.5.97-DEV `~/work/SummationByPartsOperators.jl/SummationByPartsOperators.jl`</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../applications/">« Applications &amp; references</a><a class="docs-footer-nextpage" href="../api_reference/">API reference »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Tuesday 30 June 2026 19:12">Tuesday 30 June 2026</span>. Using Julia version 1.10.11.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+  <span class="sgr90">[9f78cca6] </span>SummationByPartsOperators v0.5.97-DEV `~/work/SummationByPartsOperators.jl/SummationByPartsOperators.jl`</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../applications/">« Applications &amp; references</a><a class="docs-footer-nextpage" href="../api_reference/">API reference »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Wednesday 1 July 2026 18:54">Wednesday 1 July 2026</span>. Using Julia version 1.10.11.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
