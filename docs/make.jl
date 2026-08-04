@@ -1,4 +1,5 @@
 using Documenter
+using DocumenterCodeBlocks: CodeBlocks
 import Pkg
 using SummationByPartsOperators
 
@@ -64,6 +65,8 @@ makedocs(modules = [SummationByPartsOperators],
          sitename = "SummationByPartsOperators.jl",
          format = Documenter.HTML(prettyurls = get(ENV, "CI", nothing) == "true",
                                   canonical = "https://ranocha.github.io/SummationByPartsOperators.jl/stable"),
+         # Improve code blocks in the documentation by using DocumenterCodeBlocks.jl
+         plugins = [CodeBlocks()],
          # Explicitly specify documentation structure
          pages = [
              "Home" => "index.md",
