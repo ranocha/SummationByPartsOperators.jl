@@ -22,7 +22,7 @@ Below is an example demonstrating how to use this semidiscretization.
 
 
 ```@example wave_equation
-using SummationByPartsOperators, OrdinaryDiffEqRKN
+using SummationByPartsOperators, OrdinaryDiffEqTsit5
 using LaTeXStrings; using Plots: Plots, plot, plot!, savefig
 
 # general parameters
@@ -36,18 +36,18 @@ left_bc  = Val(:HomogeneousNeumann)
 right_bc = Val(:HomogeneousDirichlet)
 
 # setup spatial semidiscretization
-D2 = derivative_operator(MattssonSvärdShoeybi2008(), derivative_order=2,
-                         accuracy_order=4, xmin=xmin, xmax=xmax, N=101)
+D2 = derivative_operator(MattssonSvärdShoeybi2008(), derivative_order = 2,
+                         accuracy_order = 4, xmin = xmin, xmax = xmax, N = 101)
 semi = WaveEquationNonperiodicSemidiscretization(D2, left_bc, right_bc)
 ode = semidiscretize(v0_func, u0_func, semi, tspan)
 
-# solve second-order ODE using a Runge-Kutta-Nyström method
-sol = solve(ode, DPRKN6(), saveat=range(first(tspan), stop=last(tspan), length=200))
+# solve second-order ODE using a Runge-Kutta method
+sol = solve(ode, Tsit5(), saveat = range(first(tspan), stop = last(tspan), length = 200))
 
 # visualize the result
-plot(xguide=L"x")
-plot!(evaluate_coefficients(sol.u[end].x[2], semi), label=L"u")
-plot!(evaluate_coefficients(sol.u[end].x[1], semi), label=L"\partial_t u")
+plot(xguide = L"x")
+plot!(evaluate_coefficients(sol.u[end].x[2], semi), label = L"u")
+plot!(evaluate_coefficients(sol.u[end].x[1], semi), label = L"\partial_t u")
 savefig("example_wave_equation.png");
 ```
 
@@ -69,21 +69,21 @@ function create_gif(left_bc::Val{LEFT_BC}, right_bc::Val{RIGHT_BC}) where {LEFT_
     u0_func(x) = exp(-20x^2)
     v0_func(x) = zero(x)
 
-    D2 = derivative_operator(MattssonSvärdShoeybi2008(), derivative_order=2,
-                            accuracy_order=4, xmin=xmin, xmax=xmax, N=101)
+    D2 = derivative_operator(MattssonSvärdShoeybi2008(), derivative_order = 2,
+                            accuracy_order = 4, xmin = xmin, xmax = xmax, N = 101)
     semi = WaveEquationNonperiodicSemidiscretization(D2, left_bc, right_bc)
     ode = semidiscretize(v0_func, u0_func, semi, tspan)
 
-    sol = solve(ode, DPRKN6(), saveat=range(first(tspan), stop=last(tspan), length=200))
+    sol = solve(ode, Tsit5(), saveat=range(first(tspan), stop=last(tspan), length=200))
 
     anim = Animation()
     idx = 1
     x, u = evaluate_coefficients(sol.u[idx].x[2], D2)
-    fig = plot(x, u, xguide=L"x", yguide=L"u", xlim=extrema(x), ylim=(-1.05, 1.05),
-              label="", title=@sprintf("\$t = %6.2f \$", sol.t[idx]))
+    fig = plot(x, u, xguide = L"x", yguide = L"u", xlim = extrema(x), ylim = (-1.05, 1.05),
+              label = "", title = @sprintf("\$t = %6.2f \$", sol.t[idx]))
     for idx in 1:length(sol.t)
         fig[1] = x, sol.u[idx].x[2]
-        plot!(title=@sprintf("\$t = %6.2f \$", sol.t[idx]))
+        plot!(title = @sprintf("\$t = %6.2f \$", sol.t[idx]))
         frame(anim)
     end
     gif(anim, "wave_equation_$(LEFT_BC)_$(RIGHT_BC).gif")
@@ -116,6 +116,6 @@ using InteractiveUtils
 versioninfo()
 
 using Pkg
-Pkg.status(["SummationByPartsOperators", "OrdinaryDiffEqRKN"],
-           mode=PKGMODE_MANIFEST)
+Pkg.status(["SummationByPartsOperators", "OrdinaryDiffEqTsit5"],
+           mode = PKGMODE_MANIFEST)
 ```
