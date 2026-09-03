@@ -43,7 +43,7 @@ const SBP_TEST = get(ENV, "SBP_TEST", "all")
         @time @testset "Multidimensional Matrix Operators" begin
             include("multidimensional_matrix_operators_test.jl")
         end
-        @time @testset "Function Sapce Operators" begin
+        @time @testset "Function Space Operators" begin
             include("function_space_operators_test.jl")
         end
         @time @testset "Special Matrix Types" begin
