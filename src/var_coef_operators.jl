@@ -132,7 +132,35 @@ true
 """
 function var_coef_derivative_operator(source_of_coefficients, derivative_order,
                                       accuracy_order,
-                                      xmin, xmax, N, bfunc, mode = FastMode())
+                                      xmin, xmax, N, bfunc::AbstractVector, mode = FastMode())
+    if mode === Val(:serial) || mode === Val(:threads)
+        # TODO: deprecated in v0.5
+        Base.depwarn("Providing the argument `parallel` is deprecated." *
+                     "Use `mode` instead.", :var_coef_derivative_operator)
+        mode = _parallel_to_mode(mode)
+    end
+    grid = construct_grid(source_of_coefficients, accuracy_order, xmin, xmax, N)
+    coefficients = var_coef_derivative_coefficients(source_of_coefficients,
+                                                    derivative_order, accuracy_order, grid,
+                                                    mode)
+    VarCoefDerivativeOperator(coefficients, grid, bfunc)
+end
+
+"""
+    var_coef_derivative_operator(source_of_coefficients, derivative_order, accuracy_order,
+                                 xmin, xmax, N, left_weights, right_weights, bfunc,
+                                 mode=FastMode())
+
+Create a `VarCoefDerivativeOperator` approximating a `derivative_order`-th
+derivative with variable coefficients `bfunc` on a grid between `xmin` and
+`xmax` with `N` grid points up to order of accuracy `accuracy_order` with
+coefficients given by `source_of_coefficients`.
+The evaluation of the derivative can be parallelized using threads by choosing
+`mode=ThreadedMode()`.
+"""
+function var_coef_derivative_operator(source_of_coefficients, derivative_order,
+                                      accuracy_order,
+                                      xmin, xmax, N, bfunc::Function, mode = FastMode())
     if mode === Val(:serial) || mode === Val(:threads)
         # TODO: deprecated in v0.5
         Base.depwarn("Providing the argument `parallel` is deprecated." *
@@ -144,6 +172,7 @@ function var_coef_derivative_operator(source_of_coefficients, derivative_order,
                                                     derivative_order, accuracy_order, grid,
                                                     mode)
     VarCoefDerivativeOperator(coefficients, grid, bfunc.(grid))
+
 end
 
 """
