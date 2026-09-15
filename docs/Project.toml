@@ -24,6 +24,7 @@ OrdinaryDiffEqSSPRK = "2.0"
 OrdinaryDiffEqTsit5 = "2.0"
 OrdinaryDiffEqRosenbrock = "2.0"
 Plots = "1.9"
+SparseArrays = "< 0.0.1, 1"
 StaticArrays = "1.2"
 StructArrays = "0.7"
 
