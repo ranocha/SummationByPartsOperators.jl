@@ -24,9 +24,10 @@ OrdinaryDiffEqSSPRK = "2.0"
 OrdinaryDiffEqTsit5 = "2.0"
 OrdinaryDiffEqRosenbrock = "2.0"
 Plots = "1.9"
-SparseArrays = "< 0.0.1, 1"
+SparseArrays = "1"
 StaticArrays = "1.2"
 StructArrays = "0.7"
+julia = "1.10"
 
 [extras]
 HostCPUFeatures = "3e5b6fbb-0976-4d2c-9146-d79de83f2fb0"
