@@ -63,8 +63,9 @@ function Base.show(io::IO, coefficients::VarCoefDerivativeCoefficients)
 end
 
 # Compute `α*D*u + β*dest` using the coefficients `b` and store the result in `dest`.
-function mul!(dest::AbstractVector, coefficients::VarCoefDerivativeCoefficients,
-              u::AbstractVector, b::AbstractVector, α, β)
+function mul_internal!(dest::AbstractVector,
+                       coefficients::VarCoefDerivativeCoefficients,
+                       u::AbstractVector, b::AbstractVector, α, β)
     @unpack coefficient_cache, mode = coefficients
 
     @boundscheck begin
@@ -78,8 +79,9 @@ function mul!(dest::AbstractVector, coefficients::VarCoefDerivativeCoefficients,
 end
 
 # Compute `α*D*u` using the coefficients `b` and store the result in `dest`.
-function mul!(dest::AbstractVector, coefficients::VarCoefDerivativeCoefficients,
-              u::AbstractVector, b::AbstractVector, α)
+function mul_internal!(dest::AbstractVector,
+                       coefficients::VarCoefDerivativeCoefficients,
+                       u::AbstractVector, b::AbstractVector, α)
     @unpack coefficient_cache, mode = coefficients
 
     @boundscheck begin
@@ -214,7 +216,7 @@ Base.@propagate_inbounds function mul!(dest::AbstractVector, D::DissipationOpera
         @argcheck size(D, 2)==length(u) DimensionMismatch
         @argcheck size(D, 1)==length(dest) DimensionMismatch
     end
-    @inbounds mul!(dest, D.coefficients, u, D.b, D.factor * α, β)
+    @inbounds mul_internal!(dest, D.coefficients, u, D.b, D.factor * α, β)
 end
 
 # Compute `α*D*u` and store the result in `dest`.
@@ -224,7 +226,7 @@ Base.@propagate_inbounds function mul!(dest::AbstractVector, D::DissipationOpera
         @argcheck size(D, 2)==length(u) DimensionMismatch
         @argcheck size(D, 1)==length(dest) DimensionMismatch
     end
-    @inbounds mul!(dest, D.coefficients, u, D.b, D.factor * α)
+    @inbounds mul_internal!(dest, D.coefficients, u, D.b, D.factor * α)
 end
 
 """

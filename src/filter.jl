@@ -11,7 +11,8 @@ end
 
 Base.size(fact::FactorisationWrapper) = size(fact.fact)
 Base.eltype(fact::FactorisationWrapper) = eltype(fact.fact)
-mul!(dest, fact::FactorisationWrapper, u) = ldiv!(dest, fact.fact, u)
+mul_internal!(dest, fact::FactorisationWrapper, u) = ldiv!(dest, fact.fact, u)
+mul_internal!(dest, A, u) = mul!(dest, A, u)
 
 #TODO
 #struct AdaptiveFilter{T<:Real} <: AbstractFilter{T}
@@ -51,9 +52,9 @@ function (filter::ConstantFilter)(u::AbstractVector, tmp::AbstractVector)
         length(coefficients) == length(tmp) || throw(DimensionMismatch())
     end
 
-    mul!(tmp, nodal2modal, u)
+    mul_internal!(tmp, nodal2modal, u)
     @inbounds tmp .*= coefficients
-    mul!(u, modal2nodal, tmp)
+    mul_internal!(u, modal2nodal, tmp)
 
     nothing
 end
@@ -77,9 +78,9 @@ function (filter::ConstantFilter)(u::AbstractMatrix, tmp::AbstractMatrix)
         size(tmp) == size(u) || throw(DimensionMismatch())
     end
 
-    mul!(tmp, nodal2modal, u)
+    mul_internal!(tmp, nodal2modal, u)
     @inbounds tmp .*= coefficients
-    mul!(u, modal2nodal, tmp)
+    mul_internal!(u, modal2nodal, tmp)
 
     nothing
 end

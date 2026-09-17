@@ -552,18 +552,19 @@ function mul!(dest::AbstractVector, cD::UniformCoupledOperator, u::AbstractVecto
 
     @unpack D, meshgrid, coupling, der_order = cD
     if coupling === Val(:continuous)
-        mul!(dest, D, meshgrid, coupling, der_order, u, α)
+        mul_internal!(dest, D, meshgrid, coupling, der_order, u, α)
         scale_by_inverse_mass_matrix!(dest, cD)
     else
-        mul!(dest, D, meshgrid, coupling, der_order, u, α)
+        mul_internal!(dest, D, meshgrid, coupling, der_order, u, α)
     end
     dest
 end
 
-function mul!(_dest::AbstractVector, D::AbstractNonperiodicDerivativeOperator,
-              meshgrid::UniformMeshGrid1D,
-              coupling::Union{Val{:plus}, Val{:central}, Val{:minus}}, der_order::Val{1},
-              _u::AbstractVector, α = true)
+function mul_internal!(_dest::AbstractVector, D::AbstractNonperiodicDerivativeOperator,
+                       meshgrid::UniformMeshGrid1D,
+                       coupling::Union{Val{:plus}, Val{:central}, Val{:minus}},
+                       der_order::Val{1},
+                       _u::AbstractVector, α = true)
     @unpack mesh, grid = meshgrid
     dest = reshape(_dest, length(grid), numcells(mesh))
     u = reshape(_u, length(grid), numcells(mesh))
@@ -639,9 +640,10 @@ function mul!(_dest::AbstractVector, D::AbstractNonperiodicDerivativeOperator,
     _dest
 end
 
-function mul!(dest::AbstractVector, D::AbstractNonperiodicDerivativeOperator,
-              meshgrid::UniformMeshGrid1D, coupling::Val{:continuous}, der_order::Val{1},
-              u::AbstractVector, α = true)
+function mul_internal!(dest::AbstractVector, D::AbstractNonperiodicDerivativeOperator,
+                       meshgrid::UniformMeshGrid1D, coupling::Val{:continuous},
+                       der_order::Val{1},
+                       u::AbstractVector, α = true)
     @unpack mesh, grid = meshgrid
     ymin, ymax = first(grid), last(grid)
     num_nodes_per_cell = length(grid) - 1
@@ -705,9 +707,10 @@ function mul!(dest::AbstractVector, D::AbstractNonperiodicDerivativeOperator,
     dest
 end
 
-function mul!(dest::AbstractVector, D::AbstractNonperiodicDerivativeOperator,
-              meshgrid::UniformMeshGrid1D, coupling::Val{:continuous}, der_order::Val{2},
-              u::AbstractVector, α = true)
+function mul_internal!(dest::AbstractVector, D::AbstractNonperiodicDerivativeOperator,
+                       meshgrid::UniformMeshGrid1D, coupling::Val{:continuous},
+                       der_order::Val{2},
+                       u::AbstractVector, α = true)
     @unpack mesh, grid = meshgrid
     ymin, ymax = first(grid), last(grid)
     num_nodes_per_cell = length(grid) - 1
@@ -797,18 +800,19 @@ function mul!(dest::AbstractVector, cD::UniformCoupledOperator, u::AbstractVecto
     @unpack D, meshgrid, coupling, der_order = cD
     if coupling === Val(:continuous)
         throw(ArgumentError("5-arg `mul!` does not support continuously coupled operators at the moment."))
-        # mul!(dest, D, meshgrid, coupling, der_order, u, α)
+        # mul_internal!(dest, D, meshgrid, coupling, der_order, u, α)
         # scale_by_inverse_mass_matrix!(dest, cD)
     else
-        mul!(dest, D, meshgrid, coupling, der_order, u, α, β)
+        mul_internal!(dest, D, meshgrid, coupling, der_order, u, α, β)
     end
     dest
 end
 
-function mul!(_dest::AbstractVector, D::AbstractNonperiodicDerivativeOperator,
-              meshgrid::UniformMeshGrid1D,
-              coupling::Union{Val{:plus}, Val{:central}, Val{:minus}}, der_order::Val{1},
-              _u::AbstractVector, α, β)
+function mul_internal!(_dest::AbstractVector, D::AbstractNonperiodicDerivativeOperator,
+                       meshgrid::UniformMeshGrid1D,
+                       coupling::Union{Val{:plus}, Val{:central}, Val{:minus}},
+                       der_order::Val{1},
+                       _u::AbstractVector, α, β)
     @unpack mesh, grid = meshgrid
     dest = reshape(_dest, length(grid), numcells(mesh))
     u = reshape(_u, length(grid), numcells(mesh))
