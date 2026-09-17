@@ -5,7 +5,7 @@ Here is a (non-exhaustive) list of research using
 
 - Jesse Chan, Hendrik Ranocha, Andrés M. Rueda-Ramírez, Gregor Gassner,
   Tim Warburton (2022).
-  On the Entropy Projection and the Robustness of High Order Entropy Stable 
+  On the Entropy Projection and the Robustness of High Order Entropy Stable
   Discontinuous Galerkin Schemes for Under-Resolved Flows.
   [arXiv: 2203.10238 [math.NA]](http://arxiv.org/abs/2203.10238)
   [DOI: 10.3389/fphy.2022.898028](https://doi.org/10.3389/fphy.2022.898028)

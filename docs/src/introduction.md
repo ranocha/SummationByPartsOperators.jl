@@ -403,4 +403,3 @@ If you want to know even more, you can have a look at the
     Ranocha, Mitsotakis, Ketcheson (2021).
     A Broad Class of Conservative Numerical Methods for Dispersive Wave Equations.
     [DOI: 10.4208/cicp.OA-2020-0119](https://doi.org/10.4208/cicp.OA-2020-0119)
-
