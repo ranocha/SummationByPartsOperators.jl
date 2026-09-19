@@ -190,4 +190,73 @@ end
     end
 end
 
+# Element types that cannot be reinterpreted as arrays of native numbers must be
+# handled by plain loops over the values, cf.
+# https://github.com/ranocha/SummationByPartsOperators.jl/issues/421
+@testset "Element types without a native memory layout" begin
+    N = 20
+    # the coefficients of the operators are `Float64`s
+    rtol = sqrt(eps(Float64))
+    for accuracy_order in (2, 4), mode in (FastMode(), SafeMode(), ThreadedMode())
+        for D in (derivative_operator(MattssonNordström2004();
+                                      derivative_order = 1,
+                                      accuracy_order = accuracy_order,
+                                      xmin = 0.0, xmax = 1.0, N = N, mode = mode),
+                  periodic_derivative_operator(derivative_order = 1,
+                                               accuracy_order = accuracy_order,
+                                               xmin = 0.0, xmax = 1.0, N = N,
+                                               mode = mode))
+            A = Matrix(D)
+            # `BigFloat`s are no `isbits` types, so neither vectors of `BigFloat`s
+            # nor vectors of `SVector`s of `BigFloat`s can be reinterpreted.
+            # The same holds for vectors of the mutable `MVector`s.
+            for u in (big.(randn(N)),
+                      [SVector(big(randn()), big(randn())) for _ in 1:N],
+                      [MVector(randn(), randn()) for _ in 1:N])
+                du = similar(u)
+                mul!(du, D, u)
+                @test isapprox(du, A * u; rtol = rtol)
+
+                mul!(du, D, u, 2)
+                @test isapprox(du, 2 * (A * u); rtol = rtol)
+
+                dest = copy(u)
+                mul!(dest, D, u, 2, 3)
+                @test isapprox(dest, 2 * (A * u) + 3 * u; rtol = rtol)
+            end
+        end
+    end
+end
+
+# Scaling factors that are no native numbers must not end up inside the
+# vectorized loops, cf.
+# https://github.com/ranocha/SummationByPartsOperators.jl/issues/421
+@testset "Scaling factors without a native number type" begin
+    N = 20
+    rtol = sqrt(eps(Float64))
+    α = big(2.0)
+    β = big(3.0)
+    for T in (Float64, ComplexF64, SVector{2, Float64}),
+        mode in (FastMode(), SafeMode(), ThreadedMode())
+
+        for D in (derivative_operator(MattssonNordström2004();
+                                      derivative_order = 1, accuracy_order = 4,
+                                      xmin = 0.0, xmax = 1.0, N = N, mode = mode),
+                  periodic_derivative_operator(derivative_order = 1, accuracy_order = 4,
+                                               xmin = 0.0, xmax = 1.0, N = N,
+                                               mode = mode))
+            A = Matrix(D)
+            u = [rand(T) for _ in 1:N]
+
+            du = similar(u)
+            mul!(du, D, u, α)
+            @test isapprox(du, α * (A * u); rtol = rtol)
+
+            dest = copy(u)
+            mul!(dest, D, u, α, β)
+            @test isapprox(dest, α * (A * u) + β * u; rtol = rtol)
+        end
+    end
+end
+
 end # module

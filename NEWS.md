@@ -11,6 +11,17 @@ for human readability.
 #### Changed
 
 - The minimum Julia version was updated to 1.10 in version 0.5.91.
+- `mul!` with vectors of composite element types such as `ForwardDiff.Dual`s,
+  `Complex` numbers, and `StaticVector`s is significantly faster when using
+  the default `FastMode()`.
+
+#### Fixed
+
+- `mul!` does not throw an error anymore for element types that cannot be
+  reinterpreted as arrays of native numbers, e.g., `SVector{2, BigFloat}` and
+  `MVector{2, Float64}`.
+- `mul!` does not throw an error anymore for scaling factors that are no
+  native numbers, e.g., `BigFloat`s.
 
 #### Deprecated
 

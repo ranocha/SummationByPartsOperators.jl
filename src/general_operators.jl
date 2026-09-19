@@ -190,8 +190,13 @@ matching_components(::Components, ::Val{false}) = nothing
 
 # Factors multiplying the values must be plain numbers acting on each component
 # in the same way - multiplying by, e.g., a `ForwardDiff.Dual` mixes them.
+# They must also be native numbers themselves since they end up inside the
+# vectorized loops over the components.
 is_plain_factor(factor) = false
-is_plain_factor(factor::Real) = reinterpreted_components(typeof(factor)) === nothing
+function is_plain_factor(factor::Real)
+    reinterpreted_components(typeof(factor)) === nothing &&
+        LoopVectorization.check_type(typeof(factor))
+end
 
 all_plain_factors(::Tuple{}) = true
 @inline function all_plain_factors(factors::Tuple)
@@ -238,10 +243,11 @@ function reinterpret_matrix_expression(array::Symbol, ::Type{V}) where {V}
     :(reinterpret(reshape, $V, $array))
 end
 
-# Coefficients that are not native numbers would mix the components, so the
-# kernels must not vectorize across them.
-function layout_for_coefficients(layout::Type, coef_types)
-    all(LoopVectorization.check_type, coef_types) ? layout : Nothing
+# Stencil coefficients and scaling factors that are not native numbers cannot be
+# handled by LoopVectorization.jl. Since the reinterpreted layouts pay off only
+# in combination with `@turbo`, the kernels use the values as they are instead.
+function layout_for_factors(layout::Type, factor_types)
+    all(LoopVectorization.check_type, factor_types) ? layout : Nothing
 end
 
 function derivative_order(coefficients::AbstractDerivativeCoefficients)

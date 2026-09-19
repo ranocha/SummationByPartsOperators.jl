@@ -111,6 +111,14 @@ end
     @test ForwardDiff.partials.(ForwardDiff.value.(du), 1) ≈ A * (2 * values)
     @test ForwardDiff.value.(ForwardDiff.partials.(du, 1)) ≈ A * (3 * values)
     @test ForwardDiff.partials.(ForwardDiff.partials.(du, 1), 1) ≈ A * (4 * values)
+
+    # Scaling factors that are no native numbers must not end up inside the
+    # vectorized loops over the components
+    u = map(x -> ForwardDiff.Dual{:ad_test}(x, 2 * x), values)
+    du = similar(u)
+    mul!(du, D, u, big(2.0))
+    @test ForwardDiff.value.(du) ≈ 2 * (A * values)
+    @test ForwardDiff.partials.(du, 1) ≈ 2 * (A * (2 * values))
 end
 
 @testset "Jacobian-vector product" begin

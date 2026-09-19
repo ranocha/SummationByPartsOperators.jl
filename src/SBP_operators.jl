@@ -317,11 +317,11 @@ end
 
 # Generate the code applying the interior stencil. If `β === nothing`, the
 # result is `α * D * u`; otherwise, it is `α * D * u + β * dest`.
-function convolve_interior_code(dest::Type, u::Type, coef_types::Tuple, β,
+function convolve_interior_code(dest::Type, u::Type, factor_types::Tuple, β,
                                 LowerOffset::Int, UpperOffset::Int,
                                 left_boundary_width::Int, right_boundary_width::Int,
                                 mode::Type, layout::Type)
-    layout = layout_for_coefficients(layout, coef_types)
+    layout = layout_for_factors(layout, factor_types)
 
     if layout === Nothing || layout <: ArrayLayout{1}
         ex = interior_stencil_expression(LowerOffset, UpperOffset, scalar_stencil_index)
@@ -332,7 +332,8 @@ function convolve_interior_code(dest::Type, u::Type, coef_types::Tuple, β,
                  end)
         if layout === Nothing
             vectorize = LoopVectorization.check_type(eltype(dest)) &&
-                        LoopVectorization.check_type(eltype(u))
+                        LoopVectorization.check_type(eltype(u)) &&
+                        all(LoopVectorization.check_type, factor_types)
             quote
                 Base.@_inline_meta
                 $(annotate_interior_loop(loop, mode, vectorize, β === nothing))
@@ -388,7 +389,7 @@ end
                                                                    UpperOffset, Tupper,
                                                                    left_boundary_width,
                                                                    right_boundary_width}
-    convolve_interior_code(dest, u, (Tlower, Tcentral, Tupper), β,
+    convolve_interior_code(dest, u, (Tlower, Tcentral, Tupper, α, β), β,
                            LowerOffset, UpperOffset,
                            left_boundary_width, right_boundary_width, mode, layout)
 end
@@ -408,7 +409,7 @@ end
                                                                    UpperOffset, Tupper,
                                                                    left_boundary_width,
                                                                    right_boundary_width}
-    convolve_interior_code(dest, u, (Tlower, Tcentral, Tupper), nothing,
+    convolve_interior_code(dest, u, (Tlower, Tcentral, Tupper, α), nothing,
                            LowerOffset, UpperOffset,
                            left_boundary_width, right_boundary_width, mode, layout)
 end
