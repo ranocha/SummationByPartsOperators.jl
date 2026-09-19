@@ -322,7 +322,7 @@ struct Mattsson2012Cache4{T} <: AbstractCoefficientCache{T}
         d163 = T(-3 // 833)
         d164 = T(3 // 833)
 
-        d211 = T(12 / 17)
+        d211 = T(12 // 17)
         d213 = T(102125659 // 440136562)
         d214 = T(27326271 // 440136562)
         d221 = T(-59 // 68)
@@ -474,8 +474,8 @@ struct Mattsson2012Cache4{T} <: AbstractCoefficientCache{T}
     end
 end
 
-lower_bandwidth(cache::Mattsson2012Cache4) = 3
-upper_bandwidth(cache::Mattsson2012Cache4) = 3
+lower_bandwidth(cache::Mattsson2012Cache4) = 5
+upper_bandwidth(cache::Mattsson2012Cache4) = 5
 Base.checkbounds(::Type{Bool}, u::AbstractVector, ::Mattsson2012Cache4) = length(u) > 12
 left_length(::Mattsson2012Cache4) = 6
 right_length(::Mattsson2012Cache4) = 6

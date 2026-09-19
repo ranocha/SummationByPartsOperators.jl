@@ -112,3 +112,44 @@ end
     D2 = var_coef_derivative_operator(Mattsson2012(), 2, 2, -1.0, 1.0, 11, abs2)
     @test (@inferred Matrix(D2)) ≈ (@inferred Matrix(D0))
 end
+
+# The operators of Mattsson (2012) satisfy the SBP property
+#   H * D2(b) = -M(b) + B̄ * S,
+# where `M(b)` is symmetric and positive semidefinite, `S` approximates the
+# first derivative at the boundaries, and `B̄ = diag(-b[1], 0, ..., 0, b[end])`.
+# This is the basis of energy stability/conservation proofs using these
+# operators, see also
+# https://github.com/ranocha/SummationByPartsOperators.jl/issues/344
+@testset "SBP property of M(b)" begin
+    for source in test_list, acc_order in (2, 4, 6)
+        T = Float64
+        xmin = zero(T)
+        xmax = one(T)
+        N = 40
+
+        # `S` is the same as for the constant coefficient operators
+        D2 = derivative_operator(source, 2, acc_order, xmin, xmax, N)
+        S_left = derivative_left(D2, Val(1))
+        S_right = derivative_right(D2, Val(1))
+
+        D2var = var_coef_derivative_operator(source, 2, acc_order, xmin, xmax, N, one)
+        H = Matrix(mass_matrix(D2var))
+
+        for b in (one.(grid(D2var)), 1 .+ grid(D2var) .^ 2,
+                  1 .+ sinpi.(3 .* grid(D2var)) ./ 2)
+            D2var.b .= b
+            M = -H * Matrix(D2var)
+            M[begin, :] .-= b[begin] * S_left
+            M[end, :] .+= b[end] * S_right
+
+            # `M(b)` is symmetric
+            @test maximum(abs, M - M') < 1000 * eps(T)
+
+            # `M(b)` is positive semidefinite with constants in its kernel
+            λ = eigvals(Symmetric((M + M') / 2))
+            @test minimum(λ) > -1000 * eps(T)
+            @test abs(λ[1]) < 1000 * eps(T)
+            @test λ[2] > 1 // 10
+        end
+    end
+end
