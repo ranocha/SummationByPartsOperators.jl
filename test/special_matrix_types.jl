@@ -208,9 +208,11 @@ end
                                                mode = mode))
             A = Matrix(D)
             # `BigFloat`s are no `isbits` types, so neither vectors of `BigFloat`s
-            # nor vectors of `SVector`s of `BigFloat`s can be reinterpreted.
-            # The same holds for vectors of the mutable `MVector`s.
+            # nor vectors of `Complex{BigFloat}`s or `SVector`s of `BigFloat`s
+            # can be reinterpreted. The same holds for vectors of the mutable
+            # `MVector`s.
             for u in (big.(randn(N)),
+                      big.(randn(N)) .+ im .* big.(randn(N)),
                       [SVector(big(randn()), big(randn())) for _ in 1:N],
                       [MVector(randn(), randn()) for _ in 1:N])
                 du = similar(u)
@@ -255,6 +257,73 @@ end
             dest = copy(u)
             mul!(dest, D, u, α, β)
             @test isapprox(dest, α * (A * u) + β * u; rtol = rtol)
+        end
+    end
+end
+
+# User-defined scalar types that are neither `Real` nor `Complex` need not
+# support `real`, cf.
+# https://github.com/ranocha/SummationByPartsOperators.jl/issues/421
+struct Quaternion{T} <: Number
+    s::T
+    i::T
+    j::T
+    k::T
+end
+function Base.zero(::Type{Quaternion{T}}) where {T}
+    Quaternion(zero(T), zero(T), zero(T), zero(T))
+end
+Base.one(::Type{Quaternion{T}}) where {T} = Quaternion(one(T), zero(T), zero(T), zero(T))
+function Base.:+(a::Quaternion, b::Quaternion)
+    Quaternion(a.s + b.s, a.i + b.i, a.j + b.j, a.k + b.k)
+end
+Base.:*(x::Real, a::Quaternion) = Quaternion(x * a.s, x * a.i, x * a.j, x * a.k)
+Base.:*(a::Quaternion, x::Real) = x * a
+# `mul!(dest, D, u)` scales by `one(Quaternion)`, which requires the full product
+function Base.:*(a::Quaternion, b::Quaternion)
+    Quaternion(a.s * b.s - a.i * b.i - a.j * b.j - a.k * b.k,
+               a.s * b.i + a.i * b.s + a.j * b.k - a.k * b.j,
+               a.s * b.j - a.i * b.k + a.j * b.s + a.k * b.i,
+               a.s * b.k + a.i * b.j - a.j * b.i + a.k * b.s)
+end
+Base.muladd(x::Real, a::Quaternion, b::Quaternion) = x * a + b
+
+@testset "User-defined scalar element types" begin
+    N = 20
+    for accuracy_order in (2, 4), mode in (FastMode(), SafeMode(), ThreadedMode())
+        for D in (derivative_operator(MattssonNordström2004();
+                                      derivative_order = 1,
+                                      accuracy_order = accuracy_order,
+                                      xmin = 0.0, xmax = 1.0, N = N, mode = mode),
+                  periodic_derivative_operator(derivative_order = 1,
+                                               accuracy_order = accuracy_order,
+                                               xmin = 0.0, xmax = 1.0, N = N,
+                                               mode = mode))
+            # the components are transformed independently of each other
+            components = ntuple(_ -> randn(N), 4)
+            u = map(Quaternion, components...)
+            names = (:s, :i, :j, :k)
+
+            du = similar(u)
+            mul!(du, D, u)
+            for (component, name) in zip(components, names)
+                @test getproperty.(du, name) ≈ D * component
+            end
+
+            for (component, name) in zip(components, names)
+                @test getproperty.(D * u, name) ≈ D * component
+            end
+
+            mul!(du, D, u, 2)
+            for (component, name) in zip(components, names)
+                @test getproperty.(du, name) ≈ 2 * (D * component)
+            end
+
+            dest = copy(u)
+            mul!(dest, D, u, 2, 3)
+            for (component, name) in zip(components, names)
+                @test getproperty.(dest, name) ≈ 2 * (D * component) + 3 * component
+            end
         end
     end
 end

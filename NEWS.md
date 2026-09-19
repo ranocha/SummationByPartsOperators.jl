@@ -18,8 +18,8 @@ for human readability.
 #### Fixed
 
 - `mul!` does not throw an error anymore for element types that cannot be
-  reinterpreted as arrays of native numbers, e.g., `SVector{2, BigFloat}` and
-  `MVector{2, Float64}`.
+  handled by LoopVectorization.jl, e.g., `SVector{2, BigFloat}`,
+  `MVector{2, Float64}`, and user-defined scalar types.
 - `mul!` does not throw an error anymore for scaling factors that are no
   native numbers, e.g., `BigFloat`s.
 

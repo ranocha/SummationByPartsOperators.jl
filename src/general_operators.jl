@@ -299,12 +299,15 @@ end
 # The scaling factor used by `mul!(dest, D, u)` should be a plain real number
 # instead of, e.g., a `ForwardDiff.Dual` or a `Complex`. Otherwise, multiplying
 # by it is unnecessarily expensive and prevents the vectorized kernels from
-# being used. A real one is a multiplicative identity just as well.
+# being used. A real one is a multiplicative identity just as well. Element
+# types we do not know anything about are used as they are since they need not
+# support `real`.
 @inline function scaling_eltype(dest)
     T = recursive_bottom_eltype(dest)
     native_eltype(T, reinterpreted_components(T))
 end
-native_eltype(::Type{T}, ::Nothing) where {T} = real(T)
+native_eltype(::Type{T}, ::Nothing) where {T} = T
+native_eltype(::Type{Complex{T}}, ::Nothing) where {T} = T
 native_eltype(::Type{T}, ::Components{N, V}) where {T, N, V} = V
 
 function Base.:*(D::AbstractDerivativeOperator, u)
