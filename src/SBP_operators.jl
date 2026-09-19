@@ -104,10 +104,11 @@ function mul_internal!(dest::AbstractVector, coefficients::DerivativeCoefficient
         @argcheck length(u)>length(left_boundary) + length(right_boundary) DimensionMismatch
     end
 
+    layout = reinterpreted_layout(mode, dest, u, central_coef, α, β)
     convolve_boundary_coefficients!(dest, left_boundary, right_boundary, u, α, β, mode)
     convolve_interior_coefficients!(dest, lower_coef, central_coef, upper_coef, u, α, β,
                                     static_length(left_boundary),
-                                    static_length(right_boundary), mode)
+                                    static_length(right_boundary), mode, layout)
 end
 
 # Compute `α*D*u` and store the result in `dest`.
@@ -122,10 +123,11 @@ function mul_internal!(dest::AbstractVector, coefficients::DerivativeCoefficient
                             length(coefficients.right_boundary) DimensionMismatch
     end
 
+    layout = reinterpreted_layout(mode, dest, u, central_coef, α)
     convolve_boundary_coefficients!(dest, left_boundary, right_boundary, u, α, mode)
     convolve_interior_coefficients!(dest, lower_coef, central_coef, upper_coef, u, α,
                                     static_length(left_boundary),
-                                    static_length(right_boundary), mode)
+                                    static_length(right_boundary), mode, layout)
 end
 
 """
@@ -274,252 +276,142 @@ end
     end
 end
 
+# Build the expression computing the interior stencil at the index `i`, where
+# `u_at(j)` yields the expression accessing `u` at the offset `j` relative to `i`.
+function interior_stencil_expression(LowerOffset::Int, UpperOffset::Int, u_at)
+    if LowerOffset > 0
+        ex = :(lower_coef[$LowerOffset] * $(u_at(-LowerOffset)))
+        for j in (LowerOffset - 1):-1:1
+            ex = :($ex + lower_coef[$j] * $(u_at(-j)))
+        end
+        ex = :($ex + central_coef * $(u_at(0)))
+    else
+        ex = :(central_coef * $(u_at(0)))
+    end
+    for j in 1:UpperOffset
+        ex = :($ex + upper_coef[$j] * $(u_at(j)))
+    end
+    return ex
+end
+
+scalar_stencil_index(j::Int) = j > 0 ? :(u[i + $j]) : j < 0 ? :(u[i - $(-j)]) : :(u[i])
+function matrix_stencil_index(j::Int)
+    j > 0 ? :(u[v, i + $j]) : j < 0 ? :(u[v, i - $(-j)]) : :(u[v, i])
+end
+
+# Wrap the interior `loop` in the loop annotation corresponding to the execution
+# `mode`. If the element types are not supported by LoopVectorization.jl,
+# `@turbo` would fall back to a slow scalar loop; we use the loop of the
+# `SafeMode` in this case.
+function annotate_interior_loop(loop, mode::Type, vectorize::Bool, ivdep::Bool)
+    if vectorize && mode <: ThreadedMode
+        :(@tturbo warn_check_args=false $loop)
+    elseif vectorize && !(mode <: SafeMode)
+        :(@turbo warn_check_args=false $loop)
+    elseif ivdep
+        :(@inbounds @simd ivdep $loop)
+    else
+        :(@inbounds $loop)
+    end
+end
+
+# Generate the code applying the interior stencil. If `β === nothing`, the
+# result is `α * D * u`; otherwise, it is `α * D * u + β * dest`.
+function convolve_interior_code(dest::Type, u::Type, factor_types::Tuple, β,
+                                LowerOffset::Int, UpperOffset::Int,
+                                left_boundary_width::Int, right_boundary_width::Int,
+                                mode::Type, layout::Type)
+    layout = layout_for_factors(layout, factor_types)
+
+    if layout === Nothing || layout <: ArrayLayout{1}
+        ex = interior_stencil_expression(LowerOffset, UpperOffset, scalar_stencil_index)
+        assignment = β === nothing ? :(dest[i] = α * $ex) :
+                     :(dest[i] = β * dest[i] + α * $ex)
+        loop = :(for i in (firstindex(dest) + $left_boundary_width):(lastindex(dest) - $right_boundary_width)
+                     $assignment
+                 end)
+        if layout === Nothing
+            vectorize = LoopVectorization.check_type(eltype(dest)) &&
+                        LoopVectorization.check_type(eltype(u)) &&
+                        all(LoopVectorization.check_type, factor_types)
+            quote
+                Base.@_inline_meta
+                $(annotate_interior_loop(loop, mode, vectorize, β === nothing))
+            end
+        else
+            Vdest = layout.parameters[2]
+            Vu = layout.parameters[3]
+            quote
+                Base.@_inline_meta
+                let dest = $(reinterpret_vector_expression(:dest, Vdest)),
+                    u = $(reinterpret_vector_expression(:u, Vu))
+
+                    $(annotate_interior_loop(loop, mode, true, β === nothing))
+                end
+            end
+        end
+    else
+        Vdest = layout.parameters[2]
+        Vu = layout.parameters[3]
+        ex = interior_stencil_expression(LowerOffset, UpperOffset, matrix_stencil_index)
+        assignment = β === nothing ? :(dest[v, i] = α * $ex) :
+                     :(dest[v, i] = β * dest[v, i] + α * $ex)
+        loop = :(for i in fi:la
+                     for v in LoopVectorization.indices((dest, u), (1, 1))
+                         $assignment
+                     end
+                 end)
+        quote
+            Base.@_inline_meta
+            let dest = $(reinterpret_matrix_expression(:dest, Vdest)),
+                u = $(reinterpret_matrix_expression(:u, Vu))
+
+                fi = firstindex(dest, 2) + $left_boundary_width
+                la = lastindex(dest, 2) - $right_boundary_width
+                $(annotate_interior_loop(loop, mode, true, false))
+            end
+        end
+    end
+end
+
 @generated function convolve_interior_coefficients!(dest::AbstractVector,
-                                                    lower_coef::SVector{LowerOffset},
-                                                    central_coef,
-                                                    upper_coef::SVector{UpperOffset},
+                                                    lower_coef::SVector{LowerOffset,
+                                                                        Tlower},
+                                                    central_coef::Tcentral,
+                                                    upper_coef::SVector{UpperOffset,
+                                                                        Tupper},
                                                     u::AbstractVector, α, β,
                                                     ::StaticInt{left_boundary_width},
                                                     ::StaticInt{right_boundary_width},
-                                                    mode) where {LowerOffset, UpperOffset,
-                                                                 left_boundary_width,
-                                                                 right_boundary_width}
-    if LowerOffset > 0
-        ex = :(lower_coef[$LowerOffset] * u[i - $LowerOffset])
-        for j in (LowerOffset - 1):-1:1
-            ex = :($ex + lower_coef[$j] * u[i - $j])
-        end
-        ex = :($ex + central_coef * u[i])
-    else
-        ex = :(central_coef * u[i])
-    end
-    for j in 1:UpperOffset
-        ex = :($ex + upper_coef[$j] * u[i + $j])
-    end
-
-    if mode <: ThreadedMode
-        quote
-            Base.@_inline_meta
-            @tturbo warn_check_args=false for i in (left_boundary_width + 1):(length(dest) - right_boundary_width)
-                dest[i] = β * dest[i] + α * $ex
-            end
-        end
-    elseif mode <: SafeMode
-        quote
-            Base.@_inline_meta
-            @inbounds for i in (left_boundary_width + 1):(length(dest) - right_boundary_width)
-                dest[i] = β * dest[i] + α * $ex
-            end
-        end
-    else
-        quote
-            Base.@_inline_meta
-            @turbo warn_check_args=false for i in (left_boundary_width + 1):(length(dest) - right_boundary_width)
-                dest[i] = β * dest[i] + α * $ex
-            end
-        end
-    end
+                                                    mode,
+                                                    layout) where {LowerOffset, Tlower,
+                                                                   Tcentral,
+                                                                   UpperOffset, Tupper,
+                                                                   left_boundary_width,
+                                                                   right_boundary_width}
+    convolve_interior_code(dest, u, (Tlower, Tcentral, Tupper, α, β), β,
+                           LowerOffset, UpperOffset,
+                           left_boundary_width, right_boundary_width, mode, layout)
 end
 
 @generated function convolve_interior_coefficients!(dest::AbstractVector,
-                                                    lower_coef::SVector{LowerOffset},
-                                                    central_coef,
-                                                    upper_coef::SVector{UpperOffset},
+                                                    lower_coef::SVector{LowerOffset,
+                                                                        Tlower},
+                                                    central_coef::Tcentral,
+                                                    upper_coef::SVector{UpperOffset,
+                                                                        Tupper},
                                                     u::AbstractVector, α,
                                                     ::StaticInt{left_boundary_width},
                                                     ::StaticInt{right_boundary_width},
-                                                    mode) where {LowerOffset, UpperOffset,
-                                                                 left_boundary_width,
-                                                                 right_boundary_width}
-    if LowerOffset > 0
-        ex = :(lower_coef[$LowerOffset] * u[i - $LowerOffset])
-        for j in (LowerOffset - 1):-1:1
-            ex = :($ex + lower_coef[$j] * u[i - $j])
-        end
-        ex = :($ex + central_coef * u[i])
-    else
-        ex = :(central_coef * u[i])
-    end
-    for j in 1:UpperOffset
-        ex = :($ex + upper_coef[$j] * u[i + $j])
-    end
-
-    if mode <: ThreadedMode
-        quote
-            Base.@_inline_meta
-            @tturbo warn_check_args=false for i in (firstindex(dest) + $left_boundary_width):(lastindex(dest) - $right_boundary_width)
-                dest[i] = α * $ex
-            end
-        end
-    elseif mode <: SafeMode
-        quote
-            Base.@_inline_meta
-            @simd ivdep for i in (firstindex(dest) + $left_boundary_width):(lastindex(dest) - $right_boundary_width)
-                @inbounds dest[i] = α * $ex
-            end
-        end
-    else
-        quote
-            Base.@_inline_meta
-            @turbo warn_check_args=false for i in (firstindex(dest) + $left_boundary_width):(lastindex(dest) - $right_boundary_width)
-                dest[i] = α * $ex
-            end
-        end
-    end
-end
-
-# Specialized for vectors of `StaticVector`s
-@generated function convolve_interior_coefficients!(_dest::AbstractVector{<:StaticVector{N,
-                                                                                         T1}},
-                                                    lower_coef::SVector{LowerOffset},
-                                                    central_coef,
-                                                    upper_coef::SVector{UpperOffset},
-                                                    _u::AbstractVector{<:StaticVector{N,
-                                                                                      T2}},
-                                                    α, β,
-                                                    ::StaticInt{left_boundary_width},
-                                                    ::StaticInt{right_boundary_width},
-                                                    mode) where {LowerOffset,
-                                                                 UpperOffset, N, T1, T2,
-                                                                 left_boundary_width,
-                                                                 right_boundary_width}
-    if LowerOffset > 0
-        ex = :(lower_coef[$LowerOffset] * u[v, i - $LowerOffset])
-        for j in (LowerOffset - 1):-1:1
-            ex = :($ex + lower_coef[$j] * u[v, i - $j])
-        end
-        ex = :($ex + central_coef * u[v, i])
-    else
-        ex = :(central_coef * u[v, i])
-    end
-    for j in 1:UpperOffset
-        ex = :($ex + upper_coef[$j] * u[v, i + $j])
-    end
-
-    if N == 1
-        ex_dest = :(reshape(reinterpret($T1, _dest), 1, length(_dest)))
-        ex_u = :(reshape(reinterpret($T2, _u), 1, length(_u)))
-    else
-        ex_dest = :(reinterpret(reshape, $T1, _dest))
-        ex_u = :(reinterpret(reshape, $T2, _u))
-    end
-
-    if mode <: ThreadedMode
-        quote
-            Base.@_inline_meta
-            dest = $ex_dest
-            u = $ex_u
-            fi = firstindex(dest, 2) + left_boundary_width
-            la = lastindex(dest, 2) - right_boundary_width
-            @tturbo warn_check_args=false for i in fi:la
-                for v in LoopVectorization.indices((dest, u), (1, 1))
-                    dest[v, i] = β * dest[v, i] + α * $ex
-                end
-            end
-        end
-    elseif mode <: SafeMode
-        quote
-            Base.@_inline_meta
-            dest = $ex_dest
-            u = $ex_u
-            fi = firstindex(dest, 2) + left_boundary_width
-            la = lastindex(dest, 2) - right_boundary_width
-            @inbounds for i in fi:la
-                for v in LoopVectorization.indices((dest, u), (1, 1))
-                    dest[v, i] = β * dest[v, i] + α * $ex
-                end
-            end
-        end
-    else
-        quote
-            Base.@_inline_meta
-            dest = $ex_dest
-            u = $ex_u
-            fi = firstindex(dest, 2) + left_boundary_width
-            la = lastindex(dest, 2) - right_boundary_width
-            @turbo warn_check_args=false for i in fi:la
-                for v in LoopVectorization.indices((dest, u), (1, 1))
-                    dest[v, i] = β * dest[v, i] + α * $ex
-                end
-            end
-        end
-    end
-end
-
-@generated function convolve_interior_coefficients!(_dest::AbstractVector{<:StaticVector{N,
-                                                                                         T1}},
-                                                    lower_coef::SVector{LowerOffset},
-                                                    central_coef,
-                                                    upper_coef::SVector{UpperOffset},
-                                                    _u::AbstractVector{<:StaticVector{N,
-                                                                                      T2}},
-                                                    α, ::StaticInt{left_boundary_width},
-                                                    ::StaticInt{right_boundary_width},
-                                                    mode) where {LowerOffset,
-                                                                 UpperOffset, N, T1, T2,
-                                                                 left_boundary_width,
-                                                                 right_boundary_width}
-    if LowerOffset > 0
-        ex = :(lower_coef[$LowerOffset] * u[v, i - $LowerOffset])
-        for j in (LowerOffset - 1):-1:1
-            ex = :($ex + lower_coef[$j] * u[v, i - $j])
-        end
-        ex = :($ex + central_coef * u[v, i])
-    else
-        ex = :(central_coef * u[v, i])
-    end
-    for j in 1:UpperOffset
-        ex = :($ex + upper_coef[$j] * u[v, i + $j])
-    end
-
-    if N == 1
-        ex_dest = :(reshape(reinterpret($T1, _dest), 1, length(_dest)))
-        ex_u = :(reshape(reinterpret($T2, _u), 1, length(_u)))
-    else
-        ex_dest = :(reinterpret(reshape, $T1, _dest))
-        ex_u = :(reinterpret(reshape, $T2, _u))
-    end
-
-    if mode <: ThreadedMode
-        quote
-            Base.@_inline_meta
-            dest = $ex_dest
-            u = $ex_u
-            fi = firstindex(dest, 2) + left_boundary_width
-            la = lastindex(dest, 2) - right_boundary_width
-            @tturbo warn_check_args=false for i in fi:la
-                for v in LoopVectorization.indices((dest, u), (1, 1))
-                    dest[v, i] = α * $ex
-                end
-            end
-        end
-    elseif mode <: SafeMode
-        quote
-            Base.@_inline_meta
-            dest = $ex_dest
-            u = $ex_u
-            fi = firstindex(dest, 2) + left_boundary_width
-            la = lastindex(dest, 2) - right_boundary_width
-            @inbounds for i in fi:la
-                for v in LoopVectorization.indices((dest, u), (1, 1))
-                    dest[v, i] = α * $ex
-                end
-            end
-        end
-    else
-        quote
-            Base.@_inline_meta
-            dest = $ex_dest
-            u = $ex_u
-            fi = firstindex(dest, 2) + left_boundary_width
-            la = lastindex(dest, 2) - right_boundary_width
-            @turbo warn_check_args=false for i in fi:la
-                for v in LoopVectorization.indices((dest, u), (1, 1))
-                    dest[v, i] = α * $ex
-                end
-            end
-        end
-    end
+                                                    mode,
+                                                    layout) where {LowerOffset, Tlower,
+                                                                   Tcentral,
+                                                                   UpperOffset, Tupper,
+                                                                   left_boundary_width,
+                                                                   right_boundary_width}
+    convolve_interior_code(dest, u, (Tlower, Tcentral, Tupper, α), nothing,
+                           LowerOffset, UpperOffset,
+                           left_boundary_width, right_boundary_width, mode, layout)
 end
 
 """

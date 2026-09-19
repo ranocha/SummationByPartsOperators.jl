@@ -115,6 +115,141 @@ struct ThreadedMode <: AbstractExecutionMode end
 _parallel_to_mode(::Val{:threads}) = ThreadedMode()
 _parallel_to_mode(::Val{:serial}) = FastMode()
 
+# LoopVectorization.jl can only vectorize loops over native numbers. For other
+# element types, `@turbo` falls back to a scalar loop using `Base.FastMath`
+# operations. This fallback can be much slower than plain arithmetic since,
+# e.g., `Base.FastMath.mul_fast(α::Float64, u::ForwardDiff.Dual)` promotes `α`
+# to a `ForwardDiff.Dual` and evaluates the full product rule.
+# Fortunately, vectors of composite element types such as `StaticVector`s or
+# `ForwardDiff.Dual`s can be reinterpreted as arrays of native numbers.
+# Applying the stencils to such an array allows `@turbo` to vectorize across
+# the components, which is usually even faster than a plain scalar loop.
+# See https://github.com/ranocha/SummationByPartsOperators.jl/issues/421
+#
+# All of this is decided by the singleton values below. They must be singletons
+# since the kernels are `@generated` functions: their generators run in the
+# world age of their own definition and would thus not see methods of
+# `reinterpreted_components` added later by package extensions. Dispatching on
+# the layout moves the decision to ordinary inference instead.
+
+"""
+    SummationByPartsOperators.Components{N, V}()
+
+Values of the element type described by this trait consist of `N` components of
+the native number type `V`. See [`reinterpreted_components`](@ref).
+"""
+struct Components{N, V} end
+
+"""
+    SummationByPartsOperators.ArrayLayout{N, Vdest, Vu}()
+
+The kernels access `dest` and `u` as arrays of the native number types `Vdest`
+and `Vu` with `N` components per value. See [`reinterpreted_layout`](@ref).
+"""
+struct ArrayLayout{N, Vdest, Vu} end
+
+"""
+    SummationByPartsOperators.reinterpreted_components(::Type{T})
+
+Return `nothing` if values of type `T` must be treated as opaque scalars and
+`Components{N, V}()` if `reinterpret(reshape, V, ::AbstractVector{T})` yields an
+`N × length` matrix of native numbers `V`.
+"""
+reinterpreted_components(::Type) = nothing
+
+function reinterpreted_components(::Type{S}) where {N, T, S <: StaticVector{N, T}}
+    reinterpreted_components(S, Val{N}(), T)
+end
+
+function reinterpreted_components(::Type{C}) where {T, C <: Complex{T}}
+    reinterpreted_components(C, Val{2}(), T)
+end
+
+# Values of type `T` consist of `N` components of type `V`, which may be
+# composite themselves.
+@inline function reinterpreted_components(::Type{T}, ::Val{N}, ::Type{V}) where {T, N, V}
+    checked_components(T, combine_components(Val{N}(), V, reinterpreted_components(V)))
+end
+
+@inline function combine_components(::Val{N}, ::Type{V}, ::Nothing) where {N, V}
+    native_components(Val{N}(), V, Val(LoopVectorization.check_type(V)))
+end
+function combine_components(::Val{N}, ::Type{V}, ::Components{M, W}) where {N, V, M, W}
+    Components{N * M, W}()
+end
+native_components(::Val{N}, ::Type{V}, ::Val{true}) where {N, V} = Components{N, V}()
+native_components(::Val{N}, ::Type{V}, ::Val{false}) where {N, V} = nothing
+
+# `reinterpret(reshape, ...)` requires an exact match of the memory layout
+checked_components(::Type, ::Nothing) = nothing
+@inline function checked_components(::Type{T}, components::Components{N, V}) where {T, N, V}
+    matching_components(components, Val(isbitstype(T) && sizeof(T) == N * sizeof(V)))
+end
+matching_components(components::Components, ::Val{true}) = components
+matching_components(::Components, ::Val{false}) = nothing
+
+# Factors multiplying the values must be plain numbers acting on each component
+# in the same way - multiplying by, e.g., a `ForwardDiff.Dual` mixes them.
+# They must also be native numbers themselves since they end up inside the
+# vectorized loops over the components.
+is_plain_factor(factor) = false
+function is_plain_factor(factor::Real)
+    reinterpreted_components(typeof(factor)) === nothing &&
+        LoopVectorization.check_type(typeof(factor))
+end
+
+all_plain_factors(::Tuple{}) = true
+@inline function all_plain_factors(factors::Tuple)
+    is_plain_factor(first(factors)) && all_plain_factors(Base.tail(factors))
+end
+
+"""
+    SummationByPartsOperators.reinterpreted_layout(mode, dest, u, factors...)
+
+Return the [`ArrayLayout`](@ref) the kernels should use to compute
+`α * D * u [+ β * dest]` with the given scaling `factors`, or `nothing` if
+`dest` and `u` have to be used as they are.
+"""
+@inline function reinterpreted_layout(mode::AbstractExecutionMode, dest::AbstractVector,
+                                      u::AbstractVector, factors...)
+    array_layout(reinterpreted_components(eltype(dest)),
+                 reinterpreted_components(eltype(u)),
+                 Val(all_plain_factors(factors)))
+end
+
+# `SafeMode` relies only on basic functionality of Julia. Its plain loops over
+# the values are also usually faster than loops over the reinterpreted
+# components, which pay off only in combination with `@turbo`.
+function reinterpreted_layout(::SafeMode, dest::AbstractVector, u::AbstractVector,
+                              factors...)
+    nothing
+end
+
+array_layout(dest_components, u_components, ::Val{false}) = nothing
+array_layout(::Nothing, u_components, ::Val{true}) = nothing
+array_layout(dest_components, ::Nothing, ::Val{true}) = nothing
+array_layout(::Nothing, ::Nothing, ::Val{true}) = nothing
+array_layout(::Components, ::Components, ::Val{true}) = nothing
+function array_layout(::Components{N, Vdest}, ::Components{N, Vu},
+                      ::Val{true}) where {N, Vdest, Vu}
+    ArrayLayout{N, Vdest, Vu}()
+end
+
+# A single component per value is best handled as a plain vector of native numbers
+function reinterpret_vector_expression(array::Symbol, ::Type{V}) where {V}
+    :(reinterpret($V, $array))
+end
+function reinterpret_matrix_expression(array::Symbol, ::Type{V}) where {V}
+    :(reinterpret(reshape, $V, $array))
+end
+
+# Stencil coefficients and scaling factors that are not native numbers cannot be
+# handled by LoopVectorization.jl. Since the reinterpreted layouts pay off only
+# in combination with `@turbo`, the kernels use the values as they are instead.
+function layout_for_factors(layout::Type, factor_types)
+    all(LoopVectorization.check_type, factor_types) ? layout : Nothing
+end
+
 function derivative_order(coefficients::AbstractDerivativeCoefficients)
     coefficients.derivative_order
 end
@@ -158,8 +293,22 @@ xmin(D::AbstractDerivativeOperator) = first(grid(D))
 xmax(D::AbstractDerivativeOperator) = last(grid(D))
 
 Base.@propagate_inbounds function mul!(dest, D::AbstractDerivativeOperator, u)
-    mul!(dest, D, u, one(recursive_bottom_eltype(dest)))
+    mul!(dest, D, u, one(scaling_eltype(dest)))
 end
+
+# The scaling factor used by `mul!(dest, D, u)` should be a plain real number
+# instead of, e.g., a `ForwardDiff.Dual` or a `Complex`. Otherwise, multiplying
+# by it is unnecessarily expensive and prevents the vectorized kernels from
+# being used. A real one is a multiplicative identity just as well. Element
+# types we do not know anything about are used as they are since they need not
+# support `real`.
+@inline function scaling_eltype(dest)
+    T = recursive_bottom_eltype(dest)
+    native_eltype(T, reinterpreted_components(T))
+end
+native_eltype(::Type{T}, ::Nothing) where {T} = T
+native_eltype(::Type{Complex{T}}, ::Nothing) where {T} = T
+native_eltype(::Type{T}, ::Components{N, V}) where {T, N, V} = V
 
 function Base.:*(D::AbstractDerivativeOperator, u)
     @boundscheck begin

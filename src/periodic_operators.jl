@@ -59,11 +59,12 @@ function mul_internal!(dest::AbstractVector,
     end
 
     @unpack lower_coef, central_coef, upper_coef, mode = coefficients
+    layout = reinterpreted_layout(mode, dest, u, central_coef, α, β)
     convolve_periodic_boundary_coefficients!(dest, lower_coef, central_coef, upper_coef, u,
                                              α, β)
     convolve_interior_coefficients!(dest, lower_coef, central_coef, upper_coef, u, α, β,
                                     static_length(lower_coef), static_length(upper_coef),
-                                    mode)
+                                    mode, layout)
 end
 
 # Compute `α*D*u` and store the result in `dest`.
@@ -77,11 +78,12 @@ function mul_internal!(dest::AbstractVector,
     end
 
     @unpack lower_coef, central_coef, upper_coef, mode = coefficients
+    layout = reinterpreted_layout(mode, dest, u, central_coef, α)
     convolve_periodic_boundary_coefficients!(dest, lower_coef, central_coef, upper_coef, u,
                                              α)
     convolve_interior_coefficients!(dest, lower_coef, central_coef, upper_coef, u, α,
                                     static_length(lower_coef), static_length(upper_coef),
-                                    mode)
+                                    mode, layout)
 end
 
 @generated function convolve_periodic_boundary_coefficients!(dest::AbstractVector,
