@@ -39,7 +39,11 @@ for T in (Float32, Float64), acc_order in (2, 4, 6, 8), diss_order in (2, 4, 6, 
     @test bandwidth(D_serial, 1) == bandwidth(D_banded, 1)
     @test bandwidth(D_serial, 2) == bandwidth(D_banded, 2)
 
-    # All matrix representations must contain exactly the same coefficients
+    # All matrix representations are assembled from the same `mul!` calls and
+    # must thus contain exactly the same coefficients. We deliberately use `==`
+    # instead of `isapprox` here since the latter compares the difference to the
+    # norm of the whole matrix, which is too coarse to detect dropped
+    # coefficients of the boundary closure.
     @test D_full == D_sparse
     @test D_full == D_banded
 
