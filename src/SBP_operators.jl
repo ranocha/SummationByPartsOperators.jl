@@ -367,8 +367,6 @@ function convolve_interior_code(dest::Type, u::Type, coef_types::Tuple, β,
 
                 fi = firstindex(dest, 2) + $left_boundary_width
                 la = lastindex(dest, 2) - $right_boundary_width
-                # `@simd ivdep` on the outer loop would hurt the inner loop
-                # over the components, so it is not used here
                 $(annotate_interior_loop(loop, mode, true, false))
             end
         end
