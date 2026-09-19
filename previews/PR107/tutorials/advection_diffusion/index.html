@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Linear advection diffusion equation with periodic boundary conditions · SummationByPartsOperators.jl</title><script data-outdated-warner src="../../assets/warner.js"></script><link rel="canonical" href="https://ranocha.github.io/SummationByPartsOperators.jl/stable/tutorials/advection_diffusion/"/><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.039/juliamono-regular.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.11/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">SummationByPartsOperators.jl</a></span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><a class="tocitem" href="../../introduction/">Introduction</a></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="../constant_linear_advection/">Linear advection equation with constant coefficients</a></li><li class="is-active"><a class="tocitem" href>Linear advection diffusion equation with periodic boundary conditions</a><ul class="internal"><li><a class="tocitem" href="#Basic-example-using-finite-difference-SBP-operators"><span>Basic example using finite difference SBP operators</span></a></li><li><a class="tocitem" href="#Advanced-visualization"><span>Advanced visualization</span></a></li></ul></li><li><a class="tocitem" href="../variable_linear_advection/">Linear advection equation with variable coefficients</a></li><li><a class="tocitem" href="../wave_equation/">Wave equation</a></li></ul></li><li><a class="tocitem" href="../../applications/">Applications &amp; references</a></li><li><a class="tocitem" href="../../benchmarks/">Benchmarks</a></li><li><a class="tocitem" href="../../api_reference/">API reference</a></li><li><a class="tocitem" href="../../contributing/">Contributing</a></li><li><a class="tocitem" href="../../license/">License</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Tutorials</a></li><li class="is-active"><a href>Linear advection diffusion equation with periodic boundary conditions</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Linear advection diffusion equation with periodic boundary conditions</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/ranocha/SummationByPartsOperators.jl/blob/master/docs/src/tutorials/advection_diffusion.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Linear-advection-diffusion-equation-with-periodic-boundary-conditions"><a class="docs-heading-anchor" href="#Linear-advection-diffusion-equation-with-periodic-boundary-conditions">Linear advection diffusion equation with periodic boundary conditions</a><a id="Linear-advection-diffusion-equation-with-periodic-boundary-conditions-1"></a><a class="docs-heading-anchor-permalink" href="#Linear-advection-diffusion-equation-with-periodic-boundary-conditions" title="Permalink"></a></h1><p>Let&#39;s consider the linear advection diffusion equation</p><p class="math-container">\[\begin{aligned}
+    \partial_t u(t,x) + a \partial_x u(t,x) &amp;= \varepsilon \partial_x^2 u(t,x), &amp;&amp; t \in (0,T), x \in (x_{min}, x_{max}), \\
+    u(0,x) &amp;= u_0(x), &amp;&amp; x \in (x_{min}, x_{max}), \\
+\end{aligned}\]</p><p>with periodic boundary conditions. Here, <code>a</code> is the constant advection velocity and <code>ε &gt; 0</code> is the constant diffusion coefficient.</p><h2 id="Basic-example-using-finite-difference-SBP-operators"><a class="docs-heading-anchor" href="#Basic-example-using-finite-difference-SBP-operators">Basic example using finite difference SBP operators</a><a id="Basic-example-using-finite-difference-SBP-operators-1"></a><a class="docs-heading-anchor-permalink" href="#Basic-example-using-finite-difference-SBP-operators" title="Permalink"></a></h2><p>Let&#39;s create an appropriate discretization of this equation step by step. At first, we load packages that we will use in this example.</p><pre><code class="language-julia">using SummationByPartsOperators, OrdinaryDiffEq
+using LaTeXStrings; using Plots: Plots, plot, plot!, savefig</code></pre><p>Next, we specify the initial data as Julia function as well as the spatial domain and the time span.</p><pre><code class="language-julia">xmin, xmax = -1.0, 1.0
+u0_func(x) = sinpi(x)
+tspan = (0., 10.0)</code></pre><pre class="documenter-example-output">(0.0, 10.0)</pre><p>Next, we implement the semidiscretization using the interface of <a href="https://github.com/SciML/OrdinaryDiffEq.jl">OrdinaryDiffEq.jl</a> which is part of <a href="https://diffeq.sciml.ai/latest/">DifferentialEquations.jl</a>.</p><pre><code class="language-julia">function advection_diffusion!(du, u, params, t)
+    # In-place version of du = -a * D1 * u
+    mul!(du, params.D1, u, -params.a)
+    # In-place version of du = du + ε * D2 * u
+    mul!(du, params.D2, u, params.ε, true)
+end</code></pre><pre class="documenter-example-output">advection_diffusion! (generic function with 1 method)</pre><p>Next, we choose first- and second-derivative SBP operators <code>D1, D2</code>, evaluate the initial data on the grid, and set up the semidiscretization as an ODE problem.</p><pre><code class="language-julia">N = 100 # number of grid points
+D1 = periodic_derivative_operator(derivative_order=1, accuracy_order=4,
+                                  xmin=xmin, xmax=xmax, N=N)
+D2 = periodic_derivative_operator(derivative_order=2, accuracy_order=4,
+                                  xmin=xmin, xmax=xmax, N=N)
+u0 = u0_func.(grid(D1))
+params = (D1=D1, D2=D2, a=1.0, ε=0.03)
+ode = ODEProblem(advection_diffusion!, u0, tspan, params);</code></pre><pre class="documenter-example-output">ODEProblem with uType Vector{Float64} and tType Float64. In-place: true
+timespan: (0.0, 10.0)
+u0: 100-element Vector{Float64}:
+ -0.0
+ -0.06279051952931343
+ -0.12533323356430437
+ -0.1873813145857248
+ -0.24868988716485466
+ -0.30901699437494734
+ -0.3681245526846779
+ -0.42577929156507266
+ -0.4817536741017154
+ -0.5358267949789968
+  ⋮
+  0.5358267949789968
+  0.4817536741017154
+  0.42577929156507266
+  0.3681245526846779
+  0.30901699437494734
+  0.24868988716485466
+  0.1873813145857248
+  0.12533323356430437
+  0.06279051952931343</pre><p>Finally, we can solve the ODE using an explicit Runge-Kutta method with adaptive time stepping.</p><pre><code class="language-julia">sol = solve(ode, Tsit5(), saveat=range(first(tspan), stop=last(tspan), length=200));
+
+plot(xguide=L&quot;x&quot;, yguide=L&quot;u&quot;)
+plot!(evaluate_coefficients(sol[1], D1), label=L&quot;u_0&quot;)
+plot!(evaluate_coefficients(sol[end], D1), label=L&quot;u_\mathrm{numerical}&quot;)
+savefig(&quot;example_advection_diffusion.png&quot;);</code></pre><p><img src="../example_advection_diffusion.png" alt/></p><h2 id="Advanced-visualization"><a class="docs-heading-anchor" href="#Advanced-visualization">Advanced visualization</a><a id="Advanced-visualization-1"></a><a class="docs-heading-anchor-permalink" href="#Advanced-visualization" title="Permalink"></a></h2><p>Let&#39;s create an animation of the numerical solution.</p><pre><code class="language-julia">using Printf; using Plots: Animation, frame, gif
+
+let anim = Animation()
+    idx = 1
+    x, u = evaluate_coefficients(sol[idx], D1)
+    fig = plot(x, u, xguide=L&quot;x&quot;, yguide=L&quot;u&quot;, xlim=extrema(x), ylim=(-1.05, 1.05),
+              label=&quot;&quot;, title=@sprintf(&quot;\$t = %6.2f \$&quot;, sol.t[idx]))
+    for idx in 1:length(sol.t)
+        fig[1] = x, sol.u[idx]
+        plot!(title=@sprintf(&quot;\$t = %6.2f \$&quot;, sol.t[idx]))
+        frame(anim)
+    end
+    gif(anim, &quot;example_advection_diffusion.gif&quot;)
+end</code></pre><p><img src="https://user-images.githubusercontent.com/12693098/119226459-7b242c00-bb09-11eb-848b-d09590aa1c31.gif" alt="example_advection_diffusion_animation"/></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../constant_linear_advection/">« Linear advection equation with constant coefficients</a><a class="docs-footer-nextpage" href="../variable_linear_advection/">Linear advection equation with variable coefficients »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.3 on <span class="colophon-date" title="Monday 5 July 2021 10:00">Monday 5 July 2021</span>. Using Julia version 1.6.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
