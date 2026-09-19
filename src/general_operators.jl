@@ -133,7 +133,7 @@ _parallel_to_mode(::Val{:serial}) = FastMode()
 # the layout moves the decision to ordinary inference instead.
 
 """
-    Components{N, V}()
+    SummationByPartsOperators.Components{N, V}()
 
 Values of the element type described by this trait consist of `N` components of
 the native number type `V`. See [`reinterpreted_components`](@ref).
@@ -141,7 +141,7 @@ the native number type `V`. See [`reinterpreted_components`](@ref).
 struct Components{N, V} end
 
 """
-    ArrayLayout{N, Vdest, Vu}()
+    SummationByPartsOperators.ArrayLayout{N, Vdest, Vu}()
 
 The kernels access `dest` and `u` as arrays of the native number types `Vdest`
 and `Vu` with `N` components per value. See [`reinterpreted_layout`](@ref).
@@ -149,7 +149,7 @@ and `Vu` with `N` components per value. See [`reinterpreted_layout`](@ref).
 struct ArrayLayout{N, Vdest, Vu} end
 
 """
-    reinterpreted_components(::Type{T})
+    SummationByPartsOperators.reinterpreted_components(::Type{T})
 
 Return `nothing` if values of type `T` must be treated as opaque scalars and
 `Components{N, V}()` if `reinterpret(reshape, V, ::AbstractVector{T})` yields an
@@ -199,7 +199,7 @@ all_plain_factors(::Tuple{}) = true
 end
 
 """
-    reinterpreted_layout(mode, dest, u, factors...)
+    SummationByPartsOperators.reinterpreted_layout(mode, dest, u, factors...)
 
 Return the [`ArrayLayout`](@ref) the kernels should use to compute
 `α * D * u [+ β * dest]` with the given scaling `factors`, or `nothing` if
