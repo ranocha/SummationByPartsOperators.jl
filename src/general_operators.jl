@@ -161,6 +161,10 @@ function reinterpreted_components(::Type{S}) where {N, T, S <: StaticVector{N, T
     reinterpreted_components(S, Val{N}(), T)
 end
 
+function reinterpreted_components(::Type{C}) where {T, C <: Complex{T}}
+    reinterpreted_components(C, Val{2}(), T)
+end
+
 # Values of type `T` consist of `N` components of type `V`, which may be
 # composite themselves.
 @inline function reinterpreted_components(::Type{T}, ::Val{N}, ::Type{V}) where {T, N, V}
@@ -286,14 +290,15 @@ Base.@propagate_inbounds function mul!(dest, D::AbstractDerivativeOperator, u)
     mul!(dest, D, u, one(scaling_eltype(dest)))
 end
 
-# The scaling factor used by `mul!(dest, D, u)` should be a plain number instead
-# of, e.g., a `ForwardDiff.Dual`. Otherwise, multiplying by it is unnecessarily
-# expensive and prevents the vectorized kernels from being used.
+# The scaling factor used by `mul!(dest, D, u)` should be a plain real number
+# instead of, e.g., a `ForwardDiff.Dual` or a `Complex`. Otherwise, multiplying
+# by it is unnecessarily expensive and prevents the vectorized kernels from
+# being used. A real one is a multiplicative identity just as well.
 @inline function scaling_eltype(dest)
     T = recursive_bottom_eltype(dest)
     native_eltype(T, reinterpreted_components(T))
 end
-native_eltype(::Type{T}, ::Nothing) where {T} = T
+native_eltype(::Type{T}, ::Nothing) where {T} = real(T)
 native_eltype(::Type{T}, ::Components{N, V}) where {T, N, V} = V
 
 function Base.:*(D::AbstractDerivativeOperator, u)

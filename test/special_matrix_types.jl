@@ -147,4 +147,47 @@ for T in (Float32, Float64)
     @test du_scalar ≈ reinterpret(T, du_vector)
 end
 
+# Vectors of `Complex` numbers are reinterpreted as matrices of their real and
+# imaginary parts, cf.
+# https://github.com/ranocha/SummationByPartsOperators.jl/issues/421
+@testset "Complex element types" begin
+    for T in (ComplexF32, ComplexF64), accuracy_order in (2, 4), N in (17, 30),
+        mode in (FastMode(), SafeMode(), ThreadedMode())
+
+        for D in (derivative_operator(MattssonNordström2004();
+                                      derivative_order = 1,
+                                      accuracy_order = accuracy_order,
+                                      xmin = 0.0, xmax = 1.0, N = N, mode = mode),
+                  periodic_derivative_operator(derivative_order = 1,
+                                               accuracy_order = accuracy_order,
+                                               xmin = 0.0, xmax = 1.0, N = N,
+                                               mode = mode))
+            A = Matrix(D)
+            u = rand(T, N)
+            du = similar(u)
+
+            mul!(du, D, u)
+            @test du ≈ A * u
+
+            mul!(du, D, u, 2)
+            @test du ≈ 2 * A * u
+
+            dest = copy(u)
+            mul!(dest, D, u, 2, 3)
+            @test dest ≈ 2 * A * u + 3 * u
+
+            # Complex scaling factors mix the real and imaginary parts and must
+            # therefore not be applied component-wise
+            α = 2 + 3im
+            mul!(du, D, u, α)
+            @test du ≈ α * (A * u)
+
+            β = 4 - 5im
+            dest = copy(u)
+            mul!(dest, D, u, α, β)
+            @test dest ≈ α * (A * u) + β * u
+        end
+    end
+end
+
 end # module
