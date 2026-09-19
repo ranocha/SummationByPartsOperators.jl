@@ -38,6 +38,9 @@ for T in (Float32, Float64), acc_order in (2, 4, 6, 8), diss_order in (2, 4, 6, 
     @test BandedMatrices.isbanded(D_serial) == BandedMatrices.isbanded(D_banded)
     @test bandwidth(D_serial, 1) == bandwidth(D_banded, 1)
     @test bandwidth(D_serial, 2) == bandwidth(D_banded, 2)
+
+    # All matrix representations must contain exactly the same coefficients
+    @test D_full == D_sparse
     @test D_full == D_banded
 
     mul!(dest1, D_serial, u)
@@ -66,6 +69,9 @@ for T in (Float32, Float64), acc_order in (2, 4, 6, 8), diss_order in (2, 4, 6, 
     @test BandedMatrices.isbanded(Di_serial) == BandedMatrices.isbanded(Di_banded)
     @test bandwidth(Di_serial, 1) == bandwidth(Di_banded, 1)
     @test bandwidth(Di_serial, 2) == bandwidth(Di_banded, 2)
+
+    # All matrix representations must contain exactly the same coefficients
+    @test Di_full == Di_sparse
     @test Di_full == Di_banded
 
     mul!(dest1, Di_serial, u)
@@ -115,8 +121,8 @@ for T in (Float32, Float64), acc_order in (2, 4, 6), D2var_source in D2var_test_
     @test bandwidth(D2var_serial, 1) == bandwidth(D2var_banded, 1)
     @test bandwidth(D2var_serial, 2) == bandwidth(D2var_banded, 2)
 
-    # The bandwidths must be wide enough to contain all non-zero entries -
-    # otherwise, `BandedMatrix` and `copyto!` silently drop some coefficients.
+    # All matrix representations must contain exactly the same coefficients.
+    @test D2var_full == D2var_sparse
     @test D2var_full == D2var_banded
     @test D2var_full == D2var_banded_new
 
