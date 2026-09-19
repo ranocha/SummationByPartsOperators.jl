@@ -474,9 +474,6 @@ struct Mattsson2012Cache4{T} <: AbstractCoefficientCache{T}
     end
 end
 
-# The boundary closure is wider than the interior stencil (which has a
-# bandwidth of two): The first row of the boundary block has entries up to
-# the sixth column and the sixth row has entries starting in the first column.
 lower_bandwidth(cache::Mattsson2012Cache4) = 5
 upper_bandwidth(cache::Mattsson2012Cache4) = 5
 Base.checkbounds(::Type{Bool}, u::AbstractVector, ::Mattsson2012Cache4) = length(u) > 12
