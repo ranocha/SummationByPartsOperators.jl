@@ -310,6 +310,7 @@ end
         end
     end
 end
+
 @testset "Coupled upwind operators" begin
     for T in (Float32, Float64, Rational{Int128})
         for acc_order in 2:7

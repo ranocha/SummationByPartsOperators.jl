@@ -8,6 +8,12 @@ for human readability.
 
 ## Changes in the v0.5 lifecycle
 
+#### Added
+
+- The boundary optimized operators of `MattssonAlmquistVanDerWeide2018Minimal`
+  and `MattssonAlmquistVanDerWeide2018Accurate` are now also available with
+  interior accuracy orders 10 and 12 (in addition to 4, 6, and 8).
+
 #### Changed
 
 - The minimum Julia version was updated to 1.10 in version 0.5.91.
