@@ -16,6 +16,11 @@ for human readability.
 
 #### Changed
 
+- `MattssonAlmquistVanDerWeide2018Minimal` and
+  `MattssonAlmquistVanDerWeide2018Accurate` can now be constructed on smaller
+  grids. Previously, the equispaced grid points following the non-uniform ones
+  were listed explicitly, which required more nodes than the boundary closures
+  actually need. The grid points themselves are unchanged up to round-off.
 - The minimum Julia version was updated to 1.10 in version 0.5.91.
 - `mul!` with vectors of composite element types such as `ForwardDiff.Dual`s,
   `Complex` numbers, and `StaticVector`s is significantly faster when using

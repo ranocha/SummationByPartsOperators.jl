@@ -1195,6 +1195,16 @@ end
         D = @test_nowarn derivative_operator(MattssonAlmquistVanDerWeide2018Minimal(), 1, 4,
                                              0.0, 1.0, 9)
         @test all(isfinite.(Matrix(D)))
+
+        # `BoundaryAdaptedGrid` needs a special case if only a single node is
+        # left between the two non-uniform parts of the grid. Among the sources
+        # using that grid, this happens for the smallest possible grids of
+        # `MattssonNiemeläWinters2026`.
+        D = @test_nowarn upwind_operators(MattssonNiemeläWinters2026,
+                                          derivative_order = 1, accuracy_order = 2,
+                                          xmin = 0.0, xmax = 1.0, N = 7)
+        @test issorted(grid(D))
+        @test all(isfinite, Matrix(D.central))
     end
 end
 
@@ -1321,6 +1331,24 @@ end
         D32 = derivative_operator(source, 1, acc_order, Float32(xmin), Float32(xmax), N)
         @test real(D32) == Float32
         @test all(isfinite, Matrix(D32))
+
+        # The smallest grid these operators can be constructed on is the one
+        # where the two boundary closures just do not overlap. The non-uniform
+        # grid points listed in `construct_grid` must not contain any of the
+        # equispaced points following them; otherwise, the minimal number of
+        # nodes would be larger than necessary.
+        N_min = 2 * nb + 1
+        @test_throws Union{ArgumentError, DimensionMismatch} derivative_operator(source, 1,
+                                                                                 acc_order,
+                                                                                 xmin, xmax,
+                                                                                 N_min - 1)
+        D_min = derivative_operator(source, 1, acc_order, xmin, xmax, N_min)
+        @test length(grid(D_min)) == N_min
+        @test issorted(grid(D_min))
+        M_min = mass_matrix(D_min)
+        A_min = Matrix(D_min)
+        @test all(>(0), diag(M_min))
+        @test M_min * A_min + A_min' * M_min ≈ mass_matrix_boundary(D_min)
     end
 
     @testset "not implemented" for name in ("Minimal", "Accurate")
