@@ -312,24 +312,15 @@ end
                 #                  - (dR1 dR1ᵀ - dL1 dL1ᵀ)
                 boundary_terms = eR * dR2' + dR2 * eR' - eL * dL2' - dL2 * eL' -
                                  (dR1 * dR1' - dL1 * dL1')
-                if acc_order == 2
-                    # The second-order accurate third-derivative operator does
-                    # not satisfy the SBP property since the fourth row of its
-                    # boundary closure is missing. Mattsson (2014) writes
-                    #   D₃ = M⁻¹ (R + dL1 dL1ᵀ / 2 - dR1 dR1ᵀ / 2
-                    #             - eL dL2ᵀ + eR dR2ᵀ)
-                    # with an antisymmetric matrix R, and lists the nonzero
-                    # entries R[1,4] = -1//16, R[2,4] = 5//8, R[3,4] = -17//16
-                    # (Appendix A.1.1). The implementation uses the interior
-                    # stencil in the fourth row instead of
-                    #   (1//16, -5//8, 17//16, 0, -1, 1//2),
-                    # so R is not antisymmetric and the symmetric part of M D₃
-                    # picks up a spurious coupling of dL2 (dR2) to the fourth
-                    # (fourth to last) node.
-                    @test_broken M * A + A' * M == boundary_terms
-                else
-                    @test M * A + A' * M == boundary_terms
-                end
+                @test M * A + A' * M == boundary_terms
+
+                # Mattsson (2014) writes
+                #   D₃ = M⁻¹ (R + dL1 dL1ᵀ / 2 - dR1 dR1ᵀ / 2
+                #             - eL dL2ᵀ + eR dR2ᵀ)
+                # with an antisymmetric matrix R, which is equivalent to the
+                # SBP property checked above.
+                R = M * A - (dL1 * dL1' / 2 - dR1 * dR1' / 2 - eL * dL2' + eR * dR2')
+                @test R == -R'
             else
                 # Integrating by parts twice yields
                 #   ∫ u u⁗ = [u u‴] - [u′ u″] + ∫ u″ u″

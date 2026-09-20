@@ -29,6 +29,12 @@ for human readability.
   led to inexact coefficients for other element types such as `BigFloat` or
   `Rational`. In particular, `SharanBradyLivescu2022` with accuracy order 6
   did not work at all for exact element types.
+- The third-derivative operator of `Mattsson2014` with accuracy order 2 was
+  missing the fourth row of its boundary closure and did thus not satisfy the
+  SBP property. The missing row `(1//16, -5//8, 17//16, 0, -1, 1//2)` is
+  determined by the antisymmetric matrix `R` given in the reference. Since the
+  boundary closure got wider, this operator requires at least 9 nodes now
+  (instead of 7).
 
 #### Deprecated
 
