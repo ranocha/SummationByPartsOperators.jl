@@ -1197,3 +1197,61 @@ end
         @test all(isfinite.(Matrix(D)))
     end
 end
+
+# https://github.com/ranocha/SummationByPartsOperators.jl/issues/14
+@testset "MattssonAlmquistCarpenter2014Optimal" begin
+    # The `d`-th derivative of the monomial `x^k`
+    function derivative_of_monomial(x, k, d)
+        k < d && return zero(x)
+        factor = one(x)
+        for j in 0:(d - 1)
+            factor *= (k - j)
+        end
+        return factor * x^(k - d)
+    end
+
+    # The coefficients of these operators are truncated decimals, so the order
+    # of accuracy can only be checked approximately. `BigFloat` is used so that
+    # the truncation of the coefficients, and not the floating point arithmetic,
+    # is the dominant error source. This yields a clear separation between the
+    # residuals of the monomials that are handled exactly (below 1.0e-14) and
+    # the ones that are not (above 1.0e-7).
+    xmin = big(-1.0)
+    xmax = big(2.0)
+    N = 41
+    @testset "accuracy order $acc_order" for acc_order in (2, 4, 6, 8)
+        D = derivative_operator(MattssonAlmquistCarpenter2014Optimal(), 1, acc_order,
+                                xmin, xmax, N)
+        @test accuracy_order(D) == acc_order
+        A = Matrix(D)
+        x = collect(grid(D))
+
+        # diagonal, positive definite norm satisfying the SBP property
+        M = mass_matrix(D)
+        @test M isa Diagonal
+        @test all(>(0), diag(M))
+        @test M * A + A' * M ≈ mass_matrix_boundary(D)
+
+        # The grid is uniform except for the first three intervals at each
+        # boundary, where it is symmetric with respect to the midpoint.
+        dx = diff(x)
+        @test all(isapprox(dx[4]), dx[4:(end - 3)])
+        @test !isapprox(dx[1], dx[4])
+        @test dx[1:3] ≈ reverse(dx[(end - 2):end])
+
+        # The boundary closures are accurate of order `acc_order ÷ 2`, the
+        # interior stencils of order `acc_order`.
+        nb = length(D.coefficients.left_boundary)
+        @test nb == length(D.coefficients.right_boundary)
+        interior = (nb + 1):(N - nb)
+        residual(k) = A * x .^ k - derivative_of_monomial.(x, k, 1)
+        for k in 0:(acc_order ÷ 2)
+            @test maximum(abs, residual(k)) < 1.0e-14
+        end
+        @test maximum(abs, residual(acc_order ÷ 2 + 1)) > 1.0e-7
+        for k in (acc_order ÷ 2 + 1):acc_order
+            @test maximum(abs, residual(k)[interior]) < 1.0e-14
+        end
+        @test maximum(abs, residual(acc_order + 1)[interior]) > 1.0e-7
+    end
+end
