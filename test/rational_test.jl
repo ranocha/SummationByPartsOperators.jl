@@ -10,7 +10,8 @@
 # The order of accuracy cannot be checked for operators whose coefficients are
 # only available as (truncated) floating point numbers. These are
 # - `DienerDorbandSchnetterTiglio2007` with accuracy orders 6 and 8
-# - `MattssonAlmquistCarpenter2014Optimal` (the grid points are truncated decimals)
+# - `MattssonAlmquistCarpenter2014Optimal` (both the grid points and the
+#   coefficients are truncated decimals)
 # - `MattssonAlmquistVanDerWeide2018Minimal`, `MattssonAlmquistVanDerWeide2018Accurate`
 # - `MattssonNiemeläWinters2026`
 # - `Mattsson2012` variable coefficient operators with accuracy order 6
@@ -18,7 +19,8 @@
 #   `function_space_operator`s
 # The SBP property is structural and can still hold exactly for such operators;
 # it is checked whenever it does, see the testset
-# "Operators with floating point coefficients" below.
+# "Operators with floating point coefficients" and the sixth-order case of the
+# testset "Variable coefficient operators (Mattsson2012)" below.
 
 using Test
 using LinearAlgebra
@@ -291,12 +293,13 @@ end
                 if acc_order == 2
                     # The second-order accurate third-derivative operator does
                     # not satisfy the SBP property. The symmetric part of M D₃
-                    # contains an additional contribution coupling dL2 (dR2) to
-                    # the fourth (fourth to last) node. It would vanish if the
-                    # left boundary block had a fourth row
+                    # contains an additional contribution of magnitude 1/16
+                    # coupling dL2 (dR2) to the fourth (fourth to last) node.
+                    # It would vanish if the left boundary block had a fourth
+                    # row
                     #   (1//16, -5//8, 17//16, 0, -1, 1//2)
-                    # instead of the interior stencil, see
-                    # https://github.com/ranocha/SummationByPartsOperators.jl/issues/210
+                    # instead of the interior stencil (and the right boundary
+                    # block were adapted accordingly).
                     @test_broken M * A + A' * M == boundary_terms
                 else
                     @test M * A + A' * M == boundary_terms
@@ -399,10 +402,7 @@ end
 end
 
 @testset "Variable coefficient operators (Mattsson2012)" begin
-    # The coefficients of the sixth-order variable coefficient operators are
-    # only given as truncated decimals, so only the second- and fourth-order
-    # operators can be checked exactly.
-    @testset "accuracy order $acc_order" for acc_order in (2, 4)
+    @testset "accuracy order $acc_order" for acc_order in (2, 4, 6)
         # a variable coefficient that is a polynomial of degree `degree_b`
         bfunc = x -> 1 + x^2
         dbfunc = x -> 2 * x
@@ -427,34 +427,44 @@ end
         dR = derivative_right(D2, Val{1}())
 
         # SBP property M D₂(b) = -A + b(xmax) eR dRᵀ - b(xmin) eL dLᵀ with a
-        # symmetric (negative semidefinite) matrix A
+        # symmetric (negative semidefinite) matrix A. This is a structural
+        # property of the coefficients and holds exactly also for the
+        # sixth-order operators.
         R = M * A - (last(b) * eR * dR' - first(b) * eL * dL')
         @test R == R'
+        @test mass_matrix(D) == mass_matrix(D2)
 
-        # For a constant coefficient b ≡ 1, the operator reduces to the
-        # constant coefficient second-derivative operator.
-        D1 = var_coef_derivative_operator(Mattsson2012(), 2, acc_order, XMIN, XMAX, NNODES,
-                                          one)
-        @test Matrix(D1) == Matrix(D2)
-        @test mass_matrix(D1) == mass_matrix(D2)
+        # The coefficients of the sixth-order variable coefficient operators
+        # are only given as truncated decimals. Hence, the reduction to the
+        # constant coefficient operator and the order of accuracy can only be
+        # checked exactly for the second- and fourth-order operators.
+        if acc_order != 6
+            # For a constant coefficient b ≡ 1, the operator reduces to the
+            # constant coefficient second-derivative operator.
+            D1 = var_coef_derivative_operator(Mattsson2012(), 2, acc_order, XMIN, XMAX,
+                                              NNODES, one)
+            @test Matrix(D1) == Matrix(D2)
+            @test mass_matrix(D1) == mass_matrix(D2)
 
-        # The operator applied to u is exact whenever b u′ is a polynomial of
-        # sufficiently low degree. Hence, the degrees of exactness are reduced
-        # by the degree of b compared to the constant coefficient operator.
-        function exact(xi, k)
-            return dbfunc(xi) * derivative_of_monomial(xi, k, 1) +
-                   bfunc(xi) * derivative_of_monomial(xi, k, 2)
+            # The operator applied to u is exact whenever b u′ is a polynomial
+            # of sufficiently low degree. Hence, the degrees of exactness are
+            # reduced by the degree of b compared to the constant coefficient
+            # operator.
+            function exact(xi, k)
+                return dbfunc(xi) * derivative_of_monomial(xi, k, 1) +
+                       bfunc(xi) * derivative_of_monomial(xi, k, 2)
+            end
+            interior = acc_order + 1 - degree_b
+            boundary = acc_order ÷ 2 + 1 - degree_b
+            degrees = exactness_degrees(A, x, exact, interior + 1)
+            cache = D.coefficients.coefficient_cache
+            nleft = SummationByPartsOperators.left_length(cache)
+            nright = SummationByPartsOperators.right_length(cache)
+            @test nleft + nright < length(x)
+            @test all(==(interior), degrees[(nleft + 1):(end - nright)])
+            @test minimum(degrees[1:nleft]) == boundary
+            @test minimum(degrees[(end - nright + 1):end]) == boundary
         end
-        interior = acc_order + 1 - degree_b
-        boundary = acc_order ÷ 2 + 1 - degree_b
-        degrees = exactness_degrees(A, x, exact, interior + 1)
-        cache = D.coefficients.coefficient_cache
-        nleft = SummationByPartsOperators.left_length(cache)
-        nright = SummationByPartsOperators.right_length(cache)
-        @test nleft + nright < length(x)
-        @test all(==(interior), degrees[(nleft + 1):(end - nright)])
-        @test minimum(degrees[1:nleft]) == boundary
-        @test minimum(degrees[(end - nright + 1):end]) == boundary
     end
 end
 
@@ -502,7 +512,11 @@ end
     # The coefficients of these operators are truncated decimals, so their
     # order of accuracy cannot be checked exactly. The SBP property is a
     # structural property of the coefficients as they are stored, though, and
-    # still holds exactly for some of them.
+    # still holds exactly for some of them. It does not hold exactly for
+    # `DienerDorbandSchnetterTiglio2007` with accuracy orders 6 and 8,
+    # `MattssonAlmquistVanDerWeide2018Minimal`,
+    # `MattssonAlmquistVanDerWeide2018Accurate`, and
+    # `MattssonNiemeläWinters2026`, which are thus not checked here.
     @testset "MattssonAlmquistCarpenter2014Optimal" begin
         @testset "accuracy order $acc_order" for acc_order in (2, 4, 6)
             D = derivative_operator(MattssonAlmquistCarpenter2014Optimal(), 1, acc_order,
