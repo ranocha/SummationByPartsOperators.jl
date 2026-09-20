@@ -22,6 +22,8 @@
 # "Operators with floating point coefficients" and the sixth-order case of the
 # testset "Variable coefficient operators (Mattsson2012)" below.
 
+module RationalArithmeticTest
+
 using Test
 using LinearAlgebra
 using SummationByPartsOperators
@@ -122,15 +124,16 @@ function test_periodic_exactness(D; degree)
 end
 
 """
-    test_quadrature_exactness(D; degree, xmin, xmax)
+    test_quadrature_exactness(D; degree)
 
 Check that the quadrature rule given by the mass matrix of `D` is exact for
-polynomials up to degree `degree` (and no more) on the interval
-`[xmin, xmax]`. The endpoints default to the first and last node of the grid;
-they need to be passed explicitly for operators whose grid does not contain
-both endpoints of the domain.
+polynomials up to degree `degree` (and no more) on the domain of `D`. Note
+that the boundaries of the domain are not necessarily the first and last node
+of the grid, e.g., for operators coupled continuously on a periodic mesh.
 """
-function test_quadrature_exactness(D; degree, xmin = first(grid(D)), xmax = last(grid(D)))
+function test_quadrature_exactness(D; degree)
+    xmin = SummationByPartsOperators.xmin(D)
+    xmax = SummationByPartsOperators.xmax(D)
     x = collect(grid(D))
     M = mass_matrix(D)
     for k in 0:degree
@@ -663,7 +666,7 @@ end
                 else
                     2 * (acc_order ÷ 2) - 1
                 end
-                test_quadrature_exactness(Dc; degree, xmin = XMIN, xmax = XMAX)
+                test_quadrature_exactness(Dc; degree)
             end
         end
 
@@ -730,3 +733,5 @@ end
     Ap = Matrix(Dp)
     @test Ap == -Ap'
 end
+
+end # module
