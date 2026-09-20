@@ -139,6 +139,7 @@ function test_quadrature_exactness(D; degree, xmin = first(grid(D)), xmax = last
     end
     k = degree + 1
     @test sum(M * (x .^ k)) != (xmax^(k + 1) - xmin^(k + 1)) / (k + 1)
+    @test integrate(x .^ k, D) != (xmax^(k + 1) - xmin^(k + 1)) / (k + 1)
     return nothing
 end
 
@@ -449,7 +450,12 @@ end
         Ac = Matrix(D.central)
         Ap = Matrix(D.plus)
         @test Ac == (Am + Ap) / 2
+
+        # all three operators share the same norm
         M = mass_matrix(D.minus)
+        @test mass_matrix(D.central) == M
+        @test mass_matrix(D.plus) == M
+
         @test iszero(M * Ap + Am' * M)
         @test M * (Ap - Am) == (M * (Ap - Am))'
     end
@@ -514,24 +520,24 @@ end
 end
 
 @testset "Periodic dissipation operators" begin
+    # The dissipation operator depends on `D` only via its grid; the order of
+    # dissipation defaults to the accuracy order of `D`.
     @testset "accuracy order $acc_order" for acc_order in (2, 4, 6, 8)
         D = periodic_derivative_operator(1, acc_order, XMIN, XMAX, NNODES)
         M = mass_matrix(D)
         x = collect(grid(D))
         Δx = x[2] - x[1]
-        @testset "dissipation order $order" for order in (2, 4, 6, 8)
-            Di = dissipation_operator(D; order)
-            A = Matrix(Di)
+        Di = dissipation_operator(D)
+        A = Matrix(Di)
 
-            # The dissipation operator uses undivided differences, i.e., it is
-            # the `order`-th derivative operator of accuracy order `order`
-            # scaled by Δx^order and by a sign making it negative semidefinite.
-            Dref = periodic_derivative_operator(order, order, XMIN, XMAX, NNODES)
-            @test A == (-1)^(1 + order ÷ 2) * Δx^order * Matrix(Dref)
+        # The dissipation operator uses undivided differences, i.e., it is the
+        # `acc_order`-th derivative operator of accuracy order `acc_order`
+        # scaled by Δx^acc_order and by a sign making it negative semidefinite.
+        Dref = periodic_derivative_operator(acc_order, acc_order, XMIN, XMAX, NNODES)
+        @test A == (-1)^(1 + acc_order ÷ 2) * Δx^acc_order * Matrix(Dref)
 
-            # M Diss is symmetric (and negative semidefinite)
-            @test M * A == (M * A)'
-        end
+        # M Diss is symmetric (and negative semidefinite)
+        @test M * A == (M * A)'
     end
 end
 
@@ -701,6 +707,7 @@ end
             M = mass_matrix(D)
             A = Matrix(D)
             @test M * A + A' * M == mass_matrix_boundary(D)
+            @test M isa Diagonal
             @test all(>(0), diag(M))
         end
     end
