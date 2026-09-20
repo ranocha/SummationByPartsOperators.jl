@@ -20,7 +20,11 @@
 # The SBP property is structural and can still hold exactly for such operators;
 # it is checked whenever it does, see the testset
 # "Operators with floating point coefficients" and the sixth-order case of the
-# testset "Variable coefficient operators (Mattsson2012)" below.
+# testset "Variable coefficient operators (Mattsson2012)" below. The boundary
+# optimized operators of `MattssonAlmquistVanDerWeide2018Minimal` and
+# `MattssonAlmquistVanDerWeide2018Accurate` use truncated decimals only in
+# their boundary closures and near the boundaries of the grid, so everything
+# that involves only interior nodes is checked exactly for them.
 
 module RationalArithmeticTest
 
@@ -702,7 +706,10 @@ end
     # `DienerDorbandSchnetterTiglio2007` with accuracy orders 6 and 8,
     # `MattssonAlmquistVanDerWeide2018Minimal`,
     # `MattssonAlmquistVanDerWeide2018Accurate`, and
-    # `MattssonNiemeläWinters2026`, which are thus not checked here.
+    # `MattssonNiemeläWinters2026`. For the boundary optimized operators of
+    # Mattsson, Almquist, van der Weide (2018), the relations that do hold
+    # exactly are checked below; `MattssonNiemeläWinters2026` is not checked
+    # here.
     @testset "MattssonAlmquistCarpenter2014Optimal" begin
         @testset "accuracy order $acc_order" for acc_order in (2, 4, 6)
             D = derivative_operator(MattssonAlmquistCarpenter2014Optimal(), 1, acc_order,
@@ -712,6 +719,84 @@ end
             @test M * A + A' * M == mass_matrix_boundary(D)
             @test M isa Diagonal
             @test all(>(0), diag(M))
+        end
+    end
+
+    # The boundary optimized operators of Mattsson, Almquist, van der Weide
+    # (2018) store the rows of the boundary closure as `Q[i, j] / H[i, i]`,
+    # where both `Q` and `H` are given as truncated decimals in the paper. The
+    # division is thus inexact and the SBP property does not hold exactly.
+    # Their interior, however, uses the exact rational coefficients of the
+    # standard central stencils on the part of the grid that is uniform, so all
+    # relations that involve only interior nodes do hold exactly.
+    @testset "MattssonAlmquistVanDerWeide2018$name" for name in ("Minimal", "Accurate")
+        source = if name == "Minimal"
+            MattssonAlmquistVanDerWeide2018Minimal()
+        else
+            MattssonAlmquistVanDerWeide2018Accurate()
+        end
+        # The boundary closures are much wider than those of the other
+        # operators, so more nodes are required to be left with interior nodes
+        # that can be checked below.
+        nnodes = 51
+        @testset "accuracy order $acc_order" for acc_order in (4, 6, 8, 10, 12)
+            D = derivative_operator(source, 1, acc_order, XMIN, XMAX, nnodes)
+            @test eltype(grid(D)) == RT
+            @test derivative_order(D) == 1
+            @test accuracy_order(D) == acc_order
+
+            x = collect(grid(D))
+            Δx = step(grid(D))
+            nb = length(D.coefficients.left_boundary)
+            @test length(D.coefficients.right_boundary) == nb
+            # The first `nb + 1` nodes are given by the truncated decimals of
+            # the paper; the remaining ones are exactly equispaced.
+            @test x[begin] == XMIN
+            @test x[end] == XMAX
+            @test all(i -> x[i + 1] - x[i] == Δx, (nb + 1):(nnodes - nb - 1))
+            # The grid is exactly symmetric around the center of the domain.
+            @test all(i -> x[i] - XMIN == XMAX - x[end + 1 - i], eachindex(x))
+
+            M = mass_matrix(D)
+            A = Matrix(D)
+            @test M isa Diagonal
+            @test all(>(0), diag(M))
+            # Away from the boundary closures, the quadrature weights are
+            # exactly `Δx`.
+            interior = (nb + 1):(nnodes - nb)
+            @test all(i -> M[i, i] == Δx, interior)
+
+            # The part of the SBP property `M D + Dᵀ M = B` that involves only
+            # interior nodes holds exactly since the interior stencil is
+            # antisymmetric with exact rational coefficients.
+            @test all(iszero, (M * A + A' * M)[interior, interior])
+
+            # The interior stencils differentiate monomials up to degree
+            # `acc_order` (and no more) exactly. Only the rows whose stencils
+            # reach exclusively into the equispaced part of the grid can be
+            # checked; the ones closer to the boundary see the truncated
+            # decimals of the non-uniform nodes.
+            p = acc_order ÷ 2
+            rows = (nb + 1 + p):(nnodes - nb - p)
+            @test !isempty(rows)
+            exact = (xi, k) -> derivative_of_monomial(xi, k, 1)
+            degrees = exactness_degrees(A, x, exact, acc_order + 1)
+            @test all(==(acc_order), degrees[rows])
+
+            # boundary functionals
+            @test derivative_left(D, x, Val{0}()) == first(x)
+            @test derivative_right(D, x, Val{0}()) == last(x)
+            for k in 0:acc_order
+                @test integrate_boundary(x .^ k, D) == last(x)^k - first(x)^k
+            end
+
+            # scaling by the mass matrix is exactly invertible
+            u = x .^ 3
+            v = copy(u)
+            scale_by_mass_matrix!(v, D)
+            @test v == M * u
+            scale_by_inverse_mass_matrix!(v, D)
+            @test v == u
         end
     end
 end

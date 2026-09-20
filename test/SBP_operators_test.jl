@@ -1298,6 +1298,25 @@ end
         scale_by_inverse_mass_matrix!(v, D)
         @test v ≈ u
 
+        # All execution modes must yield the same result. This is particularly
+        # relevant here since these operators have the widest boundary
+        # closures of all operators in this package.
+        D_threads = derivative_operator(source, 1, acc_order, xmin, xmax, N,
+                                        ThreadedMode())
+        D_safe = derivative_operator(source, 1, acc_order, xmin, xmax, N, SafeMode())
+        dest = similar(u)
+        mul!(dest, D, u)
+        for D_other in (D_threads, D_safe)
+            dest_other = similar(u)
+            mul!(dest_other, D_other, u)
+            @test dest_other ≈ dest
+            @test Matrix(D_other) ≈ A
+            # five-argument `mul!`
+            dest_other .= u
+            mul!(dest_other, D_other, u, 2, 3)
+            @test dest_other ≈ 2 * dest + 3 * u
+        end
+
         # The operators can also be constructed for other floating point types.
         D32 = derivative_operator(source, 1, acc_order, Float32(xmin), Float32(xmax), N)
         @test real(D32) == Float32

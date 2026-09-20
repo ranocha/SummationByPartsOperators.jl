@@ -148,14 +148,35 @@ using SummationByPartsOperators
 end
 
 @testset "Coupled FD operators" begin
+    # The accuracy orders are limited per source: for higher orders, the
+    # round-off errors of the operators themselves exceed the tolerances used
+    # below, which are chosen to be tight enough to detect errors of the
+    # coupling.
+    sources_and_orders = ((MattssonNordström2004(), 2:2:6),
+                          (MattssonAlmquistCarpenter2014Extended(), 2:2:6),
+                          (MattssonAlmquistCarpenter2014Optimal(), 2:2:6),
+                          (MattssonAlmquistVanDerWeide2018Minimal(), 4:2:12),
+                          (MattssonAlmquistVanDerWeide2018Accurate(), 4:2:12))
     for T in (Float32, Float64)
-        for acc_order in 2:2:6
-            for source in (MattssonNordström2004(),
-                           MattssonAlmquistCarpenter2014Extended(),
-                           MattssonAlmquistCarpenter2014Optimal())
+        for (source, acc_orders) in sources_and_orders
+            for acc_order in acc_orders
                 ymin = T(0)
                 ymax = T(2)
                 D = derivative_operator(source, 1, acc_order, ymin, ymax, 31)
+
+                # The coefficients of the boundary optimized operators of
+                # Mattsson, Almquist, van der Weide (2018) are truncated
+                # decimals. Thus, `cD * x^0` does not vanish as accurately as
+                # for the operators with exact rational coefficients. The SBP
+                # property of the coupled operators checked below is not
+                # affected since it is enforced by the coupling.
+                consistency_factor = if source isa
+                                        Union{MattssonAlmquistVanDerWeide2018Minimal,
+                                              MattssonAlmquistVanDerWeide2018Accurate}
+                    10^5
+                else
+                    100
+                end
 
                 for N in 1:3
                     xmin = T(-1)
@@ -169,7 +190,8 @@ end
                         print(cD)
                         x = grid(cD)
                         println(x)
-                        @test norm(cD * x .^ 0) < 100N * eps(float(T))
+                        @test norm(cD * x .^ 0) <
+                              consistency_factor * N * eps(float(T))
                         @test accuracy_order(cD) == accuracy_order(D)
 
                         u = sinpi.(x)
@@ -243,7 +265,8 @@ end
                     for cD in (cD_continuous, cD_central, cD_plus, cD_minus)
                         print(devnull, cD)
                         x = grid(cD)
-                        @test norm(cD * x .^ 0) < 100N * eps(float(T))
+                        @test norm(cD * x .^ 0) <
+                              consistency_factor * N * eps(float(T))
                         @test accuracy_order(cD) == accuracy_order(D)
 
                         u = sinpi.(x)
@@ -287,7 +310,6 @@ end
         end
     end
 end
-
 @testset "Coupled upwind operators" begin
     for T in (Float32, Float64, Rational{Int128})
         for acc_order in 2:7
