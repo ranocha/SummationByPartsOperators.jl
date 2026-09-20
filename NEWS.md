@@ -17,6 +17,11 @@ for human readability.
 
 #### Fixed
 
+- The bandwidths reported for the fourth-order accurate variable-coefficient
+  second-derivative operator of `Mattsson2012()` were too small. Thus,
+  converting such an operator to a `BandedMatrix` silently dropped some
+  coefficients of the boundary closure (unless the variable coefficient was
+  constant).
 - `mul!` does not throw an error anymore for element types that cannot be
   handled by LoopVectorization.jl, e.g., `SVector{2, BigFloat}`,
   `MVector{2, Float64}`, and user-defined scalar types.

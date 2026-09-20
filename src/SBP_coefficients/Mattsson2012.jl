@@ -474,8 +474,8 @@ struct Mattsson2012Cache4{T} <: AbstractCoefficientCache{T}
     end
 end
 
-lower_bandwidth(cache::Mattsson2012Cache4) = 3
-upper_bandwidth(cache::Mattsson2012Cache4) = 3
+lower_bandwidth(cache::Mattsson2012Cache4) = 5
+upper_bandwidth(cache::Mattsson2012Cache4) = 5
 Base.checkbounds(::Type{Bool}, u::AbstractVector, ::Mattsson2012Cache4) = length(u) > 12
 left_length(::Mattsson2012Cache4) = 6
 right_length(::Mattsson2012Cache4) = 6
