@@ -122,15 +122,17 @@ function test_periodic_exactness(D; degree)
 end
 
 """
-    test_quadrature_exactness(D; degree)
+    test_quadrature_exactness(D; degree, xmin, xmax)
 
 Check that the quadrature rule given by the mass matrix of `D` is exact for
-polynomials up to degree `degree` (and no more).
+polynomials up to degree `degree` (and no more) on the interval
+`[xmin, xmax]`. The endpoints default to the first and last node of the grid;
+they need to be passed explicitly for operators whose grid does not contain
+both endpoints of the domain.
 """
-function test_quadrature_exactness(D; degree)
+function test_quadrature_exactness(D; degree, xmin = first(grid(D)), xmax = last(grid(D)))
     x = collect(grid(D))
     M = mass_matrix(D)
-    xmin, xmax = first(x), last(x)
     for k in 0:degree
         @test sum(M * (x .^ k)) == (xmax^(k + 1) - xmin^(k + 1)) / (k + 1)
         @test integrate(x .^ k, D) == (xmax^(k + 1) - xmin^(k + 1)) / (k + 1)
@@ -235,6 +237,11 @@ end
             # floating point tests
             @test M * A - A' * M == eR * dR' - eL * dL' - dR * eR' + dL * eL'
 
+            # the mass matrix is a diagonal, positive definite quadrature rule
+            @test M isa Diagonal
+            @test all(>(0), diag(M))
+            test_quadrature_exactness(D; degree = 2 * (acc_order ÷ 2) - 1)
+
             # The boundary derivative functionals are exact for polynomials of
             # degree `acc_order ÷ 2 + 1`, i.e., one more than the usual
             # boundary closure of the first-derivative operators.
@@ -250,6 +257,11 @@ end
                   derivative_of_monomial(first(x), k, 1)
             @test derivative_right(D, x .^ k, Val{1}()) !=
                   derivative_of_monomial(last(x), k, 1)
+
+            # boundary functionals
+            @test derivative_left(D, x, Val{0}()) == first(x)
+            @test derivative_right(D, x, Val{0}()) == last(x)
+            @test integrate_boundary(x, D) == last(x) - first(x)
         end
     end
 end
@@ -274,6 +286,16 @@ end
             test_exactness(D; interior = acc_order + der_order - 1,
                            boundary = boundary_degrees[(der_order, acc_order)])
 
+            # These operators share the norm of the first-derivative operators
+            # of Mattsson (2014), which is a diagonal, positive definite
+            # quadrature rule.
+            @test mass_matrix(D) ==
+                  mass_matrix(derivative_operator(Mattsson2014(), 1, acc_order, XMIN, XMAX,
+                                                  NNODES))
+            @test mass_matrix(D) isa Diagonal
+            @test all(>(0), diag(mass_matrix(D)))
+            test_quadrature_exactness(D; degree = 2 * (acc_order ÷ 2) - 1)
+
             M = mass_matrix(D)
             A = Matrix(D)
             eL, eR = boundary_vectors(D)
@@ -292,14 +314,18 @@ end
                                  (dR1 * dR1' - dL1 * dL1')
                 if acc_order == 2
                     # The second-order accurate third-derivative operator does
-                    # not satisfy the SBP property. The symmetric part of M D₃
-                    # contains an additional contribution of magnitude 1/16
-                    # coupling dL2 (dR2) to the fourth (fourth to last) node.
-                    # It would vanish if the left boundary block had a fourth
-                    # row
-                    #   (1//16, -5//8, 17//16, 0, -1, 1//2)
-                    # instead of the interior stencil (and the right boundary
-                    # block were adapted accordingly).
+                    # not satisfy the SBP property since the fourth row of its
+                    # boundary closure is missing. Mattsson (2014) writes
+                    #   D₃ = M⁻¹ (R + dL1 dL1ᵀ / 2 - dR1 dR1ᵀ / 2
+                    #             - eL dL2ᵀ + eR dR2ᵀ)
+                    # with an antisymmetric matrix R, and lists the nonzero
+                    # entries R[1,4] = -1//16, R[2,4] = 5//8, R[3,4] = -17//16
+                    # (Appendix A.1.1). The implementation uses the interior
+                    # stencil in the fourth row instead of
+                    #   (1//16, -5//8, 17//16, 0, -1, 1//2),
+                    # so R is not antisymmetric and the symmetric part of M D₃
+                    # picks up a spurious coupling of dL2 (dR2) to the fourth
+                    # (fourth to last) node.
                     @test_broken M * A + A' * M == boundary_terms
                 else
                     @test M * A + A' * M == boundary_terms
@@ -341,10 +367,13 @@ end
             Ap = Matrix(D.plus)
             @test Ac == (Am + Ap) / 2
 
-            # all three operators share the same norm
+            # all three operators share the same norm, which is a diagonal,
+            # positive definite quadrature rule
             M = mass_matrix(D.minus)
             @test mass_matrix(D.central) == M
             @test mass_matrix(D.plus) == M
+            @test M isa Diagonal
+            @test all(>(0), diag(M))
 
             # SBP property M D₊ + D₋ᵀ M = B
             @test M * Ap + Am' * M == mass_matrix_boundary(D.minus)
@@ -382,6 +411,40 @@ end
         end
     end
 
+    # The coefficients used by `periodic_central_derivative_operator` are
+    # evaluated exactly following Beljadid, LeFloch, Mishra, Parés (2017). They
+    # agree with the central stencils computed via the algorithm of Fornberg
+    # (1998) used by `periodic_derivative_operator`.
+    @testset "central stencils, derivative order $der_order" for der_order in 1:3
+        @testset "accuracy order $acc_order" for acc_order in (2, 4, 6, 8)
+            Dc = periodic_central_derivative_operator(der_order, acc_order, XMIN, XMAX,
+                                                      NNODES)
+            @test eltype(grid(Dc)) == RT
+            @test source_of_coefficients(Dc) isa BeljaddLeFlochMishraParés2017
+            @test Matrix(Dc) ==
+                  Matrix(periodic_derivative_operator(der_order, acc_order, XMIN, XMAX,
+                                                      NNODES))
+        end
+    end
+
+    # Stencils that are not centered around the node where the derivative is
+    # approximated
+    @testset "non-central stencils, derivative order $der_order" for der_order in 1:2
+        @testset "accuracy order $acc_order" for acc_order in der_order:6
+            @testset "left offset $left_offset" for left_offset in (-acc_order):0
+                D = periodic_derivative_operator(der_order, acc_order, XMIN, XMAX, NNODES,
+                                                 left_offset)
+                @test accuracy_order(D) == acc_order
+                # The stencil uses `acc_order + 1` nodes. It is symmetric if
+                # `left_offset` is `-acc_order / 2`; symmetric stencils of
+                # even-order derivatives are exact for one additional degree.
+                symmetric = 2 * left_offset == -acc_order
+                degree = acc_order + (iseven(der_order) && symmetric ? 1 : 0)
+                test_periodic_exactness(D; degree)
+            end
+        end
+    end
+
     @testset "upwind, accuracy order $acc_order" for acc_order in 1:8
         D = upwind_operators(periodic_derivative_operator; derivative_order = 1,
                              accuracy_order = acc_order,
@@ -398,6 +461,86 @@ end
         M = mass_matrix(D.minus)
         @test iszero(M * Ap + Am' * M)
         @test M * (Ap - Am) == (M * (Ap - Am))'
+    end
+end
+
+@testset "Periodic operators with wide stencils" begin
+    # The smooth noise-robust differentiators of Holoborodko (2008) and the
+    # (super) Lanczos low-noise differentiators use wider stencils than needed
+    # for their order of accuracy to reduce the amplification of noise. Their
+    # coefficients are exact rational numbers.
+    @testset "Holoborodko2008" begin
+        # the implemented stencil widths per derivative and accuracy order
+        widths = Dict((1, 2) => (5, 7, 9, 11), (1, 4) => (7, 9, 11),
+                      (2, 2) => (5, 7, 9), (2, 4) => (7, 9))
+        @testset "derivative order $der_order" for der_order in (1, 2)
+            @testset "accuracy order $acc_order" for acc_order in (2, 4)
+                @testset "stencil width $stencil_width" for stencil_width in widths[(der_order,
+                                                                                     acc_order)]
+                    D = periodic_derivative_operator(Holoborodko2008(), der_order,
+                                                     acc_order, XMIN, XMAX, NNODES;
+                                                     stencil_width)
+                    @test eltype(grid(D)) == RT
+                    @test derivative_order(D) == der_order
+                    @test accuracy_order(D) == acc_order
+                    @test length(D.coefficients.lower_coef) == stencil_width ÷ 2
+
+                    # The stencils are symmetric, so those of even-order
+                    # derivatives are exact for one additional degree.
+                    degree = acc_order + (iseven(der_order) ? 1 : 0)
+                    test_periodic_exactness(D; degree)
+
+                    A = Matrix(D)
+                    if iseven(der_order)
+                        @test A == A'
+                    else
+                        @test A == -A'
+                    end
+                end
+            end
+        end
+    end
+
+    @testset "LanczosLowNoise" begin
+        # the implemented stencil widths per accuracy order
+        widths = Dict(2 => (5, 7, 9, 11), 4 => (7, 9, 11))
+        @testset "accuracy order $acc_order" for acc_order in (2, 4)
+            @testset "stencil width $stencil_width" for stencil_width in widths[acc_order]
+                D = periodic_derivative_operator(LanczosLowNoise(); derivative_order = 1,
+                                                 accuracy_order = acc_order, stencil_width,
+                                                 xmin = XMIN, xmax = XMAX, N = NNODES)
+                @test eltype(grid(D)) == RT
+                @test derivative_order(D) == 1
+                @test accuracy_order(D) == acc_order
+                @test length(D.coefficients.lower_coef) == stencil_width ÷ 2
+
+                test_periodic_exactness(D; degree = acc_order)
+                A = Matrix(D)
+                @test A == -A'
+            end
+        end
+    end
+end
+
+@testset "Periodic dissipation operators" begin
+    @testset "accuracy order $acc_order" for acc_order in (2, 4, 6, 8)
+        D = periodic_derivative_operator(1, acc_order, XMIN, XMAX, NNODES)
+        M = mass_matrix(D)
+        x = collect(grid(D))
+        Δx = x[2] - x[1]
+        @testset "dissipation order $order" for order in (2, 4, 6, 8)
+            Di = dissipation_operator(D; order)
+            A = Matrix(Di)
+
+            # The dissipation operator uses undivided differences, i.e., it is
+            # the `order`-th derivative operator of accuracy order `order`
+            # scaled by Δx^order and by a sign making it negative semidefinite.
+            Dref = periodic_derivative_operator(order, order, XMIN, XMAX, NNODES)
+            @test A == (-1)^(1 + order ÷ 2) * Δx^order * Matrix(Dref)
+
+            # M Diss is symmetric (and negative semidefinite)
+            @test M * A == (M * A)'
+        end
     end
 end
 
@@ -492,18 +635,61 @@ end
 end
 
 @testset "Coupled operators" begin
-    @testset "accuracy order $acc_order" for acc_order in (2, 4)
-        D = derivative_operator(MattssonNordström2004(), 1, acc_order, RT(0), RT(1), 9)
-        @testset "$(nameof(typeof(mesh)))" for mesh in (UniformMesh1D(RT(0), RT(4), 4),
-                                                        UniformPeriodicMesh1D(RT(0), RT(4),
-                                                                              4))
+    @testset "accuracy order $acc_order" for acc_order in (2, 4, 6, 8)
+        # the operator used on each element of the mesh
+        D = derivative_operator(MattssonNordström2004(), 1, acc_order, RT(0), RT(1), 17)
+        meshes = (UniformMesh1D(XMIN, XMAX, 4), UniformPeriodicMesh1D(XMIN, XMAX, 4))
+
+        @testset "$(nameof(typeof(mesh)))" for mesh in meshes
             @testset "$coupling" for coupling in (couple_continuously,
                                                   couple_discontinuously)
                 Dc = coupling(D, mesh)
                 A = Matrix(Dc)
                 M = mass_matrix(Dc)
+
+                # SBP property M D + Dᵀ M = B
                 @test M * A + A' * M == mass_matrix_boundary(Dc)
+
+                # the mass matrix is a diagonal, positive definite quadrature
+                # rule
+                @test M isa Diagonal
+                @test all(>(0), diag(M))
+
+                # The quadrature rule is exact for polynomials of the same
+                # degree as the one of a single element. The continuous
+                # coupling on a periodic mesh is the exception: it identifies
+                # the first and the last node, so that only constants are
+                # integrated exactly.
+                degree = if mesh isa UniformPeriodicMesh1D &&
+                            coupling === couple_continuously
+                    0
+                else
+                    2 * (acc_order ÷ 2) - 1
+                end
+                test_quadrature_exactness(Dc; degree, xmin = XMIN, xmax = XMAX)
             end
+        end
+
+        # The discontinuous coupling using the upwind numerical fluxes
+        # `Val{:minus}()` and `Val{:plus}()` yields an upwind SBP pair sharing
+        # the norm of the central coupling.
+        @testset "upwind coupling, $(nameof(typeof(mesh)))" for mesh in meshes
+            Dminus = couple_discontinuously(D, mesh, Val{:minus}())
+            Dcentral = couple_discontinuously(D, mesh, Val{:central}())
+            Dplus = couple_discontinuously(D, mesh, Val{:plus}())
+            Am = Matrix(Dminus)
+            Ac = Matrix(Dcentral)
+            Ap = Matrix(Dplus)
+
+            M = mass_matrix(Dminus)
+            @test mass_matrix(Dcentral) == M
+            @test mass_matrix(Dplus) == M
+            @test Ac == (Am + Ap) / 2
+
+            # SBP property M D₊ + D₋ᵀ M = B
+            @test M * Ap + Am' * M == mass_matrix_boundary(Dminus)
+            # M (D₊ - D₋) is symmetric (and negative semidefinite)
+            @test M * (Ap - Am) == (M * (Ap - Am))'
         end
     end
 end
