@@ -22,6 +22,13 @@ for human readability.
   `MVector{2, Float64}`, and user-defined scalar types.
 - `mul!` does not throw an error anymore for scaling factors that are no
   native numbers, e.g., `BigFloat`s.
+- Some coefficients of `Mattsson2012`, `Mattsson2014`, `MattssonNordström2004`,
+  `MattssonSvärdNordström2004`, `MattssonSvärdShoeybi2008`, and
+  `SharanBradyLivescu2022` were rounded to `Float64` before being converted to
+  the requested element type. This did not change anything for `Float64` but
+  led to inexact coefficients for other element types such as `BigFloat` or
+  `Rational`. In particular, `SharanBradyLivescu2022` with accuracy order 6
+  did not work at all for exact element types.
 
 #### Deprecated
 

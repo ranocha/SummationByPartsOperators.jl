@@ -57,6 +57,12 @@ const SBP_TEST = get(ENV, "SBP_TEST", "all")
         end
     end
 
+    @time if SBP_TEST == "all" || SBP_TEST == "rational"
+        @time @testset "Rational Arithmetic" begin
+            include("rational_test.jl")
+        end
+    end
+
     @time if SBP_TEST == "all" || SBP_TEST == "part2"
         @time @testset "Coupling" begin
             include("coupling_test.jl")
