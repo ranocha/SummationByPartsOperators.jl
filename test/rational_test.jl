@@ -704,7 +704,7 @@ end
     # `MattssonAlmquistVanDerWeide2018Accurate`, and
     # `MattssonNiemeläWinters2026`, which are thus not checked here.
     @testset "MattssonAlmquistCarpenter2014Optimal" begin
-        @testset "accuracy order $acc_order" for acc_order in (2, 4, 6)
+        @testset "accuracy order $acc_order" for acc_order in (2, 4, 6, 8)
             D = derivative_operator(MattssonAlmquistCarpenter2014Optimal(), 1, acc_order,
                                     XMIN, XMAX, NNODES)
             M = mass_matrix(D)
