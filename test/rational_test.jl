@@ -7,15 +7,18 @@
 # `Rational{Int}` overflows quickly for the more complicated operators, so
 # `Rational{BigInt}` is used throughout. It is slower but always works.
 #
-# Operators whose coefficients are only available as (truncated) floating point
-# numbers cannot be tested here. These are
+# The order of accuracy cannot be checked for operators whose coefficients are
+# only available as (truncated) floating point numbers. These are
 # - `DienerDorbandSchnetterTiglio2007` with accuracy orders 6 and 8
 # - `MattssonAlmquistCarpenter2014Optimal` (the grid points are truncated decimals)
 # - `MattssonAlmquistVanDerWeide2018Minimal`, `MattssonAlmquistVanDerWeide2018Accurate`
 # - `MattssonNiemeläWinters2026`
-# - `Mattsson2012` with accuracy order 6
+# - `Mattsson2012` variable coefficient operators with accuracy order 6
 # - `LegendreDerivativeOperator`, `FourierDerivativeOperator`, and
 #   `function_space_operator`s
+# The SBP property is structural and can still hold exactly for such operators;
+# it is checked whenever it does, see the testset
+# "Operators with floating point coefficients" below.
 
 using Test
 using LinearAlgebra
@@ -23,9 +26,9 @@ using SummationByPartsOperators
 
 const RT = Rational{BigInt}
 
-# Domain and number of nodes used for all tests below. The grid spacing
-# `Δx = 5 // 64` is not equal to unity to make sure that the scaling of the
-# coefficients by powers of `Δx` is tested as well.
+# Domain and number of nodes used for all tests below. On uniform grids, this
+# yields the grid spacing `Δx = 5 // 64`, which is deliberately not equal to
+# unity to test the scaling of the coefficients by powers of `Δx` as well.
 const XMIN = RT(-1 // 2)
 const XMAX = RT(2)
 const NNODES = 33
@@ -45,14 +48,15 @@ function derivative_of_monomial(x, k, d)
 end
 
 """
-    exactness_degrees(A, x, der_order, max_degree)
+    exactness_degrees(A, x, exact, max_degree)
 
-For every row of the matrix `A` representing an approximation of the
-`der_order`-th derivative on the grid `x`, compute the maximal degree
-`p ≤ max_degree` such that all monomials `x^k` with `k ≤ p` are differentiated
-exactly. A value of `-1` means that not even constants are handled exactly.
+For every row of the matrix `A` representing a differential operator on the
+grid `x`, compute the maximal degree `p ≤ max_degree` such that all monomials
+`x^k` with `k ≤ p` are handled exactly. Here, `exact(xᵢ, k)` must return the
+exact value of the differential operator applied to `x^k` at the node `xᵢ`.
+A value of `-1` means that not even constants are handled exactly.
 """
-function exactness_degrees(A::AbstractMatrix, x::AbstractVector, der_order::Integer,
+function exactness_degrees(A::AbstractMatrix, x::AbstractVector, exact,
                            max_degree::Integer)
     n = size(A, 1)
     degrees = fill(-1, n)
@@ -61,7 +65,7 @@ function exactness_degrees(A::AbstractMatrix, x::AbstractVector, der_order::Inte
         residual = A * (x .^ k)
         for i in 1:n
             active[i] || continue
-            if residual[i] == derivative_of_monomial(x[i], k, der_order)
+            if residual[i] == exact(x[i], k)
                 degrees[i] = k
             else
                 active[i] = false
@@ -76,14 +80,19 @@ end
     test_exactness(D; interior, boundary)
 
 Check that the interior stencils of the nonperiodic operator `D` differentiate
-monomials up to degree `interior` (and no more) exactly and that the boundary
-closures do so up to degree `boundary` (and no more).
+monomials up to degree `interior` (and no more) exactly and that the least
+accurate rows of the boundary closures do so up to degree `boundary`
+(and no more).
 """
 function test_exactness(D; interior, boundary)
     x = collect(grid(D))
-    degrees = exactness_degrees(Matrix(D), x, derivative_order(D), interior + 1)
+    der_order = derivative_order(D)
+    exact = (xi, k) -> derivative_of_monomial(xi, k, der_order)
+    degrees = exactness_degrees(Matrix(D), x, exact, interior + 1)
     nleft = length(D.coefficients.left_boundary)
     nright = length(D.coefficients.right_boundary)
+    # make sure there are interior nodes left to check
+    @test nleft + nright < length(x)
     @test all(==(interior), degrees[(nleft + 1):(end - nright)])
     @test minimum(degrees[1:nleft]) == boundary
     @test minimum(degrees[(end - nright + 1):end]) == boundary
@@ -99,9 +108,13 @@ the periodic boundary are skipped since monomials are not periodic.
 """
 function test_periodic_exactness(D; degree)
     x = collect(grid(D))
-    degrees = exactness_degrees(Matrix(D), x, derivative_order(D), degree + 1)
+    der_order = derivative_order(D)
+    exact = (xi, k) -> derivative_of_monomial(xi, k, der_order)
+    degrees = exactness_degrees(Matrix(D), x, exact, degree + 1)
     nlower = length(D.coefficients.lower_coef)
     nupper = length(D.coefficients.upper_coef)
+    # make sure there are nodes left whose stencil does not wrap around
+    @test nlower + nupper < length(x)
     @test all(==(degree), degrees[(nlower + 1):(end - nupper)])
     return nothing
 end
@@ -153,10 +166,11 @@ end
             @test accuracy_order(D) == acc_order
 
             # Order of accuracy of the interior stencil and of the boundary
-            # closure. The boundary closures of the first-derivative operators
-            # of Mattsson (2014) are one order less accurate than usual since
-            # they share the norm of the third- and fourth-derivative operators
-            # derived there.
+            # closure. The boundary closures of the operators of Mattsson
+            # (2014) are one order less accurate than usual: they share the
+            # norm of the third- and fourth-derivative operators derived
+            # there, and the accuracy conditions combined with the SBP
+            # property have no solution of the usual order for that norm.
             boundary = if source isa Mattsson2014 && acc_order > 2
                 acc_order ÷ 2 - 1
             else
@@ -197,6 +211,8 @@ end
 
             # As for the first derivative, the boundary closures of
             # Mattsson (2014) are one order less accurate than usual.
+            # Note that this does not apply to the boundary derivative
+            # functionals checked below.
             boundary = if source isa Mattsson2014 && acc_order > 2
                 acc_order ÷ 2
             else
@@ -217,8 +233,9 @@ end
             # floating point tests
             @test M * A - A' * M == eR * dR' - eL * dL' - dR * eR' + dL * eL'
 
-            # the boundary derivative functionals are one order more accurate
-            # than the boundary closure of the first-derivative operators
+            # The boundary derivative functionals are exact for polynomials of
+            # degree `acc_order ÷ 2 + 1`, i.e., one more than the usual
+            # boundary closure of the first-derivative operators.
             x = collect(grid(D))
             for k in 0:(acc_order ÷ 2 + 1)
                 @test derivative_left(D, x .^ k, Val{1}()) ==
@@ -226,6 +243,11 @@ end
                 @test derivative_right(D, x .^ k, Val{1}()) ==
                       derivative_of_monomial(last(x), k, 1)
             end
+            k = acc_order ÷ 2 + 2
+            @test derivative_left(D, x .^ k, Val{1}()) !=
+                  derivative_of_monomial(first(x), k, 1)
+            @test derivative_right(D, x .^ k, Val{1}()) !=
+                  derivative_of_monomial(last(x), k, 1)
         end
     end
 end
@@ -377,10 +399,15 @@ end
 end
 
 @testset "Variable coefficient operators (Mattsson2012)" begin
-    # The coefficients of the sixth-order operators are only given as truncated
-    # decimals, so only the second- and fourth-order operators can be checked.
+    # The coefficients of the sixth-order variable coefficient operators are
+    # only given as truncated decimals, so only the second- and fourth-order
+    # operators can be checked exactly.
     @testset "accuracy order $acc_order" for acc_order in (2, 4)
+        # a variable coefficient that is a polynomial of degree `degree_b`
         bfunc = x -> 1 + x^2
+        dbfunc = x -> 2 * x
+        degree_b = 2
+
         D = var_coef_derivative_operator(Mattsson2012(), 2, acc_order, XMIN, XMAX, NNODES,
                                          bfunc)
         @test derivative_order(D) == 2
@@ -391,24 +418,43 @@ end
         x = collect(grid(D))
         b = bfunc.(x)
 
-        # SBP property M D₂(b) = -A + eR b(xmax) dRᵀ - eL b(xmin) dLᵀ with a
-        # symmetric (negative semidefinite) matrix A. The boundary derivative
-        # functionals are the ones of the constant coefficient operator.
+        # Mattsson (2012) reuses the constant coefficient operators, and thus
+        # also the boundary derivative functionals, of Mattsson & Nordström
+        # (2004).
         D2 = derivative_operator(Mattsson2012(), 2, acc_order, XMIN, XMAX, NNODES)
         eL, eR = boundary_vectors(D2)
         dL = derivative_left(D2, Val{1}())
         dR = derivative_right(D2, Val{1}())
+
+        # SBP property M D₂(b) = -A + b(xmax) eR dRᵀ - b(xmin) eL dLᵀ with a
+        # symmetric (negative semidefinite) matrix A
         R = M * A - (last(b) * eR * dR' - first(b) * eL * dL')
         @test R == R'
 
-        # For a constant coefficient b ≡ 1, the operator is a wide-stencil
-        # approximation of the second derivative.
+        # For a constant coefficient b ≡ 1, the operator reduces to the
+        # constant coefficient second-derivative operator.
         D1 = var_coef_derivative_operator(Mattsson2012(), 2, acc_order, XMIN, XMAX, NNODES,
                                           one)
-        degrees = exactness_degrees(Matrix(D1), x, 2, acc_order + 2)
-        nboundary = 2 * acc_order
-        @test all(==(acc_order + 1), degrees[(nboundary + 1):(end - nboundary)])
-        @test minimum(degrees[1:nboundary]) == acc_order ÷ 2 + 1
+        @test Matrix(D1) == Matrix(D2)
+        @test mass_matrix(D1) == mass_matrix(D2)
+
+        # The operator applied to u is exact whenever b u′ is a polynomial of
+        # sufficiently low degree. Hence, the degrees of exactness are reduced
+        # by the degree of b compared to the constant coefficient operator.
+        function exact(xi, k)
+            return dbfunc(xi) * derivative_of_monomial(xi, k, 1) +
+                   bfunc(xi) * derivative_of_monomial(xi, k, 2)
+        end
+        interior = acc_order + 1 - degree_b
+        boundary = acc_order ÷ 2 + 1 - degree_b
+        degrees = exactness_degrees(A, x, exact, interior + 1)
+        cache = D.coefficients.coefficient_cache
+        nleft = SummationByPartsOperators.left_length(cache)
+        nright = SummationByPartsOperators.right_length(cache)
+        @test nleft + nright < length(x)
+        @test all(==(interior), degrees[(nleft + 1):(end - nright)])
+        @test minimum(degrees[1:nleft]) == boundary
+        @test minimum(degrees[(end - nright + 1):end]) == boundary
     end
 end
 
@@ -448,6 +494,23 @@ end
                 M = mass_matrix(Dc)
                 @test M * A + A' * M == mass_matrix_boundary(Dc)
             end
+        end
+    end
+end
+
+@testset "Operators with floating point coefficients" begin
+    # The coefficients of these operators are truncated decimals, so their
+    # order of accuracy cannot be checked exactly. The SBP property is a
+    # structural property of the coefficients as they are stored, though, and
+    # still holds exactly for some of them.
+    @testset "MattssonAlmquistCarpenter2014Optimal" begin
+        @testset "accuracy order $acc_order" for acc_order in (2, 4, 6)
+            D = derivative_operator(MattssonAlmquistCarpenter2014Optimal(), 1, acc_order,
+                                    XMIN, XMAX, NNODES)
+            M = mass_matrix(D)
+            A = Matrix(D)
+            @test M * A + A' * M == mass_matrix_boundary(D)
+            @test all(>(0), diag(M))
         end
     end
 end
