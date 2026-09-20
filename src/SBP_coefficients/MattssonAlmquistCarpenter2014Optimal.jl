@@ -6,10 +6,6 @@ Coefficients of the optimal SBP operators with nonuniform grid given in
 - Mattsson, Almquist, Carpenter (2014)
   Optimal diagonal-norm SBP operators.
   Journal of Computational Physics 264, pp. 91-111.
-
-The accuracy orders 2, 4, 6, and 8 are available. Two entries of `Q` listed in
-Appendix B.4 of the reference for the accuracy order 8 are erroneous and have
-been corrected here, see the comments in the source code.
 """
 struct MattssonAlmquistCarpenter2014Optimal <: SourceOfCoefficients end
 
