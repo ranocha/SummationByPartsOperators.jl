@@ -313,7 +313,7 @@ function second_derivative_coefficients(source::Mattsson2014, order::Int, T = Fl
         right_weights = left_weights
         left_boundary_derivatives = (
                                      # first derivative
-                                     DerivativeCoefficientRow{T, 1, 4}(SVector(T(-11 / 6),
+                                     DerivativeCoefficientRow{T, 1, 4}(SVector(T(-11 // 6),
                                                                                T(3),
                                                                                T(-3 // 2),
                                                                                T(1 // 3))),)
@@ -446,7 +446,7 @@ function second_derivative_coefficients(source::Mattsson2014, order::Int, T = Fl
         right_weights = left_weights
         left_boundary_derivatives = (
                                      # first derivative
-                                     DerivativeCoefficientRow{T, 1, 5}(SVector(T(-25 / 12),
+                                     DerivativeCoefficientRow{T, 1, 5}(SVector(T(-25 // 12),
                                                                                T(4),
                                                                                T(-3),
                                                                                T(4 // 3),
@@ -481,13 +481,19 @@ function third_derivative_coefficients(source::Mattsson2014, order::Int, T = Flo
                                                                    T(15 // 16),
                                                                    T(1 // 8),
                                                                    T(-17 // 16),
+                                                                   T(1 // 2))),
+                         # d4
+                         DerivativeCoefficientRow{T, 1, 6}(SVector(T(1 // 16),
+                                                                   T(-5 // 8),
+                                                                   T(17 // 16),
+                                                                   T(0),
+                                                                   T(-1),
                                                                    T(1 // 2))))
         right_boundary = .-left_boundary
         upper_coef = SVector(T(-1), T(1 // 2))
         central_coef = T(0)
         lower_coef = -upper_coef
-        # left_weights = SVector(T(1//2))
-        left_weights = SVector(T(1 // 2), T(1), T(1))
+        left_weights = SVector(T(1 // 2), T(1), T(1), T(1))
         right_weights = left_weights
         left_boundary_derivatives = (
                                      # first derivative
@@ -568,7 +574,7 @@ function third_derivative_coefficients(source::Mattsson2014, order::Int, T = Flo
         right_weights = left_weights
         left_boundary_derivatives = (
                                      # first derivative
-                                     DerivativeCoefficientRow{T, 1, 4}(SVector(T(-11 / 6),
+                                     DerivativeCoefficientRow{T, 1, 4}(SVector(T(-11 // 6),
                                                                                T(3),
                                                                                T(-3 // 2),
                                                                                T(1 // 3))),
@@ -863,7 +869,7 @@ function fourth_derivative_coefficients(source::Mattsson2014, order::Int, T = Fl
         right_weights = left_weights
         left_boundary_derivatives = (
                                      # first derivative
-                                     DerivativeCoefficientRow{T, 1, 4}(SVector(T(-11 / 6),
+                                     DerivativeCoefficientRow{T, 1, 4}(SVector(T(-11 // 6),
                                                                                T(3),
                                                                                T(-3 // 2),
                                                                                T(1 // 3))),

@@ -1033,7 +1033,7 @@ function boundary_coefficients_weights_order_6(alpha, T = Float64; sign = true)
                       alpha^3 * (5 // 8 - (17 * h11) / 24) +
                       alpha^4 * (17 // 96 - h11 / 8) - (1 // 120) * alpha^5 * (-3 + h11) -
                       h11 -
-                      (137 / 60) * alpha * h11,
+                      (137 // 60) * alpha * h11,
                       (12013 - 60 * alpha^6 +
                        43200 * alpha * h11 +
                        72 * alpha^5 * (-14 + 5 * h11) +

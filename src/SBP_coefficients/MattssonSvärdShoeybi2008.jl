@@ -356,7 +356,7 @@ function second_derivative_coefficients(source::MattssonSvärdShoeybi2008, order
         lower_coef = upper_coef
         left_weights = SVector(T(17 // 48), T(59 // 48), T(43 // 48), T(49 // 48))
         right_weights = left_weights
-        left_boundary_derivatives = (DerivativeCoefficientRow{T, 1, 4}(SVector(T(-11 / 6),
+        left_boundary_derivatives = (DerivativeCoefficientRow{T, 1, 4}(SVector(T(-11 // 6),
                                                                                T(3),
                                                                                T(-3 // 2),
                                                                                T(1 // 3))),)

@@ -60,6 +60,13 @@ jobs:
         sbp_test:
           - part1
           - part2
+        include:
+          # The tests using exact rational arithmetic are relatively expensive
+          # to compile and independent of the platform, so they are run only
+          # once on the latest stable Julia version on Linux.
+          - version: '1'
+            os: ubuntu-latest
+            sbp_test: rational
     steps:
       - uses: actions/checkout@v7
       - uses: julia-actions/setup-julia@v3
