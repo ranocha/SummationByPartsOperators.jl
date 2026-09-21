@@ -313,7 +313,7 @@ end
 
 @testset "Coupled upwind operators" begin
     for T in (Float32, Float64, Rational{Int128})
-        for acc_order in 2:7
+        for acc_order in 2:9
             ymin = T(0)
             ymax = T(2)
             Dp = derivative_operator(Mattsson2017(:plus), 1, acc_order, ymin, ymax, 31)
