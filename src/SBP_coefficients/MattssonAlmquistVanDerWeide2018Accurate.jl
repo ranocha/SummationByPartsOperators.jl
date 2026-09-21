@@ -91,8 +91,9 @@ function first_derivative_coefficients(source::MattssonAlmquistVanDerWeide2018Ac
         q3_4 = T(69694440364211 // 100000000000000)
 
         # `D[i, :] = (Q[i, :] - δ₁ᵢ e₁ᵀ / 2) / H[i, i]`. The entries reaching
-        # into the uniform part of the grid are fixed by the interior stencil,
-        # `Q[i, j] = upper_coef[j - i]`, since `H[j, j] = 1` there.
+        # beyond the boundary closure are fixed by the antisymmetry of `Q`:
+        # row `j` uses the interior stencil and `H[j, j] = 1` there, so
+        # `Q[i, j] = -Q[j, i] = upper_coef[j - i]`.
         left_boundary = (
                          # d1
                          DerivativeCoefficientRow{T, 1, 4}(SVector(-T(1 // 2) / h1,
@@ -159,8 +160,9 @@ function first_derivative_coefficients(source::MattssonAlmquistVanDerWeide2018Ac
         q5_6 = T(75266872305402 // 100000000000000)
 
         # `D[i, :] = (Q[i, :] - δ₁ᵢ e₁ᵀ / 2) / H[i, i]`. The entries reaching
-        # into the uniform part of the grid are fixed by the interior stencil,
-        # `Q[i, j] = upper_coef[j - i]`, since `H[j, j] = 1` there.
+        # beyond the boundary closure are fixed by the antisymmetry of `Q`:
+        # row `j` uses the interior stencil and `H[j, j] = 1` there, so
+        # `Q[i, j] = -Q[j, i] = upper_coef[j - i]`.
         left_boundary = (
                          # d1
                          DerivativeCoefficientRow{T, 1, 6}(SVector(-T(1 // 2) / h1,
@@ -267,8 +269,9 @@ function first_derivative_coefficients(source::MattssonAlmquistVanDerWeide2018Ac
         q7_8 = T(80039405922650 // 100000000000000)
 
         # `D[i, :] = (Q[i, :] - δ₁ᵢ e₁ᵀ / 2) / H[i, i]`. The entries reaching
-        # into the uniform part of the grid are fixed by the interior stencil,
-        # `Q[i, j] = upper_coef[j - i]`, since `H[j, j] = 1` there.
+        # beyond the boundary closure are fixed by the antisymmetry of `Q`:
+        # row `j` uses the interior stencil and `H[j, j] = 1` there, so
+        # `Q[i, j] = -Q[j, i] = upper_coef[j - i]`.
         left_boundary = (
                          # d1
                          DerivativeCoefficientRow{T, 1, 8}(SVector(-T(1 // 2) / h1,
@@ -428,8 +431,9 @@ function first_derivative_coefficients(source::MattssonAlmquistVanDerWeide2018Ac
         q9_10 = T(83333655748509 // 100000000000000)
 
         # `D[i, :] = (Q[i, :] - δ₁ᵢ e₁ᵀ / 2) / H[i, i]`. The entries reaching
-        # into the uniform part of the grid are fixed by the interior stencil,
-        # `Q[i, j] = upper_coef[j - i]`, since `H[j, j] = 1` there.
+        # beyond the boundary closure are fixed by the antisymmetry of `Q`:
+        # row `j` uses the interior stencil and `H[j, j] = 1` there, so
+        # `Q[i, j] = -Q[j, i] = upper_coef[j - i]`.
         left_boundary = (
                          # d1
                          DerivativeCoefficientRow{T, 1, 10}(SVector(-T(1 // 2) / h1,
@@ -656,8 +660,9 @@ function first_derivative_coefficients(source::MattssonAlmquistVanDerWeide2018Ac
         q11_12 = T(85712580212095 // 100000000000000)
 
         # `D[i, :] = (Q[i, :] - δ₁ᵢ e₁ᵀ / 2) / H[i, i]`. The entries reaching
-        # into the uniform part of the grid are fixed by the interior stencil,
-        # `Q[i, j] = upper_coef[j - i]`, since `H[j, j] = 1` there.
+        # beyond the boundary closure are fixed by the antisymmetry of `Q`:
+        # row `j` uses the interior stencil and `H[j, j] = 1` there, so
+        # `Q[i, j] = -Q[j, i] = upper_coef[j - i]`.
         left_boundary = (
                          # d1
                          DerivativeCoefficientRow{T, 1, 12}(SVector(-T(1 // 2) / h1,

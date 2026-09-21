@@ -164,12 +164,12 @@ end
                 ymax = T(2)
                 D = derivative_operator(source, 1, acc_order, ymin, ymax, 31)
 
-                # The coefficients of the boundary optimized operators of
-                # Mattsson, Almquist, van der Weide (2018) are truncated
-                # decimals. Thus, `cD * x^0` does not vanish as accurately as
-                # for the operators with exact rational coefficients. The SBP
-                # property of the coupled operators checked below is not
-                # affected since it is enforced by the coupling.
+                # The boundary optimized operators of Mattsson, Almquist,
+                # van der Weide (2018) store the truncated decimals of the
+                # paper. Thus, `cD * x^0` does not vanish as accurately as for
+                # the other operators used here. The SBP property of the
+                # coupled operators checked below is not affected since it is
+                # enforced by the coupling.
                 consistency_factor = if source isa
                                         Union{MattssonAlmquistVanDerWeide2018Minimal,
                                               MattssonAlmquistVanDerWeide2018Accurate}

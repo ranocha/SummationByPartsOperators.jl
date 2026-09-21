@@ -745,8 +745,9 @@ end
             Δx = step(grid(D))
             nb = length(D.coefficients.left_boundary)
             @test length(D.coefficients.right_boundary) == nb
-            # The first `nb + 1` nodes are given by the truncated decimals of
-            # the paper; the remaining ones are exactly equispaced.
+            # Only the few nodes closest to the boundaries are given by the
+            # truncated decimals of the paper; from node `nb + 1` on, the grid
+            # is certainly equispaced.
             @test x[begin] == XMIN
             @test x[end] == XMAX
             @test all(i -> x[i + 1] - x[i] == Δx, (nb + 1):(nnodes - nb - 1))
