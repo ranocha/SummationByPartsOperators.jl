@@ -5,13 +5,13 @@ using SummationByPartsOperators
 
 # check construction of interior part of upwind operators
 @testset "Check against some upwind operators (dense)" begin
-    N = 14
+    N = 17
     xmin_construction = 0.5
     xmax_construction = 1.0
     xmin_application = -0.25
     xmax_application = 0.75
 
-    for acc_order in 2:6
+    for acc_order in 2:9
         Dm_bounded = derivative_operator(Mattsson2017(:minus), 1, acc_order,
                                          xmin_construction, xmax_construction, N)
         Dp_bounded = derivative_operator(Mattsson2017(:plus), 1, acc_order,
@@ -128,13 +128,13 @@ using SummationByPartsOperators
 end
 
 @testset "Check against some upwind operators (sparse)" begin
-    N = 14
+    N = 17
     xmin_construction = 0.5
     xmax_construction = 1.0
     xmin_application = -0.25
     xmax_application = 0.75
 
-    for acc_order in 2:6
+    for acc_order in 2:9
         Dm_bounded = derivative_operator(Mattsson2017(:minus), 1, acc_order,
                                          xmin_construction, xmax_construction, N)
         Dp_bounded = derivative_operator(Mattsson2017(:plus), 1, acc_order,
