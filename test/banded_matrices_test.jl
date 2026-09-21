@@ -5,12 +5,17 @@ using SummationByPartsOperators, BandedMatrices
 D_test_list = (MattssonNordström2004(), MattssonSvärdNordström2004(),
                MattssonSvärdShoeybi2008(), Mattsson2014(),
                MattssonAlmquistCarpenter2014Extended(),
-               MattssonAlmquistCarpenter2014Optimal())
+               MattssonAlmquistCarpenter2014Optimal(),
+               MattssonAlmquistVanDerWeide2018Minimal(),
+               MattssonAlmquistVanDerWeide2018Accurate())
 Di_test_list = (MattssonSvärdNordström2004(),)
 D2var_test_list = (Mattsson2012(),)
 
-for T in (Float32, Float64), acc_order in (2, 4, 6, 8), diss_order in (2, 4, 6, 8),
-    D_source in D_test_list, Di_source in Di_test_list
+# The boundary optimized operators of Mattsson, Almquist, van der Weide (2018)
+# are available up to accuracy order 12 and have the widest boundary closures
+# of all operators, which makes them a good test case for the bandwidths.
+for T in (Float32, Float64), acc_order in (2, 4, 6, 8, 10, 12),
+    diss_order in (2, 4, 6, 8), D_source in D_test_list, Di_source in Di_test_list
 
     xmin = zero(T)
     xmax = 5 * one(T)

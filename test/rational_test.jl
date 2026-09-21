@@ -20,7 +20,12 @@
 # The SBP property is structural and can still hold exactly for such operators;
 # it is checked whenever it does, see the testset
 # "Operators with floating point coefficients" and the sixth-order case of the
-# testset "Variable coefficient operators (Mattsson2012)" below.
+# testset "Variable coefficient operators (Mattsson2012)" below. In particular,
+# the boundary optimized operators of `MattssonAlmquistVanDerWeide2018Minimal`
+# and `MattssonAlmquistVanDerWeide2018Accurate` store the diagonal norm `H` and
+# the antisymmetric `Q` of their boundary closures as the exact rational
+# numbers printed in the paper, so their SBP property is exact although their
+# order of accuracy is not.
 
 module RationalArithmeticTest
 
@@ -698,11 +703,9 @@ end
     # The coefficients of these operators are truncated decimals, so their
     # order of accuracy cannot be checked exactly. The SBP property is a
     # structural property of the coefficients as they are stored, though, and
-    # still holds exactly for some of them. It does not hold exactly for
-    # `DienerDorbandSchnetterTiglio2007` with accuracy orders 6 and 8,
-    # `MattssonAlmquistVanDerWeide2018Minimal`,
-    # `MattssonAlmquistVanDerWeide2018Accurate`, and
-    # `MattssonNiemeläWinters2026`, which are thus not checked here.
+    # still holds exactly for most of them. It does not hold exactly for
+    # `DienerDorbandSchnetterTiglio2007` with accuracy orders 6 and 8 and for
+    # `MattssonNiemeläWinters2026`, which are not checked here.
     @testset "MattssonAlmquistCarpenter2014Optimal" begin
         @testset "accuracy order $acc_order" for acc_order in (2, 4, 6)
             D = derivative_operator(MattssonAlmquistCarpenter2014Optimal(), 1, acc_order,
@@ -712,6 +715,94 @@ end
             @test M * A + A' * M == mass_matrix_boundary(D)
             @test M isa Diagonal
             @test all(>(0), diag(M))
+        end
+    end
+
+    # The boundary optimized operators of Mattsson, Almquist, van der Weide
+    # (2018) store the diagonal norm `H` and the antisymmetric `Q` of their
+    # boundary closures as the exact rational numbers printed in the paper and
+    # divide only in the element type `T` to obtain the rows
+    # `D[i, :] = (Q[i, :] - δ₁ᵢ e₁ᵀ / 2) / H[i, i]`. Hence, the SBP property
+    # holds exactly for exact `T`, even though the truncated decimals of the
+    # paper spoil the order of accuracy of the boundary closures.
+    @testset "MattssonAlmquistVanDerWeide2018$name" for name in ("Minimal", "Accurate")
+        source = if name == "Minimal"
+            MattssonAlmquistVanDerWeide2018Minimal()
+        else
+            MattssonAlmquistVanDerWeide2018Accurate()
+        end
+        # The boundary closures are much wider than those of the other
+        # operators, so more nodes are required to be left with interior nodes
+        # that can be checked below.
+        nnodes = 51
+        @testset "accuracy order $acc_order" for acc_order in (4, 6, 8, 10, 12)
+            D = derivative_operator(source, 1, acc_order, XMIN, XMAX, nnodes)
+            @test eltype(grid(D)) == RT
+            @test derivative_order(D) == 1
+            @test accuracy_order(D) == acc_order
+
+            x = collect(grid(D))
+            Δx = step(grid(D))
+            nb = length(D.coefficients.left_boundary)
+            @test length(D.coefficients.right_boundary) == nb
+            # Only the few nodes closest to the boundaries are given by the
+            # truncated decimals of the paper; from node `nb + 1` on, the grid
+            # is certainly equispaced.
+            @test x[begin] == XMIN
+            @test x[end] == XMAX
+            @test all(i -> x[i + 1] - x[i] == Δx, (nb + 1):(nnodes - nb - 1))
+            # The grid is exactly symmetric around the center of the domain.
+            @test all(i -> x[i] - XMIN == XMAX - x[end + 1 - i], eachindex(x))
+
+            M = mass_matrix(D)
+            A = Matrix(D)
+            @test M isa Diagonal
+            @test all(>(0), diag(M))
+            # Away from the boundary closures, the quadrature weights are
+            # exactly `Δx`.
+            interior = (nb + 1):(nnodes - nb)
+            @test all(i -> M[i, i] == Δx, interior)
+
+            # SBP property M D + Dᵀ M = B
+            @test M * A + A' * M == mass_matrix_boundary(D)
+            # The right boundary closure is the exact mirror image of the left
+            # one, i.e., the operator is centro-antisymmetric.
+            @test A[end:-1:1, end:-1:1] == -A
+            @test diag(M) == reverse(diag(M))
+            # In contrast to the SBP property, the order of accuracy is not
+            # exact: the decimals of the paper are truncated, so `D * 1 == 0`
+            # holds exactly only for the rows using the interior stencil.
+            row_sums = A * ones(RT, nnodes)
+            @test all(iszero, row_sums[interior])
+            @test !all(iszero, row_sums)
+            @test all(r -> abs(r) < 1 // 10^10, row_sums)
+
+            # The interior stencils differentiate monomials up to degree
+            # `acc_order` (and no more) exactly. Only the rows whose stencils
+            # reach exclusively into the equispaced part of the grid can be
+            # checked; the ones closer to the boundary see the truncated
+            # decimals of the non-uniform nodes.
+            p = acc_order ÷ 2
+            rows = (nb + 1 + p):(nnodes - nb - p)
+            @test !isempty(rows)
+            exact = (xi, k) -> derivative_of_monomial(xi, k, 1)
+            degrees = exactness_degrees(A, x, exact, acc_order + 1)
+            @test all(==(acc_order), degrees[rows])
+
+            # boundary functionals
+            @test derivative_left(D, x, Val{0}()) == first(x)
+            @test derivative_right(D, x, Val{0}()) == last(x)
+            for k in 0:acc_order
+                @test integrate_boundary(x .^ k, D) == last(x)^k - first(x)^k
+            end
+
+            # scaling by the mass matrix is exactly invertible
+            u = x .^ 3
+            v = copy(u)
+            scale_by_mass_matrix!(v, D)
+            @test v == M * u
+            scale_by_inverse_mass_matrix!(v, D)
+            @test v == u
         end
     end
 end

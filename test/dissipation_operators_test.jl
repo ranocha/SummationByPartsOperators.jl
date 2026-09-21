@@ -4,11 +4,16 @@ using SummationByPartsOperators
 
 D_test_list = (MattssonNordström2004(), MattssonSvärdNordström2004(),
                MattssonSvärdShoeybi2008(), Mattsson2014(),
-               MattssonAlmquistCarpenter2014Extended())
+               MattssonAlmquistCarpenter2014Extended(),
+               MattssonAlmquistVanDerWeide2018Minimal(),
+               MattssonAlmquistVanDerWeide2018Accurate())
 Di_test_list = (MattssonSvärdNordström2004(),)
 
-# Nonperiodic: Test symmetry and eigenvalues
-for source_D in D_test_list, source_Di in Di_test_list, acc_order in 2:2:8,
+# Nonperiodic: Test symmetry and eigenvalues. The dissipation operators are
+# adapted to the norm of `D`, which is all that is required here; they are
+# constructed on a uniform grid also for the boundary optimized operators of
+# Mattsson, Almquist, van der Weide (2018), which use a non-uniform grid.
+for source_D in D_test_list, source_Di in Di_test_list, acc_order in 2:2:12,
     T in (Float32, Float64)
 
     xmin = -one(T)

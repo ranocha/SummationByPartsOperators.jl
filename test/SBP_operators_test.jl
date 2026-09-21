@@ -1195,5 +1195,166 @@ end
         D = @test_nowarn derivative_operator(MattssonAlmquistVanDerWeide2018Minimal(), 1, 4,
                                              0.0, 1.0, 9)
         @test all(isfinite.(Matrix(D)))
+
+        # `BoundaryAdaptedGrid` needs a special case if only a single node is
+        # left between the two non-uniform parts of the grid. Among the sources
+        # using that grid, this happens for the smallest possible grids of
+        # `MattssonNiemeläWinters2026`.
+        D = @test_nowarn upwind_operators(MattssonNiemeläWinters2026,
+                                          derivative_order = 1, accuracy_order = 2,
+                                          xmin = 0.0, xmax = 1.0, N = 7)
+        @test issorted(grid(D))
+        @test all(isfinite, Matrix(D.central))
+    end
+end
+
+# https://github.com/ranocha/SummationByPartsOperators.jl/issues/37
+@testset "boundary optimized operators of Mattsson, Almquist, van der Weide (2018)" begin
+    # Number of boundary stencils r and number of non-uniform grid spacings n as
+    # listed in Table 1 of the paper. The only exception is the 'Accurate'
+    # operator of order 6, for which Table 1 lists r = 7 and n = 4 while the
+    # operator published as supplementary material of the paper uses r = 6 and
+    # n = 3.
+    boundary_stencils = Dict("Minimal" => Dict(4 => 3, 6 => 5, 8 => 6, 10 => 8, 12 => 10),
+                             "Accurate" => Dict(4 => 4, 6 => 6, 8 => 8, 10 => 10, 12 => 12))
+    nonuniform_spacings = Dict("Minimal" => Dict(4 => 1, 6 => 2, 8 => 2, 10 => 3, 12 => 4),
+                               "Accurate" => Dict(4 => 2, 6 => 3, 8 => 4, 10 => 5, 12 => 6))
+    sources = Dict("Minimal" => MattssonAlmquistVanDerWeide2018Minimal(),
+                   "Accurate" => MattssonAlmquistVanDerWeide2018Accurate())
+
+    @testset "$name, accuracy order $acc_order" for name in ("Minimal", "Accurate"),
+                                                    acc_order in (4, 6, 8, 10, 12)
+
+        source = sources[name]
+        T = Float64
+        xmin = -one(T)
+        xmax = 2 * one(T)
+        N = 101
+        p = acc_order ÷ 2
+        # The coefficients are given as truncated decimals in the paper, which
+        # limits the accuracy that can be achieved near the boundaries.
+        atol_boundary = 10^5 * eps(T)
+        atol_interior = 10^3 * eps(T)
+
+        D = derivative_operator(source, 1, acc_order, xmin, xmax, N)
+        for compact in (true, false)
+            show(IOContext(devnull, :compact => compact), D)
+            show(IOContext(devnull, :compact => compact), D.coefficients)
+        end
+        @test real(D) == T
+        @test derivative_order(D) == 1
+        @test accuracy_order(D) == acc_order
+
+        # The number of boundary stencils is the one reported in the paper.
+        nb = boundary_stencils[name][acc_order]
+        @test length(D.coefficients.left_boundary) == nb
+        @test length(D.coefficients.right_boundary) == nb
+
+        # The grid is non-uniform near the boundaries, uniform in the interior,
+        # and symmetric with respect to the center of the domain.
+        x = grid(D)
+        @test length(x) == N
+        @test x[begin] ≈ xmin
+        @test x[end] ≈ xmax
+        @test issorted(x)
+        n_nonuniform = nonuniform_spacings[name][acc_order]
+        Δx = step(x)
+        @test all(i -> x[i + 1] - x[i] ≈ Δx, (n_nonuniform + 1):(N - n_nonuniform - 1))
+        @test all(i -> x[i] - xmin ≈ xmax - x[end + 1 - i], eachindex(x))
+
+        # SBP property with a positive definite diagonal norm
+        M = @inferred mass_matrix(D)
+        A = Matrix(D)
+        @test M isa Diagonal
+        @test all(>(0), diag(M))
+        @test M * A + A' * M ≈ mass_matrix_boundary(D)
+
+        # The operators are accurate of order `acc_order` in the interior and
+        # of order `p` near the boundaries.
+        inner_indices = (nb + 1):(N - nb)
+        res = similar(x)
+        mul!(res, D, fill(one(T), N))
+        @test all(i -> abs(res[i]) < atol_boundary, eachindex(res))
+        for k in 1:acc_order
+            mul!(res, D, x .^ k)
+            exact = k .* x .^ (k - 1)
+            scale = maximum(abs, exact)
+            @test all(i -> isapprox(res[i], exact[i], atol = scale * atol_interior),
+                      inner_indices)
+            if k <= p
+                @test all(i -> isapprox(res[i], exact[i], atol = scale * atol_boundary),
+                          eachindex(res))
+            end
+        end
+        # The associated quadrature rule is exact for polynomials of degree
+        # 2p - 1.
+        for k in 0:(2p - 1)
+            @test integrate(x .^ k, D) ≈ (xmax^(k + 1) - xmin^(k + 1)) / (k + 1)
+        end
+        @test integrate(identity, x, D) ≈ (xmax^2 - xmin^2) / 2
+
+        # boundary integration and boundary values
+        x0 = fill(one(T), N)
+        @test integrate_boundary(x0, D) ≈ x0[end] - x0[begin]
+        @test integrate_boundary(x, D) ≈ x[end] - x[begin]
+        @test derivative_left(D, x, Val{0}()) ≈ x[begin]
+        @test derivative_right(D, x, Val{0}()) ≈ x[end]
+
+        # mass matrix scaling
+        u = sinpi.(x)
+        v = copy(u)
+        scale_by_mass_matrix!(v, D)
+        @test v ≈ M * u
+        scale_by_inverse_mass_matrix!(v, D)
+        @test v ≈ u
+
+        # All execution modes must yield the same result. This is particularly
+        # relevant here since these operators have the widest boundary
+        # closures of all operators in this package.
+        D_threads = derivative_operator(source, 1, acc_order, xmin, xmax, N,
+                                        ThreadedMode())
+        D_safe = derivative_operator(source, 1, acc_order, xmin, xmax, N, SafeMode())
+        dest = similar(u)
+        mul!(dest, D, u)
+        for D_other in (D_threads, D_safe)
+            dest_other = similar(u)
+            mul!(dest_other, D_other, u)
+            @test dest_other ≈ dest
+            @test Matrix(D_other) ≈ A
+            # five-argument `mul!`
+            dest_other .= u
+            mul!(dest_other, D_other, u, 2, 3)
+            @test dest_other ≈ 2 * dest + 3 * u
+        end
+
+        # The operators can also be constructed for other floating point types.
+        D32 = derivative_operator(source, 1, acc_order, Float32(xmin), Float32(xmax), N)
+        @test real(D32) == Float32
+        @test all(isfinite, Matrix(D32))
+
+        # The smallest grid these operators can be constructed on is the one
+        # where the two boundary closures just do not overlap. The non-uniform
+        # grid points listed in `construct_grid` must not contain any of the
+        # equispaced points following them; otherwise, the minimal number of
+        # nodes would be larger than necessary.
+        N_min = 2 * nb + 1
+        @test_throws Union{ArgumentError, DimensionMismatch} derivative_operator(source, 1,
+                                                                                 acc_order,
+                                                                                 xmin, xmax,
+                                                                                 N_min - 1)
+        D_min = derivative_operator(source, 1, acc_order, xmin, xmax, N_min)
+        @test length(grid(D_min)) == N_min
+        @test issorted(grid(D_min))
+        M_min = mass_matrix(D_min)
+        A_min = Matrix(D_min)
+        @test all(>(0), diag(M_min))
+        @test M_min * A_min + A_min' * M_min ≈ mass_matrix_boundary(D_min)
+    end
+
+    @testset "not implemented" for name in ("Minimal", "Accurate")
+        source = sources[name]
+        @test_throws ArgumentError derivative_operator(source, 1, 14, 0.0, 1.0, 101)
+        @test_throws Union{MethodError, ArgumentError} derivative_operator(source, 2, 4,
+                                                                           0.0, 1.0, 101)
     end
 end
