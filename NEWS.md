@@ -21,6 +21,18 @@ for human readability.
   grids. Previously, the equispaced grid points following the non-uniform ones
   were listed explicitly, which required more nodes than the boundary closures
   actually need. The grid points themselves are unchanged up to round-off.
+- The coefficients of `MattssonAlmquistVanDerWeide2018Minimal` and
+  `MattssonAlmquistVanDerWeide2018Accurate` are now stored as the diagonal norm
+  `H` and the antisymmetric `Q` printed in the paper, read as exact rational
+  numbers, instead of the truncated decimals of `Q[i, j] / H[i, i]`. Thus,
+  these operators now satisfy the SBP property exactly for exact element types
+  such as `Rational{BigInt}`. In `Float64`, all but eight of the 704 stored
+  boundary coefficients are bit-identical to the previous ones; the remaining
+  eight change by at most 101 ulp since the paper prints the interior stencil
+  coefficients they are coupled to (`1/12`, `1/60`, `4/105`, `1/280`) as
+  truncated decimals. For element types with more precision than `Float64`,
+  e.g., `BigFloat`, the coefficients are more accurate than before since they
+  are no longer rounded to `Float64` first.
 - The minimum Julia version was updated to 1.10 in version 0.5.91.
 - `mul!` with vectors of composite element types such as `ForwardDiff.Dual`s,
   `Complex` numbers, and `StaticVector`s is significantly faster when using

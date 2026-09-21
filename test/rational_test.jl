@@ -20,11 +20,12 @@
 # The SBP property is structural and can still hold exactly for such operators;
 # it is checked whenever it does, see the testset
 # "Operators with floating point coefficients" and the sixth-order case of the
-# testset "Variable coefficient operators (Mattsson2012)" below. The boundary
-# optimized operators of `MattssonAlmquistVanDerWeide2018Minimal` and
-# `MattssonAlmquistVanDerWeide2018Accurate` use truncated decimals only in
-# their boundary closures and near the boundaries of the grid, so everything
-# that involves only interior nodes is checked exactly for them.
+# testset "Variable coefficient operators (Mattsson2012)" below. In particular,
+# the boundary optimized operators of `MattssonAlmquistVanDerWeide2018Minimal`
+# and `MattssonAlmquistVanDerWeide2018Accurate` store the diagonal norm `H` and
+# the antisymmetric `Q` of their boundary closures as the exact rational
+# numbers printed in the paper, so their SBP property is exact although their
+# order of accuracy is not.
 
 module RationalArithmeticTest
 
@@ -702,14 +703,9 @@ end
     # The coefficients of these operators are truncated decimals, so their
     # order of accuracy cannot be checked exactly. The SBP property is a
     # structural property of the coefficients as they are stored, though, and
-    # still holds exactly for some of them. It does not hold exactly for
-    # `DienerDorbandSchnetterTiglio2007` with accuracy orders 6 and 8,
-    # `MattssonAlmquistVanDerWeide2018Minimal`,
-    # `MattssonAlmquistVanDerWeide2018Accurate`, and
-    # `MattssonNiemeläWinters2026`. For the boundary optimized operators of
-    # Mattsson, Almquist, van der Weide (2018), the relations that do hold
-    # exactly are checked below; `MattssonNiemeläWinters2026` is not checked
-    # here.
+    # still holds exactly for most of them. It does not hold exactly for
+    # `DienerDorbandSchnetterTiglio2007` with accuracy orders 6 and 8 and for
+    # `MattssonNiemeläWinters2026`, which are not checked here.
     @testset "MattssonAlmquistCarpenter2014Optimal" begin
         @testset "accuracy order $acc_order" for acc_order in (2, 4, 6)
             D = derivative_operator(MattssonAlmquistCarpenter2014Optimal(), 1, acc_order,
@@ -723,12 +719,12 @@ end
     end
 
     # The boundary optimized operators of Mattsson, Almquist, van der Weide
-    # (2018) store the rows of the boundary closure as `Q[i, j] / H[i, i]`,
-    # where both `Q` and `H` are given as truncated decimals in the paper. The
-    # division is thus inexact and the SBP property does not hold exactly.
-    # Their interior, however, uses the exact rational coefficients of the
-    # standard central stencils on the part of the grid that is uniform, so all
-    # relations that involve only interior nodes do hold exactly.
+    # (2018) store the diagonal norm `H` and the antisymmetric `Q` of their
+    # boundary closures as the exact rational numbers printed in the paper and
+    # divide only in the element type `T` to obtain the rows
+    # `D[i, :] = (Q[i, :] - δ₁ᵢ e₁ᵀ / 2) / H[i, i]`. Hence, the SBP property
+    # holds exactly for exact `T`, even though the truncated decimals of the
+    # paper spoil the order of accuracy of the boundary closures.
     @testset "MattssonAlmquistVanDerWeide2018$name" for name in ("Minimal", "Accurate")
         source = if name == "Minimal"
             MattssonAlmquistVanDerWeide2018Minimal()
@@ -766,10 +762,19 @@ end
             interior = (nb + 1):(nnodes - nb)
             @test all(i -> M[i, i] == Δx, interior)
 
-            # The part of the SBP property `M D + Dᵀ M = B` that involves only
-            # interior nodes holds exactly since the interior stencil is
-            # antisymmetric with exact rational coefficients.
-            @test all(iszero, (M * A + A' * M)[interior, interior])
+            # SBP property M D + Dᵀ M = B
+            @test M * A + A' * M == mass_matrix_boundary(D)
+            # The right boundary closure is the exact mirror image of the left
+            # one, i.e., the operator is centro-antisymmetric.
+            @test A[end:-1:1, end:-1:1] == -A
+            @test diag(M) == reverse(diag(M))
+            # In contrast to the SBP property, the order of accuracy is not
+            # exact: the decimals of the paper are truncated, so `D * 1 == 0`
+            # holds exactly only for the rows using the interior stencil.
+            row_sums = A * ones(RT, nnodes)
+            @test all(iszero, row_sums[interior])
+            @test !all(iszero, row_sums)
+            @test all(r -> abs(r) < 1 // 10^10, row_sums)
 
             # The interior stencils differentiate monomials up to degree
             # `acc_order` (and no more) exactly. Only the rows whose stencils

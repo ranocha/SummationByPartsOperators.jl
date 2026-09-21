@@ -1,5 +1,14 @@
 using LinearAlgebra
 
+# The coefficient files in `src/SBP_coefficients/` do not store the rows of `D1`
+# computed below but the diagonal norm `H` and the antisymmetric `Q` themselves,
+# read as exact rational numbers, and form `D1 = H \ (Q - e*e'/2)` in the
+# element type `T`. That way, the SBP property `H*D1 + D1'*H == e_N*e_N' - e*e'`
+# holds exactly whenever `T` is exact, e.g. `Rational{BigInt}`. This requires
+# the entries of `Q` coupling the boundary closure to the uniform interior to be
+# the exact coefficients of the central stencil; the paper prints them as
+# truncated decimals, see the comments below.
+
 # order 4
 h = [
   2.1259737557798e-01,
@@ -132,13 +141,13 @@ q5 = [-q1[5], -q2[5], -q3[5], -q4[5], 0,
   8.1123946853807e-01,
   -2.0267150541446e-01,
   3.8680398901392e-02,
-  -3.5714285714286e-03,
+  -1//280,  # printed as -3.5714285714286e-03 in the paper
   0, 0, 0]'
 q6 = [-q1[6], -q2[6], -q3[6], -q4[6], -q5[6], 0,
   8.0108544742793e-01,
   -2.0088756283071e-01,
-  3.8095238095238e-02,
-  -3.5714285714286e-03,
+  4//105,  # printed as 3.8095238095238e-02 in the paper
+  -1//280,  # printed as -3.5714285714286e-03 in the paper
   0, 0]'
 q7 = [-q1[7], -q2[7], -q3[7], -q4[7], -q5[7], -q6[7], 0,
   8.0039405922650e-01,

@@ -70,38 +70,54 @@ end
 function first_derivative_coefficients(source::MattssonAlmquistVanDerWeide2018Accurate,
                                        order::Int, T = Float64, mode = FastMode())
     if order == 4
-        left_boundary = (
-                         # d1
-                         DerivativeCoefficientRow{T, 1, 4}(SVector(T(-2.3518634632279443),
-                                                                   T(3.0858932129093573),
-                                                                   T(-0.9349061508864488),
-                                                                   T(0.20087640120503583))),
-                         # d2
-                         DerivativeCoefficientRow{T, 1, 4}(SVector(T(-0.6394095807755721),
-                                                                   T(0),
-                                                                   T(0.7917608885016885),
-                                                                   T(-0.15235130772611635))),
-                         # d3
-                         DerivativeCoefficientRow{T, 1, 5}(SVector(T(0.18446061657605967),
-                                                                   T(-0.7539307161467195),
-                                                                   T(0),
-                                                                   T(0.6468087329936288),
-                                                                   T(-0.07733863342297213))),
-                         # d4
-                         DerivativeCoefficientRow{T, 1, 6}(SVector(T(-0.043308971097943676),
-                                                                   T(0.1585246807786971),
-                                                                   T(-0.7067880256335334),
-                                                                   T(0),
-                                                                   T(0.676082646803181),
-                                                                   T(-0.08451033085039762))))
-        right_boundary = .-left_boundary
+        # interior stencil
         upper_coef = SVector(T(2 // 3), T(-1 // 12))
         central_coef = zero(T)
         lower_coef = -upper_coef
-        left_weights = SVector(T(0.21259737557798),
-                               T(1.0260290400758),
-                               T(1.0775123588954),
-                               T(0.98607273802835))
+
+        # The diagonal norm `H` and the antisymmetric `Q` of the boundary
+        # closure as printed in the paper, read as exact rational numbers.
+        h1 = T(21259737557798 // 100000000000000)
+        h2 = T(10260290400758 // 10000000000000)
+        h3 = T(10775123588954 // 10000000000000)
+        h4 = T(98607273802835 // 100000000000000)
+        left_weights = SVector(h1, h2, h3, h4)
+
+        q1_2 = T(65605279837843 // 100000000000000)
+        q1_3 = T(-19875859409017 // 100000000000000)
+        q1_4 = T(42705795711740 // 1000000000000000)
+        q2_3 = T(81236966439895 // 100000000000000)
+        q2_4 = T(-15631686602052 // 100000000000000)
+        q3_4 = T(69694440364211 // 100000000000000)
+
+        # `D[i, :] = (Q[i, :] - δ₁ᵢ e₁ᵀ / 2) / H[i, i]`. The entries reaching
+        # into the uniform part of the grid are fixed by the interior stencil,
+        # `Q[i, j] = upper_coef[j - i]`, since `H[j, j] = 1` there.
+        left_boundary = (
+                         # d1
+                         DerivativeCoefficientRow{T, 1, 4}(SVector(-T(1 // 2) / h1,
+                                                                   q1_2 / h1,
+                                                                   q1_3 / h1,
+                                                                   q1_4 / h1)),
+                         # d2
+                         DerivativeCoefficientRow{T, 1, 4}(SVector(-q1_2 / h2,
+                                                                   T(0),
+                                                                   q2_3 / h2,
+                                                                   q2_4 / h2)),
+                         # d3
+                         DerivativeCoefficientRow{T, 1, 5}(SVector(-q1_3 / h3,
+                                                                   -q2_3 / h3,
+                                                                   T(0),
+                                                                   q3_4 / h3,
+                                                                   upper_coef[2] / h3)),
+                         # d4
+                         DerivativeCoefficientRow{T, 1, 6}(SVector(-q1_4 / h4,
+                                                                   -q2_4 / h4,
+                                                                   -q3_4 / h4,
+                                                                   T(0),
+                                                                   upper_coef[1] / h4,
+                                                                   upper_coef[2] / h4)))
+        right_boundary = .-left_boundary
         right_weights = left_weights
         left_boundary_derivatives = Tuple{}()
         right_boundary_derivatives = left_boundary_derivatives
@@ -111,65 +127,90 @@ function first_derivative_coefficients(source::MattssonAlmquistVanDerWeide2018Ac
                                lower_coef, central_coef, upper_coef,
                                left_weights, right_weights, mode, 1, order, source)
     elseif order == 6
-        left_boundary = (
-                         # d1
-                         DerivativeCoefficientRow{T, 1, 6}(SVector(T(-3.837232862086773),
-                                                                   T(5.068376175016296),
-                                                                   T(-1.6963756420892036),
-                                                                   T(0.5851295073874213),
-                                                                   T(-0.13275449453716695),
-                                                                   T(0.012857316309426029))),
-                         # d2
-                         DerivativeCoefficientRow{T, 1, 6}(SVector(T(-0.9591958116075092),
-                                                                   T(0),
-                                                                   T(1.2687130518352143),
-                                                                   T(-0.3860731957925361),
-                                                                   T(0.08345276954506707),
-                                                                   T(-0.006896813980236088))),
-                         # d3
-                         DerivativeCoefficientRow{T, 1, 6}(SVector(T(0.23226893958753303),
-                                                                   T(-0.9178972823223088),
-                                                                   T(0),
-                                                                   T(0.8585728949642006),
-                                                                   T(-0.19840158580452047),
-                                                                   T(0.0254570335750956))),
-                         # d4
-                         DerivativeCoefficientRow{T, 1, 7}(SVector(T(-0.07693308450770664),
-                                                                   T(0.2682207441654631),
-                                                                   T(-0.8244592785032373),
-                                                                   T(0),
-                                                                   T(0.7749305933808132),
-                                                                   T(-0.15857634324473752),
-                                                                   T(0.016817368709408833))),
-                         # d5
-                         DerivativeCoefficientRow{T, 1, 8}(SVector(T(0.017248604775379643),
-                                                                   T(-0.057293724956320936),
-                                                                   T(0.1882698460378496),
-                                                                   T(-0.7657841952075574),
-                                                                   T(0),
-                                                                   T(0.7505104744873311),
-                                                                   T(-0.14956988077877112),
-                                                                   T(0.01661887564208568))),
-                         # d6
-                         DerivativeCoefficientRow{T, 1, 9}(SVector(T(-0.0016761725437960326),
-                                                                   T(0.004750928272020083),
-                                                                   T(-0.02423857479897864),
-                                                                   T(0.15723370478311835),
-                                                                   T(-0.753044107168037),
-                                                                   T(0),
-                                                                   T(0.7503740531217644),
-                                                                   T(-0.15007481062435288),
-                                                                   T(0.016674978958261432))))
-        right_boundary = .-left_boundary
+        # interior stencil
         upper_coef = SVector(T(3 // 4), T(-3 // 20), T(1 // 60))
         central_coef = zero(T)
         lower_coef = -upper_coef
-        left_weights = SVector(T(0.13030223027124),
-                               T(0.68851501587715),
-                               T(0.95166202564389),
-                               T(0.99103890475697),
-                               T(1.0028757074552),
-                               T(0.99950151111941))
+
+        # The diagonal norm `H` and the antisymmetric `Q` of the boundary
+        # closure as printed in the paper, read as exact rational numbers.
+        h1 = T(13030223027124 // 100000000000000)
+        h2 = T(68851501587715 // 100000000000000)
+        h3 = T(95166202564389 // 100000000000000)
+        h4 = T(99103890475697 // 100000000000000)
+        h5 = T(10028757074552 // 10000000000000)
+        h6 = T(99950151111941 // 100000000000000)
+        left_weights = SVector(h1, h2, h3, h4, h5, h6)
+
+        q1_2 = T(66042071945824 // 100000000000000)
+        q1_3 = T(-22104152954203 // 100000000000000)
+        q1_4 = T(76243679810093 // 1000000000000000)
+        q1_5 = T(-17298206716724 // 1000000000000000)
+        q1_6 = T(16753369904210 // 10000000000000000)
+        q2_3 = T(87352798702787 // 100000000000000)
+        q2_4 = T(-26581719253084 // 100000000000000)
+        q2_5 = T(57458484948314 // 1000000000000000)
+        q2_6 = T(-47485599871040 // 10000000000000000)
+        q3_4 = T(81707122038457 // 100000000000000)
+        q3_5 = T(-18881125503769 // 100000000000000)
+        q3_6 = T(24226492138960 // 1000000000000000)
+        q4_5 = T(76798636652679 // 100000000000000)
+        q4_6 = T(-15715532552963 // 100000000000000)
+        q5_6 = T(75266872305402 // 100000000000000)
+
+        # `D[i, :] = (Q[i, :] - δ₁ᵢ e₁ᵀ / 2) / H[i, i]`. The entries reaching
+        # into the uniform part of the grid are fixed by the interior stencil,
+        # `Q[i, j] = upper_coef[j - i]`, since `H[j, j] = 1` there.
+        left_boundary = (
+                         # d1
+                         DerivativeCoefficientRow{T, 1, 6}(SVector(-T(1 // 2) / h1,
+                                                                   q1_2 / h1,
+                                                                   q1_3 / h1,
+                                                                   q1_4 / h1,
+                                                                   q1_5 / h1,
+                                                                   q1_6 / h1)),
+                         # d2
+                         DerivativeCoefficientRow{T, 1, 6}(SVector(-q1_2 / h2,
+                                                                   T(0),
+                                                                   q2_3 / h2,
+                                                                   q2_4 / h2,
+                                                                   q2_5 / h2,
+                                                                   q2_6 / h2)),
+                         # d3
+                         DerivativeCoefficientRow{T, 1, 6}(SVector(-q1_3 / h3,
+                                                                   -q2_3 / h3,
+                                                                   T(0),
+                                                                   q3_4 / h3,
+                                                                   q3_5 / h3,
+                                                                   q3_6 / h3)),
+                         # d4
+                         DerivativeCoefficientRow{T, 1, 7}(SVector(-q1_4 / h4,
+                                                                   -q2_4 / h4,
+                                                                   -q3_4 / h4,
+                                                                   T(0),
+                                                                   q4_5 / h4,
+                                                                   q4_6 / h4,
+                                                                   upper_coef[3] / h4)),
+                         # d5
+                         DerivativeCoefficientRow{T, 1, 8}(SVector(-q1_5 / h5,
+                                                                   -q2_5 / h5,
+                                                                   -q3_5 / h5,
+                                                                   -q4_5 / h5,
+                                                                   T(0),
+                                                                   q5_6 / h5,
+                                                                   upper_coef[2] / h5,
+                                                                   upper_coef[3] / h5)),
+                         # d6
+                         DerivativeCoefficientRow{T, 1, 9}(SVector(-q1_6 / h6,
+                                                                   -q2_6 / h6,
+                                                                   -q3_6 / h6,
+                                                                   -q4_6 / h6,
+                                                                   -q5_6 / h6,
+                                                                   T(0),
+                                                                   upper_coef[1] / h6,
+                                                                   upper_coef[2] / h6,
+                                                                   upper_coef[3] / h6)))
+        right_boundary = .-left_boundary
         right_weights = left_weights
         left_boundary_derivatives = Tuple{}()
         right_boundary_derivatives = left_boundary_derivatives
@@ -179,101 +220,139 @@ function first_derivative_coefficients(source::MattssonAlmquistVanDerWeide2018Ac
                                lower_coef, central_coef, upper_coef,
                                left_weights, right_weights, mode, 1, order, source)
     elseif order == 8
-        left_boundary = (
-                         # d1
-                         DerivativeCoefficientRow{T, 1, 8}(SVector(T(-4.647545021331372),
-                                                                   T(6.254178662563343),
-                                                                   T(-2.4139100510438665),
-                                                                   T(1.256639509571857),
-                                                                   T(-0.647667696659897),
-                                                                   T(0.24570663393330786),
-                                                                   T(-0.05204535767697368),
-                                                                   T(0.004643320643692943))),
-                         # d2
-                         DerivativeCoefficientRow{T, 1, 8}(SVector(T(-1.0868211647678514),
-                                                                   T(0),
-                                                                   T(1.5195364183857292),
-                                                                   T(-0.6543667982790691),
-                                                                   T(0.3128620695707949),
-                                                                   T(-0.11086808101811908),
-                                                                   T(0.021234895991755504),
-                                                                   T(-0.0015773398832359302))),
-                         # d3
-                         DerivativeCoefficientRow{T, 1, 8}(SVector(T(0.26780878369504263),
-                                                                   T(-0.9701235413358851),
-                                                                   T(0),
-                                                                   T(0.9726229663976735),
-                                                                   T(-0.3684397832422662),
-                                                                   T(0.1161859354443521),
-                                                                   T(-0.018907619882971544),
-                                                                   T(0.0008532589240538837))),
-                         # d4
-                         DerivativeCoefficientRow{T, 1, 8}(SVector(T(-0.12264219453174283),
-                                                                   T(0.3675044946198741),
-                                                                   T(-0.8555984502334516),
-                                                                   T(0),
-                                                                   T(0.7955264157053945),
-                                                                   T(-0.22405034810099697),
-                                                                   T(0.04290097854980221),
-                                                                   T(-0.0036408960088885555))),
-                         # d5
-                         DerivativeCoefficientRow{T, 1, 9}(SVector(T(0.0680142412945559),
-                                                                   T(-0.18906569319897437),
-                                                                   T(0.34874693977149884),
-                                                                   T(-0.855998538940948),
-                                                                   T(0),
-                                                                   T(0.7918634438230676),
-                                                                   T(-0.19783080393205543),
-                                                                   T(0.03775653807587011),
-                                                                   T(-0.0034861268930073425))),
-                         # d6
-                         DerivativeCoefficientRow{T, 1, 10}(SVector(T(-0.026557903380662235),
-                                                                    T(0.06895974248171861),
-                                                                    T(-0.11319486586973267),
-                                                                    T(0.24813802673084387),
-                                                                    T(-0.8150412273910146),
-                                                                    T(0),
-                                                                    T(0.8048396208993126),
-                                                                    T(-0.20182899393713088),
-                                                                    T(0.038273766032179475),
-                                                                    T(-0.0035881655655168633))),
-                         # d7
-                         DerivativeCoefficientRow{T, 1, 11}(SVector(T(0.005594622888681003),
-                                                                    T(-0.013135637494343391),
-                                                                    T(0.0183198514986364),
-                                                                    T(-0.047252720307139756),
-                                                                    T(0.20250470348441063),
-                                                                    T(-0.8004261411357496),
-                                                                    T(0),
-                                                                    T(0.7997353219580023),
-                                                                    T(-0.19983539676215634),
-                                                                    T(0.03806388509755359),
-                                                                    T(-0.0035684892278956487))),
-                         # d8
-                         DerivativeCoefficientRow{T, 1, 12}(SVector(T(-0.000499585189812272),
-                                                                    T(0.0009766036909553027),
-                                                                    T(-0.000827480914165871),
-                                                                    T(0.0040138390353474905),
-                                                                    T(-0.038683470124513085),
-                                                                    T(0.20090351330033354),
-                                                                    T(-0.8004576105033867),
-                                                                    T(0),
-                                                                    T(0.8000635199885898),
-                                                                    T(-0.20001587999714746),
-                                                                    T(0.038098262856599514),
-                                                                    T(-0.0035717121428062043))))
-        right_boundary = .-left_boundary
+        # interior stencil
         upper_coef = SVector(T(4 // 5), T(-1 // 5), T(4 // 105), T(-1 // 280))
         central_coef = zero(T)
         lower_coef = -upper_coef
-        left_weights = SVector(T(0.1075836807831),
-                               T(0.61909685107891),
-                               T(0.96971176519117),
-                               T(1.1023441350947),
-                               T(1.0244688965833),
-                               T(0.99533550116831),
-                               T(1.0008236941028),
-                               T(0.99992060631812))
+
+        # The diagonal norm `H` and the antisymmetric `Q` of the boundary
+        # closure as printed in the paper, read as exact rational numbers.
+        h1 = T(10758368078310 // 100000000000000)
+        h2 = T(61909685107891 // 100000000000000)
+        h3 = T(96971176519117 // 100000000000000)
+        h4 = T(11023441350947 // 10000000000000)
+        h5 = T(10244688965833 // 10000000000000)
+        h6 = T(99533550116831 // 100000000000000)
+        h7 = T(10008236941028 // 10000000000000)
+        h8 = T(99992060631812 // 100000000000000)
+        left_weights = SVector(h1, h2, h3, h4, h5, h6, h7, h8)
+
+        q1_2 = T(67284756079369 // 100000000000000)
+        q1_3 = T(-25969732837062 // 100000000000000)
+        q1_4 = T(13519390385721 // 100000000000000)
+        q1_5 = T(-69678474730984 // 1000000000000000)
+        q1_6 = T(26434024071371 // 1000000000000000)
+        q1_7 = T(-55992311465618 // 10000000000000000)
+        q1_8 = T(49954552590464 // 100000000000000000)
+        q2_3 = T(94074021172233 // 100000000000000)
+        q2_4 = T(-40511642426516 // 100000000000000)
+        q2_5 = T(19369192209331 // 100000000000000)
+        q2_6 = T(-68638079843479 // 1000000000000000)
+        q2_7 = T(13146457241484 // 1000000000000000)
+        q2_8 = T(-97652615479254 // 100000000000000000)
+        q3_4 = T(94316393361096 // 100000000000000)
+        q3_5 = T(-35728039257451 // 100000000000000)
+        q3_6 = T(11266686855013 // 100000000000000)
+        q3_7 = T(-18334941452280 // 1000000000000000)
+        q3_8 = T(82741521740941 // 100000000000000000)
+        q4_5 = T(87694387866575 // 100000000000000)
+        q4_6 = T(-24698058719506 // 100000000000000)
+        q4_7 = T(47291642094198 // 1000000000000000)
+        q4_8 = T(-40135203618880 // 10000000000000000)
+        q5_6 = T(81123946853807 // 100000000000000)
+        q5_7 = T(-20267150541446 // 100000000000000)
+        q5_8 = T(38680398901392 // 1000000000000000)
+        q6_7 = T(80108544742793 // 100000000000000)
+        q6_8 = T(-20088756283071 // 100000000000000)
+        q7_8 = T(80039405922650 // 100000000000000)
+
+        # `D[i, :] = (Q[i, :] - δ₁ᵢ e₁ᵀ / 2) / H[i, i]`. The entries reaching
+        # into the uniform part of the grid are fixed by the interior stencil,
+        # `Q[i, j] = upper_coef[j - i]`, since `H[j, j] = 1` there.
+        left_boundary = (
+                         # d1
+                         DerivativeCoefficientRow{T, 1, 8}(SVector(-T(1 // 2) / h1,
+                                                                   q1_2 / h1,
+                                                                   q1_3 / h1,
+                                                                   q1_4 / h1,
+                                                                   q1_5 / h1,
+                                                                   q1_6 / h1,
+                                                                   q1_7 / h1,
+                                                                   q1_8 / h1)),
+                         # d2
+                         DerivativeCoefficientRow{T, 1, 8}(SVector(-q1_2 / h2,
+                                                                   T(0),
+                                                                   q2_3 / h2,
+                                                                   q2_4 / h2,
+                                                                   q2_5 / h2,
+                                                                   q2_6 / h2,
+                                                                   q2_7 / h2,
+                                                                   q2_8 / h2)),
+                         # d3
+                         DerivativeCoefficientRow{T, 1, 8}(SVector(-q1_3 / h3,
+                                                                   -q2_3 / h3,
+                                                                   T(0),
+                                                                   q3_4 / h3,
+                                                                   q3_5 / h3,
+                                                                   q3_6 / h3,
+                                                                   q3_7 / h3,
+                                                                   q3_8 / h3)),
+                         # d4
+                         DerivativeCoefficientRow{T, 1, 8}(SVector(-q1_4 / h4,
+                                                                   -q2_4 / h4,
+                                                                   -q3_4 / h4,
+                                                                   T(0),
+                                                                   q4_5 / h4,
+                                                                   q4_6 / h4,
+                                                                   q4_7 / h4,
+                                                                   q4_8 / h4)),
+                         # d5
+                         DerivativeCoefficientRow{T, 1, 9}(SVector(-q1_5 / h5,
+                                                                   -q2_5 / h5,
+                                                                   -q3_5 / h5,
+                                                                   -q4_5 / h5,
+                                                                   T(0),
+                                                                   q5_6 / h5,
+                                                                   q5_7 / h5,
+                                                                   q5_8 / h5,
+                                                                   upper_coef[4] / h5)),
+                         # d6
+                         DerivativeCoefficientRow{T, 1, 10}(SVector(-q1_6 / h6,
+                                                                    -q2_6 / h6,
+                                                                    -q3_6 / h6,
+                                                                    -q4_6 / h6,
+                                                                    -q5_6 / h6,
+                                                                    T(0),
+                                                                    q6_7 / h6,
+                                                                    q6_8 / h6,
+                                                                    upper_coef[3] / h6,
+                                                                    upper_coef[4] / h6)),
+                         # d7
+                         DerivativeCoefficientRow{T, 1, 11}(SVector(-q1_7 / h7,
+                                                                    -q2_7 / h7,
+                                                                    -q3_7 / h7,
+                                                                    -q4_7 / h7,
+                                                                    -q5_7 / h7,
+                                                                    -q6_7 / h7,
+                                                                    T(0),
+                                                                    q7_8 / h7,
+                                                                    upper_coef[2] / h7,
+                                                                    upper_coef[3] / h7,
+                                                                    upper_coef[4] / h7)),
+                         # d8
+                         DerivativeCoefficientRow{T, 1, 12}(SVector(-q1_8 / h8,
+                                                                    -q2_8 / h8,
+                                                                    -q3_8 / h8,
+                                                                    -q4_8 / h8,
+                                                                    -q5_8 / h8,
+                                                                    -q6_8 / h8,
+                                                                    -q7_8 / h8,
+                                                                    T(0),
+                                                                    upper_coef[1] / h8,
+                                                                    upper_coef[2] / h8,
+                                                                    upper_coef[3] / h8,
+                                                                    upper_coef[4] / h8)))
+        right_boundary = .-left_boundary
         right_weights = left_weights
         left_boundary_derivatives = Tuple{}()
         right_boundary_derivatives = left_boundary_derivatives
@@ -283,146 +362,201 @@ function first_derivative_coefficients(source::MattssonAlmquistVanDerWeide2018Ac
                                lower_coef, central_coef, upper_coef,
                                left_weights, right_weights, mode, 1, order, source)
     elseif order == 10
-        left_boundary = (
-                         # d1
-                         DerivativeCoefficientRow{T, 1, 10}(SVector(T(-5.0),
-                                                                    T(6.7548747038001995),
-                                                                    T(-2.6691978151545994),
-                                                                    T(1.4438714982129999),
-                                                                    T(-0.7727367375076),
-                                                                    T(0.25570078343005),
-                                                                    T(0.042808774693299),
-                                                                    T(-0.082902108933389),
-                                                                    T(0.032031176427907995),
-                                                                    T(-0.0044502749689555995))),
-                         # d2
-                         DerivativeCoefficientRow{T, 1, 10}(SVector(T(-1.145265719198745),
-                                                                    T(0),
-                                                                    T(1.6131685230292827),
-                                                                    T(-0.7195954106367713),
-                                                                    T(0.3651840332042441),
-                                                                    T(-0.12197141381091767),
-                                                                    T(-0.01399423475053903),
-                                                                    T(0.03379174976808331),
-                                                                    T(-0.013128541778312972),
-                                                                    T(0.0018110141736784769))),
-                         # d3
-                         DerivativeCoefficientRow{T, 1, 10}(SVector(T(0.27900977459917853),
-                                                                    T(-0.9945564383180177),
-                                                                    T(0),
-                                                                    T(1.004253824704819),
-                                                                    T(-0.4116222831605484),
-                                                                    T(0.13904608960593332),
-                                                                    T(8.487839079429473e-05),
-                                                                    T(-0.024930033516808243),
-                                                                    T(0.010097590982069497),
-                                                                    T(-0.0013834032874125409))),
-                         # d4
-                         DerivativeCoefficientRow{T, 1, 10}(SVector(T(-0.12555079634350264),
-                                                                    T(0.36905436758383703),
-                                                                    T(-0.8354024892044419),
-                                                                    T(0),
-                                                                    T(0.7960759131488463),
-                                                                    T(-0.2481823909255492),
-                                                                    T(0.035998033476551373),
-                                                                    T(0.01500488078728063),
-                                                                    T(-0.008204065636465682),
-                                                                    T(0.0012065471134400296))),
-                         # d5
-                         DerivativeCoefficientRow{T, 1, 10}(SVector(T(0.06879174149957458),
-                                                                    T(-0.1917465511011161),
-                                                                    T(0.3505621014987283),
-                                                                    T(-0.8150200626888124),
-                                                                    T(0),
-                                                                    T(0.7435190828161148),
-                                                                    T(-0.18326819871996888),
-                                                                    T(0.027802276682660717),
-                                                                    T(-0.00018667744812003666),
-                                                                    T(-0.0004537125390638899))),
-                         # d6
-                         DerivativeCoefficientRow{T, 1, 11}(SVector(T(-0.02525933759067232),
-                                                                    T(0.07106552895046016),
-                                                                    T(-0.1314044342558119),
-                                                                    T(0.28194859492566227),
-                                                                    T(-0.8250443110814595),
-                                                                    T(0),
-                                                                    T(0.8006147214131956),
-                                                                    T(-0.2161330773414056),
-                                                                    T(0.052333431144975136),
-                                                                    T(-0.008905122105668357),
-                                                                    T(0.0007840059407332452))),
-                         # d7
-                         DerivativeCoefficientRow{T, 1, 12}(SVector(T(-0.004286144167448658),
-                                                                    T(0.008264073453404727),
-                                                                    T(-8.130035783403134e-05),
-                                                                    T(-0.04144974144338818),
-                                                                    T(0.2061182017256204),
-                                                                    T(-0.8114609971447189),
-                                                                    T(0),
-                                                                    T(0.8288973712486651),
-                                                                    T(-0.23611473523103743),
-                                                                    T(0.05925148483279516),
-                                                                    T(-0.00993284012614424),
-                                                                    T(0.0007946272100915392))),
-                         # d8
-                         DerivativeCoefficientRow{T, 1, 13}(SVector(T(0.008289486953575544),
-                                                                    T(-0.01992892123103868),
-                                                                    T(0.023847687855928824),
-                                                                    T(-0.01725455228860255),
-                                                                    T(-0.031227534064274177),
-                                                                    T(0.2187728437910129),
-                                                                    T(-0.8278065503298393),
-                                                                    T(0),
-                                                                    T(0.8329375462609859),
-                                                                    T(-0.23802243145944782),
-                                                                    T(0.05951861162798574),
-                                                                    T(-0.00991976860466429),
-                                                                    T(0.0007935814883731433))),
-                         # d9
-                         DerivativeCoefficientRow{T, 1, 14}(SVector(T(-0.003203103055575049),
-                                                                    T(0.007743290435329053),
-                                                                    T(-0.009660000293183757),
-                                                                    T(0.00943487651309554),
-                                                                    T(0.00020969357970332722),
-                                                                    T(-0.05297699654295238),
-                                                                    T(0.23582352986415386),
-                                                                    T(-0.8330064950072007),
-                                                                    T(0),
-                                                                    T(0.8333327624136899),
-                                                                    T(-0.23809415379331894),
-                                                                    T(0.059523538448329735),
-                                                                    T(-0.009920589741388288),
-                                                                    T(0.0007936471793110631))),
-                         # d10
-                         DerivativeCoefficientRow{T, 1, 15}(SVector(T(0.0004450281134593904),
-                                                                    T(-0.0010681530559586649),
-                                                                    T(0.0013234597796542534),
-                                                                    T(-0.0013875669869698303),
-                                                                    T(0.0005096554110994863),
-                                                                    T(0.0090146855416246),
-                                                                    T(-0.0591787601986842),
-                                                                    T(0.23804354829738644),
-                                                                    T(-0.8333377120321315),
-                                                                    T(0),
-                                                                    T(0.833334487875908),
-                                                                    T(-0.23809556796454512),
-                                                                    T(0.05952389199113628),
-                                                                    T(-0.00992064866518938),
-                                                                    T(0.0007936518932151504))))
-        right_boundary = .-left_boundary
+        # interior stencil
         upper_coef = SVector(T(5 // 6), T(-5 // 21), T(5 // 84), T(-5 // 504), T(1 // 1260))
         central_coef = zero(T)
         lower_coef = -upper_coef
-        left_weights = SVector(T(1.0000000000000e-01),
-                               T(5.8980851260667e-01),
-                               T(9.5666820955973e-01),
-                               T(1.1500297411596e+00),
-                               T(1.1232986993248e+00),
-                               T(1.0123020150951e+00),
-                               T(9.9877122702527e-01),
-                               T(1.0000873322761e+00),
-                               T(1.0000045540888e+00),
-                               T(9.9999861455083e-01))
+
+        # The diagonal norm `H` and the antisymmetric `Q` of the boundary
+        # closure as printed in the paper, read as exact rational numbers.
+        h1 = T(10000000000000 // 100000000000000)
+        h2 = T(58980851260667 // 100000000000000)
+        h3 = T(95666820955973 // 100000000000000)
+        h4 = T(11500297411596 // 10000000000000)
+        h5 = T(11232986993248 // 10000000000000)
+        h6 = T(10123020150951 // 10000000000000)
+        h7 = T(99877122702527 // 100000000000000)
+        h8 = T(10000873322761 // 10000000000000)
+        h9 = T(10000045540888 // 10000000000000)
+        h10 = T(99999861455083 // 100000000000000)
+        left_weights = SVector(h1, h2, h3, h4, h5, h6, h7, h8, h9, h10)
+
+        q1_2 = T(67548747038002 // 100000000000000)
+        q1_3 = T(-26691978151546 // 100000000000000)
+        q1_4 = T(14438714982130 // 100000000000000)
+        q1_5 = T(-77273673750760 // 1000000000000000)
+        q1_6 = T(25570078343005 // 1000000000000000)
+        q1_7 = T(42808774693299 // 10000000000000000)
+        q1_8 = T(-82902108933389 // 10000000000000000)
+        q1_9 = T(32031176427908 // 10000000000000000)
+        q1_10 = T(-44502749689556 // 100000000000000000)
+        q2_3 = T(95146052715180 // 100000000000000)
+        q2_4 = T(-42442349882626 // 100000000000000)
+        q2_5 = T(21538865145190 // 100000000000000)
+        q2_6 = T(-71939778160350 // 1000000000000000)
+        q2_7 = T(-82539187832840 // 10000000000000000)
+        q2_8 = T(19930661669090 // 1000000000000000)
+        q2_9 = T(-77433256989613 // 10000000000000000)
+        q2_10 = T(10681515760869 // 10000000000000000)
+        q3_4 = T(96073770842387 // 100000000000000)
+        q3_5 = T(-39378595264609 // 100000000000000)
+        q3_6 = T(13302097358959 // 100000000000000)
+        q3_7 = T(81200458151489 // 1000000000000000000)
+        q3_8 = T(-23849770528789 // 1000000000000000)
+        q3_9 = T(96600442856829 // 10000000000000000)
+        q3_10 = T(-13234579460680 // 10000000000000000)
+        q4_5 = T(91551097634196 // 100000000000000)
+        q4_6 = T(-28541713079648 // 100000000000000)
+        q4_7 = T(41398809121293 // 1000000000000000)
+        q4_8 = T(17256059167927 // 1000000000000000)
+        q4_9 = T(-94349194803610 // 10000000000000000)
+        q4_10 = T(13875650645663 // 10000000000000000)
+        q5_6 = T(83519401865051 // 100000000000000)
+        q5_7 = T(-20586492924974 // 100000000000000)
+        q5_8 = T(31230261235901 // 1000000000000000)
+        q5_9 = T(-20969453466651 // 100000000000000000)
+        q5_10 = T(-50965470499782 // 100000000000000000)
+        q6_7 = T(81046389580138 // 100000000000000)
+        q6_8 = T(-21879194972141 // 100000000000000)
+        q6_9 = T(52977237804899 // 1000000000000000)
+        q6_10 = T(-90146730522360 // 10000000000000000)
+        q7_8 = T(82787884456005 // 100000000000000)
+        q7_9 = T(-23582460382545 // 100000000000000)
+        q7_10 = T(59178678209520 // 1000000000000000)
+        q8_9 = T(83301028859275 // 100000000000000)
+        q8_10 = T(-23804321850015 // 100000000000000)
+        q9_10 = T(83333655748509 // 100000000000000)
+
+        # `D[i, :] = (Q[i, :] - δ₁ᵢ e₁ᵀ / 2) / H[i, i]`. The entries reaching
+        # into the uniform part of the grid are fixed by the interior stencil,
+        # `Q[i, j] = upper_coef[j - i]`, since `H[j, j] = 1` there.
+        left_boundary = (
+                         # d1
+                         DerivativeCoefficientRow{T, 1, 10}(SVector(-T(1 // 2) / h1,
+                                                                    q1_2 / h1,
+                                                                    q1_3 / h1,
+                                                                    q1_4 / h1,
+                                                                    q1_5 / h1,
+                                                                    q1_6 / h1,
+                                                                    q1_7 / h1,
+                                                                    q1_8 / h1,
+                                                                    q1_9 / h1,
+                                                                    q1_10 / h1)),
+                         # d2
+                         DerivativeCoefficientRow{T, 1, 10}(SVector(-q1_2 / h2,
+                                                                    T(0),
+                                                                    q2_3 / h2,
+                                                                    q2_4 / h2,
+                                                                    q2_5 / h2,
+                                                                    q2_6 / h2,
+                                                                    q2_7 / h2,
+                                                                    q2_8 / h2,
+                                                                    q2_9 / h2,
+                                                                    q2_10 / h2)),
+                         # d3
+                         DerivativeCoefficientRow{T, 1, 10}(SVector(-q1_3 / h3,
+                                                                    -q2_3 / h3,
+                                                                    T(0),
+                                                                    q3_4 / h3,
+                                                                    q3_5 / h3,
+                                                                    q3_6 / h3,
+                                                                    q3_7 / h3,
+                                                                    q3_8 / h3,
+                                                                    q3_9 / h3,
+                                                                    q3_10 / h3)),
+                         # d4
+                         DerivativeCoefficientRow{T, 1, 10}(SVector(-q1_4 / h4,
+                                                                    -q2_4 / h4,
+                                                                    -q3_4 / h4,
+                                                                    T(0),
+                                                                    q4_5 / h4,
+                                                                    q4_6 / h4,
+                                                                    q4_7 / h4,
+                                                                    q4_8 / h4,
+                                                                    q4_9 / h4,
+                                                                    q4_10 / h4)),
+                         # d5
+                         DerivativeCoefficientRow{T, 1, 10}(SVector(-q1_5 / h5,
+                                                                    -q2_5 / h5,
+                                                                    -q3_5 / h5,
+                                                                    -q4_5 / h5,
+                                                                    T(0),
+                                                                    q5_6 / h5,
+                                                                    q5_7 / h5,
+                                                                    q5_8 / h5,
+                                                                    q5_9 / h5,
+                                                                    q5_10 / h5)),
+                         # d6
+                         DerivativeCoefficientRow{T, 1, 11}(SVector(-q1_6 / h6,
+                                                                    -q2_6 / h6,
+                                                                    -q3_6 / h6,
+                                                                    -q4_6 / h6,
+                                                                    -q5_6 / h6,
+                                                                    T(0),
+                                                                    q6_7 / h6,
+                                                                    q6_8 / h6,
+                                                                    q6_9 / h6,
+                                                                    q6_10 / h6,
+                                                                    upper_coef[5] / h6)),
+                         # d7
+                         DerivativeCoefficientRow{T, 1, 12}(SVector(-q1_7 / h7,
+                                                                    -q2_7 / h7,
+                                                                    -q3_7 / h7,
+                                                                    -q4_7 / h7,
+                                                                    -q5_7 / h7,
+                                                                    -q6_7 / h7,
+                                                                    T(0),
+                                                                    q7_8 / h7,
+                                                                    q7_9 / h7,
+                                                                    q7_10 / h7,
+                                                                    upper_coef[4] / h7,
+                                                                    upper_coef[5] / h7)),
+                         # d8
+                         DerivativeCoefficientRow{T, 1, 13}(SVector(-q1_8 / h8,
+                                                                    -q2_8 / h8,
+                                                                    -q3_8 / h8,
+                                                                    -q4_8 / h8,
+                                                                    -q5_8 / h8,
+                                                                    -q6_8 / h8,
+                                                                    -q7_8 / h8,
+                                                                    T(0),
+                                                                    q8_9 / h8,
+                                                                    q8_10 / h8,
+                                                                    upper_coef[3] / h8,
+                                                                    upper_coef[4] / h8,
+                                                                    upper_coef[5] / h8)),
+                         # d9
+                         DerivativeCoefficientRow{T, 1, 14}(SVector(-q1_9 / h9,
+                                                                    -q2_9 / h9,
+                                                                    -q3_9 / h9,
+                                                                    -q4_9 / h9,
+                                                                    -q5_9 / h9,
+                                                                    -q6_9 / h9,
+                                                                    -q7_9 / h9,
+                                                                    -q8_9 / h9,
+                                                                    T(0),
+                                                                    q9_10 / h9,
+                                                                    upper_coef[2] / h9,
+                                                                    upper_coef[3] / h9,
+                                                                    upper_coef[4] / h9,
+                                                                    upper_coef[5] / h9)),
+                         # d10
+                         DerivativeCoefficientRow{T, 1, 15}(SVector(-q1_10 / h10,
+                                                                    -q2_10 / h10,
+                                                                    -q3_10 / h10,
+                                                                    -q4_10 / h10,
+                                                                    -q5_10 / h10,
+                                                                    -q6_10 / h10,
+                                                                    -q7_10 / h10,
+                                                                    -q8_10 / h10,
+                                                                    -q9_10 / h10,
+                                                                    T(0),
+                                                                    upper_coef[1] / h10,
+                                                                    upper_coef[2] / h10,
+                                                                    upper_coef[3] / h10,
+                                                                    upper_coef[4] / h10,
+                                                                    upper_coef[5] / h10)))
+        right_boundary = .-left_boundary
         right_weights = left_weights
         left_boundary_derivatives = Tuple{}()
         right_boundary_derivatives = left_boundary_derivatives
@@ -432,201 +566,277 @@ function first_derivative_coefficients(source::MattssonAlmquistVanDerWeide2018Ac
                                lower_coef, central_coef, upper_coef,
                                left_weights, right_weights, mode, 1, order, source)
     elseif order == 12
-        left_boundary = (
-                         # d1
-                         DerivativeCoefficientRow{T, 1, 12}(SVector(T(-4.9999999999945),
-                                                                    T(6.759756072834865),
-                                                                    T(-2.6859785384386456),
-                                                                    T(1.4850302678886664),
-                                                                    T(-0.8797668958605722),
-                                                                    T(0.41833336322566983),
-                                                                    T(-0.022216684976968562),
-                                                                    T(-0.15910034062004497),
-                                                                    T(0.11296706376576574),
-                                                                    T(-0.031823678285095),
-                                                                    T(0.0024843594063621672),
-                                                                    T(0.00031501105449793353))),
-                         # d2
-                         DerivativeCoefficientRow{T, 1, 12}(SVector(T(-1.133878739795504),
-                                                                    T(0),
-                                                                    T(1.6006385315463008),
-                                                                    T(-0.7278109374153),
-                                                                    T(0.4073668318541633),
-                                                                    T(-0.1919522197081608),
-                                                                    T(0.01441600463041044),
-                                                                    T(0.06758299403605063),
-                                                                    T(-0.04930937471945772),
-                                                                    T(0.014358815854147503),
-                                                                    T(-0.0013105174583630138),
-                                                                    T(-0.00010138882428701446))),
-                         # d3
-                         DerivativeCoefficientRow{T, 1, 12}(SVector(T(0.2711310314931667),
-                                                                    T(-0.9632396863595133),
-                                                                    T(0),
-                                                                    T(0.9798054671227233),
-                                                                    T(-0.4361280311564467),
-                                                                    T(0.19734348986009648),
-                                                                    T(-0.024637069564437473),
-                                                                    T(-0.0562629438518241),
-                                                                    T(0.044185160662556816),
-                                                                    T(-0.013857122245420829),
-                                                                    T(0.0016424760940084238),
-                                                                    T(1.7227945090714997e-05))),
-                         # d4
-                         DerivativeCoefficientRow{T, 1, 12}(SVector(T(-0.11868327563344944),
-                                                                    T(0.3467665588803532),
-                                                                    T(-0.7757421491913473),
-                                                                    T(0),
-                                                                    T(0.7622418166744341),
-                                                                    T(-0.288621888399084),
-                                                                    T(0.05574347066982373),
-                                                                    T(0.05207681345049272),
-                                                                    T(-0.0482121617771465),
-                                                                    T(0.01693413077233541),
-                                                                    T(-0.002607993862528182),
-                                                                    T(0.00010467841611625528))),
-                         # d5
-                         DerivativeCoefficientRow{T, 1, 12}(SVector(T(0.06606503742874865),
-                                                                    T(-0.18237031445286608),
-                                                                    T(0.3244452213849524),
-                                                                    T(-0.7162136949092276),
-                                                                    T(0),
-                                                                    T(0.6659028611067349),
-                                                                    T(-0.15989349236956088),
-                                                                    T(-0.03457094585658544),
-                                                                    T(0.055823767717079045),
-                                                                    T(-0.023442523987137517),
-                                                                    T(0.0045987060965823005),
-                                                                    T(-0.00034462215871980254))),
-                         # d6
-                         DerivativeCoefficientRow{T, 1, 12}(SVector(T(-0.034591944922016164),
-                                                                    T(0.09462590138418898),
-                                                                    T(-0.16165851858356986),
-                                                                    T(0.298625935872379),
-                                                                    T(-0.733262187918924),
-                                                                    T(0),
-                                                                    T(0.6405260960270657),
-                                                                    T(-0.08773024322054244),
-                                                                    T(-0.03708955639583118),
-                                                                    T(0.02682168402477549),
-                                                                    T(-0.00697800416318577),
-                                                                    T(0.000710837895660168))),
-                         # d7
-                         DerivativeCoefficientRow{T, 1, 13}(SVector(T(0.002170341739577727),
-                                                                    T(-0.00839572473429305),
-                                                                    T(0.023843018046744612),
-                                                                    T(-0.06813788549696756),
-                                                                    T(0.20800586709547958),
-                                                                    T(-0.7567165203313853),
-                                                                    T(0),
-                                                                    T(0.7303098191800412),
-                                                                    T(-0.15367354059576246),
-                                                                    T(0.02590498912156464),
-                                                                    T(-0.0042177895762469655),
-                                                                    T(0.001083633560299047),
-                                                                    T(-0.00017620800905153805))),
-                         # d8
-                         DerivativeCoefficientRow{T, 1, 14}(SVector(T(0.015960267582207317),
-                                                                    T(-0.04041763512118102),
-                                                                    T(0.05591326108740171),
-                                                                    T(-0.0653671036511215),
-                                                                    T(0.04618237373980181),
-                                                                    T(0.1064304537119561),
-                                                                    T(-0.749941406387904),
-                                                                    T(0),
-                                                                    T(0.8123138782352943),
-                                                                    T(-0.23643237381439314),
-                                                                    T(0.06959217898439275),
-                                                                    T(-0.01665855318106881),
-                                                                    T(0.00260560350227165),
-                                                                    T(-0.00018094468765775346))),
-                         # d9
-                         DerivativeCoefficientRow{T, 1, 15}(SVector(T(-0.011291324294686406),
-                                                                    T(0.02938237841605001),
-                                                                    T(-0.043751484213130194),
-                                                                    T(0.060296961351895356),
-                                                                    T(-0.07430330232271287),
-                                                                    T(0.04483242188727414),
-                                                                    T(0.1572328446385835),
-                                                                    T(-0.8093714006273262),
-                                                                    T(0),
-                                                                    T(0.847253901732678),
-                                                                    T(-0.26357030849911345),
-                                                                    T(0.07872207124722692),
-                                                                    T(-0.017848635191085194),
-                                                                    T(0.002596165118703301),
-                                                                    T(-0.0001802892443543959))),
-                         # d10
-                         DerivativeCoefficientRow{T, 1, 16}(SVector(T(0.003182570944036913),
-                                                                    T(-0.008560729139505266),
-                                                                    T(0.013728531302185184),
-                                                                    T(-0.021190266010048045),
-                                                                    T(0.031219649139547282),
-                                                                    T(-0.03243853867222733),
-                                                                    T(-0.02651931283756494),
-                                                                    T(0.23570326685083723),
-                                                                    T(-0.847711852715774),
-                                                                    T(0),
-                                                                    T(0.8563724042616903),
-                                                                    T(-0.2677147670769988),
-                                                                    T(0.07937014486364655),
-                                                                    T(-0.017858282594320474),
-                                                                    T(0.0025975683773557055),
-                                                                    T(-0.000180386692871924))),
-                         # d11
-                         DerivativeCoefficientRow{T, 1, 17}(SVector(T(-0.00024843437244633735),
-                                                                    T(0.0007812759969814333),
-                                                                    T(-0.0016271201664504666),
-                                                                    T(0.0032632444264972704),
-                                                                    T(-0.0061239106295712985),
-                                                                    T(0.008438708868428983),
-                                                                    T(0.004317509501591903),
-                                                                    T(-0.06937270590083615),
-                                                                    T(0.2636942764563665),
-                                                                    T(-0.8563123442468437),
-                                                                    T(0),
-                                                                    T(0.8571203917272725),
-                                                                    T(-0.2678554520754763),
-                                                                    T(0.07936457839273371),
-                                                                    T(-0.017857030138365083),
-                                                                    T(0.0025973862019440124),
-                                                                    T(-0.00018037404180166753))),
-                         # d12
-                         DerivativeCoefficientRow{T, 1, 18}(SVector(T(-3.150111604262639e-05),
-                                                                    T(6.0444201580289515e-05),
-                                                                    T(-1.7066990112005393e-05),
-                                                                    T(-0.00013097942213909975),
-                                                                    T(0.0004589224203513191),
-                                                                    T(-0.0008596432153942689),
-                                                                    T(-0.0011092609562906976),
-                                                                    T(0.016606127453276304),
-                                                                    T(-0.07875962110999503),
-                                                                    T(0.2676977712150535),
-                                                                    T(-0.8571260903445119),
-                                                                    T(0),
-                                                                    T(0.8571431453721541),
-                                                                    T(-0.26785723292879815),
-                                                                    T(0.07936510605297722),
-                                                                    T(-0.017857148861919876),
-                                                                    T(0.0025974034708247094),
-                                                                    T(-0.0001803752410294937))))
-        right_boundary = .-left_boundary
+        # interior stencil
         upper_coef = SVector(T(6 // 7), T(-15 // 56), T(5 // 63), T(-1 // 56), T(1 // 385),
                              T(-1 // 5544))
         central_coef = zero(T)
         lower_coef = -upper_coef
-        left_weights = SVector(T(1.0000000000011e-01),
-                               T(5.9616216757547e-01),
-                               T(9.9065699844442e-01),
-                               T(1.2512548713913e+00),
-                               T(1.3316678989403e+00),
-                               T(1.2093375037721e+00),
-                               T(1.0236491595704e+00),
-                               T(9.9685258909811e-01),
-                               T(1.0004766563923e+00),
-                               T(9.9993617879146e-01),
-                               T(1.0000063122914e+00),
-                               T(9.9999966373260e-01))
+
+        # The diagonal norm `H` and the antisymmetric `Q` of the boundary
+        # closure as printed in the paper, read as exact rational numbers.
+        h1 = T(10000000000011 // 100000000000000)
+        h2 = T(59616216757547 // 100000000000000)
+        h3 = T(99065699844442 // 100000000000000)
+        h4 = T(12512548713913 // 10000000000000)
+        h5 = T(13316678989403 // 10000000000000)
+        h6 = T(12093375037721 // 10000000000000)
+        h7 = T(10236491595704 // 10000000000000)
+        h8 = T(99685258909811 // 100000000000000)
+        h9 = T(10004766563923 // 10000000000000)
+        h10 = T(99993617879146 // 100000000000000)
+        h11 = T(10000063122914 // 10000000000000)
+        h12 = T(99999966373260 // 100000000000000)
+        left_weights = SVector(h1, h2, h3, h4, h5, h6, h7, h8, h9, h10, h11, h12)
+
+        q1_2 = T(67597560728423 // 100000000000000)
+        q1_3 = T(-26859785384416 // 100000000000000)
+        q1_4 = T(14850302678903 // 100000000000000)
+        q1_5 = T(-87976689586154 // 1000000000000000)
+        q1_6 = T(41833336322613 // 1000000000000000)
+        q1_7 = T(-22216684976993 // 10000000000000000)
+        q1_8 = T(-15910034062022 // 1000000000000000)
+        q1_9 = T(11296706376589 // 1000000000000000)
+        q1_10 = T(-31823678285130 // 10000000000000000)
+        q1_11 = T(24843594063649 // 100000000000000000)
+        q1_12 = T(31501105449828 // 1000000000000000000)
+        q2_3 = T(95424013647146 // 100000000000000)
+        q2_4 = T(-43389334603464 // 100000000000000)
+        q2_5 = T(24285669347653 // 100000000000000)
+        q2_6 = T(-11443465137214 // 100000000000000)
+        q2_7 = T(85942765682435 // 10000000000000000)
+        q2_8 = T(40290424215772 // 1000000000000000)
+        q2_9 = T(-29396383714543 // 1000000000000000)
+        q2_10 = T(85601827834256 // 10000000000000000)
+        q2_11 = T(-78128092862319 // 100000000000000000)
+        q2_12 = T(-60444181254875 // 1000000000000000000)
+        q3_4 = T(97065114311923 // 100000000000000)
+        q3_5 = T(-43205328628292 // 100000000000000)
+        q3_6 = T(19549970932735 // 100000000000000)
+        q3_7 = T(-24406885385172 // 1000000000000000)
+        q3_8 = T(-55737279079895 // 1000000000000000)
+        q3_9 = T(43772338637753 // 1000000000000000)
+        q3_10 = T(-13727655130726 // 1000000000000000)
+        q3_11 = T(16271304373071 // 10000000000000000)
+        q3_12 = T(17066984372933 // 1000000000000000000)
+        q4_5 = T(95375878629204 // 100000000000000)
+        q4_6 = T(-36113954384951 // 100000000000000)
+        q4_7 = T(69749289223875 // 1000000000000000)
+        q4_8 = T(65161366516465 // 1000000000000000)
+        q4_9 = T(-60325702283960 // 1000000000000000)
+        q4_10 = T(21188913621662 // 1000000000000000)
+        q4_11 = T(-32632650250470 // 10000000000000000)
+        q4_12 = T(13097937809499 // 100000000000000000)
+        q5_6 = T(88676146394834 // 100000000000000)
+        q5_7 = T(-21292503103800 // 100000000000000)
+        q5_8 = T(-46037018833218 // 1000000000000000)
+        q5_9 = T(74338719466734 // 1000000000000000)
+        q5_10 = T(-31217656663809 // 1000000000000000)
+        q5_11 = T(61239492854797 // 10000000000000000)
+        q5_12 = T(-45892226603067 // 100000000000000000)
+        q6_7 = T(77461223007026 // 100000000000000)
+        q6_8 = T(-10609547334165 // 100000000000000)
+        q6_9 = T(-44853791547749 // 1000000000000000)
+        q6_10 = T(32436468405486 // 1000000000000000)
+        q6_11 = T(-84387621360184 // 10000000000000000)
+        q6_12 = T(85964292632428 // 100000000000000000)
+        q7_8 = T(74758103262966 // 100000000000000)
+        q7_9 = T(-15730779067906 // 100000000000000)
+        q7_10 = T(26517620342970 // 1000000000000000)
+        q7_11 = T(-43175367549700 // 10000000000000000)
+        q7_12 = T(11092605832824 // 10000000000000000)
+        q8_9 = T(80975719267918 // 100000000000000)
+        q8_10 = T(-23568822398349 // 100000000000000)
+        q8_11 = T(69373143801571 // 1000000000000000)
+        q8_12 = T(-16606121869177 // 1000000000000000)
+        q9_10 = T(84765775072084 // 100000000000000)
+        q9_11 = T(-26369594097148 // 100000000000000)
+        q9_12 = T(78759594625702 // 1000000000000000)
+        q10_11 = T(85631774953989 // 100000000000000)
+        q10_12 = T(-26769768119702 // 100000000000000)
+        q11_12 = T(85712580212095 // 100000000000000)
+
+        # `D[i, :] = (Q[i, :] - δ₁ᵢ e₁ᵀ / 2) / H[i, i]`. The entries reaching
+        # into the uniform part of the grid are fixed by the interior stencil,
+        # `Q[i, j] = upper_coef[j - i]`, since `H[j, j] = 1` there.
+        left_boundary = (
+                         # d1
+                         DerivativeCoefficientRow{T, 1, 12}(SVector(-T(1 // 2) / h1,
+                                                                    q1_2 / h1,
+                                                                    q1_3 / h1,
+                                                                    q1_4 / h1,
+                                                                    q1_5 / h1,
+                                                                    q1_6 / h1,
+                                                                    q1_7 / h1,
+                                                                    q1_8 / h1,
+                                                                    q1_9 / h1,
+                                                                    q1_10 / h1,
+                                                                    q1_11 / h1,
+                                                                    q1_12 / h1)),
+                         # d2
+                         DerivativeCoefficientRow{T, 1, 12}(SVector(-q1_2 / h2,
+                                                                    T(0),
+                                                                    q2_3 / h2,
+                                                                    q2_4 / h2,
+                                                                    q2_5 / h2,
+                                                                    q2_6 / h2,
+                                                                    q2_7 / h2,
+                                                                    q2_8 / h2,
+                                                                    q2_9 / h2,
+                                                                    q2_10 / h2,
+                                                                    q2_11 / h2,
+                                                                    q2_12 / h2)),
+                         # d3
+                         DerivativeCoefficientRow{T, 1, 12}(SVector(-q1_3 / h3,
+                                                                    -q2_3 / h3,
+                                                                    T(0),
+                                                                    q3_4 / h3,
+                                                                    q3_5 / h3,
+                                                                    q3_6 / h3,
+                                                                    q3_7 / h3,
+                                                                    q3_8 / h3,
+                                                                    q3_9 / h3,
+                                                                    q3_10 / h3,
+                                                                    q3_11 / h3,
+                                                                    q3_12 / h3)),
+                         # d4
+                         DerivativeCoefficientRow{T, 1, 12}(SVector(-q1_4 / h4,
+                                                                    -q2_4 / h4,
+                                                                    -q3_4 / h4,
+                                                                    T(0),
+                                                                    q4_5 / h4,
+                                                                    q4_6 / h4,
+                                                                    q4_7 / h4,
+                                                                    q4_8 / h4,
+                                                                    q4_9 / h4,
+                                                                    q4_10 / h4,
+                                                                    q4_11 / h4,
+                                                                    q4_12 / h4)),
+                         # d5
+                         DerivativeCoefficientRow{T, 1, 12}(SVector(-q1_5 / h5,
+                                                                    -q2_5 / h5,
+                                                                    -q3_5 / h5,
+                                                                    -q4_5 / h5,
+                                                                    T(0),
+                                                                    q5_6 / h5,
+                                                                    q5_7 / h5,
+                                                                    q5_8 / h5,
+                                                                    q5_9 / h5,
+                                                                    q5_10 / h5,
+                                                                    q5_11 / h5,
+                                                                    q5_12 / h5)),
+                         # d6
+                         DerivativeCoefficientRow{T, 1, 12}(SVector(-q1_6 / h6,
+                                                                    -q2_6 / h6,
+                                                                    -q3_6 / h6,
+                                                                    -q4_6 / h6,
+                                                                    -q5_6 / h6,
+                                                                    T(0),
+                                                                    q6_7 / h6,
+                                                                    q6_8 / h6,
+                                                                    q6_9 / h6,
+                                                                    q6_10 / h6,
+                                                                    q6_11 / h6,
+                                                                    q6_12 / h6)),
+                         # d7
+                         DerivativeCoefficientRow{T, 1, 13}(SVector(-q1_7 / h7,
+                                                                    -q2_7 / h7,
+                                                                    -q3_7 / h7,
+                                                                    -q4_7 / h7,
+                                                                    -q5_7 / h7,
+                                                                    -q6_7 / h7,
+                                                                    T(0),
+                                                                    q7_8 / h7,
+                                                                    q7_9 / h7,
+                                                                    q7_10 / h7,
+                                                                    q7_11 / h7,
+                                                                    q7_12 / h7,
+                                                                    upper_coef[6] / h7)),
+                         # d8
+                         DerivativeCoefficientRow{T, 1, 14}(SVector(-q1_8 / h8,
+                                                                    -q2_8 / h8,
+                                                                    -q3_8 / h8,
+                                                                    -q4_8 / h8,
+                                                                    -q5_8 / h8,
+                                                                    -q6_8 / h8,
+                                                                    -q7_8 / h8,
+                                                                    T(0),
+                                                                    q8_9 / h8,
+                                                                    q8_10 / h8,
+                                                                    q8_11 / h8,
+                                                                    q8_12 / h8,
+                                                                    upper_coef[5] / h8,
+                                                                    upper_coef[6] / h8)),
+                         # d9
+                         DerivativeCoefficientRow{T, 1, 15}(SVector(-q1_9 / h9,
+                                                                    -q2_9 / h9,
+                                                                    -q3_9 / h9,
+                                                                    -q4_9 / h9,
+                                                                    -q5_9 / h9,
+                                                                    -q6_9 / h9,
+                                                                    -q7_9 / h9,
+                                                                    -q8_9 / h9,
+                                                                    T(0),
+                                                                    q9_10 / h9,
+                                                                    q9_11 / h9,
+                                                                    q9_12 / h9,
+                                                                    upper_coef[4] / h9,
+                                                                    upper_coef[5] / h9,
+                                                                    upper_coef[6] / h9)),
+                         # d10
+                         DerivativeCoefficientRow{T, 1, 16}(SVector(-q1_10 / h10,
+                                                                    -q2_10 / h10,
+                                                                    -q3_10 / h10,
+                                                                    -q4_10 / h10,
+                                                                    -q5_10 / h10,
+                                                                    -q6_10 / h10,
+                                                                    -q7_10 / h10,
+                                                                    -q8_10 / h10,
+                                                                    -q9_10 / h10,
+                                                                    T(0),
+                                                                    q10_11 / h10,
+                                                                    q10_12 / h10,
+                                                                    upper_coef[3] / h10,
+                                                                    upper_coef[4] / h10,
+                                                                    upper_coef[5] / h10,
+                                                                    upper_coef[6] / h10)),
+                         # d11
+                         DerivativeCoefficientRow{T, 1, 17}(SVector(-q1_11 / h11,
+                                                                    -q2_11 / h11,
+                                                                    -q3_11 / h11,
+                                                                    -q4_11 / h11,
+                                                                    -q5_11 / h11,
+                                                                    -q6_11 / h11,
+                                                                    -q7_11 / h11,
+                                                                    -q8_11 / h11,
+                                                                    -q9_11 / h11,
+                                                                    -q10_11 / h11,
+                                                                    T(0),
+                                                                    q11_12 / h11,
+                                                                    upper_coef[2] / h11,
+                                                                    upper_coef[3] / h11,
+                                                                    upper_coef[4] / h11,
+                                                                    upper_coef[5] / h11,
+                                                                    upper_coef[6] / h11)),
+                         # d12
+                         DerivativeCoefficientRow{T, 1, 18}(SVector(-q1_12 / h12,
+                                                                    -q2_12 / h12,
+                                                                    -q3_12 / h12,
+                                                                    -q4_12 / h12,
+                                                                    -q5_12 / h12,
+                                                                    -q6_12 / h12,
+                                                                    -q7_12 / h12,
+                                                                    -q8_12 / h12,
+                                                                    -q9_12 / h12,
+                                                                    -q10_12 / h12,
+                                                                    -q11_12 / h12,
+                                                                    T(0),
+                                                                    upper_coef[1] / h12,
+                                                                    upper_coef[2] / h12,
+                                                                    upper_coef[3] / h12,
+                                                                    upper_coef[4] / h12,
+                                                                    upper_coef[5] / h12,
+                                                                    upper_coef[6] / h12)))
+        right_boundary = .-left_boundary
         right_weights = left_weights
         left_boundary_derivatives = Tuple{}()
         right_boundary_derivatives = left_boundary_derivatives
