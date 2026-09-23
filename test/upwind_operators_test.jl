@@ -4,7 +4,7 @@ using SummationByPartsOperators
 
 D_test_list = vcat([(Mattsson2017, acc_order) for acc_order in 2:9],
                    [(WilliamsDuru2024, acc_order) for acc_order in 4:7],
-                   [(MattssonNiemeläWinters2026, acc_order) for acc_order in 2:9])
+                   [(MattssonNiemeläWinters2027, acc_order) for acc_order in 2:9])
 
 # check construction of interior part of upwind operators
 @testset "Check interior parts" begin
@@ -40,7 +40,7 @@ D_test_list = vcat([(Mattsson2017, acc_order) for acc_order in 2:9],
         res = M * Dp + Dm' * M
         res[1, 1] += 1
         res[end, end] -= 1
-        if source !== MattssonNiemeläWinters2026
+        if source !== MattssonNiemeläWinters2027
             @test norm(res) < N * eps()
         else
             @test norm(res) < 10 * N * eps()

@@ -13,7 +13,7 @@
 # - `MattssonAlmquistCarpenter2014Optimal` (both the grid points and the
 #   coefficients are truncated decimals)
 # - `MattssonAlmquistVanDerWeide2018Minimal`, `MattssonAlmquistVanDerWeide2018Accurate`
-# - `MattssonNiemeläWinters2026`
+# - `MattssonNiemeläWinters2027`
 # - `Mattsson2012` variable coefficient operators with accuracy order 6
 # - `LegendreDerivativeOperator`, `FourierDerivativeOperator`, and
 #   `function_space_operator`s
@@ -705,7 +705,7 @@ end
     # structural property of the coefficients as they are stored, though, and
     # still holds exactly for most of them. It does not hold exactly for
     # `DienerDorbandSchnetterTiglio2007` with accuracy orders 6 and 8 and for
-    # `MattssonNiemeläWinters2026`, which are not checked here.
+    # `MattssonNiemeläWinters2027`, which are not checked here.
     @testset "MattssonAlmquistCarpenter2014Optimal" begin
         @testset "accuracy order $acc_order" for acc_order in (2, 4, 6)
             D = derivative_operator(MattssonAlmquistCarpenter2014Optimal(), 1, acc_order,
