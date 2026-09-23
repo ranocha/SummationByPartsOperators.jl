@@ -1199,8 +1199,8 @@ end
         # `BoundaryAdaptedGrid` needs a special case if only a single node is
         # left between the two non-uniform parts of the grid. Among the sources
         # using that grid, this happens for the smallest possible grids of
-        # `MattssonNiemeläWinters2027`.
-        D = @test_nowarn upwind_operators(MattssonNiemeläWinters2027,
+        # `MattssonNiemeläWinters2026`.
+        D = @test_nowarn upwind_operators(MattssonNiemeläWinters2026,
                                           derivative_order = 1, accuracy_order = 2,
                                           xmin = 0.0, xmax = 1.0, N = 7)
         @test issorted(grid(D))

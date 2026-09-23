@@ -1,6 +1,6 @@
 
 """
-    MattssonNiemeläWinters2027(version::Symbol)
+    MattssonNiemeläWinters2026(version::Symbol)
 
 Coefficients of the optimized upwind SBP operators with nonuniform grid given in
 - Mattsson, Niemelä, Winters (2027)
@@ -10,10 +10,10 @@ Coefficients of the optimized upwind SBP operators with nonuniform grid given in
 
 You can choose between the different versions `:central`, `:plus`, and `:minus`.
 """
-struct MattssonNiemeläWinters2027 <: SourceOfCoefficients
+struct MattssonNiemeläWinters2026 <: SourceOfCoefficients
     kind::Symbol
 
-    function MattssonNiemeläWinters2027(kind::Symbol)
+    function MattssonNiemeläWinters2026(kind::Symbol)
         if (kind !== :plus) && (kind !== :minus) && (kind !== :central)
             throw(ArgumentError("The only choices are :plus, :minus, and :central, not :$kind."))
         end
@@ -21,7 +21,7 @@ struct MattssonNiemeläWinters2027 <: SourceOfCoefficients
     end
 end
 
-function Base.show(io::IO, source::MattssonNiemeläWinters2027)
+function Base.show(io::IO, source::MattssonNiemeläWinters2026)
     if get(io, :compact, false)
         summary(io, source)
     else
@@ -33,7 +33,7 @@ function Base.show(io::IO, source::MattssonNiemeläWinters2027)
     end
 end
 
-function construct_grid(source::MattssonNiemeläWinters2027, accuracy_order, xmin, xmax, N)
+function construct_grid(source::MattssonNiemeläWinters2026, accuracy_order, xmin, xmax, N)
     T = promote_type(typeof(xmin), typeof(xmax))
 
     if accuracy_order == 2
@@ -75,7 +75,7 @@ function construct_grid(source::MattssonNiemeläWinters2027, accuracy_order, xmi
     BoundaryAdaptedGrid(xmin, xmax, xstart, N)
 end
 
-function first_derivative_coefficients(source::MattssonNiemeläWinters2027,
+function first_derivative_coefficients(source::MattssonNiemeläWinters2026,
                                        order::Int,
                                        T = Float64,
                                        mode = FastMode())
