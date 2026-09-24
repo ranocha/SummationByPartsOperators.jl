@@ -851,6 +851,10 @@ end
 
 Base.size(quot::PeriodicDerivativeOperatorQuotient) = size(quot.num_D)
 grid(quot::PeriodicDerivativeOperatorQuotient) = grid(quot.num_D)
+function integrate(func::Func, u::AbstractVector,
+                   quot::PeriodicDerivativeOperatorQuotient) where {Func}
+    integrate(func, u, quot.num_D)
+end
 
 function Base.show(io::IO, quot::PeriodicDerivativeOperatorQuotient)
     if get(io, :compact, false)
@@ -1078,6 +1082,10 @@ abstract type AbstractFourierViscosity{T} <: AbstractPeriodicDerivativeOperator{
 
 LinearAlgebra.issymmetric(Di::AbstractFourierViscosity) = true
 grid(Di::AbstractFourierViscosity) = grid(Di.D)
+function integrate(func::Func, u::AbstractVector,
+                   Di::AbstractFourierViscosity) where {Func}
+    integrate(func, u, Di.D)
+end
 
 function mul!(dest::AbstractVector{T}, Di::AbstractFourierViscosity{T},
               u::AbstractVector{T}) where {T}
