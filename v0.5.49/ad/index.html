@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Automatic differentiation (AD) · SummationByPartsOperators.jl</title><meta name="title" content="Automatic differentiation (AD) · SummationByPartsOperators.jl"/><meta property="og:title" content="Automatic differentiation (AD) · SummationByPartsOperators.jl"/><meta property="twitter:title" content="Automatic differentiation (AD) · SummationByPartsOperators.jl"/><meta name="description" content="Documentation for SummationByPartsOperators.jl."/><meta property="og:description" content="Documentation for SummationByPartsOperators.jl."/><meta property="twitter:description" content="Documentation for SummationByPartsOperators.jl."/><meta property="og:url" content="https://ranocha.github.io/SummationByPartsOperators.jl/stable/ad/"/><meta property="twitter:url" content="https://ranocha.github.io/SummationByPartsOperators.jl/stable/ad/"/><link rel="canonical" href="https://ranocha.github.io/SummationByPartsOperators.jl/stable/ad/"/><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../search_index.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">SummationByPartsOperators.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><a class="tocitem" href="../introduction/">Introduction</a></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="../tutorials/constant_linear_advection/">Linear advection equation with constant coefficients</a></li><li><a class="tocitem" href="../tutorials/advection_diffusion/">Linear advection diffusion equation with periodic boundary conditions</a></li><li><a class="tocitem" href="../tutorials/variable_linear_advection/">Linear advection equation with variable coefficients</a></li><li><a class="tocitem" href="../tutorials/wave_equation/">Wave equation</a></li><li><a class="tocitem" href="../tutorials/kdv/">Korteweg-de Vries equation</a></li></ul></li><li class="is-active"><a class="tocitem" href>Automatic differentiation (AD)</a><ul class="internal"><li><a class="tocitem" href="#Jacobian-vector-products"><span>Jacobian-vector products</span></a></li><li><a class="tocitem" href="#Reproducibility"><span>Reproducibility</span></a></li></ul></li><li><a class="tocitem" href="../applications/">Applications &amp; references</a></li><li><a class="tocitem" href="../benchmarks/">Benchmarks</a></li><li><a class="tocitem" href="../api_reference/">API reference</a></li><li><a class="tocitem" href="../contributing/">Contributing</a></li><li><a class="tocitem" href="../license/">License</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Automatic differentiation (AD)</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Automatic differentiation (AD)</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/ranocha/SummationByPartsOperators.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/ranocha/SummationByPartsOperators.jl/blob/main/docs/src/ad.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Automatic/algorithmic-differentiation-(AD)"><a class="docs-heading-anchor" href="#Automatic/algorithmic-differentiation-(AD)">Automatic/algorithmic differentiation (AD)</a><a id="Automatic/algorithmic-differentiation-(AD)-1"></a><a class="docs-heading-anchor-permalink" href="#Automatic/algorithmic-differentiation-(AD)" title="Permalink"></a></h1><p><a href="https://github.com/ranocha/SummationByPartsOperators.jl">SummationByPartsOperators.jl</a> is written using generic Julia code whenever possible. This means that standard AD tools just work. For example, computing the Jacobian using <a href="https://github.com/JuliaDiff/ForwardDiff.jl">ForwardDiff.jl</a> is possible using the following code.</p><pre><code class="language-julia-repl hljs">julia&gt; using SummationByPartsOperators, ForwardDiff
+
+julia&gt; D = periodic_derivative_operator(derivative_order = 1, accuracy_order = 2,
+                                        xmin = 0.0, xmax = 1.0, N = 8)
+Periodic first-derivative operator of order 2 on a grid in [0.0, 1.0] using 8 nodes,
+stencils with 1 nodes to the left, 1 nodes to the right, and coefficients of Fornberg (1998)
+  Calculation of Weights in Finite Difference Formulas.
+  SIAM Rev. 40.3, pp. 685-691.
+
+julia&gt; u = rand(size(D, 2));
+
+julia&gt; J = ForwardDiff.jacobian(u -&gt; D * u, u)
+8×8 Matrix{Float64}:
+  0.0   4.0   0.0   0.0   0.0   0.0   0.0  -4.0
+ -4.0   0.0   4.0   0.0   0.0   0.0   0.0   0.0
+  0.0  -4.0   0.0   4.0   0.0   0.0   0.0   0.0
+  0.0   0.0  -4.0   0.0   4.0   0.0   0.0   0.0
+  0.0   0.0   0.0  -4.0   0.0   4.0   0.0   0.0
+  0.0   0.0   0.0   0.0  -4.0   0.0   4.0   0.0
+  0.0   0.0   0.0   0.0   0.0  -4.0   0.0   4.0
+  4.0   0.0   0.0   0.0   0.0   0.0  -4.0   0.0
+
+julia&gt; J ≈ Matrix(D)
+true</code></pre><p>This works of course also for non-periodic SBP operators, e.g.,</p><pre><code class="language-julia-repl hljs">julia&gt; using SummationByPartsOperators, ForwardDiff
+
+julia&gt; D = derivative_operator(MattssonNordström2004(),
+                               derivative_order = 1, accuracy_order = 2,
+                               xmin = 0.0, xmax = 1.0, N = 8)
+SBP first-derivative operator of order 2 on a grid in [0.0, 1.0] using 8 nodes
+and coefficients of Mattsson, Nordström (2004)
+  Summation by parts operators for finite difference approximations of second
+    derivatives.
+  Journal of Computational Physics 199, pp. 503-540.
+
+julia&gt; u = rand(size(D, 2));
+
+julia&gt; J = ForwardDiff.jacobian(u -&gt; D * u, u)
+8×8 Matrix{Float64}:
+ -7.0   7.0   0.0   0.0   0.0   0.0   0.0  0.0
+ -3.5   0.0   3.5   0.0   0.0   0.0   0.0  0.0
+  0.0  -3.5   0.0   3.5   0.0   0.0   0.0  0.0
+  0.0   0.0  -3.5   0.0   3.5   0.0   0.0  0.0
+  0.0   0.0   0.0  -3.5   0.0   3.5   0.0  0.0
+  0.0   0.0   0.0   0.0  -3.5   0.0   3.5  0.0
+  0.0   0.0   0.0   0.0   0.0  -3.5   0.0  3.5
+  0.0   0.0   0.0   0.0   0.0   0.0  -7.0  7.0
+
+julia&gt; J ≈ Matrix(D)
+true</code></pre><p>However, this does not work for Fourier derivative operators - and all other operators involving an FFT - since <a href="https://github.com/JuliaMath/FFTW.jl">FFTW.jl</a> cannot handle dual numbers and a simple <code>reinterpret</code> trick does also not help since <a href="https://github.com/JuliaMath/FFTW.jl">FFTW.jl</a> requires unit strides.</p><h2 id="Jacobian-vector-products"><a class="docs-heading-anchor" href="#Jacobian-vector-products">Jacobian-vector products</a><a id="Jacobian-vector-products-1"></a><a class="docs-heading-anchor-permalink" href="#Jacobian-vector-products" title="Permalink"></a></h2><p>There is a nat trick that you can use if you are only interested in Jacobian-vector products. <a href="https://github.com/JuliaDiff/ForwardDiff.jl">ForwardDiff.jl</a> does not offer such a functionality at the time of writing, but Simon Byrne suggested the following implementation.</p><pre><code class="language-julia hljs">using SummationByPartsOperators, ForwardDiff, StructArrays
+
+function StructDual(x::AbstractVector{T}, w::AbstractVector{T}) where {T}
+  @assert length(x) == length(w)
+  # This was the original suggestion. However, it is currently not stable
+  # under broadcasting. Thus, we use a slightly different version.
+  # partials = StructArray{ForwardDiff.Partials{1, T}}(
+  #     (StructArray{Tuple{T}}(
+  #         (w,)
+  #     ),)
+  # )
+  partials = reinterpret(reshape, ForwardDiff.Partials{1, T}, w)
+  duals = StructArray{ForwardDiff.Dual{Nothing, T, 1}}((x, partials))
+  return duals
+end
+
+function ForwardDiff.value(dx::StructArray{D}) where {D &lt;: ForwardDiff.Dual}
+  return dx.value
+end
+
+function ForwardDiff.partials(dx::StructArray{&lt;: ForwardDiff.Dual{Tag, T, 1}}, i) where {Tag, T}
+  # This was the original suggestion. We need to update it (see above).
+  # return getproperty(dx.partials.values, i)
+  @assert i == 1
+  return reinterpret(reshape, T, dx.partials)
+end</code></pre><p>You can use it as follows to compute the Jacobian-vector product</p><p class="math-container">\[J_f(u) \cdot v\]</p><p>for the function <span>$f$</span> given by</p><p class="math-container">\[f(u) = D u.\]</p><pre><code class="language-julia hljs">D = fourier_derivative_operator(xmin = 0.0, xmax = 1.0, N = 8)
+
+u = randn(size(D, 2)); # the point `u` where we want to compute the derivative
+v = randn(size(D, 2)); # the direction `v` in which we want to compute the derivative
+u_v = StructDual(u, v); # combined StructArray containing the value and direction
+
+f_df = D * u_v # compute the function value and its derivative
+
+@assert ForwardDiff.value(f_df) ≈ D * u
+
+@assert ForwardDiff.partials(f_df, 1) ≈ D * v # the Jacobian of `f(u) = D * u` is `D`</code></pre><p>You can of course also use this with nonlinear functions, e.g.,</p><pre><code class="language-julia hljs">f(u, D) = u .* (D * (u.^2))
+
+f_df = f(u_v, D)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">8-element StructArray(::Vector{Float64}, ::Vector{ForwardDiff.Partials{1, Float64}}) with eltype ForwardDiff.Dual{Nothing, Float64, 1}:
+ Dual{Nothing}(-3.4531889453456066,4.013244595782708)
+  Dual{Nothing}(0.47568418331618006,-5.076978809478598)
+ Dual{Nothing}(-2.413721096560831,-9.474406859483267)
+ Dual{Nothing}(-4.147609678059463,13.531859556250684)
+  Dual{Nothing}(3.6572240810489136,-6.502841824196225)
+  Dual{Nothing}(9.141514684363566,28.610365169409803)
+  Dual{Nothing}(8.654554489838072,16.13990075807425)
+ Dual{Nothing}(-0.7730683800110489,-2.9579031236259756)</code></pre><p>The Jacobian of this function is</p><pre><code class="language-julia hljs">using LinearAlgebra
+
+J = Diagonal(D * u.^2) + 2 .* u .* Matrix(D) * Diagonal(u)
+
+@assert ForwardDiff.value(f_df) ≈ f(u, D)
+
+@assert ForwardDiff.partials(f_df, 1) ≈ J * v</code></pre><h2 id="Reproducibility"><a class="docs-heading-anchor" href="#Reproducibility">Reproducibility</a><a id="Reproducibility-1"></a><a class="docs-heading-anchor-permalink" href="#Reproducibility" title="Permalink"></a></h2><p>These results were obtained using the following versions.</p><pre><code class="language-julia hljs">using InteractiveUtils
+versioninfo()
+
+using Pkg
+Pkg.status([&quot;SummationByPartsOperators&quot;, &quot;ForwardDiff&quot;, &quot;StructArrays&quot;],
+           mode=PKGMODE_MANIFEST)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Julia Version 1.6.7
+Commit 3b76b25b64 (2022-07-19 15:11 UTC)
+Platform Info:
+  OS: Linux (x86_64-pc-linux-gnu)
+  CPU: Intel(R) Xeon(R) Platinum 8171M CPU @ 2.60GHz
+  WORD_SIZE: 64
+  LIBM: libopenlibm
+  LLVM: libLLVM-11.0.1 (ORCJIT, skylake-avx512)
+Environment:
+  JULIA_PKG_SERVER_REGISTRY_PREFERENCE = eager
+<span class="sgr32"><span class="sgr1">      Status</span></span> `~/work/SummationByPartsOperators.jl/SummationByPartsOperators.jl/docs/Manifest.toml`
+ <span class="sgr90"> [f6369f11] </span>ForwardDiff v0.10.36
+ <span class="sgr90"> [09ab397b] </span>StructArrays v0.6.16
+ <span class="sgr90"> [9f78cca6] </span>SummationByPartsOperators v0.5.49 `~/work/SummationByPartsOperators.jl/SummationByPartsOperators.jl`</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../tutorials/kdv/">« Korteweg-de Vries equation</a><a class="docs-footer-nextpage" href="../applications/">Applications &amp; references »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="auto">Automatic (OS)</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.0.1 on <span class="colophon-date" title="Thursday 21 September 2023 07:05">Thursday 21 September 2023</span>. Using Julia version 1.6.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
