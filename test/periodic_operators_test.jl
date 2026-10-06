@@ -1565,3 +1565,22 @@ let N = 4
            1//2 -2//1 3//2 0//1
            0//1 1//2 -2//1 3//2]
 end
+
+# The lazy rational operators and quotients inherit the periodic quadrature
+# rule of the derivative operators they are built from.
+for T in (Float32, Float64)
+    xmin = -one(T)
+    xmax = one(T)
+    N = 16
+    D = periodic_derivative_operator(1, 2, xmin, xmax, N)
+    u = sinpi.(grid(D)) .+ 2
+
+    D2 = periodic_derivative_operator(2, 2, xmin, xmax, N)
+    # `PeriodicRationalDerivativeOperator`s and
+    # `PeriodicDerivativeOperatorQuotient`s
+    for lazy in (I + D, inv(I - D^2), D / (I - D^2), D // (I - D2))
+        @test grid(lazy) == grid(D)
+        @test integrate(u, lazy) == integrate(u, D)
+        @test integrate(abs2, u, lazy) == integrate(abs2, u, D)
+    end
+end

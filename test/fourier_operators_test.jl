@@ -199,3 +199,23 @@ for T in (Float32, Float64), filter_type in (ExponentialFilter(),)
         end
     end
 end
+
+# The (super) spectral viscosity operators and the lazy polynomial and rational
+# operators inherit the quadrature rule of the Fourier derivative operator they
+# are built from.
+for T in (Float32, Float64)
+    xmin = -one(T)
+    xmax = one(T)
+    N = 16
+
+    D = fourier_derivative_operator(xmin, xmax, N)
+    u = sinpi.(grid(D)) .+ 2
+
+    for Di in (dissipation_operator(Tadmor1989(), D),
+               dissipation_operator(Tadmor1993(), D, order = 2),
+               I + D, inv(I - D^2))
+        @test grid(Di) == grid(D)
+        @test integrate(u, Di) == integrate(u, D)
+        @test integrate(abs2, u, Di) == integrate(abs2, u, D)
+    end
+end

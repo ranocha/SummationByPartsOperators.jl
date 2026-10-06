@@ -13,6 +13,7 @@
 # - `MattssonAlmquistCarpenter2014Optimal` (both the grid points and the
 #   coefficients are truncated decimals)
 # - `MattssonAlmquistVanDerWeide2018Minimal`, `MattssonAlmquistVanDerWeide2018Accurate`
+# - `StiernströmAlmquistMattsson2023`
 # - `MattssonNiemeläWinters2026`
 # - `Mattsson2012` variable coefficient operators with accuracy order 6
 # - `LegendreDerivativeOperator`, `FourierDerivativeOperator`, and
@@ -803,6 +804,85 @@ end
             @test v == M * u
             scale_by_inverse_mass_matrix!(v, D)
             @test v == u
+        end
+    end
+
+    # The boundary-optimized variable-coefficient second-derivative operators
+    # of Stiernström, Almquist, Mattsson (2023) are assembled from the exactly
+    # stored `H` and `Q` of `MattssonAlmquistVanDerWeide2018Accurate` and from
+    # the truncated decimals of the undivided difference operators entering the
+    # remainder term `R(b)`. The construction
+    # `D₂(b) = D₁ * Diagonal(b) * D₁ - H⁻¹ * R(b)` with symmetric `R(b)` is
+    # purely algebraic, so the SBP property holds exactly for exact `T`
+    # although the order of accuracy does not.
+    @testset "StiernströmAlmquistMattsson2023" begin
+        source = StiernströmAlmquistMattsson2023()
+        reference = MattssonAlmquistVanDerWeide2018Accurate()
+        # The boundary closures occupy `3 * acc_order ÷ 2` nodes at each end
+        # and must not overlap, so more nodes are needed than elsewhere here.
+        nnodes = 37
+        @testset "accuracy order $acc_order" for acc_order in (4, 6, 8, 10, 12)
+            D2 = derivative_operator(source, 2, acc_order, XMIN, XMAX, nnodes)
+            @test eltype(grid(D2)) == RT
+            @test derivative_order(D2) == 2
+            @test accuracy_order(D2) == acc_order
+
+            # Grid, norm, and first derivative are shared with the
+            # boundary-optimized operators these are fully compatible with.
+            D1 = derivative_operator(source, 1, acc_order, XMIN, XMAX, nnodes)
+            D1_reference = derivative_operator(reference, 1, acc_order, XMIN, XMAX, nnodes)
+            @test grid(D1) == grid(D1_reference)
+            @test Matrix(D1) == Matrix(D1_reference)
+            @test mass_matrix(D2) == mass_matrix(D1_reference)
+
+            M = mass_matrix(D2)
+            @test M isa Diagonal
+            @test all(>(0), diag(M))
+            @test diag(M) == reverse(diag(M))
+
+            # Full compatibility: the first derivative at the boundaries is
+            # given by the first and last row of `D₁`.
+            A1 = Matrix(D1)
+            eL, eR = boundary_vectors(D2)
+            dL = derivative_left(D2, Val{1}())
+            dR = derivative_right(D2, Val{1}())
+            @test A1[begin, :] == dL
+            @test A1[end, :] == dR
+
+            x = collect(grid(D2))
+            for bfunc in (one, xi -> 1 + xi^2)
+                D = var_coef_derivative_operator(source, 2, acc_order, XMIN, XMAX, nnodes,
+                                                 bfunc)
+                A = Matrix(D)
+                b = bfunc.(x)
+                @test mass_matrix(D) == M
+
+                # SBP property M D₂(b) = -R(b) + b(xmax) eR dRᵀ - b(xmin) eL dLᵀ
+                # with a symmetric (negative semidefinite) matrix R(b)
+                R = M * A - (last(b) * eR * dR' - first(b) * eL * dL')
+                @test R == R'
+
+                # The operators are centro-symmetric: mirroring the variable
+                # coefficients mirrors the operator exactly.
+                Dm = var_coef_derivative_operator(source, 2, acc_order, XMIN, XMAX, nnodes,
+                                                  bfunc)
+                Dm.b .= reverse(b)
+                @test Matrix(Dm) == A[end:-1:1, end:-1:1]
+            end
+
+            # For `b ≡ 1`, the operator reduces to the constant coefficient one.
+            D = var_coef_derivative_operator(source, 2, acc_order, XMIN, XMAX, nnodes, one)
+            @test Matrix(D) == Matrix(D2)
+
+            # The order of accuracy is not exact since the coefficients of the
+            # paper are truncated decimals, but the rows using only the
+            # equispaced interior stencils annihilate constants exactly.
+            p = acc_order ÷ 2
+            row_sums = Matrix(D2) * ones(RT, nnodes)
+            interior = (3 * p + 1):(nnodes - 3 * p)
+            @test !isempty(interior)
+            @test all(iszero, row_sums[interior])
+            @test all(r -> abs(r) < 1 // 10^8, row_sums)
         end
     end
 end

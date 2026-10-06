@@ -1103,6 +1103,10 @@ See [`dissipation_operator`](@ref).
 end
 
 grid(Di::PeriodicDissipationOperator) = grid(Di.Di)
+function integrate(func::Func, u::AbstractVector,
+                   Di::PeriodicDissipationOperator) where {Func}
+    integrate(func, u, Di.Di)
+end
 derivative_order(Di::PeriodicDissipationOperator) = derivative_order(Di.Di)
 accuracy_order(Di::PeriodicDissipationOperator) = accuracy_order(Di.Di)
 source_of_coefficients(Di::PeriodicDissipationOperator) = MattssonSvärdNordström2004()
@@ -1251,6 +1255,10 @@ end
 
 Base.size(rat::PeriodicRationalDerivativeOperator) = size(rat.D)
 grid(rat::PeriodicRationalDerivativeOperator) = grid(rat.D)
+function integrate(func::Func, u::AbstractVector,
+                   rat::PeriodicRationalDerivativeOperator) where {Func}
+    integrate(func, u, rat.D)
+end
 
 function Base.show(io::IO, rat::PeriodicRationalDerivativeOperator)
     if get(io, :compact, false)
