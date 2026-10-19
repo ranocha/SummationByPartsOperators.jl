@@ -201,3 +201,33 @@ end
         end
     end
 end
+
+@testset "2D tensor product operators with different types of 1D operators" begin
+    D_fd = derivative_operator(MattssonNordström2004(), 1, 4, -1.0, 1.0, 12)
+    D_lgl = legendre_derivative_operator(0.0, 2.0, 6)
+    for (D_1, D_2) in ((D_fd, D_lgl), (D_lgl, D_fd))
+        D_t = tensor_product_operator_2D(D_1, D_2)
+        source = source_of_coefficients(D_t)
+        @test source isa SourceOfCoefficientsCombination{2}
+        @test source.sources ==
+              (source_of_coefficients(D_1), source_of_coefficients(D_2))
+        for compact in (true, false)
+            show(IOContext(devnull, :compact => compact), source)
+            summary(IOContext(devnull, :compact => compact), source)
+        end
+        @test accuracy_order(D_t) == min(accuracy_order(D_1), accuracy_order(D_2))
+
+        M = mass_matrix(D_t)
+        M_1D_1 = mass_matrix(D_1)
+        M_1D_2 = mass_matrix(D_2)
+        @test M ≈ kron(M_1D_1, M_1D_2)
+        @test M * D_t[1] ≈ kron(M_1D_1 * Matrix(D_1), M_1D_2)
+        @test M * D_t[2] ≈ kron(M_1D_1, M_1D_2 * Matrix(D_2))
+        B_x = mass_matrix_boundary(D_t, 1)
+        B_y = mass_matrix_boundary(D_t, 2)
+        @test M * D_t[1] + D_t[1]' * M ≈ B_x
+        @test M * D_t[2] + D_t[2]' * M ≈ B_y
+        @test B_x ≈ Diagonal(kron(mass_matrix_boundary(D_1), M_1D_2))
+        @test B_y ≈ Diagonal(kron(M_1D_1, mass_matrix_boundary(D_2)))
+    end
+end
