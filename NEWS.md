@@ -41,6 +41,14 @@ for human readability.
 
 #### Fixed
 
+- `mass_matrix_boundary(D, dim)` threw an `ArgumentError` for a
+  `MultidimensionalMatrixDerivativeOperator` whose `boundary_indices` contain a
+  node several times, e.g., a corner shared by two boundary faces, although such
+  operators are explicitly allowed. Now, the contributions of all entries of a
+  node are summed, so the result does not depend on the order of the entries
+  and is consistent with `integrate_boundary`. For a `TensorProductOperator`,
+  the result is unchanged; its special method, which selected the entries of the
+  corners based on their position in `boundary_indices`, has been removed.
 - The bandwidths reported for the fourth-order accurate variable-coefficient
   second-derivative operator of `Mattsson2012()` were too small. Thus,
   converting such an operator to a `BandedMatrix` silently dropped some

@@ -201,3 +201,40 @@ end
         end
     end
 end
+
+@testset "Boundary mass matrix with nodes appearing several times" begin
+    # The corners of a tensor product operator appear twice in `boundary_indices`, once for
+    # each adjacent face. The boundary mass matrix must not depend on the order of these
+    # entries, so we build a `MultidimensionalMatrixDerivativeOperator` from the same data
+    # with the boundary entries in reverse order, which also swaps the two entries of each
+    # corner.
+    N_x = 10
+    N_y = 12
+    for acc_order in [2, 4], T in (Float32, Float64)
+        D_1 = derivative_operator(MattssonNordström2004(), 1, acc_order,
+                                  T(0.0), T(1.0), N_x)
+        D_2 = derivative_operator(MattssonNordström2004(), 1, acc_order,
+                                  T(-1.0), T(2.0), N_y)
+        D_t = tensor_product_operator_2D(D_1, D_2)
+        @test length(unique(boundary_indices(D_t))) < length(boundary_indices(D_t))
+
+        perm = reverse(eachindex(D_t.boundary_indices))
+        D_multi = MultidimensionalMatrixDerivativeOperator(grid(D_t),
+                                                           D_t.boundary_indices[perm],
+                                                           D_t.normals[perm],
+                                                           D_t.weights,
+                                                           D_t.weights_boundary[perm],
+                                                           D_t.Ds,
+                                                           accuracy_order(D_t),
+                                                           source_of_coefficients(D_t))
+        M = mass_matrix(D_multi)
+        # boundary integrals clearly nonzero in both directions, so that `≈` is meaningful
+        u = exp.(first.(grid(D_t)) .+ 2 .* last.(grid(D_t)))
+        for dim in 1:2
+            B = mass_matrix_boundary(D_multi, dim)
+            @test B == mass_matrix_boundary(D_t, dim)
+            @test M * D_multi[dim] + D_multi[dim]' * M ≈ B
+            @test integrate_boundary(abs2, u, D_multi, dim) ≈ sum(B * abs2.(u))
+        end
+    end
+end
