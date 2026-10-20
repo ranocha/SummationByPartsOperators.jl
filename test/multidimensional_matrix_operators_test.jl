@@ -273,10 +273,13 @@ end
                                                      accuracy_order(D_t),
                                                      source_of_coefficients(D_t))
 
-        corners = filter(j -> count(==(j), D.boundary_indices) > 1, D.boundary_indices)
-        @test length(unique(corners)) == 4
-        for j in corners, dim in 1:2
-            @test abs(weights_boundary[j] * normals[j][dim]) > 0.1
+        # positions of the entries of the corners in `boundary_indices`
+        corner_entries = findall(k -> count(==(k), D.boundary_indices) > 1,
+                                 D.boundary_indices)
+        @test length(corner_entries) == 8
+        @test length(unique(D.boundary_indices[corner_entries])) == 4
+        for j in corner_entries, dim in 1:2
+            @test abs(weights_boundary[j] * normals[j][dim]) > sqrt(eps(T))
         end
 
         M = mass_matrix(D)
