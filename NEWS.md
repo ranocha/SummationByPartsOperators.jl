@@ -41,6 +41,11 @@ for human readability.
 
 #### Fixed
 
+- `tensor_product_operator_2D(D_x, D_y)` threw a `MethodError` if only one of
+  the 1D operators has a specific source of coefficients, e.g., for a finite
+  difference operator combined with a `LegendreDerivativeOperator`. Now,
+  `SourceOfCoefficientsCombination` accepts any object returned by
+  `source_of_coefficients`.
 - The bandwidths reported for the fourth-order accurate variable-coefficient
   second-derivative operator of `Mattsson2012()` were too small. Thus,
   converting such an operator to a `BandedMatrix` silently dropped some

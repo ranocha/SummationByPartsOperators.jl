@@ -69,15 +69,23 @@ function Base.show(io::IO, D::TensorProductOperator)
 end
 
 """
-    SourceOfCoefficientsCombination(sources::SourceOfCoefficients...)
+    SourceOfCoefficientsCombination(sources...)
 
 Combine multiple sources of coefficients into a single source.
+The `sources` can be any objects returned by [`source_of_coefficients`](@ref),
+e.g., a [`SourceOfCoefficients`](@ref) or the module `SummationByPartsOperators`,
+which is returned for operators without a specific source such as a
+[`LegendreDerivativeOperator`](@ref).
 """
-struct SourceOfCoefficientsCombination{N} <: SourceOfCoefficients
-    sources::NTuple{N, SourceOfCoefficients}
+struct SourceOfCoefficientsCombination{N, Sources <: NTuple{N, Any}} <: SourceOfCoefficients
+    sources::Sources
+
+    function SourceOfCoefficientsCombination(sources::NTuple{N, Any}) where {N}
+        return new{N, typeof(sources)}(sources)
+    end
 end
 
-function SourceOfCoefficientsCombination(sources::SourceOfCoefficients...)
+function SourceOfCoefficientsCombination(sources...)
     return SourceOfCoefficientsCombination(sources)
 end
 
