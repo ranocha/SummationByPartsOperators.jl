@@ -16,11 +16,20 @@ References:
   Review of summation-by-parts schemes for initial-boundary-value problems
   Journal of Computational Physics 268, pp. 17-38, [DOI: 10.1016/j.jcp.2014.02.031](https://doi.org/10.1016/j.jcp.2014.02.031).
 """
-@auto_hash_equals struct TensorProductOperator{Dim, T} <:
+@auto_hash_equals struct TensorProductOperator{Dim, T,
+                                               DMulti <:
+                                               MultidimensionalMatrixDerivativeOperator{Dim,
+                                                                                        T}} <:
                          AbstractMultidimensionalMatrixDerivativeOperator{Dim, T}
-    D_multi::MultidimensionalMatrixDerivativeOperator{Dim, T}
+    D_multi::DMulti
     N_x::Int
     N_y::Int
+
+    function TensorProductOperator(D_multi::MultidimensionalMatrixDerivativeOperator{Dim,
+                                                                                     T},
+                                   N_x::Int, N_y::Int) where {Dim, T}
+        return new{Dim, T, typeof(D_multi)}(D_multi, N_x, N_y)
+    end
 end
 
 # This allows us to treat a `TensorProductOperator` as a `MultidimensionalMatrixDerivativeOperator`.

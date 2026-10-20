@@ -217,6 +217,10 @@ end
                                   T(-1.0), T(2.0), N_y)
         D_t = tensor_product_operator_2D(D_1, D_2)
         @test length(unique(boundary_indices(D_t))) < length(boundary_indices(D_t))
+        # The wrapped operator is concretely typed, so forwarding to it is type stable
+        @test isconcretetype(fieldtype(typeof(D_t), :D_multi))
+        @inferred grid(D_t)
+        @inferred mass_matrix_boundary(D_t, 1)
 
         perm = reverse(eachindex(D_t.boundary_indices))
         D_multi = MultidimensionalMatrixDerivativeOperator(grid(D_t),
