@@ -242,3 +242,58 @@ end
         end
     end
 end
+
+@testset "Boundary mass matrix with several nonzero contributions at corners" begin
+    # We map a tensor product operator on the unit square affinely to a parallelogram,
+    # x = J ξ. Then, the normals of both faces adjacent to a corner have nonzero components
+    # in both directions, i.e., the boundary mass matrix receives two nonzero contributions
+    # at each corner in each direction. By the chain rule ∇_x = J^{-T} ∇_ξ and Nanson's
+    # formula n ds = det(J) J^{-T} n̂ dŝ, the mapped operator satisfies the SBP property.
+    N_x = 9
+    N_y = 10
+    for acc_order in [2, 4], T in (Float32, Float64)
+        D_1 = derivative_operator(MattssonNordström2004(), 1, acc_order,
+                                  zero(T), one(T), N_x)
+        D_2 = derivative_operator(MattssonNordström2004(), 1, acc_order,
+                                  zero(T), one(T), N_y)
+        D_t = tensor_product_operator_2D(D_1, D_2)
+
+        J = SMatrix{2, 2, T}(2, 1, 1, 3)
+        det_J = det(J)
+        J_inv_T = inv(J)'
+        nodes = Ref(J) .* grid(D_t)
+        weights = det_J .* D_t.weights
+        # boundary weight times normal
+        scaled_normals = Ref(det_J * J_inv_T) .* D_t.normals
+        normals = normalize.(scaled_normals)
+        weights_boundary = D_t.weights_boundary .* norm.(scaled_normals)
+        Ds = ntuple(i -> J_inv_T[i, 1] * D_t[1] + J_inv_T[i, 2] * D_t[2], 2)
+        D = MultidimensionalMatrixDerivativeOperator(nodes, D_t.boundary_indices, normals,
+                                                     weights, weights_boundary, Ds,
+                                                     accuracy_order(D_t),
+                                                     source_of_coefficients(D_t))
+
+        corners = filter(j -> count(==(j), D.boundary_indices) > 1, D.boundary_indices)
+        @test length(unique(corners)) == 4
+        for j in corners, dim in 1:2
+            @test abs(weights_boundary[j] * normals[j][dim]) > 0.1
+        end
+
+        M = mass_matrix(D)
+        x = first.(grid(D))
+        y = last.(grid(D))
+        @test D[1] * x ≈ ones(T, length(x))
+        @test D[2] * y ≈ ones(T, length(y))
+        @test maximum(abs, D[1] * y) < 1000 * eps(T)
+        @test maximum(abs, D[2] * x) < 1000 * eps(T)
+        u = exp.(x .- y)
+        for dim in 1:2
+            B = mass_matrix_boundary(D, dim)
+            @test M * D[dim] + D[dim]' * M ≈ B
+            @test B ≈
+                  det_J * (J_inv_T[dim, 1] * mass_matrix_boundary(D_t, 1) +
+                   J_inv_T[dim, 2] * mass_matrix_boundary(D_t, 2))
+            @test integrate_boundary(abs2, u, D, dim) ≈ sum(B * abs2.(u))
+        end
+    end
+end
