@@ -33,11 +33,13 @@ References:
 end
 
 # This allows us to treat a `TensorProductOperator` as a `MultidimensionalMatrixDerivativeOperator`.
+# We use `getfield(D, :D_multi)` instead of `D.D_multi` to avoid calling this method recursively,
+# which makes type inference fail on Julia v1.10 with code coverage enabled.
 function Base.getproperty(D::TensorProductOperator, name::Symbol)
     if name in (:D_multi, :N_x, :N_y)
         return getfield(D, name)
     else
-        return getproperty(D.D_multi, name)
+        return getproperty(getfield(D, :D_multi), name)
     end
 end
 
