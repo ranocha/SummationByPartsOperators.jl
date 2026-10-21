@@ -202,6 +202,105 @@ end
     end
 end
 
+@testset "Boundary mass matrix with nodes appearing several times" begin
+    # The corners of a tensor product operator appear twice in `boundary_indices`, once for
+    # each adjacent face. The boundary mass matrix must not depend on the order of these
+    # entries, so we build a `MultidimensionalMatrixDerivativeOperator` from the same data
+    # with the boundary entries in reverse order, which also swaps the two entries of each
+    # corner.
+    N_x = 10
+    N_y = 12
+    for acc_order in [2, 4], T in (Float32, Float64)
+        D_1 = derivative_operator(MattssonNordström2004(), 1, acc_order,
+                                  T(0.0), T(1.0), N_x)
+        D_2 = derivative_operator(MattssonNordström2004(), 1, acc_order,
+                                  T(-1.0), T(2.0), N_y)
+        D_t = tensor_product_operator_2D(D_1, D_2)
+        @test length(unique(boundary_indices(D_t))) < length(boundary_indices(D_t))
+        # The wrapped operator is concretely typed, so forwarding to it is type stable
+        @test isconcretetype(fieldtype(typeof(D_t), :D_multi))
+        @inferred grid(D_t)
+        @inferred mass_matrix_boundary(D_t, 1)
+
+        perm = reverse(eachindex(D_t.boundary_indices))
+        D_multi = MultidimensionalMatrixDerivativeOperator(grid(D_t),
+                                                           D_t.boundary_indices[perm],
+                                                           D_t.normals[perm],
+                                                           D_t.weights,
+                                                           D_t.weights_boundary[perm],
+                                                           D_t.Ds,
+                                                           accuracy_order(D_t),
+                                                           source_of_coefficients(D_t))
+        M = mass_matrix(D_multi)
+        # boundary integrals clearly nonzero in both directions, so that `≈` is meaningful
+        u = exp.(first.(grid(D_t)) .+ 2 .* last.(grid(D_t)))
+        for dim in 1:2
+            B = mass_matrix_boundary(D_multi, dim)
+            @test B == mass_matrix_boundary(D_t, dim)
+            @test M * D_multi[dim] + D_multi[dim]' * M ≈ B
+            @test integrate_boundary(abs2, u, D_multi, dim) ≈ sum(B * abs2.(u))
+        end
+    end
+end
+
+@testset "Boundary mass matrix with several nonzero contributions at corners" begin
+    # We map a tensor product operator on the unit square affinely to a parallelogram,
+    # x = J ξ. Then, the normals of both faces adjacent to a corner have nonzero components
+    # in both directions, i.e., the boundary mass matrix receives two nonzero contributions
+    # at each corner in each direction. By the chain rule ∇_x = J^{-T} ∇_ξ and Nanson's
+    # formula n ds = det(J) J^{-T} n̂ dŝ, the mapped operator satisfies the SBP property.
+    N_x = 9
+    N_y = 10
+    for acc_order in [2, 4], T in (Float32, Float64)
+        D_1 = derivative_operator(MattssonNordström2004(), 1, acc_order,
+                                  zero(T), one(T), N_x)
+        D_2 = derivative_operator(MattssonNordström2004(), 1, acc_order,
+                                  zero(T), one(T), N_y)
+        D_t = tensor_product_operator_2D(D_1, D_2)
+
+        J = SMatrix{2, 2, T}(2, 1, 1, 3)
+        det_J = det(J)
+        J_inv_T = inv(J)'
+        nodes = Ref(J) .* grid(D_t)
+        weights = det_J .* D_t.weights
+        # boundary weight times normal
+        scaled_normals = Ref(det_J * J_inv_T) .* D_t.normals
+        normals = normalize.(scaled_normals)
+        weights_boundary = D_t.weights_boundary .* norm.(scaled_normals)
+        Ds = ntuple(i -> J_inv_T[i, 1] * D_t[1] + J_inv_T[i, 2] * D_t[2], 2)
+        D = MultidimensionalMatrixDerivativeOperator(nodes, D_t.boundary_indices, normals,
+                                                     weights, weights_boundary, Ds,
+                                                     accuracy_order(D_t),
+                                                     source_of_coefficients(D_t))
+
+        # positions of the entries of the corners in `boundary_indices`
+        corner_entries = findall(k -> count(==(k), D.boundary_indices) > 1,
+                                 D.boundary_indices)
+        @test length(corner_entries) == 8
+        @test length(unique(D.boundary_indices[corner_entries])) == 4
+        for j in corner_entries, dim in 1:2
+            @test abs(weights_boundary[j] * normals[j][dim]) > sqrt(eps(T))
+        end
+
+        M = mass_matrix(D)
+        x = first.(grid(D))
+        y = last.(grid(D))
+        @test D[1] * x ≈ ones(T, length(x))
+        @test D[2] * y ≈ ones(T, length(y))
+        @test maximum(abs, D[1] * y) < 1000 * eps(T)
+        @test maximum(abs, D[2] * x) < 1000 * eps(T)
+        u = exp.(x .- y)
+        for dim in 1:2
+            B = mass_matrix_boundary(D, dim)
+            @test M * D[dim] + D[dim]' * M ≈ B
+            @test B ≈
+                  det_J * (J_inv_T[dim, 1] * mass_matrix_boundary(D_t, 1) +
+                   J_inv_T[dim, 2] * mass_matrix_boundary(D_t, 2))
+            @test integrate_boundary(abs2, u, D, dim) ≈ sum(B * abs2.(u))
+        end
+    end
+end
+
 @testset "2D tensor product operators with different types of 1D operators" begin
     D_fd = derivative_operator(MattssonNordström2004(), 1, 4, -1.0, 1.0, 12)
     D_lgl = legendre_derivative_operator(0.0, 2.0, 6)

@@ -41,6 +41,14 @@ for human readability.
 
 #### Fixed
 
+- `mass_matrix_boundary(D, dim)` threw an `ArgumentError` for a
+  `MultidimensionalMatrixDerivativeOperator` whose `boundary_indices` contain a
+  node several times, e.g., a corner shared by two boundary faces, although such
+  operators are explicitly allowed. Now, the contributions of all entries of a
+  node are summed, so the result does not depend on the order of the entries
+  and is consistent with `integrate_boundary`. For a `TensorProductOperator`,
+  the result is unchanged; its special method, which selected the entries of the
+  corners based on their position in `boundary_indices`, has been removed.
 - `tensor_product_operator_2D(D_x, D_y)` threw a `MethodError` if only one of
   the 1D operators has a specific source of coefficients, e.g., for a finite
   difference operator combined with a `LegendreDerivativeOperator`. Now,

@@ -16,46 +16,31 @@ References:
   Review of summation-by-parts schemes for initial-boundary-value problems
   Journal of Computational Physics 268, pp. 17-38, [DOI: 10.1016/j.jcp.2014.02.031](https://doi.org/10.1016/j.jcp.2014.02.031).
 """
-@auto_hash_equals struct TensorProductOperator{Dim, T} <:
+@auto_hash_equals struct TensorProductOperator{Dim, T,
+                                               DMulti <:
+                                               MultidimensionalMatrixDerivativeOperator{Dim,
+                                                                                        T}} <:
                          AbstractMultidimensionalMatrixDerivativeOperator{Dim, T}
-    D_multi::MultidimensionalMatrixDerivativeOperator{Dim, T}
+    D_multi::DMulti
     N_x::Int
     N_y::Int
+
+    function TensorProductOperator(D_multi::MultidimensionalMatrixDerivativeOperator{Dim,
+                                                                                     T},
+                                   N_x::Int, N_y::Int) where {Dim, T}
+        return new{Dim, T, typeof(D_multi)}(D_multi, N_x, N_y)
+    end
 end
 
 # This allows us to treat a `TensorProductOperator` as a `MultidimensionalMatrixDerivativeOperator`.
+# We use `getfield(D, :D_multi)` instead of `D.D_multi` to avoid calling this method recursively,
+# which makes type inference fail on Julia v1.10 with code coverage enabled.
 function Base.getproperty(D::TensorProductOperator, name::Symbol)
     if name in (:D_multi, :N_x, :N_y)
         return getfield(D, name)
     else
-        return getproperty(D.D_multi, name)
+        return getproperty(getfield(D, :D_multi), name)
     end
-end
-
-function mass_matrix_boundary(D::TensorProductOperator{2}, dim::Int)
-    # boundary_weights contains two weights for each of the four corners. We need to select the correct one based on the dimension.
-    boundary_weights = weights_boundary_scaled(D, dim)
-    boundary_indices = copy(D.boundary_indices)
-    N_x, N_y = D.N_x, D.N_y
-    # This exploits how we construct the tensor product operator in `tensor_product_operator_2D`.
-    if dim == 1
-        corners_x_dir = [N_y + 1, # lower left corner
-            N_x + N_y, # lower right corner
-            N_x + N_y + 1, # upper left corner
-            2 * N_x + N_y] # upper right corner
-        deleteat!(boundary_weights, corners_x_dir)
-        deleteat!(boundary_indices, corners_x_dir)
-    else # dim == 2
-        corners_y_dir = [1, # lower left corner
-            N_y,  # upper left corner
-            2 * N_x + N_y + 1, # lower right corner
-            2 * (N_x + N_y)] # upper right corner
-        deleteat!(boundary_weights, corners_y_dir)
-        deleteat!(boundary_indices, corners_y_dir)
-    end
-    b = zeros(eltype(D), length(D.grid))
-    b[boundary_indices] .= boundary_weights
-    return Diagonal(b)
 end
 
 function Base.show(io::IO, D::TensorProductOperator)
