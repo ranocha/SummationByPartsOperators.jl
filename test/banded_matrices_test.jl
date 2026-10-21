@@ -9,7 +9,7 @@ D_test_list = (MattssonNordström2004(), MattssonSvärdNordström2004(),
                MattssonAlmquistVanDerWeide2018Minimal(),
                MattssonAlmquistVanDerWeide2018Accurate())
 Di_test_list = (MattssonSvärdNordström2004(),)
-D2var_test_list = (Mattsson2012(),)
+D2var_test_list = (Mattsson2012(), StiernströmAlmquistMattsson2023())
 
 # The boundary optimized operators of Mattsson, Almquist, van der Weide (2018)
 # are available up to accuracy order 12 and have the widest boundary closures
@@ -99,8 +99,8 @@ end
 # https://github.com/ranocha/SummationByPartsOperators.jl/issues/344
 b_test_list = (one, x -> 1 + x^2 / 10)
 
-for T in (Float32, Float64), acc_order in (2, 4, 6), D2var_source in D2var_test_list,
-    b_func in b_test_list
+for T in (Float32, Float64), acc_order in (2, 4, 6, 8, 10, 12),
+    D2var_source in D2var_test_list, b_func in b_test_list
 
     xmin = zero(T)
     xmax = 5 * one(T)
@@ -136,8 +136,10 @@ for T in (Float32, Float64), acc_order in (2, 4, 6), D2var_source in D2var_test_
     @test D2var_full == D2var_banded_new
 
     # The different matrix representations sum the same coefficients in a
-    # different order, so we only get agreement up to round-off errors.
-    atol = 20_000 * eps(T)
+    # different order, so we only get agreement up to round-off errors. The
+    # entries of the operators grow like `1 / Δx²`, so the tolerance is scaled
+    # by the size of a single row instead of being a fixed absolute value.
+    atol = 10 * eps(T) * maximum(sum(abs, D2var_full, dims = 2)) * maximum(abs, u)
     mul!(dest1, D2var_serial, u)
     mul!(dest2, D2var_full, u)
     @test all(i -> isapprox(dest1[i], dest2[i]; atol), eachindex(u))
