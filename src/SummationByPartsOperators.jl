@@ -118,6 +118,9 @@ include("SBP_coefficients/MattssonNiemeläWinters2026.jl")
 include("SBP_coefficients/DienerDorbandSchnetterTiglio2007.jl")
 include("SBP_coefficients/SharanBradyLivescu2022.jl")
 include("SBP_coefficients/WilliamsDuru2024.jl")
+include("SBP_coefficients/VretinarisSchnetter2026.jl")
+
+include("spherical_operators.jl")
 
 include("conservation_laws/general_laws.jl")
 include("conservation_laws/burgers.jl")
@@ -136,7 +139,7 @@ export PeriodicDerivativeOperator, PeriodicDissipationOperator,
        FourierDerivativeOperator2D,
        LegendreDerivativeOperator, LegendreSecondDerivativeOperator,
        MatrixDerivativeOperator, MultidimensionalMatrixDerivativeOperator,
-       TensorProductOperator,
+       TensorProductOperator, SphericalSBPOperators, SphericalOperatorView,
        UpwindOperators, PeriodicUpwindOperators
 export FilterCallback, ConstantFilter, ExponentialFilter
 export SafeMode, FastMode, ThreadedMode
@@ -156,7 +159,10 @@ export periodic_central_derivative_operator, periodic_derivative_operator,
        dissipation_operator, var_coef_derivative_operator,
        fourier_derivative_operator,
        legendre_derivative_operator, legendre_second_derivative_operator,
-       upwind_operators, function_space_operator, tensor_product_operator_2D
+       upwind_operators, function_space_operator, tensor_product_operator_2D,
+       spherical_operators
+export scalar_mass, vector_mass, boundary_matrix,
+       gradient_operator, odd_derivative_operator, divergence_operator
 export normals, boundary_indices
 export UniformMesh1D, UniformPeriodicMesh1D
 export couple_continuously, couple_discontinuously
@@ -172,6 +178,7 @@ export MattssonNordström2004, MattssonSvärdNordström2004, MattssonSvärdShoey
        DienerDorbandSchnetterTiglio2007,
        SharanBradyLivescu2022,
        WilliamsDuru2024
+export VretinarisSchnetter2026
 export Tadmor1989, MadayTadmor1989, Tadmor1993,
        TadmorWaagan2012Standard, TadmorWaagan2012Convergent
 export GlaubitzNordströmÖffner2023

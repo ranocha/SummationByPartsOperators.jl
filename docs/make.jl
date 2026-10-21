@@ -77,6 +77,7 @@ makedocs(modules = [SummationByPartsOperators],
                  "tutorials/advection_diffusion.md",
                  "tutorials/variable_linear_advection.md",
                  "tutorials/wave_equation.md",
+                 "tutorials/spherical_operators.md",
                  "tutorials/kdv.md",
                  "tutorials/twodimensional_linear_advection.md"
              ],

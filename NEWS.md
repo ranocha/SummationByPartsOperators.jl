@@ -10,6 +10,9 @@ for human readability.
 
 #### Added
 
+- Spherical SBP operator pairs of `VretinarisSchnetter2026` can be constructed
+  with `spherical_operators`. Their gradient, odd derivative, and divergence
+  actions are matrix-like views with separate scalar and vector norm matrices.
 - The boundary optimized operators of `MattssonAlmquistVanDerWeide2018Minimal`
   and `MattssonAlmquistVanDerWeide2018Accurate` are now also available with
   interior accuracy orders 10 and 12 (in addition to 4, 6, and 8).
