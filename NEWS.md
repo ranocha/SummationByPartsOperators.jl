@@ -10,9 +10,21 @@ for human readability.
 
 #### Added
 
+- The boundary-optimized SBP operators for second derivatives with variable
+  coefficients of `StiernströmAlmquistMattsson2023` are now available with
+  interior accuracy orders 4, 6, 8, 10, and 12. They are defined on the
+  non-uniform grid of `MattssonAlmquistVanDerWeide2018Accurate` and are fully
+  compatible with the corresponding first-derivative operators, which are
+  available via the same source of coefficients.
 - The boundary optimized operators of `MattssonAlmquistVanDerWeide2018Minimal`
   and `MattssonAlmquistVanDerWeide2018Accurate` are now also available with
   interior accuracy orders 10 and 12 (in addition to 4, 6, and 8).
+- `integrate` now also works for the variable coefficient derivative operators
+  created by `var_coef_derivative_operator`, for periodic dissipation
+  operators, and for the lazy rational operators, operator quotients, and
+  (super) spectral viscosity operators. Previously, these threw a `MethodError`
+  or an error about a missing field `Δx`. The wrapping operators use the
+  quadrature rule of the derivative operator they are built from.
 
 #### Changed
 

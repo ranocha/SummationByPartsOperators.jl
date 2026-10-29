@@ -160,6 +160,33 @@ function mass_matrix(D::Union{DerivativeOperator, VarCoefDerivativeOperator})
     Diagonal(D.Δx * m)
 end
 
+"""
+    integrate(func, u, D::VarCoefDerivativeOperator)
+
+Map the function `func` to the coefficients `u` and integrate with respect to
+the quadrature rule associated with the SBP derivative operator `D`.
+"""
+function integrate(func::Func, u::AbstractVector,
+                   D::VarCoefDerivativeOperator) where {Func}
+    @boundscheck begin
+        length(u) == length(grid(D)) ||
+            throw(DimensionMismatch("sizes of input vector and operator do not match"))
+    end
+    @unpack left_weights, right_weights = D.coefficients
+
+    @inbounds res = sum(func,
+                        view(u,
+                             (1 + length(left_weights)):(length(u) - length(right_weights))))
+    @inbounds for i in Base.OneTo(length(left_weights))
+        res += left_weights[i] * func(u[i])
+    end
+    @inbounds for i in Base.OneTo(length(right_weights))
+        res += right_weights[i] * func(u[end - i + 1])
+    end
+
+    D.Δx * res
+end
+
 function scale_by_mass_matrix!(u::AbstractVector,
                                D::Union{DerivativeOperator, VarCoefDerivativeOperator},
                                factor = true)

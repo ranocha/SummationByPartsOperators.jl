@@ -142,3 +142,23 @@ for T in (Float32, Float64), order in (2, 4, 6, 8)
 
     @test norm(Matrix(Di)[15:35, 15:35] - Matrix(Dip)[15:35, 15:35]) < eps(T)
 end
+
+# Periodic dissipation operators are built on the very same grid as the
+# derivative operator they are adapted to, so they inherit its quadrature rule.
+# Nonperiodic dissipation operators do not: they are always constructed on a
+# uniform grid, also for the boundary optimized operators of Mattsson, Almquist,
+# van der Weide (2018), which use a non-uniform grid. Their grid and their norm
+# weights would thus not belong together, which is why they provide no
+# quadrature rule (neither `integrate` nor `mass_matrix`).
+for T in (Float32, Float64), acc_order in (2, 4, 6, 8)
+    xmin = -one(T)
+    xmax = 2 * one(T)
+    N = 41
+
+    Dp = periodic_derivative_operator(1, acc_order, xmin, xmax, N)
+    Dip = dissipation_operator(Dp)
+    @test grid(Dip) == grid(Dp)
+    up = sinpi.(grid(Dp))
+    @test integrate(up, Dip) == integrate(up, Dp)
+    @test integrate(abs2, up, Dip) == integrate(abs2, up, Dp)
+end
