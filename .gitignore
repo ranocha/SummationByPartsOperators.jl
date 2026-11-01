@@ -10,6 +10,8 @@ docs/src/code_of_conduct.md
 docs/src/contributing.md
 docs/src/license.md
 
-run
-run/*
-.vscode/settings.json
+run*/
+.vscode/
+*.code-workspace
+.claude/
+*.pdf
