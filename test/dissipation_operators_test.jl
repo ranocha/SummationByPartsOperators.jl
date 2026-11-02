@@ -221,7 +221,7 @@ let source = MattssonAlmquistCarpenter2014Optimal(), order = 8
     end
     small_grid = SummationByPartsOperators.construct_grid(source, order, -1.0, 2.0, 7)
     @test_throws "The grid with 7 nodes is too small" coefficients(small_grid)
-    @test_throws "Implement `SummationByPartsOperators.num_boundary_spacings`" coefficients(collect(grid(D)))
+    @test_throws MethodError coefficients(collect(grid(D)))
 end
 
 # Nonperiodic: The number of boundary rows of dissipation operators on grids

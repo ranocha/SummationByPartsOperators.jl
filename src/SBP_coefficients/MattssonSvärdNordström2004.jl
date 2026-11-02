@@ -92,9 +92,9 @@ struct MattssonSvärdNordström2004NonuniformCache{T, UniformCache, LeftWidth, R
     inv_left_weights::SVector{LeftWidth, T}
     inv_right_weights::SVector{RightWidth, T}
     # `left_stencils[j]` acts on the nodes `j:(j + p)`
-    left_stencils::SVector{NumLeftStencils, SVector{StencilWidth, T}}
+    left_stencils::NTuple{NumLeftStencils, SVector{StencilWidth, T}}
     # `right_stencils[j]` acts on the nodes `(N + 1 - j - p):(N + 1 - j)`
-    right_stencils::SVector{NumRightStencils, SVector{StencilWidth, T}}
+    right_stencils::NTuple{NumRightStencils, SVector{StencilWidth, T}}
     # the stencil acting on all other windows of `p + 1` equispaced nodes
     uniform_stencil::SVector{StencilWidth, T}
 end
@@ -142,11 +142,9 @@ function MattssonSvärdNordström2004NonuniformCache(uniform_cache::AbstractCoef
     # `uniform_stencil`. There are `N - p` stencils in total.
     num_left_stencils = min(num_left, N - p)
     num_right_stencils = min(num_right, N - p)
-    left_stencils = SVector{num_left_stencils, typeof(uniform_stencil)}(ntuple(stencil,
-                                                                               num_left_stencils))
+    left_stencils = ntuple(stencil, num_left_stencils)
     right_stencil(j) = stencil(N + 1 - j - p)
-    right_stencils = SVector{num_right_stencils, typeof(uniform_stencil)}(ntuple(right_stencil,
-                                                                                 num_right_stencils))
+    right_stencils = ntuple(right_stencil, num_right_stencils)
 
     MattssonSvärdNordström2004NonuniformCache{T, typeof(uniform_cache), left_length,
                                               right_length, num_left_stencils,
@@ -164,11 +162,7 @@ end
 # region must be determined from the structure of `grid`: comparing the spacings
 # with `step(grid)` misclassifies uniform spacings on fine or translated grids,
 # where the rounding errors of the nodes are large relative to `step(grid)`.
-function num_boundary_spacings(grid)
-    throw(ArgumentError("Dissipation operators are not implemented for grids of type " *
-                        "$(typeof(grid)). Implement " *
-                        "`SummationByPartsOperators.num_boundary_spacings` for this type."))
-end
+function num_boundary_spacings end
 
 # All rows may be boundary rows on small grids.
 function Base.checkbounds(::Type{Bool}, u::AbstractVector,
