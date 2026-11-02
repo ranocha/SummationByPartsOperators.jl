@@ -1361,22 +1361,14 @@ end
 
 # https://github.com/ranocha/SummationByPartsOperators.jl/issues/14
 @testset "MattssonAlmquistCarpenter2014Optimal" begin
-    # The `d`-th derivative of the monomial `x^k`
-    function derivative_of_monomial(x, k, d)
-        k < d && return zero(x)
-        factor = one(x)
-        for j in 0:(d - 1)
-            factor *= (k - j)
-        end
-        return factor * x^(k - d)
-    end
-
     # The coefficients of these operators are truncated decimals, so the order
     # of accuracy can only be checked approximately. `BigFloat` is used so that
     # the truncation of the coefficients, and not the floating point arithmetic,
-    # is the dominant error source. This yields a clear separation between the
-    # residuals of the monomials that are handled exactly (below 1.0e-14) and
-    # the ones that are not (above 1.0e-7).
+    # is the dominant error source. The residuals are scaled by the grid spacing
+    # and the size of the monomial, which makes the residuals of the monomials
+    # that are handled exactly independent of the interval and the number of
+    # nodes (below 1.0e-16). The scaled residuals of the monomials that are not
+    # handled exactly are above 1.0e-10 for this interval and number of nodes.
     xmin = big(-1.0)
     xmax = big(2.0)
     N = 41
@@ -1405,14 +1397,17 @@ end
         nb = length(D.coefficients.left_boundary)
         @test nb == length(D.coefficients.right_boundary)
         interior = (nb + 1):(N - nb)
-        residual(k) = A * x .^ k - derivative_of_monomial.(x, k, 1)
+        function residual(k, indices = eachindex(x))
+            r = A * x .^ k - k .* x .^ max(k - 1, 0)
+            return dx[4] * maximum(abs, view(r, indices)) / maximum(abs, x .^ k)
+        end
         for k in 0:(acc_order ÷ 2)
-            @test maximum(abs, residual(k)) < 1.0e-14
+            @test residual(k) < 1.0e-15
         end
-        @test maximum(abs, residual(acc_order ÷ 2 + 1)) > 1.0e-7
+        @test residual(acc_order ÷ 2 + 1) > 1.0e-12
         for k in (acc_order ÷ 2 + 1):acc_order
-            @test maximum(abs, residual(k)[interior]) < 1.0e-14
+            @test residual(k, interior) < 1.0e-15
         end
-        @test maximum(abs, residual(acc_order + 1)[interior]) > 1.0e-7
+        @test residual(acc_order + 1, interior) > 1.0e-12
     end
 end
