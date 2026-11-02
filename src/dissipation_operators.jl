@@ -270,6 +270,20 @@ approximating a weighted `order`-th derivative adapted to the derivative
 operator `D` with coefficients given in `source_of_coefficients`.
 The evaluation of the derivative can be parallelized using threads by choosing
 `mode=ThreadedMode()`.
+
+The dissipation operator uses the grid of `D`. If this grid has nonuniform
+spacing near the boundaries (e.g., for
+[`MattssonAlmquistCarpenter2014Optimal`](@ref) or
+[`MattssonAlmquistVanDerWeide2018Accurate`](@ref)), the undivided differences
+of order `p = order ÷ 2` acting on non-equispaced nodes are replaced by
+`p! Δx^p` times the corresponding divided differences, where `Δx = step(grid(D))`
+is the interior grid spacing. Thus, the dissipation operator annihilates
+polynomials of degree less than `p` on all grids. Up to a scalar factor, this is
+the construction of
+- Bercik, Craig Penner, Zingg (2025)
+  Stable Volume Dissipation for High-Order Finite-Difference and Spectral-Element
+  Methods with the Summation-by-Parts Property.
+  [arXiv:2503.12670](https://arxiv.org/abs/2503.12670)
 """
 function dissipation_operator(source_of_coefficients, D::DerivativeOperator{T};
                               strength = one(T),
@@ -282,10 +296,10 @@ function dissipation_operator(source_of_coefficients, D::DerivativeOperator{T};
                      "Use `mode` instead.", :dissipation_operator)
         mode = _parallel_to_mode(parallel)
     end
-    x = grid(D)
-    dissipation_operator(source_of_coefficients, order, first(x), last(x), length(x),
-                         D.coefficients.left_weights, D.coefficients.right_weights,
-                         strength, mode)
+    coefficients, b = dissipation_coefficients(source_of_coefficients, order, grid(D),
+                                               D.coefficients.left_weights,
+                                               D.coefficients.right_weights, mode)
+    DissipationOperator(strength, coefficients, grid(D), b)
 end
 
 function dissipation_operator(D::DerivativeOperator; kwargs...)

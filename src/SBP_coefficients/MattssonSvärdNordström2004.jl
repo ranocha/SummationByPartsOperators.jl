@@ -53,9 +53,232 @@ function dissipation_coefficients(source::MattssonSvärdNordström2004, order::I
     else
         throw(ArgumentError("Order $order not implemented/derived."))
     end
+    if !(grid isa AbstractRange)
+        coefficient_cache = MattssonSvärdNordström2004NonuniformCache(coefficient_cache,
+                                                                      order ÷ 2, grid,
+                                                                      inv_left_weights,
+                                                                      inv_right_weights)
+    end
 
     VarCoefDerivativeCoefficients(coefficient_cache, left_weights, right_weights, mode,
                                   order, 2, source), b
+end
+
+# The dissipation operator is `-H⁻¹ D_pᵀ B D_p`, where each row of `D_p` with
+# nonzero weight `b` is a `p`-th difference stencil acting on `p + 1`
+# consecutive nodes. On grids with nonuniform spacing near the boundaries,
+# the stencils acting on non-equispaced nodes are `p! Δx^p` times the weights
+# of the `p`-th divided difference on these nodes, where `Δx = step(grid)` is the
+# interior grid spacing. On equispaced nodes, they reduce to the undivided
+# differences used on uniform grids. Thus, the operator annihilates
+# polynomials of degree less than `p` and remains negative semidefinite with
+# respect to the norm matrix. Up to a scalar factor, this is the construction
+# of Section 2.3 of
+# - Bercik, Craig Penner, Zingg (2025)
+#   Stable Volume Dissipation for High-Order Finite-Difference and
+#   Spectral-Element Methods with the Summation-by-Parts Property.
+#   arXiv:2503.12670
+#
+# The boundary rows `1:LeftWidth` and `(N + 1 - RightWidth):N` are computed
+# from the stencils of all windows of `p + 1` consecutive nodes containing
+# them. The remaining interior rows only depend on stencils acting on
+# equispaced nodes and use `uniform_cache`. On small grids, all rows are
+# boundary rows.
+struct MattssonSvärdNordström2004NonuniformCache{T, UniformCache, LeftWidth, RightWidth,
+                                                 NumLeftStencils, NumRightStencils,
+                                                 StencilWidth} <:
+       AbstractCoefficientCache{T}
+    uniform_cache::UniformCache
+    inv_left_weights::SVector{LeftWidth, T}
+    inv_right_weights::SVector{RightWidth, T}
+    # `left_stencils[j]` acts on the nodes `j:(j + p)`
+    left_stencils::SVector{NumLeftStencils, SVector{StencilWidth, T}}
+    # `right_stencils[j]` acts on the nodes `(N + 1 - j - p):(N + 1 - j)`
+    right_stencils::SVector{NumRightStencils, SVector{StencilWidth, T}}
+    # the stencil acting on all other windows of `p + 1` equispaced nodes
+    uniform_stencil::SVector{StencilWidth, T}
+end
+
+function MattssonSvärdNordström2004NonuniformCache(uniform_cache::AbstractCoefficientCache{T},
+                                                   p::Int, grid,
+                                                   inv_left_weights_D,
+                                                   inv_right_weights_D) where {T}
+    Δx = step(grid)
+    N = length(grid)
+    is_uniform(i) = isapprox(grid[i + 1] - grid[i], Δx)
+    # number of nonuniform spacings at the left and right boundary
+    num_left = something(findlast(i -> !is_uniform(i), 1:(N ÷ 2)), 0)
+    num_right = something(findlast(j -> !is_uniform(N - j), 1:(N ÷ 2)), 0)
+    if num_left == 0 && num_right == 0
+        return uniform_cache
+    end
+
+    num_weights = length(inv_left_weights_D) + length(inv_right_weights_D)
+    if N < max(p + 1, num_weights)
+        throw(ArgumentError("The grid with $N nodes is too small for a dissipation " *
+                            "operator of order $(2p); at least " *
+                            "$(max(p + 1, num_weights)) nodes are required."))
+    end
+
+    # The interior rows must only depend on stencils acting on equispaced nodes.
+    left_length = max(length(inv_left_weights_D), num_left + p)
+    right_length = max(length(inv_right_weights_D), num_right + p)
+    if left_length + right_length > N
+        left_length = N - length(inv_right_weights_D)
+        right_length = length(inv_right_weights_D)
+    end
+
+    inv_left_weights = SVector(inv_left_weights_D...,
+                               ntuple(_ -> one(T),
+                                      left_length - length(inv_left_weights_D))...)
+    inv_right_weights = SVector(inv_right_weights_D...,
+                                ntuple(_ -> one(T),
+                                       right_length - length(inv_right_weights_D))...)
+
+    uniform_stencil = SVector(ntuple(k -> T((-1)^(p + 1 - k) * binomial(p, k - 1)),
+                                     p + 1))
+    function stencil(first_node)
+        ξ = SVector(ntuple(k -> (grid[first_node + k - 1] - grid[first_node]) / Δx,
+                           p + 1))
+        SVector(ntuple(k -> T(factorial(p)) /
+                            prod(ξ[k] - ξ[m] for m in eachindex(ξ) if m != k),
+                       p + 1))
+    end
+    # Only the stencils acting on at least one nonuniform spacing differ from
+    # `uniform_stencil`. There are `N - p` stencils in total.
+    num_left_stencils = min(num_left, N - p)
+    num_right_stencils = min(num_right, N - p)
+    left_stencils = SVector{num_left_stencils, typeof(uniform_stencil)}(ntuple(stencil,
+                                                                               num_left_stencils))
+    right_stencil(j) = stencil(N + 1 - j - p)
+    right_stencils = SVector{num_right_stencils, typeof(uniform_stencil)}(ntuple(right_stencil,
+                                                                                 num_right_stencils))
+
+    MattssonSvärdNordström2004NonuniformCache{T, typeof(uniform_cache), left_length,
+                                              right_length, num_left_stencils,
+                                              num_right_stencils, p + 1}(uniform_cache,
+                                                                         inv_left_weights,
+                                                                         inv_right_weights,
+                                                                         left_stencils,
+                                                                         right_stencils,
+                                                                         uniform_stencil)
+end
+
+# All rows may be boundary rows on small grids.
+function Base.checkbounds(::Type{Bool}, u::AbstractVector,
+                          cache::MattssonSvärdNordström2004NonuniformCache)
+    length(u) >= length(cache.inv_left_weights) + length(cache.inv_right_weights)
+end
+
+function lower_bandwidth(cache::MattssonSvärdNordström2004NonuniformCache)
+    lower_bandwidth(cache.uniform_cache)
+end
+function upper_bandwidth(cache::MattssonSvärdNordström2004NonuniformCache)
+    upper_bandwidth(cache.uniform_cache)
+end
+
+# The stencil acting on the nodes `j:(j + p)` of a grid with `N` nodes
+@inline function nonuniform_window_stencil(cache::MattssonSvärdNordström2004NonuniformCache,
+                                           j, N)
+    @unpack left_stencils, right_stencils, uniform_stencil = cache
+    p = length(uniform_stencil) - 1
+    if j <= length(left_stencils)
+        return left_stencils[j]
+    end
+    j_right = N + 1 - p - j
+    if j_right <= length(right_stencils)
+        return right_stencils[j_right]
+    end
+    return uniform_stencil
+end
+
+# Contribution `b[j + cld(p, 2)] * stencil[i - j + 1] * (stencil ⋅ u[j:(j + p)])`
+# of the stencil acting on the nodes `j:(j + p)` to `(D_pᵀ B D_p u)[i]`
+@inline function nonuniform_stencil_term(cache::MattssonSvärdNordström2004NonuniformCache,
+                                         u, b, i, j)
+    stencil = nonuniform_window_stencil(cache, j, length(u))
+    p = length(stencil) - 1
+    stencil_u = stencil[1] * u[j]
+    for k in 1:p
+        stencil_u += stencil[k + 1] * u[j + k]
+    end
+    # Multiplying `stencil[i - j + 1] * stencil_u` first ensures that the
+    # contributions to the entries `(i, k)` and `(k, i)` of `D_pᵀ B D_p` are
+    # rounded in the same way.
+    b[j + cld(p, 2)] * (stencil[i - j + 1] * stencil_u)
+end
+
+# `-(D_pᵀ B D_p u)[i]`
+function nonuniform_boundary_row(cache::MattssonSvärdNordström2004NonuniformCache,
+                                 u, b, i)
+    p = length(cache.uniform_stencil) - 1
+    j_min = max(1, i - p)
+    j_max = min(i, length(u) - p)
+    res = nonuniform_stencil_term(cache, u, b, i, j_min)
+    for j in (j_min + 1):j_max
+        res += nonuniform_stencil_term(cache, u, b, i, j)
+    end
+    -res
+end
+
+function convolve_nonuniform_boundary_coefficients!(dest, cache, u, b, α)
+    @unpack inv_left_weights, inv_right_weights = cache
+    N = length(dest)
+
+    for i in eachindex(inv_left_weights)
+        dest[i] = α * inv_left_weights[i] * nonuniform_boundary_row(cache, u, b, i)
+    end
+    for i in eachindex(inv_right_weights)
+        dest[N + 1 - i] = α * inv_right_weights[i] *
+                          nonuniform_boundary_row(cache, u, b, N + 1 - i)
+    end
+end
+
+function convolve_nonuniform_boundary_coefficients!(dest, cache, u, b, α, β)
+    @unpack inv_left_weights, inv_right_weights = cache
+    N = length(dest)
+
+    for i in eachindex(inv_left_weights)
+        dest[i] = α * inv_left_weights[i] * nonuniform_boundary_row(cache, u, b, i) +
+                  β * dest[i]
+    end
+    for i in eachindex(inv_right_weights)
+        dest[N + 1 - i] = α * inv_right_weights[i] *
+                          nonuniform_boundary_row(cache, u, b, N + 1 - i) +
+                          β * dest[N + 1 - i]
+    end
+end
+
+function convolve_boundary_coefficients!(dest::AbstractVector,
+                                         cache::MattssonSvärdNordström2004NonuniformCache,
+                                         u::AbstractVector, b::AbstractVector, α,
+                                         ::SafeMode)
+    convolve_nonuniform_boundary_coefficients!(dest, cache, u, b, α)
+end
+function convolve_boundary_coefficients!(dest::AbstractVector,
+                                         cache::MattssonSvärdNordström2004NonuniformCache,
+                                         u::AbstractVector, b::AbstractVector, α, β,
+                                         ::SafeMode)
+    convolve_nonuniform_boundary_coefficients!(dest, cache, u, b, α, β)
+end
+
+function convolve_boundary_coefficients!(dest::AbstractVector,
+                                         cache::MattssonSvärdNordström2004NonuniformCache,
+                                         u::AbstractVector, b::AbstractVector, α,
+                                         ::Union{FastMode, ThreadedMode})
+    convolve_nonuniform_boundary_coefficients!(dest, cache, u, b, α)
+end
+function convolve_boundary_coefficients!(dest::AbstractVector,
+                                         cache::MattssonSvärdNordström2004NonuniformCache,
+                                         u::AbstractVector, b::AbstractVector, α, β,
+                                         ::Union{FastMode, ThreadedMode})
+    convolve_nonuniform_boundary_coefficients!(dest, cache, u, b, α, β)
+end
+
+@inline function convolve_interior_coefficients_loopbody(i,
+                                                         cache::MattssonSvärdNordström2004NonuniformCache,
+                                                         u, b)
+    convolve_interior_coefficients_loopbody(i, cache.uniform_cache, u, b)
 end
 
 struct MattssonSvärdNordström2004Cache2{T, LeftWidth, RightWidth} <:
