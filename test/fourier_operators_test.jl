@@ -216,6 +216,30 @@ for T in (Float32, Float64), source in source_SSV
     end
 end
 
+# Kernels Q̂ₖ of the (super) spectral viscosity as functions of the wavenumber k
+# and the cutoff wavenumber m = cutoff - 1, as given in the references
+let N = 64, m = 5, kmax = N ÷ 2
+    kernels = ((Tadmor1989(), 1, k -> k < m ? 0.0 : 1.0),
+               (MadayTadmor1989(), 1, k -> k < m ? 0.0 : k <= 2m ? (k - m) / m : 1.0),
+               (TadmorWaagan2012Standard(), 1,
+                k -> k <= m ? 0.0 : exp(-((kmax - k) / (k - m))^2)),
+               (TadmorWaagan2012Convergent(), 1,
+                k -> k <= m ? 0.0 : k < 2m ? exp(-((2m - k) / (k - m))^2) : 1.0),
+               ((Tadmor1993(), order, k -> k <= m ? 0.0 : 1 - (m / k)^(2order))
+                for order in 1:3)...)
+    D = fourier_derivative_operator(-1.0, 1.0, N)
+    strength = 0.3
+    for (source, order, kernel) in kernels
+        Di = dissipation_operator(source, D; strength, cutoff = m + 1, order)
+        atol = 100 * eps() * strength * (kmax * π)^(2order)
+        for k in 0:(kmax - 1)
+            u = compute_coefficients(x -> cospi(k * x), D)
+            @test isapprox(Di * u, -strength * kernel(k) * (k * π)^(2order) * u;
+                           atol)
+        end
+    end
+end
+
 # Modal Filtering
 for T in (Float32, Float64), filter_type in (ExponentialFilter(),)
     xmin = -one(T)
