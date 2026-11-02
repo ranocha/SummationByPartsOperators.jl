@@ -128,13 +128,19 @@ The boundary mass matrix is constructed to be mimetic, see
 - Jan Glaubitz, Simon-Christian Klein, Jan Nordström, Philipp Öffner (2023)
   Multi-dimensional summation-by-parts operators for general function spaces: Theory and construction
   Journal of Computational Physics 491, 112370, [DOI: 10.1016/j.jcp.2023.112370](https://doi.org/10.1016/j.jcp.2023.112370).
+
+The boundary mass matrix is diagonal. The `i`-th entry of the boundary contributes its weight
+`weights_boundary[i]` times the `dim`-th component of its normal `normals[i]` to the diagonal entry of the node
+`boundary_indices[i]`. A node that appears several times in `boundary_indices`, e.g., a corner shared by two
+boundary faces, receives the sum of the contributions of all its entries, one for each face.
+
+See also [`integrate_boundary`](@ref).
 """
-function mass_matrix_boundary(D::MultidimensionalMatrixDerivativeOperator, dim::Int)
-    if length(unique(D.boundary_indices)) != length(D.boundary_indices)
-        throw(ArgumentError("The boundary indices should be unique"))
-    end
+function mass_matrix_boundary(D::AbstractMultidimensionalMatrixDerivativeOperator, dim::Int)
     b = zeros(eltype(D), length(D.grid))
-    b[D.boundary_indices] .= weights_boundary_scaled(D, dim)
+    for (i, j) in enumerate(D.boundary_indices)
+        b[j] += get_weight_boundary_scaled(D, dim, i)
+    end
     return Diagonal(b)
 end
 

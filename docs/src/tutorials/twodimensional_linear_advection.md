@@ -69,7 +69,8 @@ approximates boundary integrals as
 where ``f`` and ``g`` are functions, ``\boldsymbol{f}`` and ``\boldsymbol{g}`` are their coefficients, and ``\boldsymbol{n}`` is the outward-pointing
 normal vector at the boundary. SummationByPartsOperators.jl creates so-called _mimetic_ boundary operators [^GlaubitzKleinNordströmÖffner2023],
 which means that the boundary quadrature rule in a certain direction is given as a diagonal matrix with zeros on the diagonal entries corresponding
-to interior nodes and non-zero diagonal elements of the form ``b_n = v_n(\boldsymbol{\xi}\cdot\boldsymbol{n}(\boldsymbol{x}_n))``. The operator
+to interior nodes and non-zero diagonal elements of the form ``b_n = v_n(\boldsymbol{\xi}\cdot\boldsymbol{n}(\boldsymbol{x}_n))``,
+where a corner shared by two boundary faces receives the sum of such terms, one for each face. The operator
 only stores the positive weights ``v_n``, but the boundary mass matrices ``B_{\boldsymbol{\xi}}`` can be constructed by calling [`mass_matrix_boundary`](@ref).
 
 ```@example twodimensional_advection

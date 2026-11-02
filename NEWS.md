@@ -14,9 +14,30 @@ for human readability.
   are available with accuracy order 8 now. Two entries of `Q` listed in
   Appendix B.4 of the reference are erroneous and have been corrected, see
   [#14](https://github.com/ranocha/SummationByPartsOperators.jl/issues/14).
+- The boundary optimized operators of `MattssonAlmquistVanDerWeide2018Minimal`
+  and `MattssonAlmquistVanDerWeide2018Accurate` are now also available with
+  interior accuracy orders 10 and 12 (in addition to 4, 6, and 8).
 
 #### Changed
 
+- `MattssonAlmquistVanDerWeide2018Minimal` and
+  `MattssonAlmquistVanDerWeide2018Accurate` can now be constructed on smaller
+  grids. Previously, the equispaced grid points following the non-uniform ones
+  were listed explicitly, which required more nodes than the boundary closures
+  actually need. The grid points themselves are unchanged up to round-off.
+- The coefficients of `MattssonAlmquistVanDerWeide2018Minimal` and
+  `MattssonAlmquistVanDerWeide2018Accurate` are now stored as the diagonal norm
+  `H` and the antisymmetric `Q` printed in the paper, read as exact rational
+  numbers, instead of the truncated decimals of `Q[i, j] / H[i, i]`. Thus,
+  these operators now satisfy the SBP property exactly for exact element types
+  such as `Rational{BigInt}`. In `Float64`, all but eight of the 224 boundary
+  coefficients of the accuracy orders 4, 6, and 8 available before are
+  bit-identical to the previous ones; the remaining eight change by at most
+  101 ulp since the paper prints the interior stencil coefficients they are
+  coupled to (`1/12`, `1/60`, `4/105`, `1/280`) as truncated decimals. For
+  element types with more precision than `Float64`, e.g., `BigFloat`, the
+  coefficients are more accurate than before since they are no longer rounded
+  to `Float64` first.
 - The minimum Julia version was updated to 1.10 in version 0.5.91.
 - `mul!` with vectors of composite element types such as `ForwardDiff.Dual`s,
   `Complex` numbers, and `StaticVector`s is significantly faster when using
@@ -24,6 +45,19 @@ for human readability.
 
 #### Fixed
 
+- `mass_matrix_boundary(D, dim)` threw an `ArgumentError` for a
+  `MultidimensionalMatrixDerivativeOperator` whose `boundary_indices` contain a
+  node several times, e.g., a corner shared by two boundary faces, although such
+  operators are explicitly allowed. Now, the contributions of all entries of a
+  node are summed, so the result does not depend on the order of the entries
+  and is consistent with `integrate_boundary`. For a `TensorProductOperator`,
+  the result is unchanged; its special method, which selected the entries of the
+  corners based on their position in `boundary_indices`, has been removed.
+- `tensor_product_operator_2D(D_x, D_y)` threw a `MethodError` if only one of
+  the 1D operators has a specific source of coefficients, e.g., for a finite
+  difference operator combined with a `LegendreDerivativeOperator`. Now,
+  `SourceOfCoefficientsCombination` accepts any object returned by
+  `source_of_coefficients`.
 - The bandwidths reported for the fourth-order accurate variable-coefficient
   second-derivative operator of `Mattsson2012()` were too small. Thus,
   converting such an operator to a `BandedMatrix` silently dropped some
