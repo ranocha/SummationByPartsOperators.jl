@@ -17,6 +17,11 @@ for human readability.
 - The boundary optimized operators of `MattssonAlmquistVanDerWeide2018Minimal`
   and `MattssonAlmquistVanDerWeide2018Accurate` are now also available with
   interior accuracy orders 10 and 12 (in addition to 4, 6, and 8).
+- Rational functions of periodic finite difference operators and polynomials
+  of Fourier derivative operators support division by numbers and
+  `UniformScaling`s from both sides, e.g., `2 / (I + D^2)`, `(I + D^2) \ I`,
+  and `I / (I + D^2)`, as rational functions of Fourier derivative operators
+  already did.
 
 #### Changed
 
@@ -76,6 +81,15 @@ for human readability.
   `mul_transpose_derivative_left!` support arrays with offset axes now.
 - `I - D` for Fourier derivative operators `D` resulted in a
   `StackOverflowError`.
+- `-D`, `D + D`, `D - D`, `D / 2`, and `2 \ D` for Fourier derivative operators
+  `D`, `-poly` and `poly / 2` for polynomials `poly` of Fourier derivative
+  operators, and `-rat` and `rat / 2` for rational functions `rat` of periodic
+  finite difference operators resulted in operators that threw a `MethodError`
+  when applied to a vector. Since `-D^2` was affected, `-D^2 + I` threw a
+  `MethodError` as well.
+- `periodic_derivative_operator(derivative_order, accuracy_order, grid)` threw
+  a `MethodError` because of a method ambiguity (also with the optional
+  arguments `left_offset` and `mode`).
 - `issymmetric` for rational Fourier derivative operators returned `true` for
   some non-symmetric operators, e.g., `(I + D) / (I + 2 * D)`.
 - `show` and `summary` of upwind operators with different accuracy orders
@@ -127,6 +141,25 @@ for human readability.
   documented now. Moreover, the kernels of these operators and of
   `TadmorWaagan2012Standard()` are computed in the requested element type
   instead of `Float64`.
+- Scaling a Fourier or periodic finite difference operator (or polynomials and
+  rational functions of such operators) by a number of another type, e.g.,
+  `0.5 * D` or `D + 0.5 * I` for a `Float32` operator `D`, threw a
+  `MethodError`. Now, the scaling factor is converted to the element type of
+  the operator.
+- Applying a `ConstantFilter` of a Fourier operator to a matrix throws an
+  informative `ArgumentError` instead of a `DimensionMismatch` without message.
+- `periodic_derivative_operator(LanczosLowNoise(); derivative_order = 2, ...)`
+  threw an `UndefVarError` instead of an `ArgumentError`.
+- `periodic_derivative_operator(LanczosLowNoise(), 1, 4, 0.0, 1.0, 20)`
+  resulted in a `StackOverflowError` instead of a `MethodError`.
+- `periodic_derivative_coefficients(source, derivative_order, accuracy_order)`
+  without keyword arguments was ambiguous for `Holoborodko2008()` and
+  `LanczosLowNoise()`.
+- `integrate` was not implemented for `VarCoefDerivativeOperator`s.
+- The nonperiodic semidiscretizations of Burgers' equation, the cubic
+  conservation law, and the variable linear advection equation threw a
+  `MethodError` if the boundary data and the solution have different types,
+  e.g., for boundary functions returning an `Int`.
 
 #### Deprecated
 

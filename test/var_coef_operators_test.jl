@@ -153,3 +153,21 @@ end
         end
     end
 end
+
+@testset "integrate" begin
+    for source in test_list, T in (Float32, Float64), acc_order in (2, 4, 6)
+        xmin = -one(T)
+        xmax = 2 * one(T)
+        N = 51
+
+        D2var = var_coef_derivative_operator(source, 2, acc_order, xmin, xmax, N, one)
+        D2 = derivative_operator(source, 2, acc_order, xmin, xmax, N)
+        x = grid(D2var)
+        u = sinpi.(x)
+        M = mass_matrix(D2var)
+        @test integrate(u, D2var) ≈ sum(M * u)
+        @test integrate(u -> u^2, u, D2var) ≈ u' * M * u
+        @test integrate(u, D2var) ≈ integrate(u, D2)
+        @test_throws DimensionMismatch integrate(u[(begin + 1):end], D2var)
+    end
+end
