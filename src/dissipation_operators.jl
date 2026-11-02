@@ -269,19 +269,20 @@ end
                          order::Int=accuracy_order(D),
                          mode=D.coefficients.mode)
 
-Create a negative semidefinite `DissipationOperator` using undivided differences
-approximating a weighted `order`-th derivative adapted to the derivative
-operator `D` with coefficients given in `source_of_coefficients`.
+Create a negative semidefinite `DissipationOperator` approximating a weighted
+`order`-th derivative adapted to the derivative operator `D` with coefficients
+given in `source_of_coefficients`.
 The evaluation of the derivative can be parallelized using threads by choosing
 `mode=ThreadedMode()`.
 
-The dissipation operator uses the grid of `D`. If this grid has nonuniform
-spacing near the boundaries (e.g., for
+The dissipation operator uses the grid of `D`. On uniform grids, it is
+constructed from undivided differences of order `p = order ÷ 2`. If the grid
+has nonuniform spacing near the boundaries (e.g., for
 [`MattssonAlmquistCarpenter2014Optimal`](@ref) or
 [`MattssonAlmquistVanDerWeide2018Accurate`](@ref)), the undivided differences
-of order `p = order ÷ 2` acting on non-equispaced nodes are replaced by
-`p! Δx^p` times the corresponding divided differences, where `Δx = step(grid(D))`
-is the interior grid spacing. Thus, the dissipation operator annihilates
+acting on non-equispaced nodes are replaced by `p! Δx^p` times the
+corresponding divided differences, where `Δx = step(grid(D))` is the interior
+grid spacing. Thus, the dissipation operator annihilates
 polynomials of degree less than `p` on all grids. Up to a scalar factor, this is
 the construction of
 - Bercik, Craig Penner, Zingg (2025)

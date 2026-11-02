@@ -649,6 +649,9 @@ end
                                                                               (MattssonAlmquistVanDerWeide2018Accurate(),
                                                                                (4, 6, 8),
                                                                                51),
+                                                                              (MattssonNiemeläWinters2026(:central),
+                                                                               (2, 4, 6, 8),
+                                                                               NNODES),
                                                                               (SharanBradyLivescu2022(RT(1 //
                                                                                                          2),
                                                                                                       RT(2 //

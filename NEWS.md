@@ -85,7 +85,8 @@ for human readability.
   for derivative operators `D` on grids with nonuniform spacing near the
   boundaries (`MattssonAlmquistCarpenter2014Optimal`,
   `MattssonAlmquistVanDerWeide2018Minimal`,
-  `MattssonAlmquistVanDerWeide2018Accurate`, and `SharanBradyLivescu2022`).
+  `MattssonAlmquistVanDerWeide2018Accurate`, `MattssonNiemeläWinters2026`, and
+  `SharanBradyLivescu2022`).
   Thus, the grid of the dissipation operator differed from the grid of `D`,
   and the dissipation operator did not annihilate linear functions and was
   only first-order accurate near the boundaries. Now, the dissipation operator

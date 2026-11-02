@@ -103,9 +103,9 @@ function MattssonSvärdNordström2004NonuniformCache(uniform_cache::AbstractCoef
                                                    p::Int, grid,
                                                    inv_left_weights_D,
                                                    inv_right_weights_D) where {T}
+    num_left, num_right = num_boundary_spacings(grid)
     Δx = step(grid)
     N = length(grid)
-    num_left, num_right = num_boundary_spacings(grid)
 
     num_weights = length(inv_left_weights_D) + length(inv_right_weights_D)
     if N < max(p + 1, num_weights)
@@ -255,6 +255,8 @@ function convolve_nonuniform_boundary_coefficients!(dest, cache, u, b, α, β)
     end
 end
 
+# The execution modes are annotated to avoid method ambiguities with the
+# methods of `convolve_boundary_coefficients!` for `DerivativeOperator`s.
 function convolve_boundary_coefficients!(dest::AbstractVector,
                                          cache::MattssonSvärdNordström2004NonuniformCache,
                                          u::AbstractVector, b::AbstractVector, α,

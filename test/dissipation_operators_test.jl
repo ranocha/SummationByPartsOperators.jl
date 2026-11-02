@@ -8,7 +8,8 @@ D_test_list = (MattssonNordström2004(), MattssonSvärdNordström2004(),
                MattssonAlmquistCarpenter2014Extended(),
                MattssonAlmquistCarpenter2014Optimal(),
                MattssonAlmquistVanDerWeide2018Minimal(),
-               MattssonAlmquistVanDerWeide2018Accurate())
+               MattssonAlmquistVanDerWeide2018Accurate(),
+               MattssonNiemeläWinters2026(:central))
 Di_test_list = (MattssonSvärdNordström2004(),)
 
 # Nonperiodic: Test symmetry and eigenvalues. The dissipation operators are
@@ -48,7 +49,7 @@ for source_D in D_test_list, source_Di in Di_test_list, acc_order in 2:2:12,
         # `HDi` in the boundary rows are larger, and so are the rounding errors.
         scale = grid(D) isa AbstractRange ? one(T) : norm(HDi)
         @test norm(HDi - HDi') < 10 * eps(T) * scale
-        @test minimum(real, eigvals(HDi)) < 10 * eps(T)
+        @test maximum(eigvals(Symmetric(HDi))) < 10 * eps(T) * opnorm(HDi)
     end
 end
 
@@ -102,6 +103,8 @@ for (make_source, acc_orders) in ((T -> MattssonAlmquistCarpenter2014Optimal(),
                                    (4, 6, 8)),
                                   (T -> MattssonAlmquistVanDerWeide2018Accurate(),
                                    (4, 6, 8)),
+                                  (T -> MattssonNiemeläWinters2026(:central),
+                                   (2, 4, 6, 8)),
                                   (T -> SharanBradyLivescu2022(T(1 // 2), T(2 // 3)),
                                    (2, 4, 6))),
     acc_order in acc_orders, T in (Float32, Float64)
@@ -184,6 +187,7 @@ for (source_D, acc_orders) in ((MattssonAlmquistCarpenter2014Optimal(), (2, 4, 6
                                 (4, 6, 8, 10, 12)),
                                (MattssonAlmquistVanDerWeide2018Accurate(),
                                 (4, 6, 8, 10, 12)),
+                               (MattssonNiemeläWinters2026(:central), 2:9),
                                (SharanBradyLivescu2022(0.5, 2 / 3), (2, 4, 6))),
     acc_order in acc_orders, order in 2:2:8
 
@@ -200,8 +204,24 @@ for (source_D, acc_orders) in ((MattssonAlmquistCarpenter2014Optimal(), (2, 4, 6
             Di = dissipation_operator(D; order, mode)
             @test grid(Di) == grid(D)
             @test Matrix(Di) ≈ dissipation_matrix_reference(D, order)
+            HDi = mass_matrix(D) * Matrix(Di)
+            @test maximum(eigvals(Symmetric(HDi))) < 10 * eps() * opnorm(HDi)
         end
     end
+end
+
+# Nonperiodic: Errors for grids not supported by dissipation operators
+let source = MattssonAlmquistCarpenter2014Optimal(), order = 8
+    D = derivative_operator(source, 1, order, -1.0, 2.0, 41)
+    (; left_weights, right_weights) = D.coefficients
+    function coefficients(grid)
+        SummationByPartsOperators.dissipation_coefficients(MattssonSvärdNordström2004(),
+                                                           order, grid, left_weights,
+                                                           right_weights)
+    end
+    small_grid = SummationByPartsOperators.construct_grid(source, order, -1.0, 2.0, 7)
+    @test_throws "The grid with 7 nodes is too small" coefficients(small_grid)
+    @test_throws "Implement `SummationByPartsOperators.num_boundary_spacings`" coefficients(collect(grid(D)))
 end
 
 # Nonperiodic: The number of boundary rows of dissipation operators on grids
@@ -210,6 +230,7 @@ end
 # nodes relative to the grid spacing.
 for (source_D, num_spacings) in ((MattssonAlmquistCarpenter2014Optimal(), 3),
                                  (MattssonAlmquistVanDerWeide2018Accurate(), 4),
+                                 (MattssonNiemeläWinters2026(:central), 3),
                                  (SharanBradyLivescu2022(0.5f0, 2.0f0 / 3), 1)),
     order in (2, 4, 6, 8)
 
