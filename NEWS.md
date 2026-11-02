@@ -87,6 +87,8 @@ for human readability.
   finite difference operators resulted in operators that threw a `MethodError`
   when applied to a vector. Since `-D^2` was affected, `-D^2 + I` threw a
   `MethodError` as well.
+- `-D` and `2 \ D` for periodic finite difference operators `D` could not be
+  combined with `UniformScaling`s, e.g., `-D + I` threw a `MethodError`.
 - `periodic_derivative_operator(derivative_order, accuracy_order, grid)` threw
   a `MethodError` because of a method ambiguity (also with the optional
   arguments `left_offset` and `mode`).
@@ -136,8 +138,8 @@ for human readability.
   `0.5 * D` or `D + 0.5 * I` for a `Float32` operator `D`, threw a
   `MethodError`. Now, the scaling factor is converted to the element type of
   the operator.
-- Applying a `ConstantFilter` of a Fourier operator to a matrix threw a
-  `DimensionMismatch`.
+- Applying a `ConstantFilter` of a Fourier operator to a matrix throws an
+  informative `ArgumentError` instead of a `DimensionMismatch` without message.
 - `periodic_derivative_operator(LanczosLowNoise(); derivative_order = 2, ...)`
   threw an `UndefVarError` instead of an `ArgumentError`.
 - `periodic_derivative_operator(LanczosLowNoise(), 1, 4, 0.0, 1.0, 20)`

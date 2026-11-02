@@ -1561,7 +1561,10 @@ for T in (Float32, Float64)
                         (poly \ 1.0I, inv(Mpoly)), (-rat, -Mrat), (rat / 0.5I, 2 * Mrat),
                         (0.5I \ rat, 2 * Mrat), (2.0I / rat, 2 * inv(Mrat)),
                         (rat \ 2.0I, 2 * inv(Mrat)), (D / 0.5I, 2 * Matrix(D)),
-                        (0.5I \ D, 2 * Matrix(D)))
+                        (0.5I \ D, 2 * Matrix(D)), (-D, -Matrix(D)),
+                        (-D + 0.5I, T(0.5) * I - Matrix(D)), (D / 2, Matrix(D) / 2),
+                        (D / 0.5, 2 * Matrix(D)), (2 \ D, Matrix(D) / 2),
+                        (D / 2 + I, Matrix(D) / 2 + I))
             @test eltype(op) == T
             @test eltype(op * u) == T
             @test Matrix(op) ≈ M

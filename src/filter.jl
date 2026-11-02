@@ -61,7 +61,7 @@ end
 
 function (filter::ConstantFilter)(u::AbstractMatrix, tmp::AbstractVector)
     @boundscheck begin
-        length(filter.coefficients) == length(tmp) || throw(DimensionMismatch())
+        length(tmp) == size(u, 1) || throw(DimensionMismatch())
     end
 
     for j in axes(u, 2)
@@ -76,18 +76,7 @@ end
 # arrays they were created for, which columns of a matrix do not have in general.
 function (filter::ConstantFilter{<:Real, <:FFTW.FFTWPlan})(u::AbstractMatrix,
                                                            tmp::AbstractVector)
-    @boundscheck begin
-        length(filter.coefficients) == length(tmp) || throw(DimensionMismatch())
-    end
-
-    v = similar(u, size(u, 1))
-    for j in axes(u, 2)
-        copyto!(v, view(u, :, j))
-        @inbounds filter(v, tmp)
-        copyto!(view(u, :, j), v)
-    end
-
-    nothing
+    throw(ArgumentError("Fourier filters can only be applied to vectors, not to matrices"))
 end
 
 function (filter::ConstantFilter)(u::AbstractMatrix, tmp::AbstractMatrix)

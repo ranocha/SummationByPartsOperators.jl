@@ -1521,6 +1521,18 @@ function Base.:\(scaling::UniformScaling, D::PeriodicDerivativeOperator)
     scaling \ PeriodicRationalDerivativeOperator(D)
 end
 
+function Base.:-(D::PeriodicDerivativeOperator)
+    -PeriodicRationalDerivativeOperator(D)
+end
+
+function Base.:/(D::PeriodicDerivativeOperator, factor::Real)
+    PeriodicRationalDerivativeOperator(D) / factor
+end
+
+function Base.:\(factor::Real, D::PeriodicDerivativeOperator)
+    factor \ PeriodicRationalDerivativeOperator(D)
+end
+
 function mul!(dest::AbstractVector{T}, rat::PeriodicRationalDerivativeOperator,
               u::AbstractVector{T}) where {T}
     @unpack D, num_coef, den_coef, tmp, eigval, rfft_plan, irfft_plan = rat

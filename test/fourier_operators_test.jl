@@ -258,14 +258,6 @@ for T in (Float32, Float64), filter_type in (ExponentialFilter(),)
             @test integrate(u -> u^2, u, D) <= norm2_u
         end
 
-        # filtering a matrix filters each column
-        U = rand(T, N, 3)
-        V = copy(U)
-        filter!(U)
-        for j in axes(V, 2)
-            v = V[:, j]
-            filter!(v)
-            @test U[:, j] ≈ v
-        end
+        @test_throws "only be applied to vectors" filter!(rand(T, N, 3))
     end
 end
