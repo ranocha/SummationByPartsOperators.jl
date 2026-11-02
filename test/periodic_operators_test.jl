@@ -1478,6 +1478,19 @@ end
     end
 end # LanczosLowNoise
 
+@testset "periodic_derivative_operator with a grid" begin
+    xmin, xmax, N = 0.0, 1.0, 11
+    D = periodic_derivative_operator(1, 4, xmin, xmax, N)
+    grid = range(xmin, xmax, length = N + 1)
+    left_offset = -(4 + 1) ÷ 2
+    for args in ((), (left_offset,), (FastMode(),), (left_offset, FastMode()),
+                 (FastMode(), left_offset))
+        D_grid = periodic_derivative_operator(1, 4, grid, args...)
+        @test Matrix(D_grid) ≈ Matrix(D)
+        @test SummationByPartsOperators.grid(D_grid) ≈ SummationByPartsOperators.grid(D)
+    end
+end
+
 @testset "LanczosLowNoise and Holoborodko2008 errors" begin
     @test_throws "derivative_order=2" periodic_derivative_operator(LanczosLowNoise();
                                                                    derivative_order = 2,
@@ -1535,6 +1548,24 @@ for T in (Float32, Float64)
         end
         @test Matrix(0.5 * D) ≈ T(0.5) * Matrix(D)
         @test Matrix(D + 0.5I) ≈ Matrix(D) + T(0.5) * I
+
+        # negation and division of rational operators
+        poly = I + D^2
+        rat = (I - D^2) / (I + D^2)
+        Mpoly = I + Matrix(D^2)
+        Mrat = (I - Matrix(D^2)) / (I + Matrix(D^2))
+        for (op, M) in ((-poly, -Mpoly), (-D^2 + 0.5I, T(0.5) * I - Matrix(D^2)),
+                        (poly / 2, Mpoly / 2), (poly / 0.5, 2 * Mpoly),
+                        (0.5 \ poly, 2 * Mpoly), (2.0 / poly, 2 * inv(Mpoly)),
+                        (poly \ 2.0, 2 * inv(Mpoly)), (1.0I / poly, inv(Mpoly)),
+                        (poly \ 1.0I, inv(Mpoly)), (-rat, -Mrat), (rat / 0.5I, 2 * Mrat),
+                        (0.5I \ rat, 2 * Mrat), (2.0I / rat, 2 * inv(Mrat)),
+                        (rat \ 2.0I, 2 * inv(Mrat)), (D / 0.5I, 2 * Matrix(D)),
+                        (0.5I \ D, 2 * Matrix(D)))
+            @test eltype(op) == T
+            @test eltype(op * u) == T
+            @test Matrix(op) ≈ M
+        end
 
         rat = (I + 2D + 5 * D^2) * (2I * D - D^3 * 5I) * (D * 2 - D^2 * 5)
         @test rat.num_coef == (0.0, 0.0, 4.0, -2.0, -10.0, -45.0, 0.0, 125.0)

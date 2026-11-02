@@ -981,7 +981,7 @@ the leftmost grid point used is determined by `left_offset`.
 The evaluation of the derivative can be parallelized using threads by choosing
 `mode=ThreadedMode())`.
 """
-function periodic_derivative_operator(derivative_order, accuracy_order,
+function periodic_derivative_operator(derivative_order::Integer, accuracy_order,
                                       grid::Union{LinRange, StepRangeLen},
                                       left_offset::Int = -(accuracy_order + 1) ÷ 2,
                                       mode = FastMode())
@@ -996,7 +996,7 @@ function periodic_derivative_operator(derivative_order, accuracy_order,
     PeriodicDerivativeOperator(coefficients, grid)
 end
 
-@inline function periodic_derivative_operator(derivative_order, accuracy_order,
+@inline function periodic_derivative_operator(derivative_order::Integer, accuracy_order,
                                               grid::Union{LinRange, StepRangeLen},
                                               mode::AbstractExecutionMode,
                                               left_offset::Int = -(accuracy_order + 1) ÷ 2)
@@ -1474,6 +1474,51 @@ end
 
 function Base.:/(rat1::PeriodicDerivativeOperator, rat2::PeriodicRationalDerivativeOperator)
     PeriodicRationalDerivativeOperator(rat1) / rat2
+end
+
+function Base.:-(rat::PeriodicRationalDerivativeOperator)
+    PeriodicRationalDerivativeOperator(rat, map(c -> -c, rat.num_coef), rat.den_coef)
+end
+
+function Base.:/(rat::PeriodicRationalDerivativeOperator, factor::Union{Real, Integer})
+    PeriodicRationalDerivativeOperator(rat, map(c -> c / factor, rat.num_coef),
+                                       rat.den_coef)
+end
+
+function Base.:\(factor::Union{Real, Integer}, rat::PeriodicRationalDerivativeOperator)
+    rat / factor
+end
+
+function Base.:/(factor::Union{Real, Integer}, rat::PeriodicRationalDerivativeOperator)
+    factor * inv(rat)
+end
+
+function Base.:\(rat::PeriodicRationalDerivativeOperator, factor::Union{Real, Integer})
+    inv(rat) * factor
+end
+
+function Base.:/(rat::PeriodicRationalDerivativeOperator, scaling::UniformScaling)
+    rat / scaling.λ
+end
+
+function Base.:\(scaling::UniformScaling, rat::PeriodicRationalDerivativeOperator)
+    scaling.λ \ rat
+end
+
+function Base.:/(scaling::UniformScaling, rat::PeriodicRationalDerivativeOperator)
+    scaling.λ / rat
+end
+
+function Base.:\(rat::PeriodicRationalDerivativeOperator, scaling::UniformScaling)
+    rat \ scaling.λ
+end
+
+function Base.:/(D::PeriodicDerivativeOperator, scaling::UniformScaling)
+    PeriodicRationalDerivativeOperator(D) / scaling
+end
+
+function Base.:\(scaling::UniformScaling, D::PeriodicDerivativeOperator)
+    scaling \ PeriodicRationalDerivativeOperator(D)
 end
 
 function mul!(dest::AbstractVector{T}, rat::PeriodicRationalDerivativeOperator,

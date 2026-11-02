@@ -418,6 +418,48 @@ function Base.:-(scaling::UniformScaling, D::FourierDerivativeOperator)
     scaling - FourierPolynomialDerivativeOperator(D)
 end
 
+function Base.:+(D1::FourierDerivativeOperator, D2::FourierDerivativeOperator)
+    FourierPolynomialDerivativeOperator(D1) + FourierPolynomialDerivativeOperator(D2)
+end
+
+function Base.:-(D1::FourierDerivativeOperator, D2::FourierDerivativeOperator)
+    FourierPolynomialDerivativeOperator(D1) - FourierPolynomialDerivativeOperator(D2)
+end
+
+function Base.:-(poly::FourierPolynomialDerivativeOperator)
+    FourierPolynomialDerivativeOperator(poly.D1, map(c -> -c, poly.coef))
+end
+
+function Base.:-(D::FourierDerivativeOperator)
+    -FourierPolynomialDerivativeOperator(D)
+end
+
+function Base.:/(poly::FourierPolynomialDerivativeOperator, factor::Union{Real, Integer})
+    FourierPolynomialDerivativeOperator(poly.D1, map(c -> c / factor, poly.coef))
+end
+
+function Base.:/(D::FourierDerivativeOperator, factor::Union{Real, Integer})
+    FourierPolynomialDerivativeOperator(D) / factor
+end
+
+function Base.:\(factor::Union{Real, Integer},
+                 poly::Union{FourierDerivativeOperator,
+                             FourierPolynomialDerivativeOperator})
+    poly / factor
+end
+
+function Base.:/(poly::Union{FourierDerivativeOperator,
+                             FourierPolynomialDerivativeOperator},
+                 scaling::UniformScaling)
+    poly / scaling.λ
+end
+
+function Base.:\(scaling::UniformScaling,
+                 poly::Union{FourierDerivativeOperator,
+                             FourierPolynomialDerivativeOperator})
+    scaling.λ \ poly
+end
+
 function mul!(dest::AbstractVector{T}, poly::FourierPolynomialDerivativeOperator,
               u::AbstractVector{T}) where {T}
     @unpack D1, coef, coef_end = poly
@@ -756,6 +798,30 @@ end
 
 function Base.:\(scaling::UniformScaling, rat::FourierRationalDerivativeOperator)
     scaling.λ \ rat
+end
+
+function Base.:/(factor::Union{Real, Integer},
+                 den::Union{FourierDerivativeOperator,
+                            FourierPolynomialDerivativeOperator})
+    factor / FourierRationalDerivativeOperator(den)
+end
+
+function Base.:\(den::Union{FourierDerivativeOperator,
+                            FourierPolynomialDerivativeOperator},
+                 factor::Union{Real, Integer})
+    FourierRationalDerivativeOperator(den) \ factor
+end
+
+function Base.:/(scaling::UniformScaling,
+                 den::Union{FourierDerivativeOperator,
+                            FourierPolynomialDerivativeOperator})
+    scaling.λ / den
+end
+
+function Base.:\(den::Union{FourierDerivativeOperator,
+                            FourierPolynomialDerivativeOperator},
+                 scaling::UniformScaling)
+    den \ scaling.λ
 end
 
 function mul!(dest::AbstractVector{T}, rat::FourierRationalDerivativeOperator,

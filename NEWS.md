@@ -17,6 +17,11 @@ for human readability.
 - The boundary optimized operators of `MattssonAlmquistVanDerWeide2018Minimal`
   and `MattssonAlmquistVanDerWeide2018Accurate` are now also available with
   interior accuracy orders 10 and 12 (in addition to 4, 6, and 8).
+- Rational functions of periodic finite difference operators and polynomials
+  of Fourier derivative operators support division by numbers and
+  `UniformScaling`s from both sides, e.g., `2 / (I + D^2)`, `(I + D^2) \ I`,
+  and `I / (I + D^2)`, as rational functions of Fourier derivative operators
+  already did.
 
 #### Changed
 
@@ -76,6 +81,15 @@ for human readability.
   `mul_transpose_derivative_left!` support arrays with offset axes now.
 - `I - D` for Fourier derivative operators `D` resulted in a
   `StackOverflowError`.
+- `-D`, `D + D`, `D - D`, `D / 2`, and `2 \ D` for Fourier derivative operators
+  `D`, `-poly` and `poly / 2` for polynomials `poly` of Fourier derivative
+  operators, and `-rat` and `rat / 2` for rational functions `rat` of periodic
+  finite difference operators resulted in operators that threw a `MethodError`
+  when applied to a vector. Since `-D^2` was affected, `-D^2 + I` threw a
+  `MethodError` as well.
+- `periodic_derivative_operator(derivative_order, accuracy_order, grid)` threw
+  a `MethodError` because of a method ambiguity (also with the optional
+  arguments `left_offset` and `mode`).
 - `issymmetric` for rational Fourier derivative operators returned `true` for
   some non-symmetric operators, e.g., `(I + D) / (I + 2 * D)`.
 - `show` and `summary` of upwind operators with different accuracy orders
