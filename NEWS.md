@@ -10,6 +10,10 @@ for human readability.
 
 #### Added
 
+- The first-derivative operators of `MattssonAlmquistCarpenter2014Optimal()`
+  are available with accuracy order 8 now. Two entries of `Q` listed in
+  Appendix B.4 of the reference are erroneous and have been corrected, see
+  [#14](https://github.com/ranocha/SummationByPartsOperators.jl/issues/14).
 - The boundary optimized operators of `MattssonAlmquistVanDerWeide2018Minimal`
   and `MattssonAlmquistVanDerWeide2018Accurate` are now also available with
   interior accuracy orders 10 and 12 (in addition to 4, 6, and 8).

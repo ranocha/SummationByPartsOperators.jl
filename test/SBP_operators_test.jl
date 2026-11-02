@@ -1358,3 +1358,56 @@ end
                                                                            0.0, 1.0, 101)
     end
 end
+
+# https://github.com/ranocha/SummationByPartsOperators.jl/issues/14
+@testset "MattssonAlmquistCarpenter2014Optimal" begin
+    # The coefficients of these operators are truncated decimals, so the order
+    # of accuracy can only be checked approximately. `BigFloat` is used so that
+    # the truncation of the coefficients, and not the floating point arithmetic,
+    # is the dominant error source. The residuals are scaled by the grid spacing
+    # and the size of the monomial, which makes the residuals of the monomials
+    # that are handled exactly independent of the interval and the number of
+    # nodes (below 1.0e-16). The scaled residuals of the monomials that are not
+    # handled exactly are above 1.0e-10 for this interval and number of nodes.
+    xmin = big(-1.0)
+    xmax = big(2.0)
+    N = 41
+    @testset "accuracy order $acc_order" for acc_order in (2, 4, 6, 8)
+        D = derivative_operator(MattssonAlmquistCarpenter2014Optimal(), 1, acc_order,
+                                xmin, xmax, N)
+        @test accuracy_order(D) == acc_order
+        A = Matrix(D)
+        x = collect(grid(D))
+
+        # diagonal, positive definite norm satisfying the SBP property
+        M = mass_matrix(D)
+        @test M isa Diagonal
+        @test all(>(0), diag(M))
+        @test M * A + A' * M ≈ mass_matrix_boundary(D)
+
+        # The grid is uniform except for the first three intervals at each
+        # boundary, where it is symmetric with respect to the midpoint.
+        dx = diff(x)
+        @test all(isapprox(dx[4]), dx[4:(end - 3)])
+        @test !isapprox(dx[1], dx[4])
+        @test dx[1:3] ≈ reverse(dx[(end - 2):end])
+
+        # The boundary closures are accurate of order `acc_order ÷ 2`, the
+        # interior stencils of order `acc_order`.
+        nb = length(D.coefficients.left_boundary)
+        @test nb == length(D.coefficients.right_boundary)
+        interior = (nb + 1):(N - nb)
+        function residual(k, indices = eachindex(x))
+            r = A * x .^ k - k .* x .^ max(k - 1, 0)
+            return dx[4] * maximum(abs, view(r, indices)) / maximum(abs, x .^ k)
+        end
+        for k in 0:(acc_order ÷ 2)
+            @test residual(k) < 1.0e-15
+        end
+        @test residual(acc_order ÷ 2 + 1) > 1.0e-12
+        for k in (acc_order ÷ 2 + 1):acc_order
+            @test residual(k, interior) < 1.0e-15
+        end
+        @test residual(acc_order + 1, interior) > 1.0e-12
+    end
+end
