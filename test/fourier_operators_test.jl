@@ -74,6 +74,20 @@ for T in (Float32, Float64)
         @test issymmetric(I - D^2)
         @test !issymmetric(I + D)
         @test !issymmetric(D - I)
+        @test @inferred(I-D) * u ≈ u - D * u
+        @test @inferred(D-I) * u ≈ D * u - u
+
+        # The rational operator is symmetric if and only if the numerator
+        # and the denominator are both even or both odd.
+        @test issymmetric((I - D^2) / (I + D^4))
+        @test !issymmetric((I + D) / (I + 2 * D))
+        @test !issymmetric(D / (I - D^2))
+        @test !issymmetric((I - D^2) / (I + D))
+        @test issymmetric(0 * (D / (I - D^2)))
+        for rat in ((I - D^2) / (I + D^4), (I + D) / (I + 2 * D), D / (I - D^2))
+            A = Matrix(rat)
+            @test issymmetric(rat) == isapprox(A, A')
+        end
 
         @test @inferred(SummationByPartsOperators.xmin(D^2)) ≈ xmin
         @test @inferred(SummationByPartsOperators.xmax(D^2)) ≈ xmax
@@ -101,6 +115,9 @@ for T in (Float32, Float64)
         @test iszero(0 * rat)
         v = rat * u
         @test (I - D^2) \ (v + D^4 * v) ≈ u
+
+        @test rat \ u ≈ Matrix(I + D^4) * (Matrix(I - D^2) \ u)
+        @test ((I - D^2) / (I + 0 * D)) \ u ≈ (I - D^2) \ u
 
         rat1 = @inferred((I - D^2)/(I + D^4))
         rat2 = @inferred((I + D^4)/(I - D^2))
@@ -135,6 +152,24 @@ for T in (Float32, Float64)
         @test @inferred(I-rat1) == D^0 - rat1
         @test @inferred(rat1-I) == rat1 - D^0
         @test @inferred(-rat1) == @inferred(-1*rat1)
+    end
+end
+
+# Dense Fourier derivative matrix
+for T in (Float32, Float64, BigFloat), N in (4, 5, 8, 9)
+    xmin = -one(T)
+    xmax = one(T)
+    Dmat = @inferred SummationByPartsOperators.fourier_derivative_matrix(N, xmin, xmax)
+    @test eltype(Dmat) == T
+    x = range(xmin, stop = xmax, length = N + 1)[1:(end - 1)]
+    for k in 0:((N - 1) ÷ 2)
+        @test maximum(abs, Dmat * sinpi.(k .* x) - k * T(π) .* cospi.(k .* x)) <
+              10 * N^2 * eps(T)
+        @test maximum(abs, Dmat * cospi.(k .* x) + k * T(π) .* sinpi.(k .* x)) <
+              10 * N^2 * eps(T)
+    end
+    if T != BigFloat
+        @test Dmat ≈ Matrix(fourier_derivative_operator(xmin, xmax, N))
     end
 end
 

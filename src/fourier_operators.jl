@@ -186,10 +186,14 @@ Kopriva (2009) Implementing Spectral Methods for PDEs, Algorithm 18.
 function fourier_derivative_matrix(N, xmin::Real = 0.0, xmax::Real = 2π)
     T = promote_type(typeof(xmin), typeof(xmax))
     jac_2 = T(π) / (xmax - xmin)
-    D = Array{T}(undef, N, N)
+    D = zeros(T, N, N)
     @inbounds for j in 1:N, i in 1:N
         j == i && continue
-        D[i, j] = (-1)^(i + j) * cot((i - j) * T(π) / N) * jac_2
+        if iseven(N)
+            D[i, j] = (-1)^(i + j) * cot((i - j) * T(π) / N) * jac_2
+        else
+            D[i, j] = (-1)^(i + j) * csc((i - j) * T(π) / N) * jac_2
+        end
         D[i, i] -= D[i, j]
     end
     D
@@ -406,7 +410,7 @@ function Base.:-(D::FourierDerivativeOperator, scaling::UniformScaling)
 end
 
 function Base.:-(scaling::UniformScaling, D::FourierDerivativeOperator)
-    scaling - D
+    scaling - FourierPolynomialDerivativeOperator(D)
 end
 
 function mul!(dest::AbstractVector{T}, poly::FourierPolynomialDerivativeOperator,
@@ -499,10 +503,14 @@ end
 
 function LinearAlgebra.issymmetric(rat::FourierRationalDerivativeOperator)
     @unpack num_coef, den_coef = rat
+    # The symbol `num(ik) / den(ik)` is real (i.e., the operator is symmetric)
+    # if numerator and denominator are both even or both odd polynomials.
     num_is_even = all(iszero, num_coef[idx] for idx in eachindex(num_coef) if iseven(idx))
+    num_is_odd = all(iszero, num_coef[idx] for idx in eachindex(num_coef) if isodd(idx))
     den_is_even = all(iszero, den_coef[idx] for idx in eachindex(den_coef) if iseven(idx))
+    den_is_odd = all(iszero, den_coef[idx] for idx in eachindex(den_coef) if isodd(idx))
 
-    num_is_even == den_is_even
+    iszero(rat) || (num_is_even && den_is_even) || (num_is_odd && den_is_odd)
 end
 
 Base.iszero(D::FourierRationalDerivativeOperator) = all(iszero, D.num_coef)
@@ -777,8 +785,8 @@ function LinearAlgebra.ldiv!(dest::AbstractVector{T},
                   (N * evalpoly((j - 1) * im * jac * N, num_coef))
     end
     # see e.g. Steven G. Johnson (2011) Notes on FFT based differentiation
-    @inbounds tmp[end] *= evalpoly((N - 1) * im * jac * N, den_coef_end) /
-                          (N * evalpoly((N - 1) * im * jac * N, num_coef_end))
+    @inbounds tmp[end] *= evalpoly((length(tmp) - 1) * im * jac * N, den_coef_end) /
+                          (N * evalpoly((length(tmp) - 1) * im * jac * N, num_coef_end))
     mul!(dest, brfft_plan, tmp)
 end
 

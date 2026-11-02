@@ -1,6 +1,7 @@
 using Test
 using LinearAlgebra
 using SummationByPartsOperators
+using OffsetArrays: OffsetArray
 
 D_test_list = (MattssonNordström2004(), MattssonSvärdNordström2004(),
                MattssonSvärdShoeybi2008(), Mattsson2014(),
@@ -1410,4 +1411,78 @@ end
         end
         @test residual(acc_order + 1, interior) > 1.0e-12
     end
+end
+
+@testset "MattssonAlmquistCarpenter2014Optimal with few nodes" begin
+    # For N = 7, the uniform part of the grid consists of a single node.
+    @testset "N = $N" for N in (7, 8)
+        for T in (Float32, Float64)
+            D = derivative_operator(MattssonAlmquistCarpenter2014Optimal(), 1, 2,
+                                    zero(T), one(T), N)
+            x = collect(grid(D))
+            @test D.Δx ≈ x[4] - x[3]
+            M = mass_matrix(D)
+            A = Matrix(D)
+            @test all(>(0), diag(M))
+            @test sum(M) ≈ 1
+            @test M * A + A' * M ≈ mass_matrix_boundary(D)
+            @test maximum(abs, D * ones(T, N)) < 10 * eps(T)
+            @test D * x ≈ ones(T, N)
+        end
+    end
+end
+
+@testset "Transposed derivative functionals at the boundaries" begin
+    for T in (Float32, Float64)
+        D = derivative_operator(MattssonNordström2004(), 2, 4, zero(T), one(T), 21)
+        N = size(D, 2)
+        u0 = rand(T, N)
+        for der_order in (Val(0), Val(1)), (α, β) in ((true, false), (T(2), T(3)))
+            # Only the entries in the stencil of the derivative functional are
+            # changed.
+            d = derivative_left(D, der_order)
+            idx = firstindex(d):findlast(!iszero, d)
+            u = copy(u0)
+            mul_transpose_derivative_left!(u, D, der_order, α, β)
+            @test u[idx] ≈ α * d[idx] + β * u0[idx]
+            @test u[(last(idx) + 1):end] == u0[(last(idx) + 1):end]
+
+            d = derivative_right(D, der_order)
+            idx = findfirst(!iszero, d):lastindex(d)
+            u = copy(u0)
+            mul_transpose_derivative_right!(u, D, der_order, α, β)
+            @test u[idx] ≈ α * d[idx] + β * u0[idx]
+            @test u[begin:(first(idx) - 1)] == u0[begin:(first(idx) - 1)]
+        end
+        @test_throws DimensionMismatch mul_transpose_derivative_left!(zeros(T, N + 1), D,
+                                                                      Val(1))
+        @test_throws DimensionMismatch mul_transpose_derivative_right!(zeros(T, N + 1), D,
+                                                                       Val(1))
+    end
+end
+
+@testset "Arrays with offset axes" begin
+    D = derivative_operator(MattssonNordström2004(), 1, 4, 0.0, 1.0, 21)
+    u = sinpi.(grid(D))
+    u_offset = OffsetArray(copy(u), -1)
+    @test integrate(u_offset, D) ≈ integrate(u, D)
+    @test integrate(abs2, u_offset, D) ≈ integrate(abs2, u, D)
+    @test_throws ArgumentError mul!(similar(u_offset), D, u_offset)
+    @test_throws ArgumentError mul!(similar(u_offset), D, u_offset, 2.0, 3.0)
+    D = derivative_operator(MattssonNordström2004(), 2, 4, 0.0, 1.0, 21)
+    for der_order in (Val(0), Val(1))
+        v = copy(u)
+        v_offset = OffsetArray(copy(u), -1)
+        mul_transpose_derivative_left!(v, D, der_order, 2.0, 3.0)
+        mul_transpose_derivative_left!(v_offset, D, der_order, 2.0, 3.0)
+        @test parent(v_offset) == v
+        mul_transpose_derivative_right!(v, D, der_order, 2.0, 3.0)
+        mul_transpose_derivative_right!(v_offset, D, der_order, 2.0, 3.0)
+        @test parent(v_offset) == v
+    end
+
+    D = periodic_derivative_operator(1, 4, 0.0, 1.0, 20)
+    u_offset = OffsetArray(sinpi.(grid(D)), -1)
+    @test_throws ArgumentError mul!(similar(u_offset), D, u_offset)
+    @test_throws ArgumentError mul!(similar(u_offset), D, u_offset, 2.0, 3.0)
 end
