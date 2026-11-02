@@ -505,6 +505,8 @@ function LinearAlgebra.issymmetric(rat::FourierRationalDerivativeOperator)
     @unpack num_coef, den_coef = rat
     # The symbol `num(ik) / den(ik)` is real (i.e., the operator is symmetric)
     # if numerator and denominator are both even or both odd polynomials.
+    # The check below assumes that there is no common factor that could be
+    # canceled.
     num_is_even = all(iszero, num_coef[idx] for idx in eachindex(num_coef) if iseven(idx))
     num_is_odd = all(iszero, num_coef[idx] for idx in eachindex(num_coef) if isodd(idx))
     den_is_even = all(iszero, den_coef[idx] for idx in eachindex(den_coef) if iseven(idx))
