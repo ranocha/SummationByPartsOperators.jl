@@ -63,7 +63,7 @@ function left_boundary_weight end
 """
     right_boundary_weight(D)
 
-Return the left-boundary weight of the (diagonal) mass matrix `M` associated to
+Return the right-boundary weight of the (diagonal) mass matrix `M` associated to
 the derivative operator `D`.
 """
 function right_boundary_weight end
@@ -574,7 +574,7 @@ end
 
 function Base.:+(D::AbstractDerivativeOperator, combi::LinearlyCombinedDerivativeOperators)
     coefficients = (one(eltype(D)), combi.coefficients...)
-    LinearlyCombinedDerivativeOperators((combi.operators..., D), coefficients)
+    LinearlyCombinedDerivativeOperators((D, combi.operators...), coefficients)
 end
 
 function Base.:+(combi1::LinearlyCombinedDerivativeOperators,

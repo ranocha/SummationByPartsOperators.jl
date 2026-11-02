@@ -27,23 +27,34 @@ struct MattssonAlmquistCarpenter2014OptimalGrid{T, Grid} <: AbstractArray{T, 1}
     d2::T
     d3::T
     uniform_grid::Grid
+    Δx::T
 end
 
 function MattssonAlmquistCarpenter2014OptimalGrid(xmin::T, xmax::T, d1::T, d2::T, d3::T,
-                                                  N::Int) where {T}
+                                                  Δx::T, N::Int) where {T}
     @argcheck xmin < xmax
     @argcheck N > 6
     @argcheck d1 > 0
     @argcheck d2 > 0
     @argcheck d3 > 0
+    @argcheck Δx > 0
 
-    uniform_grid = range(xmin + d1 + d2 + d3, stop = xmax - d1 - d2 - d3, length = N - 6)
+    if N == 7
+        # The step of a range with a single element is zero, so the grid
+        # spacing `Δx` is stored separately. The start and end points of the
+        # uniform part may differ due to rounding errors.
+        x = xmin + d1 + d2 + d3
+        uniform_grid = range(x, stop = x, length = 1)
+    else
+        uniform_grid = range(xmin + d1 + d2 + d3, stop = xmax - d1 - d2 - d3,
+                             length = N - 6)
+    end
     MattssonAlmquistCarpenter2014OptimalGrid{T, typeof(uniform_grid)}(xmin, xmax, d1, d2,
-                                                                      d3, uniform_grid)
+                                                                      d3, uniform_grid, Δx)
 end
 
-function MattssonAlmquistCarpenter2014OptimalGrid(xmin, xmax, d1, d2, d3, N)
-    MattssonAlmquistCarpenter2014OptimalGrid(promote(xmin, xmax, d1, d2, d3)..., N)
+function MattssonAlmquistCarpenter2014OptimalGrid(xmin, xmax, d1, d2, d3, Δx, N)
+    MattssonAlmquistCarpenter2014OptimalGrid(promote(xmin, xmax, d1, d2, d3, Δx)..., N)
 end
 
 function Base.length(grid::MattssonAlmquistCarpenter2014OptimalGrid)
@@ -76,7 +87,7 @@ function Base.getindex(grid::MattssonAlmquistCarpenter2014OptimalGrid, i::Int)
 end
 
 Base.size(grid::MattssonAlmquistCarpenter2014OptimalGrid) = (length(grid),)
-Base.step(grid::MattssonAlmquistCarpenter2014OptimalGrid) = step(grid.uniform_grid)
+Base.step(grid::MattssonAlmquistCarpenter2014OptimalGrid) = grid.Δx
 
 function construct_grid(::MattssonAlmquistCarpenter2014Optimal, accuracy_order, xmin, xmax,
                         N)
@@ -105,7 +116,7 @@ function construct_grid(::MattssonAlmquistCarpenter2014Optimal, accuracy_order, 
 
     h = (xmax - xmin) / (2 * (d1 + d2 + d3) + N - 7)
 
-    MattssonAlmquistCarpenter2014OptimalGrid(xmin, xmax, d1 * h, d2 * h, d3 * h, N)
+    MattssonAlmquistCarpenter2014OptimalGrid(xmin, xmax, d1 * h, d2 * h, d3 * h, h, N)
 end
 
 function first_derivative_coefficients(source::MattssonAlmquistCarpenter2014Optimal,

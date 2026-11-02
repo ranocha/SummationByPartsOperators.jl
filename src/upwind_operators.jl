@@ -113,7 +113,7 @@ function Base.show(io::IO, D::Union{UpwindOperators, PeriodicUpwindOperators})
         print(io, "Upwind SBP ", derivative_order(D),
               "-derivative operators")
     end
-    acc = accuracy_order(D.minus), accuracy_order(D.central), accuracy_order(D.minus)
+    acc = accuracy_order(D.minus), accuracy_order(D.central), accuracy_order(D.plus)
     if all(==(first(acc)), acc)
         print(io, " of order ", first(acc))
     else
@@ -129,7 +129,7 @@ function Base.show(io::IO, D::Union{UpwindOperators, PeriodicUpwindOperators})
 end
 
 function Base.summary(io::IO, D::Union{UpwindOperators, PeriodicUpwindOperators})
-    acc = accuracy_order(D.minus), accuracy_order(D.central), accuracy_order(D.minus)
+    acc = accuracy_order(D.minus), accuracy_order(D.central), accuracy_order(D.plus)
     if all(==(first(acc)), acc)
         acc_string = string(first(acc))
     else

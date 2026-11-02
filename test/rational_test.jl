@@ -749,6 +749,15 @@ end
             @test M isa Diagonal
             @test all(>(0), diag(M))
         end
+        @testset "minimal number of nodes" begin
+            # The uniform part of the grid consists of a single node.
+            D = derivative_operator(MattssonAlmquistCarpenter2014Optimal(), 1, 2,
+                                    XMIN, XMAX, 7)
+            M = mass_matrix(D)
+            A = Matrix(D)
+            @test M * A + A' * M == mass_matrix_boundary(D)
+            @test all(>(0), diag(M))
+        end
     end
 
     # The boundary optimized operators of Mattsson, Almquist, van der Weide

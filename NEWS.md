@@ -45,6 +45,42 @@ for human readability.
 
 #### Fixed
 
+- `D + combi` for a derivative operator `D` and a linear combination `combi`
+  of derivative operators paired the coefficients with the wrong operators,
+  e.g., `D3 + (D1 - D2)` computed `D1 + D2 - D3`.
+- `ldiv!` and `\` for rational Fourier derivative operators used a wrong
+  wavenumber for the last Fourier mode.
+- `rat + λ * I`, `rat - λ * I`, and `λ * I - rat` ignored `λ` for rational
+  periodic finite difference operators `rat`, i.e., they were only correct for
+  `λ == 1`. This also affected `D ± λ * I` for periodic derivative operators.
+- `fourier_derivative_matrix` returned wrong results for an odd number of
+  nodes and did not initialize the diagonal, which could result in garbage
+  values or an `UndefRefError` for non-bits types such as `BigFloat`.
+- `mul_transpose_derivative_right!` ignored `β`. The methods of
+  `mul_transpose_derivative_left!` and `mul_transpose_derivative_right!` for
+  `Val(0)` computed `(α + β) * u` at the boundary node instead of `α + β * u`.
+- `MattssonAlmquistCarpenter2014Optimal()` with accuracy order 2 and seven
+  nodes resulted in a grid spacing of zero.
+- `evaluate_coefficients` for Legendre operators returned plotting nodes in
+  `[-1, 1]` instead of the physical interval.
+- The Jacobians of coupled operators were computed from cell bounds that are
+  shrunk slightly for floating point types, which resulted in a systematic
+  relative error of the mass matrix and the derivative of a few ulp of the
+  cell bounds divided by the cell length, e.g., `1.5e-3` for `Float32` cells of
+  length `0.01` at `x = 100`.
+- `integrate(func, u, cD)` for coupled operators `cD` does not accept vectors
+  `u` of the wrong length anymore.
+- `mul!` for finite difference operators throws an `ArgumentError` for arrays
+  with offset axes instead of silently computing wrong results.
+  `integrate(func, u, D)` for finite difference operators and
+  `mul_transpose_derivative_left!` support arrays with offset axes now.
+- `I - D` for Fourier derivative operators `D` resulted in a
+  `StackOverflowError`.
+- `issymmetric` for rational Fourier derivative operators returned `true` for
+  some non-symmetric operators, e.g., `(I + D) / (I + 2 * D)`.
+- `show` and `summary` of upwind operators with different accuracy orders
+  displayed the accuracy order of the minus operator instead of the plus
+  operator.
 - `dissipation_operator(D)` used undivided differences on a uniform grid also
   for derivative operators `D` on grids with nonuniform spacing near the
   boundaries (`MattssonAlmquistCarpenter2014Optimal`,

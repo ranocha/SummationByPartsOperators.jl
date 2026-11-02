@@ -103,6 +103,10 @@ end
 
 @inline bounds(mesh::Union{UniformMesh1D, UniformPeriodicMesh1D}) = mesh.xmin, mesh.xmax
 
+# Use this instead of `bounds(cell, mesh)` to compute Jacobians since the latter
+# shrinks the cells slightly for floating point types.
+@inline cell_length(cell::Int, mesh::Union{UniformMesh1D, UniformPeriodicMesh1D}) = mesh.Δx
+
 function left_cell(cell::Int, mesh::AbstractMesh1D)
     N = numcells(mesh)
     @boundscheck begin
@@ -286,8 +290,7 @@ function left_boundary_weight(cD::UniformCoupledOperator)
     @unpack mesh, grid = meshgrid
     ymin, ymax = first(grid), last(grid)
     cell = 1
-    xmin, xmax = bounds(cell, mesh)
-    factor = (xmax - xmin) / (ymax - ymin)
+    factor = cell_length(cell, mesh) / (ymax - ymin)
     factor * left_boundary_weight(D)
 end
 
@@ -296,8 +299,7 @@ function right_boundary_weight(cD::UniformCoupledOperator)
     @unpack mesh, grid = meshgrid
     ymin, ymax = first(grid), last(grid)
     cell = numcells(mesh)
-    xmin, xmax = bounds(cell, mesh)
-    factor = (xmax - xmin) / (ymax - ymin)
+    factor = cell_length(cell, mesh) / (ymax - ymin)
     factor * right_boundary_weight(D)
 end
 
@@ -389,12 +391,10 @@ for (fname, op) in ((:scale_by_mass_matrix!, Base.:*),
             num_nodes_per_cell = length(grid) - 1
 
             cell = 1
-            xmin, xmax = bounds(cell, mesh)
-            jac = (xmax - xmin) / (ymax - ymin)
+            jac = cell_length(cell, mesh) / (ymax - ymin)
             if isperiodic(mesh)
                 next_cell = left_cell(cell, mesh)
-                xmin, xmax = bounds(next_cell, mesh)
-                next_jac = (xmax - xmin) / (ymax - ymin)
+                next_jac = cell_length(next_cell, mesh) / (ymax - ymin)
                 u[1] *= $op(factor,
                             jac * get_weight(D, 1) +
                             next_jac * get_weight(D, num_nodes_per_cell + 1))
@@ -414,11 +414,9 @@ for (fname, op) in ((:scale_by_mass_matrix!, Base.:*),
             end
 
             for cell in 2:(numcells(mesh) - 1)
-                xmin, xmax = bounds(cell, mesh)
-                jac = (xmax - xmin) / (ymax - ymin)
+                jac = cell_length(cell, mesh) / (ymax - ymin)
                 next_cell = left_cell(cell, mesh)
-                xmin, xmax = bounds(next_cell, mesh)
-                next_jac = (xmax - xmin) / (ymax - ymin)
+                next_jac = cell_length(next_cell, mesh) / (ymax - ymin)
                 u[(cell - 1) * num_nodes_per_cell + 1] *= $op(factor,
                                                               jac * get_weight(D, 1) +
                                                               next_jac * get_weight(D,
@@ -431,11 +429,9 @@ for (fname, op) in ((:scale_by_mass_matrix!, Base.:*),
             end
 
             cell = numcells(mesh)
-            xmin, xmax = bounds(cell, mesh)
-            jac = (xmax - xmin) / (ymax - ymin)
+            jac = cell_length(cell, mesh) / (ymax - ymin)
             next_cell = left_cell(cell, mesh)
-            xmin, xmax = bounds(next_cell, mesh)
-            next_jac = (xmax - xmin) / (ymax - ymin)
+            next_jac = cell_length(next_cell, mesh) / (ymax - ymin)
             u[(cell - 1) * num_nodes_per_cell + 1] *= $op(factor,
                                                           jac * get_weight(D, 1) +
                                                           next_jac * get_weight(D,
@@ -454,8 +450,7 @@ for (fname, op) in ((:scale_by_mass_matrix!, Base.:*),
         else # discontinuous coupling
             num_nodes_per_cell = length(grid)
             for cell in 1:numcells(mesh)
-                xmin, xmax = bounds(cell, mesh)
-                jac = (xmax - xmin) / (ymax - ymin)
+                jac = cell_length(cell, mesh) / (ymax - ymin)
                 idx = ((cell - 1) * num_nodes_per_cell + 1):(cell * num_nodes_per_cell)
                 $fname(view(u, idx), D, $op(factor, jac))
             end
@@ -466,6 +461,8 @@ for (fname, op) in ((:scale_by_mass_matrix!, Base.:*),
 end
 
 function integrate(func::Func, u::AbstractVector, cD::UniformCoupledOperator) where {Func}
+    Base.require_one_based_indexing(u)
+    @argcheck length(u)==size(cD, 2) DimensionMismatch
     @unpack D, meshgrid = cD
     @unpack mesh, grid = meshgrid
     ymin, ymax = first(grid), last(grid)
@@ -474,12 +471,10 @@ function integrate(func::Func, u::AbstractVector, cD::UniformCoupledOperator) wh
         num_nodes_per_cell = length(grid) - 1
 
         cell = 1
-        xmin, xmax = bounds(cell, mesh)
-        jac = (xmax - xmin) / (ymax - ymin)
+        jac = cell_length(cell, mesh) / (ymax - ymin)
         if isperiodic(mesh)
             next_cell = left_cell(cell, mesh)
-            xmin, xmax = bounds(next_cell, mesh)
-            next_jac = (xmax - xmin) / (ymax - ymin)
+            next_jac = cell_length(next_cell, mesh) / (ymax - ymin)
             res = func(u[1]) * (jac * get_weight(D, 1) +
                    next_jac * get_weight(D, num_nodes_per_cell + 1))
         else
@@ -497,11 +492,9 @@ function integrate(func::Func, u::AbstractVector, cD::UniformCoupledOperator) wh
         end
 
         for cell in 2:(numcells(mesh) - 1)
-            xmin, xmax = bounds(cell, mesh)
-            jac = (xmax - xmin) / (ymax - ymin)
+            jac = cell_length(cell, mesh) / (ymax - ymin)
             next_cell = left_cell(cell, mesh)
-            xmin, xmax = bounds(next_cell, mesh)
-            next_jac = (xmax - xmin) / (ymax - ymin)
+            next_jac = cell_length(next_cell, mesh) / (ymax - ymin)
             res += func(u[(cell - 1) * num_nodes_per_cell + 1]) * (jac * get_weight(D, 1) +
                     next_jac * get_weight(D, num_nodes_per_cell + 1))
             @simd for i in 2:num_nodes_per_cell
@@ -511,11 +504,9 @@ function integrate(func::Func, u::AbstractVector, cD::UniformCoupledOperator) wh
         end
 
         cell = numcells(mesh)
-        xmin, xmax = bounds(cell, mesh)
-        jac = (xmax - xmin) / (ymax - ymin)
+        jac = cell_length(cell, mesh) / (ymax - ymin)
         next_cell = left_cell(cell, mesh)
-        xmin, xmax = bounds(next_cell, mesh)
-        next_jac = (xmax - xmin) / (ymax - ymin)
+        next_jac = cell_length(next_cell, mesh) / (ymax - ymin)
         res += func(u[(cell - 1) * num_nodes_per_cell + 1]) *
                (jac * get_weight(D, 1) + next_jac * get_weight(D, num_nodes_per_cell + 1))
         @simd for i in 2:num_nodes_per_cell
@@ -528,13 +519,11 @@ function integrate(func::Func, u::AbstractVector, cD::UniformCoupledOperator) wh
     else # discontinuous coupling
         num_nodes_per_cell = length(grid)
         cell = 1
-        xmin, xmax = bounds(cell, mesh)
-        jac = (xmax - xmin) / (ymax - ymin)
+        jac = cell_length(cell, mesh) / (ymax - ymin)
         idx = ((cell - 1) * num_nodes_per_cell + 1):(cell * num_nodes_per_cell)
         res = jac * integrate(func, view(u, idx), D)
         for cell in 2:numcells(mesh)
-            xmin, xmax = bounds(cell, mesh)
-            jac = (xmax - xmin) / (ymax - ymin)
+            jac = cell_length(cell, mesh) / (ymax - ymin)
             idx = ((cell - 1) * num_nodes_per_cell + 1):(cell * num_nodes_per_cell)
             res += jac * integrate(func, view(u, idx), D)
         end
@@ -572,8 +561,7 @@ function mul_internal!(_dest::AbstractVector, D::AbstractNonperiodicDerivativeOp
     half = one(eltype(D)) / 2
 
     cell = 1
-    xmin, xmax = bounds(cell, mesh)
-    factor = (ymax - ymin) / (xmax - xmin)
+    factor = (ymax - ymin) / cell_length(cell, mesh)
     mul!(view(dest, :, cell), D, view(u, :, cell), α * factor)
     if numcells(mesh) == 1 && !isperiodic(mesh)
         return _dest
@@ -599,8 +587,7 @@ function mul_internal!(_dest::AbstractVector, D::AbstractNonperiodicDerivativeOp
     end
 
     for cell in 2:(numcells(mesh) - 1)
-        xmin, xmax = bounds(cell, mesh)
-        factor = (ymax - ymin) / (xmax - xmin)
+        factor = (ymax - ymin) / cell_length(cell, mesh)
         mul!(view(dest, :, cell), D, view(u, :, cell), α * factor)
         if coupling === Val(:central)
             dest[1, cell] += half * (u[1, cell] - u[end, left_cell(cell, mesh)]) * α *
@@ -617,8 +604,7 @@ function mul_internal!(_dest::AbstractVector, D::AbstractNonperiodicDerivativeOp
     end
 
     cell = numcells(mesh)
-    xmin, xmax = bounds(cell, mesh)
-    factor = (ymax - ymin) / (xmax - xmin)
+    factor = (ymax - ymin) / cell_length(cell, mesh)
     mul!(view(dest, :, cell), D, view(u, :, cell), α * factor)
     if coupling === Val(:central)
         dest[1, cell] += half * (u[1, cell] - u[end, left_cell(cell, mesh)]) * α * factor /
@@ -652,8 +638,7 @@ function mul_internal!(dest::AbstractVector, D::AbstractNonperiodicDerivativeOpe
     desttmp = similar(dest, length(grid))
 
     cell = 1
-    xmin, xmax = bounds(cell, mesh)
-    factor = (ymax - ymin) / (xmax - xmin)
+    factor = (ymax - ymin) / cell_length(cell, mesh)
     if isperiodic(mesh) && numcells(mesh) == 1
         utmp[1:(end - 1)] .= u
         utmp[end] = u[1]
@@ -673,8 +658,7 @@ function mul_internal!(dest::AbstractVector, D::AbstractNonperiodicDerivativeOpe
     end
 
     for cell in 2:(numcells(mesh) - 1)
-        xmin, xmax = bounds(cell, mesh)
-        factor = (ymax - ymin) / (xmax - xmin)
+        factor = (ymax - ymin) / cell_length(cell, mesh)
         idx = ((cell - 1) * num_nodes_per_cell + 1):(cell * num_nodes_per_cell + 1)
         utmp .= u[idx]
         mul!(desttmp, D, utmp, α * factor)
@@ -684,8 +668,7 @@ function mul_internal!(dest::AbstractVector, D::AbstractNonperiodicDerivativeOpe
     end
 
     cell = numcells(mesh)
-    xmin, xmax = bounds(cell, mesh)
-    factor = (ymax - ymin) / (xmax - xmin)
+    factor = (ymax - ymin) / cell_length(cell, mesh)
     if isperiodic(mesh)
         idx = ((cell - 1) * num_nodes_per_cell + 1):(cell * num_nodes_per_cell)
         utmp[1:(end - 1)] .= u[idx]
@@ -719,8 +702,7 @@ function mul_internal!(dest::AbstractVector, D::AbstractNonperiodicDerivativeOpe
     desttmp = similar(dest, length(grid))
 
     cell = 1
-    xmin, xmax = bounds(cell, mesh)
-    factor1 = (ymax - ymin) / (xmax - xmin)
+    factor1 = (ymax - ymin) / cell_length(cell, mesh)
     factor = factor1^2
     if isperiodic(mesh) && numcells(mesh) == 1
         utmp[1:(end - 1)] .= u
@@ -749,8 +731,7 @@ function mul_internal!(dest::AbstractVector, D::AbstractNonperiodicDerivativeOpe
     end
 
     for cell in 2:(numcells(mesh) - 1)
-        xmin, xmax = bounds(cell, mesh)
-        factor1 = (ymax - ymin) / (xmax - xmin)
+        factor1 = (ymax - ymin) / cell_length(cell, mesh)
         factor = factor1^2
         idx = ((cell - 1) * num_nodes_per_cell + 1):(cell * num_nodes_per_cell + 1)
         utmp .= u[idx]
@@ -763,8 +744,7 @@ function mul_internal!(dest::AbstractVector, D::AbstractNonperiodicDerivativeOpe
     end
 
     cell = numcells(mesh)
-    xmin, xmax = bounds(cell, mesh)
-    factor1 = (ymax - ymin) / (xmax - xmin)
+    factor1 = (ymax - ymin) / cell_length(cell, mesh)
     factor = factor1^2
     if isperiodic(mesh)
         idx = ((cell - 1) * num_nodes_per_cell + 1):(cell * num_nodes_per_cell)
@@ -820,8 +800,7 @@ function mul_internal!(_dest::AbstractVector, D::AbstractNonperiodicDerivativeOp
     half = one(eltype(D)) / 2
 
     cell = 1
-    xmin, xmax = bounds(cell, mesh)
-    factor = (ymax - ymin) / (xmax - xmin)
+    factor = (ymax - ymin) / cell_length(cell, mesh)
     mul!(view(dest, :, cell), D, view(u, :, cell), α * factor, β)
     if numcells(mesh) == 1 && !isperiodic(mesh)
         return _dest
@@ -847,8 +826,7 @@ function mul_internal!(_dest::AbstractVector, D::AbstractNonperiodicDerivativeOp
     end
 
     for cell in 2:(numcells(mesh) - 1)
-        xmin, xmax = bounds(cell, mesh)
-        factor = (ymax - ymin) / (xmax - xmin)
+        factor = (ymax - ymin) / cell_length(cell, mesh)
         mul!(view(dest, :, cell), D, view(u, :, cell), α * factor, β)
         if coupling === Val(:central)
             dest[1, cell] += half * (u[1, cell] - u[end, left_cell(cell, mesh)]) * α *
@@ -865,8 +843,7 @@ function mul_internal!(_dest::AbstractVector, D::AbstractNonperiodicDerivativeOp
     end
 
     cell = numcells(mesh)
-    xmin, xmax = bounds(cell, mesh)
-    factor = (ymax - ymin) / (xmax - xmin)
+    factor = (ymax - ymin) / cell_length(cell, mesh)
     mul!(view(dest, :, cell), D, view(u, :, cell), α * factor, β)
     if coupling === Val(:central)
         dest[1, cell] += half * (u[1, cell] - u[end, left_cell(cell, mesh)]) * α * factor /
@@ -907,9 +884,8 @@ function derivative_left(cD::UniformNonperiodicCoupledOperator,
 
     @unpack mesh, grid = cD.meshgrid
     cell = 1
-    xmin, xmax = bounds(cell, mesh)
     ymin, ymax = first(grid), last(grid)
-    factor = (ymax - ymin) / (xmax - xmin)
+    factor = (ymax - ymin) / cell_length(cell, mesh)
     u_local = @view u[begin:(begin + size(cD.D, 2) - 1)]
     return factor * derivative_left(cD.D, u_local, der_order)
 end
@@ -923,9 +899,8 @@ function derivative_right(cD::UniformNonperiodicCoupledOperator,
 
     @unpack mesh, grid = cD.meshgrid
     cell = numcells(mesh)
-    xmin, xmax = bounds(cell, mesh)
     ymin, ymax = first(grid), last(grid)
-    factor = (ymax - ymin) / (xmax - xmin)
+    factor = (ymax - ymin) / cell_length(cell, mesh)
     u_local = @view u[(end - size(cD.D, 2) + 1):end]
     return factor * derivative_right(cD.D, u_local, der_order)
 end

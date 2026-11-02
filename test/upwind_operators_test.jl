@@ -174,6 +174,18 @@ end
     @test D.central == Dc
     @test derivative_order(D) == 1
 
+    # Upwind operators with different orders of accuracy
+    Dp3 = derivative_operator(Mattsson2017(:plus), 1, acc_order + 1, xmin, xmax, N)
+    D3 = UpwindOperators(Dm, Dc, Dp3)
+    @test occursin("of orders (2, 2, 3)", sprint(show, D3))
+    @test occursin("accuracy:(2, 2, 3)", sprint(summary, D3))
+    Dp3 = periodic_derivative_operator(1, acc_order + 1, xmin, xmax, N, -1)
+    Dm2 = periodic_derivative_operator(1, acc_order, xmin, xmax, N, -2)
+    Dc2 = periodic_derivative_operator(1, acc_order, xmin, xmax, N)
+    D3 = PeriodicUpwindOperators(Dm2, Dc2, Dp3)
+    @test occursin("of orders (2, 2, 3)", sprint(show, D3))
+    @test occursin("accuracy:(2, 2, 3)", sprint(summary, D3))
+
     @test grid(D) == grid(Dp)
     @test SummationByPartsOperators.xmin(D) == SummationByPartsOperators.xmin(Dp)
     @test SummationByPartsOperators.xmax(D) == SummationByPartsOperators.xmax(Dp)

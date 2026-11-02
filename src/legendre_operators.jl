@@ -107,7 +107,10 @@ function evaluate_coefficients(u,
                                D::Union{LegendreDerivativeOperator,
                                         LegendreSecondDerivativeOperator},
                                npoints = 2 * size(D, 2) + 1)
-    evaluate_coefficients(u, D.basis, npoints)
+    xplot, uplot = evaluate_coefficients(u, D.basis, npoints)
+    xmin, xmax = first(D.grid), last(D.grid)
+    xplot .= map_from_canonical.(xplot, xmin, xmax, D.basis)
+    return xplot, uplot
 end
 
 function mass_matrix(D::Union{LegendreDerivativeOperator, LegendreSecondDerivativeOperator})

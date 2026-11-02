@@ -55,6 +55,7 @@ end
 # Compute `α*D*u + β*dest` and store the result in `dest`.
 Base.@propagate_inbounds function mul!(dest::AbstractVector, D::VarCoefDerivativeOperator,
                                        u::AbstractVector, α, β)
+    Base.require_one_based_indexing(dest, u)
     @boundscheck begin
         @argcheck size(D, 2)==length(u) DimensionMismatch
         @argcheck size(D, 1)==length(dest) DimensionMismatch
@@ -65,6 +66,7 @@ end
 # Compute `α*D*u` and store the result in `dest`.
 Base.@propagate_inbounds function mul!(dest::AbstractVector, D::VarCoefDerivativeOperator,
                                        u::AbstractVector, α)
+    Base.require_one_based_indexing(dest, u)
     @boundscheck begin
         @argcheck size(D, 2)==length(u) DimensionMismatch
         @argcheck size(D, 1)==length(dest) DimensionMismatch

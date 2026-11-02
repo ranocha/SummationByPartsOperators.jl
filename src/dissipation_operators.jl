@@ -212,6 +212,7 @@ end
 # Compute `α*D*u + β*dest` and store the result in `dest`.
 Base.@propagate_inbounds function mul!(dest::AbstractVector, D::DissipationOperator,
                                        u::AbstractVector, α, β)
+    Base.require_one_based_indexing(dest, u)
     @boundscheck begin
         @argcheck size(D, 2)==length(u) DimensionMismatch
         @argcheck size(D, 1)==length(dest) DimensionMismatch
@@ -222,6 +223,7 @@ end
 # Compute `α*D*u` and store the result in `dest`.
 Base.@propagate_inbounds function mul!(dest::AbstractVector, D::DissipationOperator,
                                        u::AbstractVector, α)
+    Base.require_one_based_indexing(dest, u)
     @boundscheck begin
         @argcheck size(D, 2)==length(u) DimensionMismatch
         @argcheck size(D, 1)==length(dest) DimensionMismatch
@@ -231,13 +233,15 @@ end
 
 """
     dissipation_operator(source_of_coefficients, order, xmin, xmax, N,
-                         left_weights, right_weights, mode=FastMode())
+                         left_weights, right_weights,
+                         strength=one(xmin + xmax), mode=FastMode())
 
 Create a negative semidefinite `DissipationOperator` using undivided differences
 approximating a weighted `order`-th derivative on a grid between `xmin` and
 `xmax` with `N` grid points up to order of accuracy 2 with coefficients given
 by `source_of_coefficients`.
 The norm matrix is given by `left_weights` and `right_weights`.
+The operator is scaled by the factor `strength`.
 The evaluation of the derivative can be parallelized using threads by choosing
 `mode=ThreadedMode()`.
 """
