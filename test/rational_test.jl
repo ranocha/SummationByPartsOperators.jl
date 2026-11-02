@@ -637,6 +637,42 @@ end
             @test !iszero(A * (x .^ (order ÷ 2)))
         end
     end
+
+    # On grids with nonuniform spacing near the boundaries, the dissipation
+    # operators use divided differences on the grid of `D`.
+    @testset "$(nameof(typeof(source)))" for (source, acc_orders, nnodes) in ((MattssonAlmquistCarpenter2014Optimal(),
+                                                                               (2, 4, 6, 8),
+                                                                               NNODES),
+                                                                              (MattssonAlmquistVanDerWeide2018Minimal(),
+                                                                               (4, 6, 8),
+                                                                               51),
+                                                                              (MattssonAlmquistVanDerWeide2018Accurate(),
+                                                                               (4, 6, 8),
+                                                                               51),
+                                                                              (MattssonNiemeläWinters2026(:central),
+                                                                               (2, 4, 6, 8),
+                                                                               NNODES),
+                                                                              (SharanBradyLivescu2022(RT(1 //
+                                                                                                         2),
+                                                                                                      RT(2 //
+                                                                                                         3)),
+                                                                               (2, 4, 6),
+                                                                               NNODES))
+        @testset "accuracy order $acc_order" for acc_order in acc_orders
+            D = derivative_operator(source, 1, acc_order, XMIN, XMAX, nnodes)
+            M = mass_matrix(D)
+            x = collect(grid(D))
+            Di = dissipation_operator(MattssonSvärdNordström2004(), D)
+            @test grid(Di) == grid(D)
+            A = Matrix(Di)
+            # M Diss is symmetric (and negative semidefinite)
+            @test M * A == (M * A)'
+            for k in 0:(acc_order ÷ 2 - 1)
+                @test iszero(A * (x .^ k))
+            end
+            @test !iszero(A * (x .^ (acc_order ÷ 2)))
+        end
+    end
 end
 
 @testset "Coupled operators" begin

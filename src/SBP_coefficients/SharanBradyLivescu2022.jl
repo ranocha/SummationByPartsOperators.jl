@@ -71,6 +71,7 @@ end
 
 Base.size(grid::CutCellGrid) = (length(grid),)
 Base.step(grid::CutCellGrid) = step(grid.uniform_interior_grid)
+num_boundary_spacings(::CutCellGrid) = (1, 1)
 
 function construct_grid(source::SharanBradyLivescu2022, accuracy_order, xmin, xmax, N)
     if accuracy_order == 2

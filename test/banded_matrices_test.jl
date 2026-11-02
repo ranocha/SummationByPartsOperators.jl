@@ -83,13 +83,17 @@ for T in (Float32, Float64), acc_order in (2, 4, 6, 8, 10, 12),
     @test Di_full == Di_sparse
     @test Di_full == Di_banded
 
+    # Since `abs(u[i]) <= 1`, the rounding errors scale with the row sums of
+    # `abs.(Di_full)`, which are larger in the boundary rows on grids with
+    # nonuniform spacing near the boundaries.
+    atol = eps(T) * max(500, opnorm(Di_full, Inf))
     mul!(dest1, Di_serial, u)
     mul!(dest2, Di_full, u)
-    @test all(i -> isapprox(dest1[i], dest2[i], atol = 500 * eps(T)), eachindex(u))
+    @test all(i -> isapprox(dest1[i], dest2[i]; atol), eachindex(u))
     mul!(dest2, Di_sparse, u)
-    @test all(i -> isapprox(dest1[i], dest2[i], atol = 500 * eps(T)), eachindex(u))
+    @test all(i -> isapprox(dest1[i], dest2[i]; atol), eachindex(u))
     mul!(dest2, Di_banded, u)
-    @test all(i -> isapprox(dest1[i], dest2[i], atol = 500 * eps(T)), eachindex(u))
+    @test all(i -> isapprox(dest1[i], dest2[i]; atol), eachindex(u))
 end
 
 # The coefficient function `one` results in the constant coefficient case,

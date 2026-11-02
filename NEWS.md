@@ -95,6 +95,22 @@ for human readability.
 - `show` and `summary` of upwind operators with different accuracy orders
   displayed the accuracy order of the minus operator instead of the plus
   operator.
+- `dissipation_operator(D)` used undivided differences on a uniform grid also
+  for derivative operators `D` on grids with nonuniform spacing near the
+  boundaries (`MattssonAlmquistCarpenter2014Optimal`,
+  `MattssonAlmquistVanDerWeide2018Minimal`,
+  `MattssonAlmquistVanDerWeide2018Accurate`, `MattssonNiemeläWinters2026`, and
+  `SharanBradyLivescu2022`).
+  Thus, the grid of the dissipation operator differed from the grid of `D`,
+  and the dissipation operator did not annihilate linear functions and was
+  only first-order accurate near the boundaries. Now, the dissipation operator
+  uses the grid of `D` and divided differences (scaled by `p! Δx^p` with
+  `Δx = step(grid(D))`) on non-equispaced nodes. This restores the accuracy
+  `O(Δx^p)` of a dissipation operator of order `2p` near the boundaries, while
+  keeping the operator negative semidefinite with respect to the mass matrix of `D`.
+  Up to a scalar factor, this is the construction of Bercik, Craig Penner, and
+  Zingg (2025), [arXiv:2503.12670](https://arxiv.org/abs/2503.12670).
+  Nothing changes on uniform grids.
 - `mass_matrix_boundary(D, dim)` threw an `ArgumentError` for a
   `MultidimensionalMatrixDerivativeOperator` whose `boundary_indices` contain a
   node several times, e.g., a corner shared by two boundary faces, although such

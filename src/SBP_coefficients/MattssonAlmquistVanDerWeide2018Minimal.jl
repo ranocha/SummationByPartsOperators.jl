@@ -72,6 +72,7 @@ end
 
 Base.size(grid::BoundaryAdaptedGrid) = (length(grid),)
 Base.step(grid::BoundaryAdaptedGrid) = grid.Δx
+num_boundary_spacings(::BoundaryAdaptedGrid{T, M}) where {T, M} = (M, M)
 
 function construct_grid(::MattssonAlmquistVanDerWeide2018Minimal, accuracy_order, xmin,
                         xmax, N)
