@@ -225,6 +225,11 @@ _coef_end(coef, D1) = coef
     end
 end
 
+function FourierPolynomialDerivativeOperator(D1::FourierDerivativeOperator{T},
+                                             coef::Tuple) where {T}
+    FourierPolynomialDerivativeOperator(D1, map(c -> convert(T, c), coef))
+end
+
 function FourierPolynomialDerivativeOperator(D1::FourierDerivativeOperator)
     T = eltype(D1)
     FourierPolynomialDerivativeOperator(D1, (zero(T), one(T)))
@@ -480,6 +485,12 @@ end
         new{T, Grid, RFFT, BRFFT, Nnum, Nden}(D1, num_coef, num_coef_end, den_coef,
                                               den_coef_end)
     end
+end
+
+function FourierRationalDerivativeOperator(D1::FourierDerivativeOperator{T},
+                                           num_coef::Tuple, den_coef::Tuple) where {T}
+    FourierRationalDerivativeOperator(D1, map(c -> convert(T, c), num_coef),
+                                      map(c -> convert(T, c), den_coef))
 end
 
 Base.size(rat::FourierRationalDerivativeOperator) = size(rat.D1)

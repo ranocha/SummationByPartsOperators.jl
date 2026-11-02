@@ -78,6 +78,10 @@ function Base.show(io::IO, semi::VariableLinearAdvectionNonperiodicSemidiscretiz
     end
 end
 
+function godunov_flux_variablelinearadvection(uₗ::Real, uᵣ::Real, a::Real)
+    godunov_flux_variablelinearadvection(promote(uₗ, uᵣ, a)...)
+end
+
 function godunov_flux_variablelinearadvection(uₗ::T, uᵣ::T, a::T) where {T <: Real}
     ifelse(a > 0, a * uₗ, a * uᵣ)
 end

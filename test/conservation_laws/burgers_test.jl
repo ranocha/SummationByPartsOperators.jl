@@ -51,6 +51,26 @@ using Test, SummationByPartsOperators
             ode = semidiscretize(u0func, semi, tspan)
             du = similar(ode.u0)
             semi(du, ode.u0, nothing, first(tspan))
+
+            # boundary values of another type than `T`
+            semi_int = BurgersNonperiodicSemidiscretization(D, Di, split_form,
+                                                            t -> 1, t -> -1)
+            semi_T = BurgersNonperiodicSemidiscretization(D, Di, split_form,
+                                                          t -> one(T), t -> -one(T))
+            du_int = similar(ode.u0)
+            semi_int(du_int, ode.u0, nothing, first(tspan))
+            semi_T(du, ode.u0, nothing, first(tspan))
+            @test du_int == du
         end
+    end
+end
+
+@testset "Godunov flux with arguments of different types" begin
+    godunov_flux_burgers = SummationByPartsOperators.godunov_flux_burgers
+    for (i, x) in ((1, 0.5), (-1, 0.5), (1, -0.5), (-1, -0.5))
+        @test godunov_flux_burgers(i, x) === godunov_flux_burgers(float(i), x)
+        @test godunov_flux_burgers(x, i) === godunov_flux_burgers(x, float(i))
+        @test godunov_flux_burgers(i, Float32(x)) ===
+              godunov_flux_burgers(Float32(i), Float32(x))
     end
 end

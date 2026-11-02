@@ -77,6 +77,16 @@ for T in (Float32, Float64)
         @test @inferred(I-D) * u ≈ u - D * u
         @test @inferred(D-I) * u ≈ D * u - u
 
+        # scaling factors of another type are converted to `T`
+        for op in (0.5 * D, D * 0.5, 0.5 * D^2, D + 0.5I, 0.5I - D^2,
+                   0.5 * ((I - D^2) / (I + D^4)), (I - D^2) / (I + D^4) + 0.5I)
+            @test eltype(op) == T
+            @test eltype(op * u) == T
+        end
+        @test (0.5 * D) * u ≈ T(0.5) * (D * u)
+        @test (D^2 + 0.5I) * u ≈ D^2 * u + T(0.5) * u
+        @test (0.5 * (D / (I - D^2))) * u ≈ T(0.5) * ((D / (I - D^2)) * u)
+
         # The rational operator is symmetric if and only if the numerator
         # and the denominator are both even or both odd.
         @test issymmetric((I - D^2) / (I + D^4))
@@ -231,6 +241,16 @@ for T in (Float32, Float64), filter_type in (ExponentialFilter(),)
             norm2_u = integrate(u -> u^2, u, D)
             filter!(u)
             @test integrate(u -> u^2, u, D) <= norm2_u
+        end
+
+        # filtering a matrix filters each column
+        U = rand(T, N, 3)
+        V = copy(U)
+        filter!(U)
+        for j in axes(V, 2)
+            v = V[:, j]
+            filter!(v)
+            @test U[:, j] ≈ v
         end
     end
 end

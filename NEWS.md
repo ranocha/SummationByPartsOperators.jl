@@ -117,6 +117,25 @@ for human readability.
   determined by the antisymmetric matrix `R` given in the reference. Since the
   boundary closure got wider, this operator requires at least 9 nodes now
   (instead of 7).
+- Scaling a Fourier or periodic finite difference operator (or polynomials and
+  rational functions of such operators) by a number of another type, e.g.,
+  `0.5 * D` or `D + 0.5 * I` for a `Float32` operator `D`, threw a
+  `MethodError`. Now, the scaling factor is converted to the element type of
+  the operator.
+- Applying a `ConstantFilter` of a Fourier operator to a matrix threw a
+  `DimensionMismatch`.
+- `periodic_derivative_operator(LanczosLowNoise(); derivative_order = 2, ...)`
+  threw an `UndefVarError` instead of an `ArgumentError`.
+- `periodic_derivative_operator(LanczosLowNoise(), 1, 4, 0.0, 1.0, 20)`
+  resulted in a `StackOverflowError` instead of a `MethodError`.
+- `periodic_derivative_coefficients(source, derivative_order, accuracy_order)`
+  without keyword arguments was ambiguous for `Holoborodko2008()` and
+  `LanczosLowNoise()`.
+- `integrate` was not implemented for `VarCoefDerivativeOperator`s.
+- The nonperiodic semidiscretizations of Burgers' equation, the cubic
+  conservation law, and the variable linear advection equation threw a
+  `MethodError` if the boundary data and the solution have different types,
+  e.g., for boundary functions returning an `Int`.
 
 #### Deprecated
 

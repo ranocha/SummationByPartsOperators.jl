@@ -61,12 +61,30 @@ end
 
 function (filter::ConstantFilter)(u::AbstractMatrix, tmp::AbstractVector)
     @boundscheck begin
-        length(tmp) == size(u, 1) || throw(DimensionMismatch())
+        length(filter.coefficients) == length(tmp) || throw(DimensionMismatch())
     end
 
-    for j in Base.OneTo(size(u, 2))
+    for j in axes(u, 2)
         v = view(u, :, j)
         @inbounds filter(v, tmp)
+    end
+
+    nothing
+end
+
+# FFTW plans can only be applied to arrays with the memory alignment of the
+# arrays they were created for, which columns of a matrix do not have in general.
+function (filter::ConstantFilter{<:Real, <:FFTW.FFTWPlan})(u::AbstractMatrix,
+                                                           tmp::AbstractVector)
+    @boundscheck begin
+        length(filter.coefficients) == length(tmp) || throw(DimensionMismatch())
+    end
+
+    v = similar(u, size(u, 1))
+    for j in axes(u, 2)
+        copyto!(v, view(u, :, j))
+        @inbounds filter(v, tmp)
+        copyto!(view(u, :, j), v)
     end
 
     nothing

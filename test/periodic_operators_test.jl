@@ -1478,6 +1478,28 @@ end
     end
 end # LanczosLowNoise
 
+@testset "LanczosLowNoise and Holoborodko2008 errors" begin
+    @test_throws "derivative_order=2" periodic_derivative_operator(LanczosLowNoise();
+                                                                   derivative_order = 2,
+                                                                   accuracy_order = 4,
+                                                                   xmin = 0.0, xmax = 1.0,
+                                                                   N = 20)
+    # the positional form exists only for Holoborodko2008
+    @test_throws MethodError periodic_derivative_operator(LanczosLowNoise(), 1, 4,
+                                                          0.0, 1.0, 20)
+    @test_throws MethodError periodic_derivative_operator(LanczosLowNoise(), 1, 4,
+                                                          0.0, 1.0, 20, FastMode())
+
+    # positional `derivative_order` and `accuracy_order` without keyword arguments
+    for source in (Holoborodko2008(), LanczosLowNoise())
+        coefficients = SummationByPartsOperators.periodic_derivative_coefficients(source,
+                                                                                  1, 2)
+        @test coefficients ==
+              SummationByPartsOperators.periodic_derivative_coefficients(source, 1, 2;
+                                                                         stencil_width = 5)
+    end
+end
+
 # Check rational operators
 for T in (Float32, Float64)
     xmin = -one(T)
@@ -1504,6 +1526,15 @@ for T in (Float32, Float64)
               (I - Matrix(D^2)) / (I + Matrix(D^2)) - 2I
         @test Matrix(2I - (I - D^2) / (I + D^2)) ≈
               2I - (I - Matrix(D^2)) / (I + Matrix(D^2))
+
+        # scaling factors of another type are converted to `T`
+        for op in (0.5 * D, D * 0.5, 0.5 * D^2, D + 0.5I, 0.5I - D^2,
+                   0.5 * ((I - D^2) / (I + D^2)), (I - D^2) / (I + D^2) + 0.5I)
+            @test eltype(op) == T
+            @test eltype(op * u) == T
+        end
+        @test Matrix(0.5 * D) ≈ T(0.5) * Matrix(D)
+        @test Matrix(D + 0.5I) ≈ Matrix(D) + T(0.5) * I
 
         rat = (I + 2D + 5 * D^2) * (2I * D - D^3 * 5I) * (D * 2 - D^2 * 5)
         @test rat.num_coef == (0.0, 0.0, 4.0, -2.0, -10.0, -45.0, 0.0, 125.0)

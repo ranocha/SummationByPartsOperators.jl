@@ -396,7 +396,7 @@ the leftmost grid point used is determined by `left_offset`.
 The evaluation of the derivative can be parallelized using threads by choosing
 mode=ThreadedMode()`.
 """
-function periodic_derivative_coefficients(derivative_order, accuracy_order,
+function periodic_derivative_coefficients(derivative_order::Integer, accuracy_order,
                                           left_offset::Int = -(accuracy_order + 1) ÷ 2,
                                           T = Float64, mode = FastMode())
     @argcheck -accuracy_order <= left_offset <= 0
@@ -663,6 +663,8 @@ function periodic_derivative_coefficients(source::LanczosLowNoise,
         else
             method_exists = false
         end
+    else
+        method_exists = false
     end
     if method_exists == false
         throw(ArgumentError("Method with derivative_order=$derivative_order, accuracy_order=$accuracy_order, stencil_width=$stencil_width not implemented/derived."))
@@ -883,9 +885,9 @@ function periodic_derivative_operator(derivative_order::Integer, accuracy_order,
     PeriodicDerivativeOperator(coefficients, grid)
 end
 
-@inline function periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax,
-                                              N,
-                                              mode,
+@inline function periodic_derivative_operator(derivative_order::Integer, accuracy_order,
+                                              xmin, xmax, N,
+                                              mode::Union{AbstractExecutionMode, Val},
                                               left_offset::Int = -(accuracy_order + 1) ÷ 2)
     if mode === Val(:serial) || mode === Val(:threads)
         # TODO: deprecated in v0.5
@@ -1239,10 +1241,11 @@ function PeriodicRationalDerivativeOperator(D::PeriodicDerivativeOperator{T}) wh
                                        rfft_plan, irfft_plan)
 end
 
-function PeriodicRationalDerivativeOperator(rat::PeriodicRationalDerivativeOperator,
-                                            num_coef, den_coef)
-    PeriodicRationalDerivativeOperator(rat.D, num_coef, den_coef, rat.tmp, rat.eigval,
-                                       rat.rfft_plan, rat.irfft_plan)
+function PeriodicRationalDerivativeOperator(rat::PeriodicRationalDerivativeOperator{T},
+                                            num_coef, den_coef) where {T}
+    PeriodicRationalDerivativeOperator(rat.D, map(c -> convert(T, c), num_coef),
+                                       map(c -> convert(T, c), den_coef), rat.tmp,
+                                       rat.eigval, rat.rfft_plan, rat.irfft_plan)
 end
 
 function PeriodicRationalDerivativeOperator(D::PeriodicDerivativeOperator, num_coef,
