@@ -87,8 +87,6 @@ for human readability.
   finite difference operators resulted in operators that threw a `MethodError`
   when applied to a vector. Since `-D^2` was affected, `-D^2 + I` threw a
   `MethodError` as well.
-- `-D` and `2 \ D` for periodic finite difference operators `D` could not be
-  combined with `UniformScaling`s, e.g., `-D + I` threw a `MethodError`.
 - `periodic_derivative_operator(derivative_order, accuracy_order, grid)` threw
   a `MethodError` because of a method ambiguity (also with the optional
   arguments `left_offset` and `mode`).
