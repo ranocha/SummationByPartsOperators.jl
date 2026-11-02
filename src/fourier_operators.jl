@@ -274,7 +274,7 @@ function Base.literal_pow(::typeof(^), D1::FourierDerivativeOperator, ::Val{P}) 
     FourierPolynomialDerivativeOperator(D1, coef)
 end
 
-function Base.:*(factor::Union{Real, Integer}, poly::FourierPolynomialDerivativeOperator)
+function Base.:*(factor::Real, poly::FourierPolynomialDerivativeOperator)
     @unpack coef = poly
     for idx in 1:length(coef)
         coef = Base.setindex(coef, factor * coef[idx], idx)
@@ -283,15 +283,15 @@ function Base.:*(factor::Union{Real, Integer}, poly::FourierPolynomialDerivative
     FourierPolynomialDerivativeOperator(poly.D1, coef)
 end
 
-function Base.:*(poly::FourierPolynomialDerivativeOperator, factor::Union{Real, Integer})
+function Base.:*(poly::FourierPolynomialDerivativeOperator, factor::Real)
     factor * poly
 end
 
-function Base.:*(D::FourierDerivativeOperator, factor::Union{Real, Integer})
+function Base.:*(D::FourierDerivativeOperator, factor::Real)
     FourierPolynomialDerivativeOperator(D) * factor
 end
 
-function Base.:*(factor::Union{Real, Integer}, D::FourierDerivativeOperator)
+function Base.:*(factor::Real, D::FourierDerivativeOperator)
     D * factor
 end
 
@@ -434,15 +434,15 @@ function Base.:-(D::FourierDerivativeOperator)
     -FourierPolynomialDerivativeOperator(D)
 end
 
-function Base.:/(poly::FourierPolynomialDerivativeOperator, factor::Union{Real, Integer})
+function Base.:/(poly::FourierPolynomialDerivativeOperator, factor::Real)
     FourierPolynomialDerivativeOperator(poly.D1, map(c -> c / factor, poly.coef))
 end
 
-function Base.:/(D::FourierDerivativeOperator, factor::Union{Real, Integer})
+function Base.:/(D::FourierDerivativeOperator, factor::Real)
     FourierPolynomialDerivativeOperator(D) / factor
 end
 
-function Base.:\(factor::Union{Real, Integer},
+function Base.:\(factor::Real,
                  poly::Union{FourierDerivativeOperator,
                              FourierPolynomialDerivativeOperator})
     poly / factor
@@ -711,7 +711,7 @@ function Base.:*(rat1::Union{FourierDerivativeOperator,
     FourierRationalDerivativeOperator(rat1) * rat2
 end
 
-function Base.:*(factor::Union{Real, Integer}, rat::FourierRationalDerivativeOperator)
+function Base.:*(factor::Real, rat::FourierRationalDerivativeOperator)
     @unpack num_coef = rat
     for idx in eachindex(num_coef)
         num_coef = Base.setindex(num_coef, factor * num_coef[idx], idx)
@@ -720,7 +720,7 @@ function Base.:*(factor::Union{Real, Integer}, rat::FourierRationalDerivativeOpe
     FourierRationalDerivativeOperator(rat.D1, num_coef, rat.den_coef)
 end
 
-function Base.:*(poly::FourierRationalDerivativeOperator, factor::Union{Real, Integer})
+function Base.:*(poly::FourierRationalDerivativeOperator, factor::Real)
     factor * poly
 end
 
@@ -758,7 +758,7 @@ function Base.:/(rat1::Union{FourierDerivativeOperator,
     FourierRationalDerivativeOperator(rat1) / rat2
 end
 
-function Base.:/(factor::Union{Real, Integer}, rat::FourierRationalDerivativeOperator)
+function Base.:/(factor::Real, rat::FourierRationalDerivativeOperator)
     @unpack den_coef = rat
     for idx in eachindex(den_coef)
         den_coef = Base.setindex(den_coef, factor * den_coef[idx], idx)
@@ -767,7 +767,7 @@ function Base.:/(factor::Union{Real, Integer}, rat::FourierRationalDerivativeOpe
     FourierRationalDerivativeOperator(rat.D1, den_coef, rat.num_coef)
 end
 
-function Base.:/(rat::FourierRationalDerivativeOperator, factor::Union{Real, Integer})
+function Base.:/(rat::FourierRationalDerivativeOperator, factor::Real)
     @unpack num_coef = rat
     for idx in eachindex(num_coef)
         num_coef = Base.setindex(num_coef, num_coef[idx] / factor, idx)
@@ -776,11 +776,11 @@ function Base.:/(rat::FourierRationalDerivativeOperator, factor::Union{Real, Int
     FourierRationalDerivativeOperator(rat.D1, num_coef, rat.den_coef)
 end
 
-function Base.:\(factor::Union{Real, Integer}, rat::FourierRationalDerivativeOperator)
+function Base.:\(factor::Real, rat::FourierRationalDerivativeOperator)
     rat / factor
 end
 
-function Base.:\(rat::FourierRationalDerivativeOperator, factor::Union{Real, Integer})
+function Base.:\(rat::FourierRationalDerivativeOperator, factor::Real)
     inv(rat) * factor
 end
 
@@ -800,7 +800,7 @@ function Base.:\(scaling::UniformScaling, rat::FourierRationalDerivativeOperator
     scaling.λ \ rat
 end
 
-function Base.:/(factor::Union{Real, Integer},
+function Base.:/(factor::Real,
                  den::Union{FourierDerivativeOperator,
                             FourierPolynomialDerivativeOperator})
     factor / FourierRationalDerivativeOperator(den)
@@ -808,7 +808,7 @@ end
 
 function Base.:\(den::Union{FourierDerivativeOperator,
                             FourierPolynomialDerivativeOperator},
-                 factor::Union{Real, Integer})
+                 factor::Real)
     FourierRationalDerivativeOperator(den) \ factor
 end
 

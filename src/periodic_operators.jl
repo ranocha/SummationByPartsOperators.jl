@@ -1328,7 +1328,7 @@ function Base.literal_pow(::typeof(^), D1::PeriodicDerivativeOperator, ::Val{P})
     PeriodicRationalDerivativeOperator(D1, coef, (one(T),))
 end
 
-function Base.:*(factor::Union{Real, Integer}, rat::PeriodicRationalDerivativeOperator)
+function Base.:*(factor::Real, rat::PeriodicRationalDerivativeOperator)
     @unpack num_coef = rat
     for idx in 1:length(num_coef)
         num_coef = Base.setindex(num_coef, factor * num_coef[idx], idx)
@@ -1337,15 +1337,15 @@ function Base.:*(factor::Union{Real, Integer}, rat::PeriodicRationalDerivativeOp
     PeriodicRationalDerivativeOperator(rat, num_coef, rat.den_coef)
 end
 
-function Base.:*(rat::PeriodicRationalDerivativeOperator, factor::Union{Real, Integer})
+function Base.:*(rat::PeriodicRationalDerivativeOperator, factor::Real)
     factor * rat
 end
 
-function Base.:*(D::PeriodicDerivativeOperator, factor::Union{Real, Integer})
+function Base.:*(D::PeriodicDerivativeOperator, factor::Real)
     PeriodicRationalDerivativeOperator(D) * factor
 end
 
-function Base.:*(factor::Union{Real, Integer}, D::PeriodicDerivativeOperator)
+function Base.:*(factor::Real, D::PeriodicDerivativeOperator)
     D * factor
 end
 
@@ -1480,20 +1480,20 @@ function Base.:-(rat::PeriodicRationalDerivativeOperator)
     PeriodicRationalDerivativeOperator(rat, map(c -> -c, rat.num_coef), rat.den_coef)
 end
 
-function Base.:/(rat::PeriodicRationalDerivativeOperator, factor::Union{Real, Integer})
+function Base.:/(rat::PeriodicRationalDerivativeOperator, factor::Real)
     PeriodicRationalDerivativeOperator(rat, map(c -> c / factor, rat.num_coef),
                                        rat.den_coef)
 end
 
-function Base.:\(factor::Union{Real, Integer}, rat::PeriodicRationalDerivativeOperator)
+function Base.:\(factor::Real, rat::PeriodicRationalDerivativeOperator)
     rat / factor
 end
 
-function Base.:/(factor::Union{Real, Integer}, rat::PeriodicRationalDerivativeOperator)
+function Base.:/(factor::Real, rat::PeriodicRationalDerivativeOperator)
     factor * inv(rat)
 end
 
-function Base.:\(rat::PeriodicRationalDerivativeOperator, factor::Union{Real, Integer})
+function Base.:\(rat::PeriodicRationalDerivativeOperator, factor::Real)
     inv(rat) * factor
 end
 
