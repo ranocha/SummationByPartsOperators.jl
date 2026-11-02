@@ -168,6 +168,8 @@ function Base.show(io::IO, semi::CubicNonperiodicSemidiscretization)
     end
 end
 
+godunov_flux_cubic(uₗ::Real, uᵣ::Real) = godunov_flux_cubic(promote(uₗ, uᵣ)...)
+
 function godunov_flux_cubic(uₗ::T, uᵣ::T) where {T <: Real}
     uₗ^3
 end

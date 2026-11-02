@@ -166,6 +166,8 @@ function Base.show(io::IO, semi::BurgersNonperiodicSemidiscretization)
     end
 end
 
+godunov_flux_burgers(uₗ::Real, uᵣ::Real) = godunov_flux_burgers(promote(uₗ, uᵣ)...)
+
 function godunov_flux_burgers(uₗ::T, uᵣ::T) where {T <: Real}
     if uₗ < uᵣ
         if uₗ < 0 && 0 < uᵣ
