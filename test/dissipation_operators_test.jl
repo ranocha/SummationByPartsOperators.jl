@@ -204,6 +204,27 @@ for (source_D, acc_orders) in ((MattssonAlmquistCarpenter2014Optimal(), (2, 4, 6
     end
 end
 
+# Nonperiodic: The number of boundary rows of dissipation operators on grids
+# with nonuniform spacing near the boundaries does not depend on the number of
+# nodes, also on fine and translated grids with large rounding errors of the
+# nodes relative to the grid spacing.
+for (source_D, num_spacings) in ((MattssonAlmquistCarpenter2014Optimal(), 3),
+                                 (MattssonAlmquistVanDerWeide2018Accurate(), 4),
+                                 (SharanBradyLivescu2022(0.5f0, 2.0f0 / 3), 1)),
+    order in (2, 4, 6, 8)
+
+    p = order ÷ 2
+    D = derivative_operator(source_D, 1, 6, 100.0f0, 101.0f0, 501)
+    Di = dissipation_operator(D; order)
+    cache = Di.coefficients.coefficient_cache
+    @test length(cache.left_stencils) == num_spacings
+    @test length(cache.right_stencils) == num_spacings
+    @test length(cache.inv_left_weights) <=
+          max(length(D.coefficients.left_weights), num_spacings + p)
+    @test length(cache.inv_right_weights) <=
+          max(length(D.coefficients.right_weights), num_spacings + p)
+end
+
 # Periodic: Test symmetry and eigenvalues
 for acc_order in 2:2:8, T in (Float32, Float64)
     xmin = -one(T)

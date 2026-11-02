@@ -105,13 +105,7 @@ function MattssonSvärdNordström2004NonuniformCache(uniform_cache::AbstractCoef
                                                    inv_right_weights_D) where {T}
     Δx = step(grid)
     N = length(grid)
-    is_uniform(i) = isapprox(grid[i + 1] - grid[i], Δx)
-    # number of nonuniform spacings at the left and right boundary
-    num_left = something(findlast(i -> !is_uniform(i), 1:(N ÷ 2)), 0)
-    num_right = something(findlast(j -> !is_uniform(N - j), 1:(N ÷ 2)), 0)
-    if num_left == 0 && num_right == 0
-        return uniform_cache
-    end
+    num_left, num_right = num_boundary_spacings(grid)
 
     num_weights = length(inv_left_weights_D) + length(inv_right_weights_D)
     if N < max(p + 1, num_weights)
@@ -162,6 +156,18 @@ function MattssonSvärdNordström2004NonuniformCache(uniform_cache::AbstractCoef
                                                                          left_stencils,
                                                                          right_stencils,
                                                                          uniform_stencil)
+end
+
+# `num_boundary_spacings(grid)` returns the numbers of spacings at the left and
+# right boundary of `grid` involving nodes outside of the uniform part of `grid`.
+# All other spacings equal `step(grid)` up to rounding errors. The boundary
+# region must be determined from the structure of `grid`: comparing the spacings
+# with `step(grid)` misclassifies uniform spacings on fine or translated grids,
+# where the rounding errors of the nodes are large relative to `step(grid)`.
+function num_boundary_spacings(grid)
+    throw(ArgumentError("Dissipation operators are not implemented for grids of type " *
+                        "$(typeof(grid)). Implement " *
+                        "`SummationByPartsOperators.num_boundary_spacings` for this type."))
 end
 
 # All rows may be boundary rows on small grids.

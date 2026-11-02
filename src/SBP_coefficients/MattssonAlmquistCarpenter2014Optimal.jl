@@ -88,6 +88,7 @@ end
 
 Base.size(grid::MattssonAlmquistCarpenter2014OptimalGrid) = (length(grid),)
 Base.step(grid::MattssonAlmquistCarpenter2014OptimalGrid) = grid.Δx
+num_boundary_spacings(::MattssonAlmquistCarpenter2014OptimalGrid) = (3, 3)
 
 function construct_grid(::MattssonAlmquistCarpenter2014Optimal, accuracy_order, xmin, xmax,
                         N)
