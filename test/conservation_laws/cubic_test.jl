@@ -64,5 +64,20 @@ using OrdinaryDiffEqSSPRK, DiffEqCallbacks
         saving = SavingCallback(semi, saveat = range(tspan..., length = 10))
         sol = solve(ode, SSPRK104(), dt = T(1 / 5N), save_everystep = false,
                     callback = saving)
+
+        # boundary values of another type than `T`
+        semi_int = CubicNonperiodicSemidiscretization(D, Di, split_form, t -> 1, t -> -1)
+        semi_T = CubicNonperiodicSemidiscretization(D, Di, split_form,
+                                                    t -> one(T), t -> -one(T))
+        du_int = similar(ode.u0)
+        semi_int(du_int, ode.u0, nothing, first(tspan))
+        semi_T(du, ode.u0, nothing, first(tspan))
+        @test du_int == du
     end
+end
+
+@testset "Godunov flux with arguments of different types" begin
+    godunov_flux_cubic = SummationByPartsOperators.godunov_flux_cubic
+    @test godunov_flux_cubic(2, 0.5) === godunov_flux_cubic(2.0, 0.5)
+    @test godunov_flux_cubic(2, 0.5f0) === godunov_flux_cubic(2.0f0, 0.5f0)
 end

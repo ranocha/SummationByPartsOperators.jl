@@ -31,6 +31,19 @@ using Test, SummationByPartsOperators
         ode = semidiscretize(u0func, semi, tspan)
         du = similar(ode.u0)
         semi(du, ode.u0, nothing, first(tspan))
+
+        # boundary values of another type than `T`
+        semi_int = VariableLinearAdvectionNonperiodicSemidiscretization(D, Di, afunc,
+                                                                        split_form,
+                                                                        t -> 1, t -> -1)
+        semi_T = VariableLinearAdvectionNonperiodicSemidiscretization(D, Di, afunc,
+                                                                      split_form,
+                                                                      t -> one(T),
+                                                                      t -> -one(T))
+        du_int = similar(ode.u0)
+        semi_int(du_int, ode.u0, nothing, first(tspan))
+        semi_T(du, ode.u0, nothing, first(tspan))
+        @test du_int == du
     end
 
     # periodic, Fourier

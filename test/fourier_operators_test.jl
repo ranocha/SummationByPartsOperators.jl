@@ -77,6 +77,31 @@ for T in (Float32, Float64)
         @test @inferred(I-D) * u ≈ u - D * u
         @test @inferred(D-I) * u ≈ D * u - u
 
+        # scaling factors of another type are converted to `T`
+        for op in (0.5 * D, D * 0.5, 0.5 * D^2, D + 0.5I, 0.5I - D^2,
+                   0.5 * ((I - D^2) / (I + D^4)), (I - D^2) / (I + D^4) + 0.5I)
+            @test eltype(op) == T
+            @test eltype(op * u) == T
+        end
+        @test (0.5 * D) * u ≈ T(0.5) * (D * u)
+        @test (D^2 + 0.5I) * u ≈ D^2 * u + T(0.5) * u
+        @test (0.5 * (D / (I - D^2))) * u ≈ T(0.5) * ((D / (I - D^2)) * u)
+
+        # negation and division of derivative operators and polynomials
+        poly = I + D^2
+        rat = (I - D^2) / (I + D^4)
+        for (op, v) in ((-D, -(D * u)), (D + D, 2 * (D * u)), (D - D, zero(u)),
+                        (D / 2, (D * u) / 2), (2 \ D, (D * u) / 2),
+                        (D / 0.5I, 2 * (D * u)), (0.5I \ D, 2 * (D * u)),
+                        (-D^2 + 0.5I, T(0.5) * u - D^2 * u),
+                        (-poly, -(poly * u)), (poly / 0.5, 2 * (poly * u)),
+                        (2.0 / poly, 2 * (poly \ u)), (poly \ 2.0, 2 * (poly \ u)),
+                        (1.0I / poly, poly \ u), (poly \ 1.0I, poly \ u),
+                        (rat / 0.5I, 2 * (rat * u)), (2.0I / rat, 2 * (rat \ u)))
+            @test eltype(op) == T
+            @test op * u ≈ v
+        end
+
         # The rational operator is symmetric if and only if the numerator
         # and the denominator are both even or both odd.
         @test issymmetric((I - D^2) / (I + D^4))
@@ -232,5 +257,7 @@ for T in (Float32, Float64), filter_type in (ExponentialFilter(),)
             filter!(u)
             @test integrate(u -> u^2, u, D) <= norm2_u
         end
+
+        @test_throws "only be applied to vectors" filter!(rand(T, N, 3))
     end
 end

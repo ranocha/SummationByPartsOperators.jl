@@ -631,33 +631,6 @@ Base.@propagate_inbounds function mul!(dest::AbstractVector, D::DerivativeOperat
     @inbounds mul_internal!(dest, D.coefficients, u, α * D.factor)
 end
 
-"""
-    integrate(func, u, D::DerivativeOperator)
-
-Map the function `func` to the coefficients `u` and integrate with respect to
-the quadrature rule associated with the SBP derivative operator `D`.
-"""
-function integrate(func::Func, u::AbstractVector, D::DerivativeOperator) where {Func}
-    @boundscheck begin
-        length(u) == length(grid(D)) ||
-            throw(DimensionMismatch("sizes of input vector and operator do not match"))
-    end
-    @unpack Δx = D
-    @unpack left_weights, right_weights = D.coefficients
-
-    @inbounds res = sum(func,
-                        view(u,
-                             (firstindex(u) + length(left_weights)):(lastindex(u) - length(right_weights))))
-    @inbounds for i in Base.OneTo(length(left_weights))
-        res += left_weights[i] * func(u[begin + i - 1])
-    end
-    @inbounds for i in Base.OneTo(length(right_weights))
-        res += right_weights[i] * func(u[end - i + 1])
-    end
-
-    Δx * res
-end
-
 function scale_by_mass_matrix!(u::AbstractVector, D::DerivativeOperator)
     Base.require_one_based_indexing(u)
     @boundscheck begin

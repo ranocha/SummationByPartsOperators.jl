@@ -396,7 +396,7 @@ the leftmost grid point used is determined by `left_offset`.
 The evaluation of the derivative can be parallelized using threads by choosing
 mode=ThreadedMode()`.
 """
-function periodic_derivative_coefficients(derivative_order, accuracy_order,
+function periodic_derivative_coefficients(derivative_order::Integer, accuracy_order,
                                           left_offset::Int = -(accuracy_order + 1) ÷ 2,
                                           T = Float64, mode = FastMode())
     @argcheck -accuracy_order <= left_offset <= 0
@@ -663,6 +663,8 @@ function periodic_derivative_coefficients(source::LanczosLowNoise,
         else
             method_exists = false
         end
+    else
+        method_exists = false
     end
     if method_exists == false
         throw(ArgumentError("Method with derivative_order=$derivative_order, accuracy_order=$accuracy_order, stencil_width=$stencil_width not implemented/derived."))
@@ -883,9 +885,9 @@ function periodic_derivative_operator(derivative_order::Integer, accuracy_order,
     PeriodicDerivativeOperator(coefficients, grid)
 end
 
-@inline function periodic_derivative_operator(derivative_order, accuracy_order, xmin, xmax,
-                                              N,
-                                              mode,
+@inline function periodic_derivative_operator(derivative_order::Integer, accuracy_order,
+                                              xmin, xmax, N,
+                                              mode::Union{AbstractExecutionMode, Val},
                                               left_offset::Int = -(accuracy_order + 1) ÷ 2)
     if mode === Val(:serial) || mode === Val(:threads)
         # TODO: deprecated in v0.5
@@ -979,7 +981,7 @@ the leftmost grid point used is determined by `left_offset`.
 The evaluation of the derivative can be parallelized using threads by choosing
 `mode=ThreadedMode())`.
 """
-function periodic_derivative_operator(derivative_order, accuracy_order,
+function periodic_derivative_operator(derivative_order::Integer, accuracy_order,
                                       grid::Union{LinRange, StepRangeLen},
                                       left_offset::Int = -(accuracy_order + 1) ÷ 2,
                                       mode = FastMode())
@@ -994,7 +996,7 @@ function periodic_derivative_operator(derivative_order, accuracy_order,
     PeriodicDerivativeOperator(coefficients, grid)
 end
 
-@inline function periodic_derivative_operator(derivative_order, accuracy_order,
+@inline function periodic_derivative_operator(derivative_order::Integer, accuracy_order,
                                               grid::Union{LinRange, StepRangeLen},
                                               mode::AbstractExecutionMode,
                                               left_offset::Int = -(accuracy_order + 1) ÷ 2)
@@ -1239,10 +1241,11 @@ function PeriodicRationalDerivativeOperator(D::PeriodicDerivativeOperator{T}) wh
                                        rfft_plan, irfft_plan)
 end
 
-function PeriodicRationalDerivativeOperator(rat::PeriodicRationalDerivativeOperator,
-                                            num_coef, den_coef)
-    PeriodicRationalDerivativeOperator(rat.D, num_coef, den_coef, rat.tmp, rat.eigval,
-                                       rat.rfft_plan, rat.irfft_plan)
+function PeriodicRationalDerivativeOperator(rat::PeriodicRationalDerivativeOperator{T},
+                                            num_coef, den_coef) where {T}
+    PeriodicRationalDerivativeOperator(rat.D, map(c -> convert(T, c), num_coef),
+                                       map(c -> convert(T, c), den_coef), rat.tmp,
+                                       rat.eigval, rat.rfft_plan, rat.irfft_plan)
 end
 
 function PeriodicRationalDerivativeOperator(D::PeriodicDerivativeOperator, num_coef,
@@ -1325,7 +1328,7 @@ function Base.literal_pow(::typeof(^), D1::PeriodicDerivativeOperator, ::Val{P})
     PeriodicRationalDerivativeOperator(D1, coef, (one(T),))
 end
 
-function Base.:*(factor::Union{Real, Integer}, rat::PeriodicRationalDerivativeOperator)
+function Base.:*(factor::Real, rat::PeriodicRationalDerivativeOperator)
     @unpack num_coef = rat
     for idx in 1:length(num_coef)
         num_coef = Base.setindex(num_coef, factor * num_coef[idx], idx)
@@ -1334,15 +1337,15 @@ function Base.:*(factor::Union{Real, Integer}, rat::PeriodicRationalDerivativeOp
     PeriodicRationalDerivativeOperator(rat, num_coef, rat.den_coef)
 end
 
-function Base.:*(rat::PeriodicRationalDerivativeOperator, factor::Union{Real, Integer})
+function Base.:*(rat::PeriodicRationalDerivativeOperator, factor::Real)
     factor * rat
 end
 
-function Base.:*(D::PeriodicDerivativeOperator, factor::Union{Real, Integer})
+function Base.:*(D::PeriodicDerivativeOperator, factor::Real)
     PeriodicRationalDerivativeOperator(D) * factor
 end
 
-function Base.:*(factor::Union{Real, Integer}, D::PeriodicDerivativeOperator)
+function Base.:*(factor::Real, D::PeriodicDerivativeOperator)
     D * factor
 end
 
@@ -1471,6 +1474,51 @@ end
 
 function Base.:/(rat1::PeriodicDerivativeOperator, rat2::PeriodicRationalDerivativeOperator)
     PeriodicRationalDerivativeOperator(rat1) / rat2
+end
+
+function Base.:-(rat::PeriodicRationalDerivativeOperator)
+    PeriodicRationalDerivativeOperator(rat, map(c -> -c, rat.num_coef), rat.den_coef)
+end
+
+function Base.:/(rat::PeriodicRationalDerivativeOperator, factor::Real)
+    PeriodicRationalDerivativeOperator(rat, map(c -> c / factor, rat.num_coef),
+                                       rat.den_coef)
+end
+
+function Base.:\(factor::Real, rat::PeriodicRationalDerivativeOperator)
+    rat / factor
+end
+
+function Base.:/(factor::Real, rat::PeriodicRationalDerivativeOperator)
+    factor * inv(rat)
+end
+
+function Base.:\(rat::PeriodicRationalDerivativeOperator, factor::Real)
+    inv(rat) * factor
+end
+
+function Base.:/(rat::PeriodicRationalDerivativeOperator, scaling::UniformScaling)
+    rat / scaling.λ
+end
+
+function Base.:\(scaling::UniformScaling, rat::PeriodicRationalDerivativeOperator)
+    scaling.λ \ rat
+end
+
+function Base.:/(scaling::UniformScaling, rat::PeriodicRationalDerivativeOperator)
+    scaling.λ / rat
+end
+
+function Base.:\(rat::PeriodicRationalDerivativeOperator, scaling::UniformScaling)
+    rat \ scaling.λ
+end
+
+function Base.:/(D::PeriodicDerivativeOperator, scaling::UniformScaling)
+    PeriodicRationalDerivativeOperator(D) / scaling
+end
+
+function Base.:\(scaling::UniformScaling, D::PeriodicDerivativeOperator)
+    scaling \ PeriodicRationalDerivativeOperator(D)
 end
 
 function mul!(dest::AbstractVector{T}, rat::PeriodicRationalDerivativeOperator,
