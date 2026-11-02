@@ -41,6 +41,22 @@ for T in (Float32, Float64)
     end
 end
 
+# Evaluation on the physical interval
+for T in (Float32, Float64)
+    xmin = T(2)
+    xmax = T(5)
+    for N in (2, 5),
+        D in (legendre_derivative_operator(xmin, xmax, N),
+              legendre_second_derivative_operator(xmin, xmax, N))
+
+        u = compute_coefficients(x -> x^(N - 1), D)
+        xplot, uplot = evaluate_coefficients(u, D)
+        @test first(xplot) ≈ xmin
+        @test last(xplot) ≈ xmax
+        @test uplot ≈ xplot .^ (N - 1)
+    end
+end
+
 # Modal Filtering
 for T in (Float32, Float64), filter_type in (ExponentialFilter(),)
     xmin = -one(T)

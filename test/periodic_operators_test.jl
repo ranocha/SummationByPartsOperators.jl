@@ -1494,6 +1494,16 @@ for T in (Float32, Float64)
         @test Matrix(I - D^2) ≈ I - Matrix(D^2)
         @test Matrix(I + D) ≈ I + Matrix(D)
         @test Matrix(D - I) ≈ Matrix(D) - I
+        @test Matrix(D + 2I) ≈ Matrix(D) + 2I
+        @test Matrix(2I + D) ≈ Matrix(D) + 2I
+        @test Matrix(D - 2I) ≈ Matrix(D) - 2I
+        @test Matrix(2I - D) ≈ 2I - Matrix(D)
+        @test Matrix((I - D^2) / (I + D^2) + 2I) ≈
+              (I - Matrix(D^2)) / (I + Matrix(D^2)) + 2I
+        @test Matrix((I - D^2) / (I + D^2) - 2I) ≈
+              (I - Matrix(D^2)) / (I + Matrix(D^2)) - 2I
+        @test Matrix(2I - (I - D^2) / (I + D^2)) ≈
+              2I - (I - Matrix(D^2)) / (I + Matrix(D^2))
 
         rat = (I + 2D + 5 * D^2) * (2I * D - D^3 * 5I) * (D * 2 - D^2 * 5)
         @test rat.num_coef == (0.0, 0.0, 4.0, -2.0, -10.0, -45.0, 0.0, 125.0)

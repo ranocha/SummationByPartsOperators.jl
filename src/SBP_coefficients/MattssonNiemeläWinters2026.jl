@@ -26,9 +26,9 @@ function Base.show(io::IO, source::MattssonNiemeläWinters2026)
         summary(io, source)
     else
         print(io,
-              "Mattsson, Niemelä, Winters (2026) \n",
-              "  Optimal boundary closures for diagonal-norm upwind SBP operators. \n",
-              "  arXiv e-print 2602.05727. \n",
+              "Mattsson, Niemelä, Winters (2027) \n",
+              "  Boundary-optimized closures for diagonal-norm upwind SBP operators. \n",
+              "  Journal of Computational Physics 568, pp. 115399. \n",
               "  (upwind coefficients ", source.kind, ")")
     end
 end

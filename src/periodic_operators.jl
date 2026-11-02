@@ -748,6 +748,7 @@ xmax(D::PeriodicDerivativeOperator) = last(D.grid_evaluate)
 # Compute `α*D*u + β*dest` and store the result in `dest`.
 Base.@propagate_inbounds function mul!(dest::AbstractVector, D::PeriodicDerivativeOperator,
                                        u::AbstractVector, α, β)
+    Base.require_one_based_indexing(dest, u)
     @boundscheck begin
         @argcheck size(D, 2)==length(u) DimensionMismatch
         @argcheck size(D, 1)==length(dest) DimensionMismatch
@@ -758,6 +759,7 @@ end
 # Compute `α*D*u` and store the result in `dest`.
 Base.@propagate_inbounds function mul!(dest::AbstractVector, D::PeriodicDerivativeOperator,
                                        u::AbstractVector, α)
+    Base.require_one_based_indexing(dest, u)
     @boundscheck begin
         @argcheck size(D, 2)==length(u) DimensionMismatch
         @argcheck size(D, 1)==length(dest) DimensionMismatch
@@ -1380,7 +1382,7 @@ end
 
 function Base.:+(rat::PeriodicRationalDerivativeOperator, scaling::UniformScaling)
     @unpack num_coef, den_coef = rat
-    num_coef = add_poly(num_coef, den_coef)
+    num_coef = add_poly(num_coef, map(c -> scaling.λ * c, den_coef))
 
     PeriodicRationalDerivativeOperator(rat, num_coef, den_coef)
 end
@@ -1417,14 +1419,14 @@ end
 
 function Base.:-(rat::PeriodicRationalDerivativeOperator, scaling::UniformScaling)
     @unpack num_coef, den_coef = rat
-    num_coef = subtract_poly(num_coef, den_coef)
+    num_coef = subtract_poly(num_coef, map(c -> scaling.λ * c, den_coef))
 
     PeriodicRationalDerivativeOperator(rat, num_coef, den_coef)
 end
 
 function Base.:-(scaling::UniformScaling, rat::PeriodicRationalDerivativeOperator)
     @unpack num_coef, den_coef = rat
-    num_coef = subtract_poly(den_coef, num_coef)
+    num_coef = subtract_poly(map(c -> scaling.λ * c, den_coef), num_coef)
 
     PeriodicRationalDerivativeOperator(rat, num_coef, den_coef)
 end
