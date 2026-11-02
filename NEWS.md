@@ -131,6 +131,16 @@ for human readability.
   determined by the antisymmetric matrix `R` given in the reference. Since the
   boundary closure got wider, this operator requires at least 9 nodes now
   (instead of 7).
+- The kernels of the Fourier spectral viscosity operators
+  `MadayTadmor1989()`, `TadmorWaagan2012Convergent()`, and `Tadmor1993()`
+  were shifted by one wavenumber relative to the references, e.g.,
+  `Tadmor1993()` used `1 - ((m + 1) / (k + 1))^(2s)` instead of
+  `1 - (m / k)^(2s)` for the wavenumber `k` and the cutoff wavenumber
+  `m = cutoff - 1`. Now, they match the references. The keyword argument
+  `cutoff` of `dissipation_operator` for Fourier derivative operators is
+  documented now. Moreover, the kernels of these operators and of
+  `TadmorWaagan2012Standard()` are computed in the requested element type
+  instead of `Float64`.
 - Scaling a Fourier or periodic finite difference operator (or polynomials and
   rational functions of such operators) by a number of another type, e.g.,
   `0.5 * D` or `D + 0.5 * I` for a `Float32` operator `D`, threw a
