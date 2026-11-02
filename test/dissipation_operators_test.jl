@@ -1,6 +1,7 @@
 using Test
 using LinearAlgebra
 using SummationByPartsOperators
+using OffsetArrays: OffsetArray
 
 D_test_list = (MattssonNordström2004(), MattssonSvärdNordström2004(),
                MattssonSvärdShoeybi2008(), Mattsson2014(),
@@ -144,6 +145,9 @@ for (make_source, acc_orders) in ((T -> MattssonAlmquistCarpenter2014Optimal(),
         @test maximum(abs, Di_full * u - dest1) < tol
         @test iszero(dissipation_mul_allocations(dest1, Di_serial, u))
         @test iszero(dissipation_mul_allocations(dest2, Di_serial, u, one(T), zero(T)))
+        u_offset = OffsetArray(u, -1)
+        @test_throws ArgumentError mul!(similar(u_offset), Di_serial, u_offset)
+        @test_throws ArgumentError mul!(similar(u_offset), Di_serial, u_offset, 2, 3)
 
         push!(maxerrs, maximum(abs, dest1))
     end
