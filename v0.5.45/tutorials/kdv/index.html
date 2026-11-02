@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Korteweg-de Vries equation · SummationByPartsOperators.jl</title><script data-outdated-warner src="../../assets/warner.js"></script><link rel="canonical" href="https://ranocha.github.io/SummationByPartsOperators.jl/stable/tutorials/kdv/"/><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">SummationByPartsOperators.jl</a></span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><a class="tocitem" href="../../introduction/">Introduction</a></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="../constant_linear_advection/">Linear advection equation with constant coefficients</a></li><li><a class="tocitem" href="../advection_diffusion/">Linear advection diffusion equation with periodic boundary conditions</a></li><li><a class="tocitem" href="../variable_linear_advection/">Linear advection equation with variable coefficients</a></li><li><a class="tocitem" href="../wave_equation/">Wave equation</a></li><li class="is-active"><a class="tocitem" href>Korteweg-de Vries equation</a><ul class="internal"><li><a class="tocitem" href="#Basic-example-using-finite-difference-SBP-operators"><span>Basic example using finite difference SBP operators</span></a></li><li><a class="tocitem" href="#Advanced-visualization"><span>Advanced visualization</span></a></li><li><a class="tocitem" href="#Package-versions"><span>Package versions</span></a></li></ul></li></ul></li><li><a class="tocitem" href="../../ad/">Automatic differentiation (AD)</a></li><li><a class="tocitem" href="../../applications/">Applications &amp; references</a></li><li><a class="tocitem" href="../../benchmarks/">Benchmarks</a></li><li><a class="tocitem" href="../../api_reference/">API reference</a></li><li><a class="tocitem" href="../../contributing/">Contributing</a></li><li><a class="tocitem" href="../../license/">License</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Tutorials</a></li><li class="is-active"><a href>Korteweg-de Vries equation</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Korteweg-de Vries equation</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/ranocha/SummationByPartsOperators.jl/blob/main/docs/src/tutorials/kdv.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Korteweg-de-Vries-equation"><a class="docs-heading-anchor" href="#Korteweg-de-Vries-equation">Korteweg-de Vries equation</a><a id="Korteweg-de-Vries-equation-1"></a><a class="docs-heading-anchor-permalink" href="#Korteweg-de-Vries-equation" title="Permalink"></a></h1><p>Let&#39;s consider the Korteweg-de Vries (KdV) equation</p><p class="math-container">\[\begin{aligned}
+    \partial_t u(t,x) + \partial_x \frac{u(t,x)^2}{2} + \partial_x^3 u(t,x) &amp;= 0, &amp;&amp; t \in (0,T), x \in (x_{min}, x_{max}), \\
+    u(0,x) &amp;= u_0(x), &amp;&amp; x \in (x_{min}, x_{max}), \\
+\end{aligned}\]</p><p>with periodic boundary conditions. The KdV equation has the quadratic invariant</p><p class="math-container">\[    J = \frac{1}{2} \int u(t,x)^2 \mathrm{d}x.\]</p><p>A classical trick to conserve this invariant is to use following split form</p><p class="math-container">\[    u_t + \frac{1}{3} (u^2)_x + \frac{1}{3} u u_x = 0.\]</p><p>Indeed, integration by parts with periodic boundary conditions yields</p><p class="math-container">\[\begin{aligned}
+    \partial_t J
+    &amp;=
+    \int u u_t
+    =
+    -\frac{1}{3} \int u (u^2)_x - \frac{1}{3} \int u^2 u_x
+    \\
+    &amp;=
+    0 + \frac{1}{3} \int u_x u^2 - \frac{1}{3} \int u^2 u_x
+    =
+    0.
+\end{aligned}\]</p><h2 id="Basic-example-using-finite-difference-SBP-operators"><a class="docs-heading-anchor" href="#Basic-example-using-finite-difference-SBP-operators">Basic example using finite difference SBP operators</a><a id="Basic-example-using-finite-difference-SBP-operators-1"></a><a class="docs-heading-anchor-permalink" href="#Basic-example-using-finite-difference-SBP-operators" title="Permalink"></a></h2><p>Let&#39;s create an appropriate discretization of this equation step by step. At first, we load packages that we will use in this example.</p><pre><code class="language-julia hljs">using SummationByPartsOperators, OrdinaryDiffEq
+using LaTeXStrings; using Plots: Plots, plot, plot!, savefig</code></pre><p>Next, we specify the initial data as Julia function as well as the spatial domain and the time span. Here, we use an analytic soliton solution of the KdV equation for the initial data.</p><pre><code class="language-julia hljs"># traveling wave solution (soliton)
+get_xmin() = 0.0  # left boundary of the domain
+get_xmax() = 80.0 # right boundary of the domain
+get_c() = 2 / 3   # wave speed
+function usol(t, x)
+    xmin = get_xmin()
+    xmax = get_xmax()
+    μ = (xmax - xmin) / 2
+    c = get_c()
+    A = 3 * c
+    K = sqrt(1/c - 1)
+    x_t = mod(x - c*t - xmin, xmax - xmin) + xmin - μ
+
+    A / cosh(sqrt(3*A) / 6 * x_t)^2
+end
+
+tspan = (0.0, (get_xmax() - get_xmin()) / (3 * get_c()) + 10 * (get_xmax() - get_xmin()) / get_c())</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">(0.0, 1240.0)</code></pre><p>Next, we implement the semidiscretization using the interface of <a href="https://github.com/SciML/OrdinaryDiffEq.jl">OrdinaryDiffEq.jl</a> which is part of <a href="https://diffeq.sciml.ai/latest/">DifferentialEquations.jl</a>. For simplicity, we just use the out-of-place version here since we do not have to worry about appropriate temporary buffers when using automatic differentiation in implicit time integration methods.</p><pre><code class="language-julia hljs">function kdv(u, parameters, t)
+    D1 = parameters.D1
+    D3 = parameters.D3
+
+    # conservative semidiscretization using a split form
+    return (-1 / 3) * (u .* (D1 * u) + D1 * (u.^2)) - D3 * u
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">kdv (generic function with 1 method)</code></pre><p>Next, we choose first- and third-derivative SBP operators <code>D1, D3</code>, evaluate the initial data on the grid, and set up the semidiscretization as an ODE problem.</p><pre><code class="language-julia hljs">N = 128 # number of grid points
+D1 = periodic_derivative_operator(derivative_order=1, accuracy_order=8,
+                                  xmin=get_xmin(), xmax=get_xmax(), N=N)
+D3 = periodic_derivative_operator(derivative_order=3, accuracy_order=8,
+                                  xmin=get_xmin(), xmax=get_xmax(), N=N)
+u0 = usol.(first(tspan), grid(D1))
+parameters = (; D1, D3)
+
+ode = ODEProblem(kdv, u0, tspan, parameters);</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ODEProblem with uType Vector{Float64} and tType Float64. In-place: false
+timespan: (0.0, 1240.0)
+u0: 128-element Vector{Float64}:
+ 5.2371088845943444e-14
+ 8.724018505611473e-14
+ 1.4532540866227717e-13
+ 2.4208424580109605e-13
+ 4.032659023947894e-13
+ 6.717636147537472e-13
+ 1.119029284219571e-12
+ 1.864088068240953e-12
+ 3.1052130405874536e-12
+ 5.1726890975335685e-12
+ ⋮
+ 5.1726890975335685e-12
+ 3.1052130405874536e-12
+ 1.864088068240953e-12
+ 1.119029284219571e-12
+ 6.717636147537472e-13
+ 4.032659023947894e-13
+ 2.4208424580109605e-13
+ 1.4532540866227717e-13
+ 8.724018505611473e-14</code></pre><p>Finally, we can solve the ODE using a Rosenbrock method with adaptive time stepping. We use such a linearly implicit time integration method since the third-order derivative makes the system stiff.</p><pre><code class="language-julia hljs">sol = solve(ode, Rodas5(), saveat=range(first(tspan), stop=last(tspan), length=200))
+
+plot(xguide=L&quot;x&quot;, yguide=L&quot;u&quot;)
+plot!(evaluate_coefficients(sol[1], D1), label=L&quot;u_0&quot;)
+plot!(evaluate_coefficients(sol[end], D1), label=L&quot;u_\mathrm{numerical}&quot;)
+savefig(&quot;example_kdv.png&quot;);</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&quot;/home/runner/work/SummationByPartsOperators.jl/SummationByPartsOperators.jl/docs/build/tutorials/example_kdv.png&quot;</code></pre><p><img src="../example_kdv.png" alt/></p><h2 id="Advanced-visualization"><a class="docs-heading-anchor" href="#Advanced-visualization">Advanced visualization</a><a id="Advanced-visualization-1"></a><a class="docs-heading-anchor-permalink" href="#Advanced-visualization" title="Permalink"></a></h2><p>Let&#39;s create an animation of the numerical solution.</p><pre><code class="language-julia hljs">using Printf; using Plots: Animation, frame, gif
+
+let anim = Animation()
+    idx = 1
+    x, u = evaluate_coefficients(sol[idx], D1)
+    fig = plot(x, u, xguide=L&quot;x&quot;, yguide=L&quot;u&quot;, xlim=extrema(x), ylim=(-0.05, 2.05),
+              label=&quot;&quot;, title=@sprintf(&quot;\$t = %6.2f \$&quot;, sol.t[idx]))
+    for idx in 1:length(sol.t)
+        fig[1] = x, sol.u[idx]
+        plot!(title=@sprintf(&quot;\$t = %6.2f \$&quot;, sol.t[idx]))
+        frame(anim)
+    end
+    gif(anim, &quot;example_kdv.gif&quot;)
+end</code></pre><p><img src="https://user-images.githubusercontent.com/12693098/186075685-a4f12cf0-df6d-486a-ba5c-04d7a7466743.gif" alt="example_kdv_animation"/></p><h2 id="Package-versions"><a class="docs-heading-anchor" href="#Package-versions">Package versions</a><a id="Package-versions-1"></a><a class="docs-heading-anchor-permalink" href="#Package-versions" title="Permalink"></a></h2><p>These results were obtained using the following versions.</p><pre><code class="language-julia hljs">using InteractiveUtils
+versioninfo()
+
+using Pkg
+Pkg.status([&quot;SummationByPartsOperators&quot;, &quot;OrdinaryDiffEq&quot;],
+           mode=PKGMODE_MANIFEST)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Julia Version 1.6.7
+Commit 3b76b25b64 (2022-07-19 15:11 UTC)
+Platform Info:
+  OS: Linux (x86_64-pc-linux-gnu)
+  CPU: Intel(R) Xeon(R) Platinum 8272CL CPU @ 2.60GHz
+  WORD_SIZE: 64
+  LIBM: libopenlibm
+  LLVM: libLLVM-11.0.1 (ORCJIT, skylake-avx512)
+Environment:
+  JULIA_PKG_SERVER_REGISTRY_PREFERENCE = eager
+      Status `~/work/SummationByPartsOperators.jl/SummationByPartsOperators.jl/docs/Manifest.toml`
+  [1dea7af3] OrdinaryDiffEq v6.51.2
+  [9f78cca6] SummationByPartsOperators v0.5.45 `~/work/SummationByPartsOperators.jl/SummationByPartsOperators.jl`</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../wave_equation/">« Wave equation</a><a class="docs-footer-nextpage" href="../../ad/">Automatic differentiation (AD) »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.25 on <span class="colophon-date" title="Sunday 20 August 2023 04:52">Sunday 20 August 2023</span>. Using Julia version 1.6.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
