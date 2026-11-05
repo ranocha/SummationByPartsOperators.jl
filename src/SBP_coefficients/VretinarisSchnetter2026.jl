@@ -1,7 +1,7 @@
 """
     VretinarisSchnetter2026()
 
-Source of the fourth- and sixth-order spherical summation-by-parts operators
+Source of the second-, fourth-, and sixth-order spherical summation-by-parts operators
 constructed from Cartesian SBP operators on a mirrored uniform grid.
 
 - Vretinaris, Schnetter (2026)

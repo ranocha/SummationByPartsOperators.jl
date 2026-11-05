@@ -46,4 +46,4 @@ vector_mass(operators) == V
 Use `grid = :staggered` to place the radial nodes away from the origin. The
 collocated grid includes the origin and applies the odd-field regularity
 condition there. The currently available constructions support accuracy orders
-four and six on uniform radial grids.
+two, four, and six on uniform radial grids.

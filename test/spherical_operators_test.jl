@@ -5,7 +5,7 @@ using Test
 @testset "Spherical SBP operators" begin
     source = VretinarisSchnetter2026()
 
-    for grid_kind in (:collocated, :staggered), order in (4, 6)
+    for grid_kind in (:collocated, :staggered), order in (2, 4, 6)
         operators = spherical_operators(source;
                                         accuracy_order = order,
                                         N = 20,
@@ -47,10 +47,15 @@ using Test
         if grid_kind === :collocated
             exact_rows = order == 4 ? (1:(length(r) - 4)) : eachindex(r)
             @test divergence[exact_rows] == 3 .* ones(eltype(r), length(exact_rows))
-            @test scalar_mass(operators) != vector_mass(operators)
+            if order == 2
+                @test scalar_mass(operators) == vector_mass(operators)
+            else
+                @test scalar_mass(operators) != vector_mass(operators)
+            end
         else
-            @test divergence[1:16] == 3 .* ones(eltype(r), 16)
             @test scalar_mass(operators) == vector_mass(operators)
+            exact_rows = order == 2 ? eachindex(r) : 1:16
+            @test divergence[exact_rows] == 3 .* ones(eltype(r), length(exact_rows))
         end
     end
 end
@@ -58,7 +63,7 @@ end
 @testset "Spherical SBP operators with p=1" begin
     source = VretinarisSchnetter2026()
 
-    for grid_kind in (:collocated, :staggered), order in (4, 6)
+    for grid_kind in (:collocated, :staggered), order in (2, 4, 6)
         operators = spherical_operators(source;
                                         accuracy_order = order,
                                         N = 20,
@@ -80,6 +85,64 @@ end
             @test Dr[1:(end - 4)] == 2 .* ones(eltype(r), length(r) - 4)
             @test Dr3[1:5] == 4 .* r[1:5] .^ 2
         end
+    end
+end
+
+@testset "Second-order spherical closure" begin
+    for grid_kind in (:collocated, :staggered), p in (1, 2)
+        operators = spherical_operators(VretinarisSchnetter2026();
+                                        accuracy_order = 2,
+                                        N = 20,
+                                        R = 20 // 1,
+                                        p,
+                                        grid = grid_kind,
+                                        mode = SafeMode())
+        r = grid(operators)
+        S = scalar_mass(operators)
+        V = vector_mass(operators)
+        B = boundary_matrix(operators)
+        G = gradient_operator(operators)
+        Godd = odd_derivative_operator(operators)
+        D = divergence_operator(operators)
+
+        @test S == V
+        @test isdiag(S)
+        @test isdiag(V)
+        @test all(>(zero(eltype(r))), diag(S))
+        @test S * D + G' * V == B
+        @test D * r == (p + 1) .* ones(eltype(r), length(r))
+        @test sum(diag(S)) == last(r)^(p + 1) / (p + 1)
+        if grid_kind === :collocated
+            @test D[1, :] == (p + 1) .* Godd[1, :]
+        end
+    end
+end
+
+@testset "Second-order spherical convergence" begin
+    for grid_kind in (:collocated, :staggered)
+        gradient_errors = Float64[]
+        divergence_errors = Float64[]
+        for N in (20, 40, 80)
+            operators = spherical_operators(VretinarisSchnetter2026();
+                                            accuracy_order = 2,
+                                            N,
+                                            R = 1.0,
+                                            p = 2,
+                                            grid = grid_kind,
+                                            mode = SafeMode())
+            r = grid(operators)
+            G = gradient_operator(operators)
+            D = divergence_operator(operators)
+            interior = 2:(length(r) - 1)
+
+            push!(gradient_errors, maximum(abs.(G * cos.(r) .+ sin.(r))[interior]))
+            flux = r .* exp.(-r .^ 2)
+            exact_divergence = (3 .- 2 .* r .^ 2) .* exp.(-r .^ 2)
+            push!(divergence_errors,
+                  maximum(abs.(D * flux .- exact_divergence)[interior]))
+        end
+        @test all(gradient_errors[1:(end - 1)] ./ gradient_errors[2:end] .> 3)
+        @test all(divergence_errors[1:(end - 1)] ./ divergence_errors[2:end] .> 3)
     end
 end
 
@@ -110,7 +173,7 @@ end
 @testset "Spherical SBP input validation" begin
     source = VretinarisSchnetter2026()
     @test_throws ArgumentError spherical_operators(source;
-                                                   accuracy_order = 2,
+                                                   accuracy_order = 3,
                                                    N = 20,
                                                    R = 1,
                                                    grid = :staggered)

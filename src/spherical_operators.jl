@@ -248,6 +248,39 @@ function _spherical_divergence(S::SparseMatrixCSC{T, Ti}, V::SparseMatrixCSC{T, 
     return sparse(I, J, Dvalues, size(rhs)...), B
 end
 
+"""Assemble the second-order common diagonal norm exactly."""
+function _spherical_sbp2(data, p::Int)
+    r, G, radius = data.r, data.G, data.radius
+    n = length(r)
+    n > 2 ||
+        throw(ArgumentError("second-order spherical operators require at least three radial nodes"))
+    Gq = sparse(_SphericalRational.(G))
+    rq = _SphericalRational.(r)
+    Gq * ones(_SphericalRational, n) == zeros(_SphericalRational, n) ||
+        throw(ArgumentError("folded spherical gradient does not annihilate constants"))
+
+    # Enforce D * r = (p + 1) * 1 after substituting the common diagonal
+    # norm S = V = diag(s) into S * D + G' * V = B. The final quadrature
+    # row is redundant for a valid folded derivative, but catches errors in
+    # the closure construction and fixes the intended volume normalization.
+    A = zeros(_SphericalRational, n + 1, n)
+    b = zeros(_SphericalRational, n + 1)
+    for i in 1:n, j in 1:n
+        A[i, j] = (i == j ? p + 1 : 0) + Gq[j, i] * rq[j]
+    end
+    b[n] = radius^(p + 1)
+    A[end, :] .= one(_SphericalRational)
+    b[end] = radius^(p + 1) / (p + 1)
+    diagonal = _spherical_solve(A, b)
+    A * diagonal == b || throw(ArgumentError("second-order spherical closure is inexact"))
+    all(>(zero(_SphericalRational)), diagonal) ||
+        throw(ArgumentError("second-order spherical norm is not positive"))
+
+    S = spdiagm(0 => diagonal)
+    D, B = _spherical_divergence(S, S, Gq, rq, p)
+    return (S = S, V = S, D = D, B = B)
+end
+
 """Assemble the fourth-order collocated split norms from their exact constraints."""
 function _spherical_sbp4(data, p::Int)
     r, G, Hhalf, radius = data.r, data.G, data.Hhalf, data.radius
@@ -406,6 +439,12 @@ function _spherical_staggered(source, accuracy_order::Int, N::Int, p::Int,
                               mode::AbstractExecutionMode)
     cartesian = _spherical_cartesian_data(source, accuracy_order, N;
                                           staggered = true, mode)
+    if accuracy_order == 2
+        closure = _spherical_sbp2(cartesian, p)
+        return (r = cartesian.r, S = closure.S, V = closure.V, B = closure.B,
+                G = cartesian.G, Godd = cartesian.Godd, D = closure.D,
+                radius = cartesian.radius)
+    end
     H = sparse(cartesian.Hhalf * spdiagm(0 => cartesian.r .^ p))
     D, B = _spherical_divergence(H, H, cartesian.G, cartesian.r, p)
     return (r = cartesian.r, S = H, V = H, B = B,
@@ -418,7 +457,8 @@ function _spherical_collocated(source, accuracy_order::Int, N::Int, p::Int,
                                mode::AbstractExecutionMode)
     cartesian = _spherical_cartesian_data(source, accuracy_order, N;
                                           staggered = false, mode)
-    closure = accuracy_order == 4 ? _spherical_sbp4(cartesian, p) :
+    closure = accuracy_order == 2 ? _spherical_sbp2(cartesian, p) :
+              accuracy_order == 4 ? _spherical_sbp4(cartesian, p) :
               _spherical_sbp6(cartesian, p)
     return (r = cartesian.r, S = closure.S, V = closure.V, B = closure.B,
             G = cartesian.G, Godd = cartesian.Godd, D = closure.D,
@@ -430,7 +470,7 @@ end
                         p=2, grid=:collocated,
                         cartesian_source=MattssonNordström2004(), mode=FastMode())
 
-Construct fourth- or sixth-order spherical SBP operators. `N` is the
+Construct second-, fourth-, or sixth-order spherical SBP operators. `N` is the
 number of radial subintervals on a collocated grid and the number of radial
 nodes on a staggered grid. The supported radial metric exponents are `p = 1`
 and `p = 2`. For `p = 0`, use [`derivative_operator`](@ref) to construct the
@@ -444,7 +484,7 @@ function spherical_operators(::VretinarisSchnetter2026;
                              grid::Symbol = :collocated,
                              cartesian_source::SourceOfCoefficients = MattssonNordström2004(),
                              mode::AbstractExecutionMode = FastMode())
-    @argcheck accuracy_order in (4, 6) ArgumentError("only fourth- and sixth-order spherical operators are implemented")
+    @argcheck accuracy_order in (2, 4, 6) ArgumentError("only second-, fourth-, and sixth-order spherical operators are implemented")
     @argcheck N > 0 ArgumentError("`N` must be positive")
     @argcheck R > zero(R) ArgumentError("`R` must be positive")
     p == 0 &&
