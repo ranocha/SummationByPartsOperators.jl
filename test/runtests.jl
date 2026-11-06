@@ -40,6 +40,9 @@ const SBP_TEST = get(ENV, "SBP_TEST", "all")
         @time @testset "Matrix Operators" begin
             include("matrix_operators_test.jl")
         end
+        @time @testset "Spherical Operators" begin
+            include("spherical_operators_test.jl")
+        end
         @time @testset "Multidimensional Matrix Operators" begin
             include("multidimensional_matrix_operators_test.jl")
         end

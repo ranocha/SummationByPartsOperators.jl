@@ -10,6 +10,10 @@ for human readability.
 
 #### Added
 
+- Spherical SBP operator pairs of `VretinarisSchnetter2026` can be constructed
+  with `spherical_operators` at accuracy orders two, four, and six on collocated
+  and staggered uniform radial grids. Their gradient and divergence actions are
+  matrix-like views with separate scalar and vector norm matrices.
 - The first-derivative operators of `MattssonAlmquistCarpenter2014Optimal()`
   are available with accuracy order 8 now. Two entries of `Q` listed in
   Appendix B.4 of the reference are erroneous and have been corrected, see
