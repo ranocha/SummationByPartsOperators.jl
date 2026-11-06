@@ -162,7 +162,7 @@ export periodic_central_derivative_operator, periodic_derivative_operator,
        upwind_operators, function_space_operator, tensor_product_operator_2D,
        spherical_operators
 export scalar_mass, vector_mass, boundary_matrix,
-       gradient_operator, odd_derivative_operator, divergence_operator
+       gradient_operator, divergence_operator
 export normals, boundary_indices
 export UniformMesh1D, UniformPeriodicMesh1D
 export couple_continuously, couple_discontinuously

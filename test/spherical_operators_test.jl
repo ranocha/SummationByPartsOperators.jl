@@ -11,8 +11,7 @@ using Test
                                         N = 20,
                                         R = 20 // 1,
                                         p = 2,
-                                        grid = grid_kind,
-                                        mode = SafeMode())
+                                        grid = grid_kind)
 
         r = grid(operators)
         expected_grid = grid_kind === :collocated ?
@@ -22,7 +21,6 @@ using Test
         @test SummationByPartsOperators.accuracy_order(operators) == order
         @test source_of_coefficients(operators) === source
         G = gradient_operator(operators)
-        Godd = odd_derivative_operator(operators)
         D = divergence_operator(operators)
         @test size(G) == (length(r), length(r))
         @test size(D) == (length(r), length(r))
@@ -69,8 +67,7 @@ end
                                         N = 20,
                                         R = 20 // 1,
                                         p = 1,
-                                        grid = grid_kind,
-                                        mode = SafeMode())
+                                        grid = grid_kind)
         r = grid(operators)
         G = gradient_operator(operators)
         D = divergence_operator(operators)
@@ -95,14 +92,13 @@ end
                                         N = 20,
                                         R = 20 // 1,
                                         p,
-                                        grid = grid_kind,
-                                        mode = SafeMode())
+                                        grid = grid_kind)
         r = grid(operators)
         S = scalar_mass(operators)
         V = vector_mass(operators)
         B = boundary_matrix(operators)
         G = gradient_operator(operators)
-        Godd = odd_derivative_operator(operators)
+        Godd = operators.odd_derivative
         D = divergence_operator(operators)
 
         @test S == V
@@ -128,8 +124,7 @@ end
                                             N,
                                             R = 1.0,
                                             p = 2,
-                                            grid = grid_kind,
-                                            mode = SafeMode())
+                                            grid = grid_kind)
             r = grid(operators)
             G = gradient_operator(operators)
             D = divergence_operator(operators)
@@ -154,8 +149,7 @@ end
                                         accuracy_order = 4,
                                         N,
                                         R = 1.0,
-                                        p = 1,
-                                        mode = SafeMode())
+                                        p = 1)
         r = grid(operators)
         G = gradient_operator(operators)
         D = divergence_operator(operators)
@@ -168,6 +162,83 @@ end
     end
     @test all(gradient_errors[1:(end - 1)] ./ gradient_errors[2:end] .> 8)
     @test all(divergence_errors[1:(end - 1)] ./ divergence_errors[2:end] .> 8)
+end
+
+@testset "Supported Cartesian sources for spherical operators" begin
+    supported = ((MattssonNordström2004(), (2, 4, 6)),
+                 (MattssonSvärdNordström2004(), (2, 4, 6)),
+                 (MattssonSvärdShoeybi2008(), (2, 4, 6)),
+                 (Mattsson2012(), (2, 4, 6)),
+                 (Mattsson2014(), (2,)),
+                 (MattssonAlmquistCarpenter2014Extended(), (2,)),
+                 (MattssonAlmquistCarpenter2014Optimal(), (2,)),
+                 (Mattsson2017(:minus), (4, 6)),
+                 (DienerDorbandSchnetterTiglio2007(), (2, 4)))
+
+    for (cartesian_source, orders) in supported
+        @test SummationByPartsOperators._spherical_supported_orders(cartesian_source) ==
+              orders
+        for order in orders
+            operators = spherical_operators(VretinarisSchnetter2026();
+                                            accuracy_order = order,
+                                            N = 20,
+                                            R = 20 // 1,
+                                            p = 2,
+                                            grid = :collocated,
+                                            cartesian_source)
+            @test operators.cartesian_source === cartesian_source
+            @test scalar_mass(operators) * divergence_operator(operators) +
+                  gradient_operator(operators)' * vector_mass(operators) ==
+                  boundary_matrix(operators)
+        end
+    end
+
+    unsupported = (Mattsson2017(:central),
+                   Mattsson2017(:plus),
+                   MattssonAlmquistVanDerWeide2018Minimal(),
+                   MattssonAlmquistVanDerWeide2018Accurate(),
+                   MattssonNiemeläWinters2026(:central),
+                   MattssonNiemeläWinters2026(:plus),
+                   MattssonNiemeläWinters2026(:minus),
+                   SharanBradyLivescu2022(1 // 2, 1 // 2),
+                   WilliamsDuru2024(:central),
+                   WilliamsDuru2024(:plus),
+                   WilliamsDuru2024(:minus))
+    for cartesian_source in unsupported
+        @test isempty(SummationByPartsOperators._spherical_supported_orders(cartesian_source))
+        @test_throws ArgumentError spherical_operators(VretinarisSchnetter2026();
+                                                       accuracy_order = 4,
+                                                       N = 20,
+                                                       R = 1.0,
+                                                       cartesian_source)
+    end
+    @test_throws ArgumentError spherical_operators(VretinarisSchnetter2026();
+                                                   accuracy_order = 2,
+                                                   N = 20,
+                                                   R = 1.0,
+                                                   cartesian_source = Mattsson2017(:minus))
+end
+
+@testset "Spherical SBP output element type" begin
+    source = VretinarisSchnetter2026()
+    radii_and_types = ((Float32(1), Float32),
+                       (1.0, Float64),
+                       (big"1.0", BigFloat),
+                       (1, Float64),
+                       (BigInt(1), BigFloat),
+                       (1 // 1, Rational{BigInt}))
+
+    for (R, T) in radii_and_types
+        operators = spherical_operators(source;
+                                        accuracy_order = 2,
+                                        N = 8,
+                                        R)
+        @test eltype(grid(operators)) == T
+        @test eltype(scalar_mass(operators)) == T
+        @test eltype(vector_mass(operators)) == T
+        @test eltype(gradient_operator(operators)) == T
+        @test eltype(divergence_operator(operators)) == T
+    end
 end
 
 @testset "Spherical SBP input validation" begin

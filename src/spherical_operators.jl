@@ -8,12 +8,15 @@ scalar field. They satisfy
 ```
 S * D + G' * V = B.
 ```
+Here, `B` represents the weighted outer-boundary contribution. It is zero
+except for `B[end, end] = R^p`; radial regularity removes the origin
+contribution.
 
 This is a *pair* of compatible operators, not a subtype of
 `AbstractDerivativeOperator`: the scalar and vector fields have distinct norm
 matrices. Use [`scalar_mass`](@ref) and [`vector_mass`](@ref) to access them,
-and [`gradient_operator`](@ref), [`odd_derivative_operator`](@ref), or
-[`divergence_operator`](@ref) to obtain a matrix-like action.
+and [`gradient_operator`](@ref) or [`divergence_operator`](@ref) to obtain a
+matrix-like action.
 """
 @auto_hash_equals struct SphericalSBPOperators{T <: Real, S <: AbstractMatrix{T},
                                                V <: AbstractMatrix{T},
@@ -40,7 +43,19 @@ end
 grid(operators::SphericalSBPOperators) = operators.grid
 accuracy_order(operators::SphericalSBPOperators) = operators.accuracy_order
 source_of_coefficients(operators::SphericalSBPOperators) = operators.source
+
+"""
+    scalar_mass(::SphericalSBPOperators)
+
+Return the scalar-field mass matrix of a spherical SBP operator pair.
+"""
 scalar_mass(operators::SphericalSBPOperators) = operators.scalar_mass
+
+"""
+    vector_mass(::SphericalSBPOperators)
+
+Return the radial-vector-field mass matrix of a spherical SBP operator pair.
+"""
 vector_mass(operators::SphericalSBPOperators) = operators.vector_mass
 boundary_matrix(operators::SphericalSBPOperators) = operators.boundary_matrix
 
@@ -63,7 +78,7 @@ fields with potentially different norms. Use [`scalar_mass`](@ref) and
     function SphericalOperatorView(operators::Operators, matrix::M,
                                    kind::Symbol) where {T <: Real, M <: AbstractMatrix{T},
                                                         Operators}
-        kind in (:gradient, :odd_derivative, :divergence) ||
+        kind in (:gradient, :divergence) ||
             throw(ArgumentError("unknown spherical operator action `$kind`"))
         return new{T, M, Operators}(operators, matrix, kind)
     end
@@ -107,11 +122,6 @@ function gradient_operator(operators::SphericalSBPOperators)
     return SphericalOperatorView(operators, operators.gradient, :gradient)
 end
 
-"""Return the odd-vector derivative action used for origin regularity."""
-function odd_derivative_operator(operators::SphericalSBPOperators)
-    return SphericalOperatorView(operators, operators.odd_derivative, :odd_derivative)
-end
-
 """Return the odd-vector to even-scalar spherical divergence action."""
 function divergence_operator(operators::SphericalSBPOperators)
     return SphericalOperatorView(operators, operators.divergence, :divergence)
@@ -129,7 +139,7 @@ end
 
 const _SphericalRational = Rational{BigInt}
 
-"""Solve an exact, possibly underdetermined, linear constraint system."""
+# Solve an exact, possibly underdetermined, linear constraint system.
 function _spherical_solve(A::Matrix{_SphericalRational}, b::Vector{_SphericalRational})
     size(A, 1) == length(b) || throw(DimensionMismatch("constraint dimensions disagree"))
     augmented = hcat(copy(A), copy(b))
@@ -166,7 +176,7 @@ function _spherical_solve(A::Matrix{_SphericalRational}, b::Vector{_SphericalRat
     return solution
 end
 
-"""Create folding maps for an exactly symmetric Cartesian grid."""
+# Create folding maps for an exactly symmetric Cartesian grid.
 function _spherical_folding_maps(x::Vector{T}; origin::Bool) where {T <: Real}
     indices = findall(x -> origin ? x >= zero(T) : x > zero(T), x)
     isempty(indices) && throw(ArgumentError("could not identify the radial half grid"))
@@ -198,9 +208,9 @@ function _spherical_folding_maps(x::Vector{T}; origin::Bool) where {T <: Real}
     return r, R, Eeven, Eodd
 end
 
-"""Build and fold the existing Cartesian SBP operator on a canonical grid."""
+# Build and fold the existing Cartesian SBP operator on a canonical grid.
 function _spherical_cartesian_data(source, accuracy_order::Int, N::Int;
-                                   staggered::Bool, mode::AbstractExecutionMode)
+                                   staggered::Bool)
     radius = staggered ? _SphericalRational(2 * N - 1, 2) : _SphericalRational(N)
     points = staggered ? 2 * N : 2 * N + 1
     cartesian = derivative_operator(source;
@@ -208,10 +218,9 @@ function _spherical_cartesian_data(source, accuracy_order::Int, N::Int;
                                     accuracy_order,
                                     xmin = -radius,
                                     xmax = radius,
-                                    N = points,
-                                    mode)
+                                    N = points)
     x = collect(grid(cartesian))
-    Gfull = sparse(Matrix(cartesian))
+    Gfull = sparse(cartesian)
     Hfull = sparse(mass_matrix(cartesian))
     r, R, Eeven, Eodd = _spherical_folding_maps(x; origin = !staggered)
     G = sparse(R * Gfull * Eeven)
@@ -220,7 +229,7 @@ function _spherical_cartesian_data(source, accuracy_order::Int, N::Int;
     return (r = r, G = G, Godd = Godd, Hhalf = Hhalf, radius = radius)
 end
 
-"""Extract the diagonal of an exactly diagonal sparse matrix."""
+# Extract the diagonal of an exactly diagonal sparse matrix.
 function _spherical_diagonal(A::SparseMatrixCSC{T, Ti}) where {T, Ti}
     size(A, 1) == size(A, 2) || throw(DimensionMismatch("mass matrix must be square"))
     diagonal = zeros(T, size(A, 1))
@@ -231,7 +240,7 @@ function _spherical_diagonal(A::SparseMatrixCSC{T, Ti}) where {T, Ti}
     return diagonal
 end
 
-"""Recover divergence from the paired SBP identity for a nonsingular scalar norm."""
+# Recover divergence from the paired SBP identity for a nonsingular scalar norm.
 function _spherical_divergence(S::SparseMatrixCSC{T, Ti}, V::SparseMatrixCSC{T, Ti},
                                G::SparseMatrixCSC{T, Ti}, r::AbstractVector,
                                p::Int) where {T, Ti}
@@ -248,7 +257,7 @@ function _spherical_divergence(S::SparseMatrixCSC{T, Ti}, V::SparseMatrixCSC{T, 
     return sparse(I, J, Dvalues, size(rhs)...), B
 end
 
-"""Assemble the second-order common diagonal norm exactly."""
+# Assemble the second-order common diagonal norm exactly.
 function _spherical_sbp2(data, p::Int)
     r, G, radius = data.r, data.G, data.radius
     n = length(r)
@@ -281,7 +290,7 @@ function _spherical_sbp2(data, p::Int)
     return (S = S, V = S, D = D, B = B)
 end
 
-"""Assemble the fourth-order collocated split norms from their exact constraints."""
+# Assemble the fourth-order collocated split norms from their exact constraints.
 function _spherical_sbp4(data, p::Int)
     r, G, Hhalf, radius = data.r, data.G, data.Hhalf, data.radius
     n = length(r)
@@ -354,7 +363,7 @@ function _spherical_sbp4(data, p::Int)
     return (S = S, V = sparse(V), D = D, B = B)
 end
 
-"""Assemble the sixth-order collocated split norms from publication constraints."""
+# Assemble the sixth-order collocated split norms from publication constraints.
 function _spherical_sbp6(data, p::Int)
     r, G, radius = data.r, data.G, data.radius
     n = length(r)
@@ -417,9 +426,10 @@ function _spherical_sbp6(data, p::Int)
     return (S = S, V = sparse(V), D = D, B = B)
 end
 
-"""Scale canonical rational matrices and nodes to the requested physical radius."""
+# Scale canonical rational matrices and nodes to the requested physical radius.
 function _spherical_rescale(data, radius::Real, p::Int)
-    T = radius isa AbstractFloat ? typeof(radius) : _SphericalRational
+    T = radius isa AbstractFloat ? typeof(radius) :
+        radius isa Integer ? typeof(float(radius)) : _SphericalRational
     ratio = convert(T, radius) / convert(T, data.radius)
     scale(A, factor) = begin
         I, J, values = findnz(A)
@@ -434,11 +444,10 @@ function _spherical_rescale(data, radius::Real, p::Int)
             D = scale(data.D, inv(ratio)))
 end
 
-"""Construct a native staggered spherical SBP pair on the canonical half grid."""
-function _spherical_staggered(source, accuracy_order::Int, N::Int, p::Int,
-                              mode::AbstractExecutionMode)
+# Construct a native staggered spherical SBP pair on the canonical half grid.
+function _spherical_staggered(source, accuracy_order::Int, N::Int, p::Int)
     cartesian = _spherical_cartesian_data(source, accuracy_order, N;
-                                          staggered = true, mode)
+                                          staggered = true)
     if accuracy_order == 2
         closure = _spherical_sbp2(cartesian, p)
         return (r = cartesian.r, S = closure.S, V = closure.V, B = closure.B,
@@ -452,11 +461,10 @@ function _spherical_staggered(source, accuracy_order::Int, N::Int, p::Int,
             radius = cartesian.radius)
 end
 
-"""Construct a native collocated spherical SBP pair by exact closure solves."""
-function _spherical_collocated(source, accuracy_order::Int, N::Int, p::Int,
-                               mode::AbstractExecutionMode)
+# Construct a native collocated spherical SBP pair by exact closure solves.
+function _spherical_collocated(source, accuracy_order::Int, N::Int, p::Int)
     cartesian = _spherical_cartesian_data(source, accuracy_order, N;
-                                          staggered = false, mode)
+                                          staggered = false)
     closure = accuracy_order == 2 ? _spherical_sbp2(cartesian, p) :
               accuracy_order == 4 ? _spherical_sbp4(cartesian, p) :
               _spherical_sbp6(cartesian, p)
@@ -465,16 +473,41 @@ function _spherical_collocated(source, accuracy_order::Int, N::Int, p::Int,
             radius = cartesian.radius)
 end
 
+# Return the accuracy orders for which a Cartesian source has passed the exact
+# spherical closure construction on collocated and staggered grids for p = 1, 2.
+function _spherical_supported_orders(::Union{MattssonNordström2004,
+                                             MattssonSvärdNordström2004,
+                                             MattssonSvärdShoeybi2008,
+                                             Mattsson2012})
+    return (2, 4, 6)
+end
+function _spherical_supported_orders(::Union{Mattsson2014,
+                                             MattssonAlmquistCarpenter2014Extended,
+                                             MattssonAlmquistCarpenter2014Optimal})
+    return (2,)
+end
+_spherical_supported_orders(::DienerDorbandSchnetterTiglio2007) = (2, 4)
+function _spherical_supported_orders(source::Mattsson2017)
+    return source.kind === :minus ? (4, 6) : ()
+end
+_spherical_supported_orders(::SourceOfCoefficients) = ()
+
 """
     spherical_operators(VretinarisSchnetter2026(); accuracy_order, N, R,
                         p=2, grid=:collocated,
-                        cartesian_source=MattssonNordström2004(), mode=FastMode())
+                        cartesian_source=MattssonNordström2004())
 
 Construct second-, fourth-, or sixth-order spherical SBP operators. `N` is the
 number of radial subintervals on a collocated grid and the number of radial
 nodes on a staggered grid. The supported radial metric exponents are `p = 1`
 and `p = 2`. For `p = 0`, use [`derivative_operator`](@ref) to construct the
-usual Cartesian SBP operators instead.
+usual Cartesian SBP operators instead. The closure system is solved exactly in
+`Rational{BigInt}`. A floating-point `R` determines the floating-point return
+type; an integer `R` follows the usual grid convention and returns the
+corresponding floating-point type, while a rational `R` retains exact rational
+output. Only Cartesian source/order combinations that pass the exact spherical
+closure construction are accepted; see the spherical operators tutorial for
+the supported combinations.
 """
 function spherical_operators(::VretinarisSchnetter2026;
                              accuracy_order::Integer,
@@ -482,21 +515,21 @@ function spherical_operators(::VretinarisSchnetter2026;
                              R::Real,
                              p::Integer = 2,
                              grid::Symbol = :collocated,
-                             cartesian_source::SourceOfCoefficients = MattssonNordström2004(),
-                             mode::AbstractExecutionMode = FastMode())
+                             cartesian_source::SourceOfCoefficients = MattssonNordström2004())
     @argcheck accuracy_order in (2, 4, 6) ArgumentError("only second-, fourth-, and sixth-order spherical operators are implemented")
-    @argcheck N > 0 ArgumentError("`N` must be positive")
-    @argcheck R > zero(R) ArgumentError("`R` must be positive")
+    @argcheck N>0 ArgumentError("`N` must be positive")
+    @argcheck R>zero(R) ArgumentError("`R` must be positive")
     p == 0 &&
         throw(ArgumentError("`p=0` describes the usual Cartesian operators; use `derivative_operator` instead"))
     @argcheck p in (1, 2) ArgumentError("only `p=1` and `p=2` spherical operators are implemented")
     @argcheck grid in (:collocated, :staggered) ArgumentError("`grid` must be :collocated or :staggered")
+    supported_orders = _spherical_supported_orders(cartesian_source)
+    @argcheck accuracy_order in supported_orders ArgumentError("Cartesian source $(typeof(cartesian_source)) is not supported for spherical accuracy order $accuracy_order")
 
     canonical = grid === :collocated ?
-                _spherical_collocated(cartesian_source, Int(accuracy_order), Int(N), Int(p),
-                                      mode) :
-                _spherical_staggered(cartesian_source, Int(accuracy_order), Int(N), Int(p),
-                                     mode)
+                _spherical_collocated(cartesian_source, Int(accuracy_order), Int(N),
+                                      Int(p)) :
+                _spherical_staggered(cartesian_source, Int(accuracy_order), Int(N), Int(p))
     construction = _spherical_rescale(canonical, R, Int(p))
     return SphericalSBPOperators(construction.r,
                                  construction.S, construction.V, construction.B,
