@@ -74,6 +74,45 @@ for T in (Float32, Float64)
         @test issymmetric(I - D^2)
         @test !issymmetric(I + D)
         @test !issymmetric(D - I)
+        @test @inferred(I-D) * u ≈ u - D * u
+        @test @inferred(D-I) * u ≈ D * u - u
+
+        # scaling factors of another type are converted to `T`
+        for op in (0.5 * D, D * 0.5, 0.5 * D^2, D + 0.5I, 0.5I - D^2,
+                   0.5 * ((I - D^2) / (I + D^4)), (I - D^2) / (I + D^4) + 0.5I)
+            @test eltype(op) == T
+            @test eltype(op * u) == T
+        end
+        @test (0.5 * D) * u ≈ T(0.5) * (D * u)
+        @test (D^2 + 0.5I) * u ≈ D^2 * u + T(0.5) * u
+        @test (0.5 * (D / (I - D^2))) * u ≈ T(0.5) * ((D / (I - D^2)) * u)
+
+        # negation and division of derivative operators and polynomials
+        poly = I + D^2
+        rat = (I - D^2) / (I + D^4)
+        for (op, v) in ((-D, -(D * u)), (D + D, 2 * (D * u)), (D - D, zero(u)),
+                        (D / 2, (D * u) / 2), (2 \ D, (D * u) / 2),
+                        (D / 0.5I, 2 * (D * u)), (0.5I \ D, 2 * (D * u)),
+                        (-D^2 + 0.5I, T(0.5) * u - D^2 * u),
+                        (-poly, -(poly * u)), (poly / 0.5, 2 * (poly * u)),
+                        (2.0 / poly, 2 * (poly \ u)), (poly \ 2.0, 2 * (poly \ u)),
+                        (1.0I / poly, poly \ u), (poly \ 1.0I, poly \ u),
+                        (rat / 0.5I, 2 * (rat * u)), (2.0I / rat, 2 * (rat \ u)))
+            @test eltype(op) == T
+            @test op * u ≈ v
+        end
+
+        # The rational operator is symmetric if and only if the numerator
+        # and the denominator are both even or both odd.
+        @test issymmetric((I - D^2) / (I + D^4))
+        @test !issymmetric((I + D) / (I + 2 * D))
+        @test !issymmetric(D / (I - D^2))
+        @test !issymmetric((I - D^2) / (I + D))
+        @test issymmetric(0 * (D / (I - D^2)))
+        for rat in ((I - D^2) / (I + D^4), (I + D) / (I + 2 * D), D / (I - D^2))
+            A = Matrix(rat)
+            @test issymmetric(rat) == isapprox(A, A')
+        end
 
         @test @inferred(SummationByPartsOperators.xmin(D^2)) ≈ xmin
         @test @inferred(SummationByPartsOperators.xmax(D^2)) ≈ xmax
@@ -101,6 +140,9 @@ for T in (Float32, Float64)
         @test iszero(0 * rat)
         v = rat * u
         @test (I - D^2) \ (v + D^4 * v) ≈ u
+
+        @test rat \ u ≈ Matrix(I + D^4) * (Matrix(I - D^2) \ u)
+        @test ((I - D^2) / (I + 0 * D)) \ u ≈ (I - D^2) \ u
 
         rat1 = @inferred((I - D^2)/(I + D^4))
         rat2 = @inferred((I + D^4)/(I - D^2))
@@ -135,6 +177,24 @@ for T in (Float32, Float64)
         @test @inferred(I-rat1) == D^0 - rat1
         @test @inferred(rat1-I) == rat1 - D^0
         @test @inferred(-rat1) == @inferred(-1*rat1)
+    end
+end
+
+# Dense Fourier derivative matrix
+for T in (Float32, Float64, BigFloat), N in (4, 5, 8, 9)
+    xmin = -one(T)
+    xmax = one(T)
+    Dmat = @inferred SummationByPartsOperators.fourier_derivative_matrix(N, xmin, xmax)
+    @test eltype(Dmat) == T
+    x = range(xmin, stop = xmax, length = N + 1)[1:(end - 1)]
+    for k in 0:((N - 1) ÷ 2)
+        @test maximum(abs, Dmat * sinpi.(k .* x) - k * T(π) .* cospi.(k .* x)) <
+              10 * N^2 * eps(T)
+        @test maximum(abs, Dmat * cospi.(k .* x) + k * T(π) .* sinpi.(k .* x)) <
+              10 * N^2 * eps(T)
+    end
+    if T != BigFloat
+        @test Dmat ≈ Matrix(fourier_derivative_operator(xmin, xmax, N))
     end
 end
 
@@ -181,6 +241,30 @@ for T in (Float32, Float64), source in source_SSV
     end
 end
 
+# Kernels Q̂ₖ of the (super) spectral viscosity as functions of the wavenumber k
+# and the cutoff wavenumber m = cutoff - 1, as given in the references
+let N = 64, m = 5, kmax = N ÷ 2
+    kernels = ((Tadmor1989(), 1, k -> k < m ? 0.0 : 1.0),
+               (MadayTadmor1989(), 1, k -> k < m ? 0.0 : k <= 2m ? (k - m) / m : 1.0),
+               (TadmorWaagan2012Standard(), 1,
+                k -> k <= m ? 0.0 : exp(-((kmax - k) / (k - m))^2)),
+               (TadmorWaagan2012Convergent(), 1,
+                k -> k <= m ? 0.0 : k < 2m ? exp(-((2m - k) / (k - m))^2) : 1.0),
+               ((Tadmor1993(), order, k -> k <= m ? 0.0 : 1 - (m / k)^(2order))
+                for order in 1:3)...)
+    D = fourier_derivative_operator(-1.0, 1.0, N)
+    strength = 0.3
+    for (source, order, kernel) in kernels
+        Di = dissipation_operator(source, D; strength, cutoff = m + 1, order)
+        atol = 100 * eps() * strength * (kmax * π)^(2order)
+        for k in 0:(kmax - 1)
+            u = compute_coefficients(x -> cospi(k * x), D)
+            @test isapprox(Di * u, -strength * kernel(k) * (k * π)^(2order) * u;
+                           atol)
+        end
+    end
+end
+
 # Modal Filtering
 for T in (Float32, Float64), filter_type in (ExponentialFilter(),)
     xmin = -one(T)
@@ -197,5 +281,7 @@ for T in (Float32, Float64), filter_type in (ExponentialFilter(),)
             filter!(u)
             @test integrate(u -> u^2, u, D) <= norm2_u
         end
+
+        @test_throws "only be applied to vectors" filter!(rand(T, N, 3))
     end
 end

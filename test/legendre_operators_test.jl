@@ -41,6 +41,22 @@ for T in (Float32, Float64)
     end
 end
 
+# Evaluation on the physical interval
+for T in (Float32, Float64)
+    xmin = T(2)
+    xmax = T(5)
+    for N in (2, 5),
+        D in (legendre_derivative_operator(xmin, xmax, N),
+              legendre_second_derivative_operator(xmin, xmax, N))
+
+        u = compute_coefficients(x -> x^(N - 1), D)
+        xplot, uplot = evaluate_coefficients(u, D)
+        @test first(xplot) ≈ xmin
+        @test last(xplot) ≈ xmax
+        @test uplot ≈ xplot .^ (N - 1)
+    end
+end
+
 # Modal Filtering
 for T in (Float32, Float64), filter_type in (ExponentialFilter(),)
     xmin = -one(T)
@@ -59,5 +75,16 @@ for T in (Float32, Float64), filter_type in (ExponentialFilter(),)
             @test integrate(u, D) ≈ sum(mass_matrix(D) * u)
             @test integrate(u -> u^2, u, D) ≈ dot(u, mass_matrix(D), u)
         end
+
+        # filtering a matrix filters each column
+        U = rand(T, N, 3)
+        V = copy(U)
+        filter!(U)
+        for j in axes(V, 2)
+            v = V[:, j]
+            filter!(v)
+            @test U[:, j] ≈ v
+        end
+        @test_throws DimensionMismatch filter!(rand(T, N + 1, 3))
     end
 end

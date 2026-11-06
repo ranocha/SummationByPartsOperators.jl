@@ -186,10 +186,14 @@ Kopriva (2009) Implementing Spectral Methods for PDEs, Algorithm 18.
 function fourier_derivative_matrix(N, xmin::Real = 0.0, xmax::Real = 2π)
     T = promote_type(typeof(xmin), typeof(xmax))
     jac_2 = T(π) / (xmax - xmin)
-    D = Array{T}(undef, N, N)
+    D = zeros(T, N, N)
     @inbounds for j in 1:N, i in 1:N
         j == i && continue
-        D[i, j] = (-1)^(i + j) * cot((i - j) * T(π) / N) * jac_2
+        if iseven(N)
+            D[i, j] = (-1)^(i + j) * cot((i - j) * T(π) / N) * jac_2
+        else
+            D[i, j] = (-1)^(i + j) * csc((i - j) * T(π) / N) * jac_2
+        end
         D[i, i] -= D[i, j]
     end
     D
@@ -219,6 +223,11 @@ _coef_end(coef, D1) = coef
         coef_end = _coef_end(coef, D1)
         new{T, Grid, RFFT, BRFFT, N}(D1, coef, coef_end)
     end
+end
+
+function FourierPolynomialDerivativeOperator(D1::FourierDerivativeOperator{T},
+                                             coef::Tuple) where {T}
+    FourierPolynomialDerivativeOperator(D1, map(c -> convert(T, c), coef))
 end
 
 function FourierPolynomialDerivativeOperator(D1::FourierDerivativeOperator)
@@ -265,7 +274,7 @@ function Base.literal_pow(::typeof(^), D1::FourierDerivativeOperator, ::Val{P}) 
     FourierPolynomialDerivativeOperator(D1, coef)
 end
 
-function Base.:*(factor::Union{Real, Integer}, poly::FourierPolynomialDerivativeOperator)
+function Base.:*(factor::Real, poly::FourierPolynomialDerivativeOperator)
     @unpack coef = poly
     for idx in 1:length(coef)
         coef = Base.setindex(coef, factor * coef[idx], idx)
@@ -274,15 +283,15 @@ function Base.:*(factor::Union{Real, Integer}, poly::FourierPolynomialDerivative
     FourierPolynomialDerivativeOperator(poly.D1, coef)
 end
 
-function Base.:*(poly::FourierPolynomialDerivativeOperator, factor::Union{Real, Integer})
+function Base.:*(poly::FourierPolynomialDerivativeOperator, factor::Real)
     factor * poly
 end
 
-function Base.:*(D::FourierDerivativeOperator, factor::Union{Real, Integer})
+function Base.:*(D::FourierDerivativeOperator, factor::Real)
     FourierPolynomialDerivativeOperator(D) * factor
 end
 
-function Base.:*(factor::Union{Real, Integer}, D::FourierDerivativeOperator)
+function Base.:*(factor::Real, D::FourierDerivativeOperator)
     D * factor
 end
 
@@ -406,7 +415,49 @@ function Base.:-(D::FourierDerivativeOperator, scaling::UniformScaling)
 end
 
 function Base.:-(scaling::UniformScaling, D::FourierDerivativeOperator)
-    scaling - D
+    scaling - FourierPolynomialDerivativeOperator(D)
+end
+
+function Base.:+(D1::FourierDerivativeOperator, D2::FourierDerivativeOperator)
+    FourierPolynomialDerivativeOperator(D1) + FourierPolynomialDerivativeOperator(D2)
+end
+
+function Base.:-(D1::FourierDerivativeOperator, D2::FourierDerivativeOperator)
+    FourierPolynomialDerivativeOperator(D1) - FourierPolynomialDerivativeOperator(D2)
+end
+
+function Base.:-(poly::FourierPolynomialDerivativeOperator)
+    FourierPolynomialDerivativeOperator(poly.D1, map(c -> -c, poly.coef))
+end
+
+function Base.:-(D::FourierDerivativeOperator)
+    -FourierPolynomialDerivativeOperator(D)
+end
+
+function Base.:/(poly::FourierPolynomialDerivativeOperator, factor::Real)
+    FourierPolynomialDerivativeOperator(poly.D1, map(c -> c / factor, poly.coef))
+end
+
+function Base.:/(D::FourierDerivativeOperator, factor::Real)
+    FourierPolynomialDerivativeOperator(D) / factor
+end
+
+function Base.:\(factor::Real,
+                 poly::Union{FourierDerivativeOperator,
+                             FourierPolynomialDerivativeOperator})
+    poly / factor
+end
+
+function Base.:/(poly::Union{FourierDerivativeOperator,
+                             FourierPolynomialDerivativeOperator},
+                 scaling::UniformScaling)
+    poly / scaling.λ
+end
+
+function Base.:\(scaling::UniformScaling,
+                 poly::Union{FourierDerivativeOperator,
+                             FourierPolynomialDerivativeOperator})
+    scaling.λ \ poly
 end
 
 function mul!(dest::AbstractVector{T}, poly::FourierPolynomialDerivativeOperator,
@@ -478,6 +529,12 @@ end
     end
 end
 
+function FourierRationalDerivativeOperator(D1::FourierDerivativeOperator{T},
+                                           num_coef::Tuple, den_coef::Tuple) where {T}
+    FourierRationalDerivativeOperator(D1, map(c -> convert(T, c), num_coef),
+                                      map(c -> convert(T, c), den_coef))
+end
+
 Base.size(rat::FourierRationalDerivativeOperator) = size(rat.D1)
 grid(rat::FourierRationalDerivativeOperator) = grid(rat.D1)
 
@@ -499,10 +556,16 @@ end
 
 function LinearAlgebra.issymmetric(rat::FourierRationalDerivativeOperator)
     @unpack num_coef, den_coef = rat
+    # The symbol `num(ik) / den(ik)` is real (i.e., the operator is symmetric)
+    # if numerator and denominator are both even or both odd polynomials.
+    # The check below assumes that there is no common factor that could be
+    # canceled.
     num_is_even = all(iszero, num_coef[idx] for idx in eachindex(num_coef) if iseven(idx))
+    num_is_odd = all(iszero, num_coef[idx] for idx in eachindex(num_coef) if isodd(idx))
     den_is_even = all(iszero, den_coef[idx] for idx in eachindex(den_coef) if iseven(idx))
+    den_is_odd = all(iszero, den_coef[idx] for idx in eachindex(den_coef) if isodd(idx))
 
-    num_is_even == den_is_even
+    iszero(rat) || (num_is_even && den_is_even) || (num_is_odd && den_is_odd)
 end
 
 Base.iszero(D::FourierRationalDerivativeOperator) = all(iszero, D.num_coef)
@@ -648,7 +711,7 @@ function Base.:*(rat1::Union{FourierDerivativeOperator,
     FourierRationalDerivativeOperator(rat1) * rat2
 end
 
-function Base.:*(factor::Union{Real, Integer}, rat::FourierRationalDerivativeOperator)
+function Base.:*(factor::Real, rat::FourierRationalDerivativeOperator)
     @unpack num_coef = rat
     for idx in eachindex(num_coef)
         num_coef = Base.setindex(num_coef, factor * num_coef[idx], idx)
@@ -657,7 +720,7 @@ function Base.:*(factor::Union{Real, Integer}, rat::FourierRationalDerivativeOpe
     FourierRationalDerivativeOperator(rat.D1, num_coef, rat.den_coef)
 end
 
-function Base.:*(poly::FourierRationalDerivativeOperator, factor::Union{Real, Integer})
+function Base.:*(poly::FourierRationalDerivativeOperator, factor::Real)
     factor * poly
 end
 
@@ -695,7 +758,7 @@ function Base.:/(rat1::Union{FourierDerivativeOperator,
     FourierRationalDerivativeOperator(rat1) / rat2
 end
 
-function Base.:/(factor::Union{Real, Integer}, rat::FourierRationalDerivativeOperator)
+function Base.:/(factor::Real, rat::FourierRationalDerivativeOperator)
     @unpack den_coef = rat
     for idx in eachindex(den_coef)
         den_coef = Base.setindex(den_coef, factor * den_coef[idx], idx)
@@ -704,7 +767,7 @@ function Base.:/(factor::Union{Real, Integer}, rat::FourierRationalDerivativeOpe
     FourierRationalDerivativeOperator(rat.D1, den_coef, rat.num_coef)
 end
 
-function Base.:/(rat::FourierRationalDerivativeOperator, factor::Union{Real, Integer})
+function Base.:/(rat::FourierRationalDerivativeOperator, factor::Real)
     @unpack num_coef = rat
     for idx in eachindex(num_coef)
         num_coef = Base.setindex(num_coef, num_coef[idx] / factor, idx)
@@ -713,11 +776,11 @@ function Base.:/(rat::FourierRationalDerivativeOperator, factor::Union{Real, Int
     FourierRationalDerivativeOperator(rat.D1, num_coef, rat.den_coef)
 end
 
-function Base.:\(factor::Union{Real, Integer}, rat::FourierRationalDerivativeOperator)
+function Base.:\(factor::Real, rat::FourierRationalDerivativeOperator)
     rat / factor
 end
 
-function Base.:\(rat::FourierRationalDerivativeOperator, factor::Union{Real, Integer})
+function Base.:\(rat::FourierRationalDerivativeOperator, factor::Real)
     inv(rat) * factor
 end
 
@@ -735,6 +798,30 @@ end
 
 function Base.:\(scaling::UniformScaling, rat::FourierRationalDerivativeOperator)
     scaling.λ \ rat
+end
+
+function Base.:/(factor::Real,
+                 den::Union{FourierDerivativeOperator,
+                            FourierPolynomialDerivativeOperator})
+    factor / FourierRationalDerivativeOperator(den)
+end
+
+function Base.:\(den::Union{FourierDerivativeOperator,
+                            FourierPolynomialDerivativeOperator},
+                 factor::Real)
+    FourierRationalDerivativeOperator(den) \ factor
+end
+
+function Base.:/(scaling::UniformScaling,
+                 den::Union{FourierDerivativeOperator,
+                            FourierPolynomialDerivativeOperator})
+    scaling.λ / den
+end
+
+function Base.:\(den::Union{FourierDerivativeOperator,
+                            FourierPolynomialDerivativeOperator},
+                 scaling::UniformScaling)
+    den \ scaling.λ
 end
 
 function mul!(dest::AbstractVector{T}, rat::FourierRationalDerivativeOperator,
@@ -777,8 +864,8 @@ function LinearAlgebra.ldiv!(dest::AbstractVector{T},
                   (N * evalpoly((j - 1) * im * jac * N, num_coef))
     end
     # see e.g. Steven G. Johnson (2011) Notes on FFT based differentiation
-    @inbounds tmp[end] *= evalpoly((N - 1) * im * jac * N, den_coef_end) /
-                          (N * evalpoly((N - 1) * im * jac * N, num_coef_end))
+    @inbounds tmp[end] *= evalpoly((length(tmp) - 1) * im * jac * N, den_coef_end) /
+                          (N * evalpoly((length(tmp) - 1) * im * jac * N, num_coef_end))
     mul!(dest, brfft_plan, tmp)
 end
 
@@ -1140,6 +1227,28 @@ function Base.show(io::IO, Di::FourierConstantViscosity)
     print(io, Di.source_of_coefficients)
 end
 
+"""
+    dissipation_operator(source_of_coefficients, D::FourierDerivativeOperator;
+                         strength, cutoff, [order])
+
+Create a negative semidefinite Fourier (super) spectral viscosity operator for
+the Fourier derivative operator `D` with coefficients given in
+`source_of_coefficients`, i.e., [`Tadmor1989`](@ref),
+[`MadayTadmor1989`](@ref), [`TadmorWaagan2012Standard`](@ref),
+[`TadmorWaagan2012Convergent`](@ref), or [`Tadmor1993`](@ref).
+The operator multiplies the Fourier coefficient with wavenumber `k` by
+`-strength * Q̂ₖ * (2π * k / (xmax - xmin))^(2 * order)`, where the kernel
+`Q̂ₖ ∈ [0, 1]` of the respective reference vanishes for `k < m`.
+
+The keyword argument `cutoff` is the (1-based) index of the Fourier
+coefficient with the cutoff wavenumber `m` of the references, i.e.,
+`m = cutoff - 1`. For `N = size(D, 2)` nodes, the defaults are
+`strength = 1 / N` and `cutoff = 1 + round(Int, sqrt(N))`. The order of the
+super spectral viscosity [`Tadmor1993`](@ref) is set by `order` (default `1`)
+with defaults `strength = 1 / N^(2 * order - 1)` and
+`cutoff = 1 + round(Int, N^(1 - 1 / (2 * order)))`; all other sources use
+`order = 1`.
+"""
 function dissipation_operator(source_of_coefficients, D::FourierDerivativeOperator;
                               kwargs...)
     parameters = get_parameters(source_of_coefficients, D; kwargs...)
@@ -1209,10 +1318,12 @@ function set_filter_coefficients!(coefficients::AbstractVector{T},
     @argcheck cutoff >= 1
     fill!(coefficients, zero(T))
     jac = jac^2 / N # ^2: 2nd derivative; /N: brfft instead of irfft
-    @inbounds @simd for j in cutoff:min(2cutoff, length(coefficients))
-        coefficients[j] = -strength * (j - 1)^2 * jac * (j - cutoff) / cutoff
+    m = cutoff - 1 # wavenumber k = j - 1 of coefficients[j]
+    @inbounds @simd for j in (cutoff + 1):min(2m, length(coefficients))
+        k = j - 1
+        coefficients[j] = -strength * k^2 * jac * T(k - m) / m
     end
-    @inbounds @simd for j in (2cutoff):length(coefficients)
+    @inbounds @simd for j in (2m + 1):length(coefficients)
         coefficients[j] = -strength * (j - 1)^2 * jac
     end
 end
@@ -1248,7 +1359,7 @@ function set_filter_coefficients!(coefficients::AbstractVector{T},
     jac = jac^2 / N # ^2: 2nd derivative; /N: brfft instead of irfft
     @inbounds @simd for j in (cutoff + 1):length(coefficients)
         coefficients[j] = -strength * (j - 1)^2 * jac *
-                          exp(-((length(coefficients) - j) / (j - cutoff))^2)
+                          exp(-(T(length(coefficients) - j) / (j - cutoff))^2)
     end
 end
 
@@ -1287,11 +1398,12 @@ function set_filter_coefficients!(coefficients::AbstractVector{T},
     @argcheck cutoff >= 1
     fill!(coefficients, zero(T))
     jac = jac^2 / N # ^2: 2nd derivative; /N: brfft instead of irfft
-    @inbounds @simd for j in cutoff:min(2cutoff, length(coefficients))
-        coefficients[j] = -strength * (j - 1)^2 * jac *
-                          exp(-((2cutoff - j) / (j - cutoff))^2)
+    m = cutoff - 1 # wavenumber k = j - 1 of coefficients[j]
+    @inbounds @simd for j in (cutoff + 1):min(2m, length(coefficients))
+        k = j - 1
+        coefficients[j] = -strength * k^2 * jac * exp(-(T(2m - k) / (k - m))^2)
     end
-    @inbounds @simd for j in (2cutoff):length(coefficients)
+    @inbounds @simd for j in (2m + 1):length(coefficients)
         coefficients[j] = -strength * (j - 1)^2 * jac
     end
 end
@@ -1339,8 +1451,10 @@ function set_filter_coefficients!(coefficients::AbstractVector{T},
     @argcheck cutoff >= 1
     fill!(coefficients, zero(T))
     jac = jac^2order / N # ^2order: order-th derivative; /N: brfft instead of irfft
-    @inbounds @simd for j in cutoff:length(coefficients)
-        coefficients[j] = -strength * (j - 1)^2order * jac * (1 - (cutoff / j)^2order)
+    m = cutoff - 1 # wavenumber k = j - 1 of coefficients[j]
+    @inbounds @simd for j in (cutoff + 1):length(coefficients)
+        k = j - 1
+        coefficients[j] = -strength * k^2order * jac * (1 - (T(m) / k)^2order)
     end
 end
 

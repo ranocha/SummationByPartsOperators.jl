@@ -707,13 +707,22 @@ end
     # `DienerDorbandSchnetterTiglio2007` with accuracy orders 6 and 8 and for
     # `MattssonNiemeläWinters2026`, which are not checked here.
     @testset "MattssonAlmquistCarpenter2014Optimal" begin
-        @testset "accuracy order $acc_order" for acc_order in (2, 4, 6)
+        @testset "accuracy order $acc_order" for acc_order in (2, 4, 6, 8)
             D = derivative_operator(MattssonAlmquistCarpenter2014Optimal(), 1, acc_order,
                                     XMIN, XMAX, NNODES)
             M = mass_matrix(D)
             A = Matrix(D)
             @test M * A + A' * M == mass_matrix_boundary(D)
             @test M isa Diagonal
+            @test all(>(0), diag(M))
+        end
+        @testset "minimal number of nodes" begin
+            # The uniform part of the grid consists of a single node.
+            D = derivative_operator(MattssonAlmquistCarpenter2014Optimal(), 1, 2,
+                                    XMIN, XMAX, 7)
+            M = mass_matrix(D)
+            A = Matrix(D)
+            @test M * A + A' * M == mass_matrix_boundary(D)
             @test all(>(0), diag(M))
         end
     end

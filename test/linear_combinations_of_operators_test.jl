@@ -52,6 +52,9 @@ for T in (Float32, Float64)
         combi = D₂ + (D₁ - D₂)
         @test combi * u ≈ D₁ * u
 
+        combi = D₃ + (D₁ - D₂)
+        @test combi * u ≈ D₃ * u + D₁ * u - D₂ * u
+
         combi = (D₁ + D₂) - D₂
         @test combi * u ≈ D₁ * u
 

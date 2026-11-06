@@ -1,6 +1,7 @@
 using Test
 using LinearAlgebra
 using SummationByPartsOperators
+using OffsetArrays: OffsetArray
 
 D_test_list = (MattssonNordström2004(), MattssonSvärdNordström2004(),
                MattssonSvärdShoeybi2008(), Mattsson2014(),
@@ -1357,4 +1358,131 @@ end
         @test_throws Union{MethodError, ArgumentError} derivative_operator(source, 2, 4,
                                                                            0.0, 1.0, 101)
     end
+end
+
+# https://github.com/ranocha/SummationByPartsOperators.jl/issues/14
+@testset "MattssonAlmquistCarpenter2014Optimal" begin
+    # The coefficients of these operators are truncated decimals, so the order
+    # of accuracy can only be checked approximately. `BigFloat` is used so that
+    # the truncation of the coefficients, and not the floating point arithmetic,
+    # is the dominant error source. The residuals are scaled by the grid spacing
+    # and the size of the monomial, which makes the residuals of the monomials
+    # that are handled exactly independent of the interval and the number of
+    # nodes (below 1.0e-16). The scaled residuals of the monomials that are not
+    # handled exactly are above 1.0e-10 for this interval and number of nodes.
+    xmin = big(-1.0)
+    xmax = big(2.0)
+    N = 41
+    @testset "accuracy order $acc_order" for acc_order in (2, 4, 6, 8)
+        D = derivative_operator(MattssonAlmquistCarpenter2014Optimal(), 1, acc_order,
+                                xmin, xmax, N)
+        @test accuracy_order(D) == acc_order
+        A = Matrix(D)
+        x = collect(grid(D))
+
+        # diagonal, positive definite norm satisfying the SBP property
+        M = mass_matrix(D)
+        @test M isa Diagonal
+        @test all(>(0), diag(M))
+        @test M * A + A' * M ≈ mass_matrix_boundary(D)
+
+        # The grid is uniform except for the first three intervals at each
+        # boundary, where it is symmetric with respect to the midpoint.
+        dx = diff(x)
+        @test all(isapprox(dx[4]), dx[4:(end - 3)])
+        @test !isapprox(dx[1], dx[4])
+        @test dx[1:3] ≈ reverse(dx[(end - 2):end])
+
+        # The boundary closures are accurate of order `acc_order ÷ 2`, the
+        # interior stencils of order `acc_order`.
+        nb = length(D.coefficients.left_boundary)
+        @test nb == length(D.coefficients.right_boundary)
+        interior = (nb + 1):(N - nb)
+        function residual(k, indices = eachindex(x))
+            r = A * x .^ k - k .* x .^ max(k - 1, 0)
+            return dx[4] * maximum(abs, view(r, indices)) / maximum(abs, x .^ k)
+        end
+        for k in 0:(acc_order ÷ 2)
+            @test residual(k) < 1.0e-15
+        end
+        @test residual(acc_order ÷ 2 + 1) > 1.0e-12
+        for k in (acc_order ÷ 2 + 1):acc_order
+            @test residual(k, interior) < 1.0e-15
+        end
+        @test residual(acc_order + 1, interior) > 1.0e-12
+    end
+end
+
+@testset "MattssonAlmquistCarpenter2014Optimal with few nodes" begin
+    # For N = 7, the uniform part of the grid consists of a single node.
+    @testset "N = $N" for N in (7, 8)
+        for T in (Float32, Float64)
+            D = derivative_operator(MattssonAlmquistCarpenter2014Optimal(), 1, 2,
+                                    zero(T), one(T), N)
+            x = collect(grid(D))
+            @test D.Δx ≈ x[4] - x[3]
+            M = mass_matrix(D)
+            A = Matrix(D)
+            @test all(>(0), diag(M))
+            @test sum(M) ≈ 1
+            @test M * A + A' * M ≈ mass_matrix_boundary(D)
+            @test maximum(abs, D * ones(T, N)) < 10 * eps(T)
+            @test D * x ≈ ones(T, N)
+        end
+    end
+end
+
+@testset "Transposed derivative functionals at the boundaries" begin
+    for T in (Float32, Float64)
+        D = derivative_operator(MattssonNordström2004(), 2, 4, zero(T), one(T), 21)
+        N = size(D, 2)
+        u0 = rand(T, N)
+        for der_order in (Val(0), Val(1)), (α, β) in ((true, false), (T(2), T(3)))
+            # Only the entries in the stencil of the derivative functional are
+            # changed.
+            d = derivative_left(D, der_order)
+            idx = firstindex(d):findlast(!iszero, d)
+            u = copy(u0)
+            mul_transpose_derivative_left!(u, D, der_order, α, β)
+            @test u[idx] ≈ α * d[idx] + β * u0[idx]
+            @test u[(last(idx) + 1):end] == u0[(last(idx) + 1):end]
+
+            d = derivative_right(D, der_order)
+            idx = findfirst(!iszero, d):lastindex(d)
+            u = copy(u0)
+            mul_transpose_derivative_right!(u, D, der_order, α, β)
+            @test u[idx] ≈ α * d[idx] + β * u0[idx]
+            @test u[begin:(first(idx) - 1)] == u0[begin:(first(idx) - 1)]
+        end
+        @test_throws DimensionMismatch mul_transpose_derivative_left!(zeros(T, N + 1), D,
+                                                                      Val(1))
+        @test_throws DimensionMismatch mul_transpose_derivative_right!(zeros(T, N + 1), D,
+                                                                       Val(1))
+    end
+end
+
+@testset "Arrays with offset axes" begin
+    D = derivative_operator(MattssonNordström2004(), 1, 4, 0.0, 1.0, 21)
+    u = sinpi.(grid(D))
+    u_offset = OffsetArray(copy(u), -1)
+    @test integrate(u_offset, D) ≈ integrate(u, D)
+    @test integrate(abs2, u_offset, D) ≈ integrate(abs2, u, D)
+    @test_throws ArgumentError mul!(similar(u_offset), D, u_offset)
+    @test_throws ArgumentError mul!(similar(u_offset), D, u_offset, 2.0, 3.0)
+    D = derivative_operator(MattssonNordström2004(), 2, 4, 0.0, 1.0, 21)
+    for der_order in (Val(0), Val(1))
+        v = copy(u)
+        v_offset = OffsetArray(copy(u), -1)
+        mul_transpose_derivative_left!(v, D, der_order, 2.0, 3.0)
+        mul_transpose_derivative_left!(v_offset, D, der_order, 2.0, 3.0)
+        @test parent(v_offset) == v
+        mul_transpose_derivative_right!(v, D, der_order, 2.0, 3.0)
+        mul_transpose_derivative_right!(v_offset, D, der_order, 2.0, 3.0)
+        @test parent(v_offset) == v
+    end
+
+    D = periodic_derivative_operator(1, 4, 0.0, 1.0, 20)
+    u_offset = OffsetArray(sinpi.(grid(D)), -1)
+    @test_throws ArgumentError mul!(similar(u_offset), D, u_offset)
+    @test_throws ArgumentError mul!(similar(u_offset), D, u_offset, 2.0, 3.0)
 end

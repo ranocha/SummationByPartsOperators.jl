@@ -540,16 +540,18 @@ Thus, the coefficients `α, β` have the same meaning as in [`mul!`](@ref).
 @inline function mul_transpose_derivative_left!(u::AbstractVector, D::DerivativeOperator,
                                                 der_order::Val{N}, α = true,
                                                 β = false) where {N}
+    @argcheck length(u)==size(D, 2) DimensionMismatch
     factor = α / D.Δx^N
     coef = D.coefficients.left_boundary_derivatives[N].coef
     for i in eachindex(coef)
-        u[i] = factor * coef[i] + β * u[i]
+        u[begin + i - 1] = factor * coef[i] + β * u[begin + i - 1]
     end
 end
 
 @inline function mul_transpose_derivative_left!(u::AbstractVector, D::DerivativeOperator,
                                                 der_order::Val{0}, α = true, β = false)
-    @inbounds u[begin] = α * u[begin] + β * u[begin]
+    @argcheck length(u)==size(D, 2) DimensionMismatch
+    u[begin] = α + β * u[begin]
     return nothing
 end
 
@@ -564,16 +566,18 @@ Thus, the coefficients `α, β` have the same meaning as in [`mul!`](@ref).
 @inline function mul_transpose_derivative_right!(u::AbstractVector, D::DerivativeOperator,
                                                  der_order::Val{N}, α = true,
                                                  β = false) where {N}
+    @argcheck length(u)==size(D, 2) DimensionMismatch
     factor = α / D.Δx^N
     coef = D.coefficients.right_boundary_derivatives[N].coef
     for i in eachindex(coef)
-        u[end - i + 1] += factor * coef[i]
+        u[end - i + 1] = factor * coef[i] + β * u[end - i + 1]
     end
 end
 
 @inline function mul_transpose_derivative_right!(u::AbstractVector, D::DerivativeOperator,
                                                  der_order::Val{0}, α = true, β = false)
-    @inbounds u[end] = α * u[end] + β * u[end]
+    @argcheck length(u)==size(D, 2) DimensionMismatch
+    u[end] = α + β * u[end]
     return nothing
 end
 
@@ -608,6 +612,7 @@ end
 # Compute `α*D*u + β*dest` and store the result in `dest`.
 Base.@propagate_inbounds function mul!(dest::AbstractVector, D::DerivativeOperator,
                                        u::AbstractVector, α, β)
+    Base.require_one_based_indexing(dest, u)
     @boundscheck begin
         @argcheck size(D, 2)==length(u) DimensionMismatch
         @argcheck size(D, 1)==length(dest) DimensionMismatch
@@ -618,38 +623,12 @@ end
 # Compute `α*D*u` and store the result in `dest`.
 Base.@propagate_inbounds function mul!(dest::AbstractVector, D::DerivativeOperator,
                                        u::AbstractVector, α)
+    Base.require_one_based_indexing(dest, u)
     @boundscheck begin
         @argcheck size(D, 2)==length(u) DimensionMismatch
         @argcheck size(D, 1)==length(dest) DimensionMismatch
     end
     @inbounds mul_internal!(dest, D.coefficients, u, α * D.factor)
-end
-
-"""
-    integrate(func, u, D::DerivativeOperator)
-
-Map the function `func` to the coefficients `u` and integrate with respect to
-the quadrature rule associated with the SBP derivative operator `D`.
-"""
-function integrate(func::Func, u::AbstractVector, D::DerivativeOperator) where {Func}
-    @boundscheck begin
-        length(u) == length(grid(D)) ||
-            throw(DimensionMismatch("sizes of input vector and operator do not match"))
-    end
-    @unpack Δx = D
-    @unpack left_weights, right_weights = D.coefficients
-
-    @inbounds res = sum(func,
-                        view(u,
-                             (1 + length(left_weights)):(length(u) - length(right_weights))))
-    @inbounds for i in Base.OneTo(length(left_weights))
-        res += left_weights[i] * func(u[i])
-    end
-    @inbounds for i in Base.OneTo(length(right_weights))
-        res += right_weights[i] * func(u[end - i + 1])
-    end
-
-    Δx * res
 end
 
 function scale_by_mass_matrix!(u::AbstractVector, D::DerivativeOperator)

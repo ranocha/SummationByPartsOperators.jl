@@ -3,6 +3,7 @@ using LinearAlgebra
 using SparseArrays
 using BandedMatrices
 using SummationByPartsOperators
+using OffsetArrays: OffsetArray
 
 @testset "Coupled Legendre operators" begin
     for T in (Float32, Float64)
@@ -468,5 +469,40 @@ end
         D2op2 = couple_continuously(D2op1, UniformPeriodicMesh1D(xmin, xmax, 1))
         @test SummationByPartsOperators.xmin(D2op2) ≈ xmin
         @test SummationByPartsOperators.xmax(D2op2) ≈ xmax
+    end
+end
+
+@testset "Coupled operators far away from the origin" begin
+    # The Jacobians of the cells must be computed from the length of the cells,
+    # which is resolved poorly by the nodes far away from the origin.
+    for (T, xmin, Nx) in ((Float32, 100, 100), (Float64, 10_000, 1000))
+        D = legendre_derivative_operator(-one(T), one(T), 4)
+        for mesh in (UniformMesh1D(T(xmin), T(xmin + 1), Nx),
+                     UniformPeriodicMesh1D(T(xmin), T(xmin + 1), Nx))
+            for cD in (couple_continuously(D, mesh), couple_discontinuously(D, mesh))
+                tol = length(grid(cD)) * eps(T)
+                @test abs(integrate(one, grid(cD), cD) - 1) < tol
+                @test abs(sum(mass_matrix(cD)) - 1) < tol
+                if !SummationByPartsOperators.isperiodic(mesh)
+                    @test isapprox(left_boundary_weight(cD),
+                                   left_boundary_weight(D) / (2 * Nx), rtol = 4 * eps(T))
+                    @test isapprox(right_boundary_weight(cD),
+                                   right_boundary_weight(D) / (2 * Nx), rtol = 4 * eps(T))
+                end
+            end
+        end
+    end
+end
+
+@testset "Coupled operators: input checks" begin
+    D = legendre_derivative_operator(-1.0, 1.0, 4)
+    for cD in (couple_continuously(D, UniformMesh1D(0.0, 3.0, 3)),
+               couple_discontinuously(D, UniformMesh1D(0.0, 3.0, 3)),
+               couple_continuously(D, UniformPeriodicMesh1D(0.0, 3.0, 3)))
+        N = size(cD, 2)
+        @test integrate(ones(N), cD) ≈ 3
+        @test_throws DimensionMismatch integrate(ones(N + 1), cD)
+        @test_throws DimensionMismatch integrate(ones(N - 1), cD)
+        @test_throws ArgumentError integrate(OffsetArray(ones(N), -1), cD)
     end
 end

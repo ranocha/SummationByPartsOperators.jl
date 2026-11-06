@@ -64,12 +64,19 @@ function (filter::ConstantFilter)(u::AbstractMatrix, tmp::AbstractVector)
         length(tmp) == size(u, 1) || throw(DimensionMismatch())
     end
 
-    for j in Base.OneTo(size(u, 2))
+    for j in axes(u, 2)
         v = view(u, :, j)
         @inbounds filter(v, tmp)
     end
 
     nothing
+end
+
+# FFTW plans can only be applied to arrays with the memory alignment of the
+# arrays they were created for, which columns of a matrix do not have in general.
+function (filter::ConstantFilter{<:Real, <:FFTW.FFTWPlan})(u::AbstractMatrix,
+                                                           tmp::AbstractVector)
+    throw(ArgumentError("Fourier filters can only be applied to vectors, not to matrices"))
 end
 
 function (filter::ConstantFilter)(u::AbstractMatrix, tmp::AbstractMatrix)

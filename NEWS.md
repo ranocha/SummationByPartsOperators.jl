@@ -14,9 +14,18 @@ for human readability.
   with `spherical_operators` at accuracy orders two, four, and six on collocated
   and staggered uniform radial grids. Their gradient and divergence actions are
   matrix-like views with separate scalar and vector norm matrices.
+- The first-derivative operators of `MattssonAlmquistCarpenter2014Optimal()`
+  are available with accuracy order 8 now. Two entries of `Q` listed in
+  Appendix B.4 of the reference are erroneous and have been corrected, see
+  [#14](https://github.com/ranocha/SummationByPartsOperators.jl/issues/14).
 - The boundary optimized operators of `MattssonAlmquistVanDerWeide2018Minimal`
   and `MattssonAlmquistVanDerWeide2018Accurate` are now also available with
   interior accuracy orders 10 and 12 (in addition to 4, 6, and 8).
+- Rational functions of periodic finite difference operators and polynomials
+  of Fourier derivative operators support division by numbers and
+  `UniformScaling`s from both sides, e.g., `2 / (I + D^2)`, `(I + D^2) \ I`,
+  and `I / (I + D^2)`, as rational functions of Fourier derivative operators
+  already did.
 
 #### Changed
 
@@ -45,6 +54,64 @@ for human readability.
 
 #### Fixed
 
+- `D + combi` for a derivative operator `D` and a linear combination `combi`
+  of derivative operators paired the coefficients with the wrong operators,
+  e.g., `D3 + (D1 - D2)` computed `D1 + D2 - D3`.
+- `ldiv!` and `\` for rational Fourier derivative operators used a wrong
+  wavenumber for the last Fourier mode.
+- `rat + λ * I`, `rat - λ * I`, and `λ * I - rat` ignored `λ` for rational
+  periodic finite difference operators `rat`, i.e., they were only correct for
+  `λ == 1`. This also affected `D ± λ * I` for periodic derivative operators.
+- `fourier_derivative_matrix` returned wrong results for an odd number of
+  nodes and did not initialize the diagonal, which could result in garbage
+  values or an `UndefRefError` for non-bits types such as `BigFloat`.
+- `mul_transpose_derivative_right!` ignored `β`. The methods of
+  `mul_transpose_derivative_left!` and `mul_transpose_derivative_right!` for
+  `Val(0)` computed `(α + β) * u` at the boundary node instead of `α + β * u`.
+- `MattssonAlmquistCarpenter2014Optimal()` with accuracy order 2 and seven
+  nodes resulted in a grid spacing of zero.
+- `evaluate_coefficients` for Legendre operators returned plotting nodes in
+  `[-1, 1]` instead of the physical interval.
+- The Jacobians of coupled operators were computed from cell bounds that are
+  shrunk slightly for floating point types, which resulted in a systematic
+  relative error of the mass matrix and the derivative of a few ulp of the
+  cell bounds divided by the cell length, e.g., `1.5e-3` for `Float32` cells of
+  length `0.01` at `x = 100`.
+- `integrate(func, u, cD)` for coupled operators `cD` does not accept vectors
+  `u` of the wrong length anymore.
+- `mul!` for finite difference operators throws an `ArgumentError` for arrays
+  with offset axes instead of silently computing wrong results.
+  `integrate(func, u, D)` for finite difference operators and
+  `mul_transpose_derivative_left!` support arrays with offset axes now.
+- `I - D` for Fourier derivative operators `D` resulted in a
+  `StackOverflowError`.
+- `-D`, `D + D`, `D - D`, `D / 2`, and `2 \ D` for Fourier derivative operators
+  `D`, `-poly` and `poly / 2` for polynomials `poly` of Fourier derivative
+  operators, and `-rat` and `rat / 2` for rational functions `rat` of periodic
+  finite difference operators resulted in operators that threw a `MethodError`
+  when applied to a vector. Since `-D^2` was affected, `-D^2 + I` threw a
+  `MethodError` as well.
+- `periodic_derivative_operator(derivative_order, accuracy_order, grid)` threw
+  a `MethodError` because of a method ambiguity (also with the optional
+  arguments `left_offset` and `mode`).
+- `issymmetric` for rational Fourier derivative operators returned `true` for
+  some non-symmetric operators, e.g., `(I + D) / (I + 2 * D)`.
+- `show` and `summary` of upwind operators with different accuracy orders
+  displayed the accuracy order of the minus operator instead of the plus
+  operator.
+- `mass_matrix_boundary(D, dim)` threw an `ArgumentError` for a
+  `MultidimensionalMatrixDerivativeOperator` whose `boundary_indices` contain a
+  node several times, e.g., a corner shared by two boundary faces, although such
+  operators are explicitly allowed. Now, the contributions of all entries of a
+  node are summed, so the result does not depend on the order of the entries
+  and is consistent with `integrate_boundary`. For a `TensorProductOperator`,
+  the result is unchanged; its special method, which selected the entries of the
+  corners based on their position in `boundary_indices`, has been removed.
+- `tensor_product_operator_2D(D_x, D_y)` threw a `MethodError` if only one of
+  the 1D operators has a specific source of coefficients, e.g., for a finite
+  difference operator combined with a `LegendreDerivativeOperator`. Now,
+  `SourceOfCoefficientsCombination` accepts any object returned by
+  `source_of_coefficients`.
 - The bandwidths reported for the fourth-order accurate variable-coefficient
   second-derivative operator of `Mattsson2012()` were too small. Thus,
   converting such an operator to a `BandedMatrix` silently dropped some
@@ -68,6 +135,35 @@ for human readability.
   determined by the antisymmetric matrix `R` given in the reference. Since the
   boundary closure got wider, this operator requires at least 9 nodes now
   (instead of 7).
+- The kernels of the Fourier spectral viscosity operators
+  `MadayTadmor1989()`, `TadmorWaagan2012Convergent()`, and `Tadmor1993()`
+  were shifted by one wavenumber relative to the references, e.g.,
+  `Tadmor1993()` used `1 - ((m + 1) / (k + 1))^(2s)` instead of
+  `1 - (m / k)^(2s)` for the wavenumber `k` and the cutoff wavenumber
+  `m = cutoff - 1`. Now, they match the references. The keyword argument
+  `cutoff` of `dissipation_operator` for Fourier derivative operators is
+  documented now. Moreover, the kernels of these operators and of
+  `TadmorWaagan2012Standard()` are computed in the requested element type
+  instead of `Float64`.
+- Scaling a Fourier or periodic finite difference operator (or polynomials and
+  rational functions of such operators) by a number of another type, e.g.,
+  `0.5 * D` or `D + 0.5 * I` for a `Float32` operator `D`, threw a
+  `MethodError`. Now, the scaling factor is converted to the element type of
+  the operator.
+- Applying a `ConstantFilter` of a Fourier operator to a matrix throws an
+  informative `ArgumentError` instead of a `DimensionMismatch` without message.
+- `periodic_derivative_operator(LanczosLowNoise(); derivative_order = 2, ...)`
+  threw an `UndefVarError` instead of an `ArgumentError`.
+- `periodic_derivative_operator(LanczosLowNoise(), 1, 4, 0.0, 1.0, 20)`
+  resulted in a `StackOverflowError` instead of a `MethodError`.
+- `periodic_derivative_coefficients(source, derivative_order, accuracy_order)`
+  without keyword arguments was ambiguous for `Holoborodko2008()` and
+  `LanczosLowNoise()`.
+- `integrate` was not implemented for `VarCoefDerivativeOperator`s.
+- The nonperiodic semidiscretizations of Burgers' equation, the cubic
+  conservation law, and the variable linear advection equation threw a
+  `MethodError` if the boundary data and the solution have different types,
+  e.g., for boundary functions returning an `Int`.
 
 #### Deprecated
 
